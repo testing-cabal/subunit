@@ -102,7 +102,7 @@ class TestTestImports(unittest.TestCase):
 
 class TestTestProtocolServerPipe(unittest.TestCase):
 
-    def skip_test_story(self):
+    def test_story(self):
         protocol = MockTestProtocolServer()
         pipe = StringIO("test old mcdonald\n"
                         "success old mcdonald\n"
@@ -117,10 +117,12 @@ class TestTestProtocolServerPipe(unittest.TestCase):
         bing = subunit.RemotedTestCase("bing crosby")
         an_error = subunit.RemotedTestCase("an error")
         self.assertEqual(protocol.start_calls, [mcdonald, bing, an_error])
-        self.assertEqual(protocol.error_calls, [(an_error, RemoteError())])
-        self.assertEqual(protocol.failure_calls, [
-                            (bing,
-                             RemoteError("foo.c:53:ERROR invalid state\n"))])
+        self.assertEqual(protocol.error_calls, 
+                         [(an_error, subunit.RemoteError())])
+        self.assertEqual(protocol.failure_calls, 
+                         [(bing,
+                           subunit.RemoteError("foo.c:53:ERROR "
+                                               "invalid state\n"))])
         self.assertEqual(protocol.success_calls, [mcdonald])
 
 
