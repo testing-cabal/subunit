@@ -29,10 +29,24 @@ class TestProtocolServer(object):
     OUTSIDE_TEST = 0
     TEST_STARTED = 1
     READING_FAILURE = 2
+    READING_ERROR = 3
 
     def __init__(self):
         self.state = TestProtocolServer.OUTSIDE_TEST
         
+    def _addError(self, offset, line):
+        if (self.state == TestProtocolServer.TEST_STARTED and
+            self.current_test_description == line[offset:-1]):
+            self.state = TestProtocolServer.OUTSIDE_TEST
+            self.current_test_description = None
+            self.addError("")
+        elif (self.state == TestProtocolServer.TEST_STARTED and
+            self.current_test_description + " [" == line[offset:-1]):
+            self.state = TestProtocolServer.READING_ERROR
+            self._message = ""
+        else:
+            self.stdOutLineRecieved(line)
+
     def _addFailure(self, offset, line):
         if (self.state == TestProtocolServer.TEST_STARTED and
             self.current_test_description == line[offset:-1]):
@@ -67,6 +81,10 @@ class TestProtocolServer(object):
             self.state = TestProtocolServer.OUTSIDE_TEST
             self.current_test_description = None
             self.addFailure(self._message)
+        elif self.state == TestProtocolServer.READING_ERROR:
+            self.state = TestProtocolServer.OUTSIDE_TEST
+            self.current_test_description = None
+            self.addError(self._message)
         else:
             self.stdOutLineRecieved(line)
         
@@ -74,7 +92,8 @@ class TestProtocolServer(object):
         """Call the appropriate local method for the recieved line."""
         if line == "]\n":
             self.endQuote(line)
-        elif self.state == TestProtocolServer.READING_FAILURE:
+        elif (self.state == TestProtocolServer.READING_FAILURE or
+              self.state == TestProtocolServer.READING_ERROR):
             self._appendMessage(line)
         elif line.startswith("test:"):
             self._startTest(6, line)
@@ -84,6 +103,10 @@ class TestProtocolServer(object):
             self._startTest(8, line)
         elif line.startswith("test"):
             self._startTest(5, line)
+        elif line.startswith("error:"):
+            self._addError(7, line)
+        elif line.startswith("error"):
+            self._addError(6, line)
         elif line.startswith("failure:"):
             self._addFailure(9, line)
         elif line.startswith("failure"):
@@ -104,6 +127,10 @@ class TestProtocolServer(object):
         if self.state == TestProtocolServer.TEST_STARTED:
             self.addError("lost connection during test '%s'" 
                           % self.current_test_description)
+        elif self.state == TestProtocolServer.READING_ERROR:
+            self.addError("lost connection during "
+                          "error report of test "
+                          "'%s'" % self.current_test_description)
         elif self.state == TestProtocolServer.READING_FAILURE:
             self.addError("lost connection during "
                           "failure report of test "
