@@ -40,7 +40,7 @@ class TestProtocolServer(object):
             self.current_test_description == line[offset:-1]):
             self.state = TestProtocolServer.OUTSIDE_TEST
             self.current_test_description = None
-            self.addError("")
+            self.addError(self._current_test, RemoteError(""))
         elif (self.state == TestProtocolServer.TEST_STARTED and
             self.current_test_description + " [" == line[offset:-1]):
             self.state = TestProtocolServer.READING_ERROR
@@ -86,7 +86,7 @@ class TestProtocolServer(object):
         elif self.state == TestProtocolServer.READING_ERROR:
             self.state = TestProtocolServer.OUTSIDE_TEST
             self.current_test_description = None
-            self.addError(self._message)
+            self.addError(self._current_test, RemoteError(self._message))
         else:
             self.stdOutLineRecieved(line)
         
@@ -127,16 +127,24 @@ class TestProtocolServer(object):
     def lostConnection(self):
         """The input connection has finished."""
         if self.state == TestProtocolServer.TEST_STARTED:
-            self.addError("lost connection during test '%s'" 
-                          % self.current_test_description)
+            self.addError(self._current_test,
+                          RemoteError("lost connection during test '%s'"
+                                      % self.current_test_description))
         elif self.state == TestProtocolServer.READING_ERROR:
-            self.addError("lost connection during "
-                          "error report of test "
-                          "'%s'" % self.current_test_description)
+            self.addError(self._current_test,
+                          RemoteError("lost connection during "
+                                      "error report of test "
+                                      "'%s'" % self.current_test_description))
         elif self.state == TestProtocolServer.READING_FAILURE:
-            self.addError("lost connection during "
-                          "failure report of test "
-                          "'%s'" % self.current_test_description)
+            self.addError(self._current_test,
+                          RemoteError("lost connection during "
+                                      "failure report of test "
+                                      "'%s'" % self.current_test_description))
+
+    def readFrom(self, pipe):
+        for line in pipe.readlines(pipe):
+            self.lineReceived(line)
+        self.lostConnection()
 
     def _startTest(self, offset, line):
         """Internal call to change state machine. Override startTest()."""
@@ -152,9 +160,19 @@ class TestProtocolServer(object):
         sys.stdout.write(line)
 
 
-class RemoteError(Exception):
+class RemoteException(Exception):
     """An exception that occured remotely to python."""
+
+    def __eq__(self, other):
+        try:
+            return self.args == other.args
+        except AttributeError:
+            return False
     
+
+def RemoteError(description):
+    return (RemoteException("RemoteError:\n%s" % description), None, None)
+
 
 class RemotedTestCase(unittest.TestCase):
     """A class to represent test cases run in child processes."""
@@ -195,7 +213,7 @@ class RemotedTestCase(unittest.TestCase):
     def run(self, result=None):
         if result is None: result = self.defaultTestResult()
         result.startTest(self)
-        result.addError(self, (RemoteError("Cannot run RemotedTestCases.\n"), None, None))
+        result.addError(self, RemoteError("Cannot run RemotedTestCases.\n"))
         result.stopTest(self)
         
     def _strclass(self):
