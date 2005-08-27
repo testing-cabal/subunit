@@ -83,10 +83,11 @@ class TestMockTestProtocolServer(unittest.TestCase):
         self.assertEqual(protocol.success_calls, [""])
         
 
-class TestTestProtocolServer(unittest.TestCase):
+class TestTestImports(unittest.TestCase):
     
     def test_imports(self):
         from subunit import TestProtocolServer
+        from subunit import RemotedTestCase
 
 
 class TestTestProtocolServerStartTest(unittest.TestCase):
@@ -417,6 +418,25 @@ class TestTestProtocolServerAddSuccess(unittest.TestCase):
 
     def test_simple_success_colon(self):
         self.simple_success_keyword("successful:")
+
+
+class TestRemotedTestCase(unittest.TestCase):
+
+    def test_simple(self):
+        test = subunit.RemotedTestCase("A test description")
+        self.assertRaises(NotImplementedError, test.setUp)
+        self.assertRaises(NotImplementedError, test.tearDown)
+        self.assertEqual("A test description",
+                         test.shortDescription())
+        self.assertEqual("subunit.RemotedTestCase.A test description",
+                         test.id())
+        self.assertEqual("A test description (subunit.RemotedTestCase)", "%s" % test)
+        self.assertEqual("<subunit.RemotedTestCase description="
+                         "'A test description'>", "%r" % test)
+        result = unittest.TestResult()
+        test.run(result)
+        self.assertEqual([(test, "Cannot run RemotedTestCases.\n\n")], result.errors)
+        self.assertEqual(1, result.testsRun)
 
 
 def test_suite():

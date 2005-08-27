@@ -18,6 +18,7 @@
 #
 
 import sys
+import unittest
 
 def test_suite():
     import subunit.tests
@@ -147,3 +148,48 @@ class TestProtocolServer(object):
         
     def stdOutLineRecieved(self, line):
         sys.stdout.write(line)
+
+
+class RemoteError(Exception):
+    """An exception that occured remotely to python."""
+    
+
+class RemotedTestCase(unittest.TestCase):
+    """A class to represent test cases run in child processes."""
+
+    def __init__(self, description):
+        """Create a psuedo test case with description description."""
+        self.__description = description
+
+    def error(self, label):
+        raise NotImplementedError("%s on RemotedTestCases is not permitted." %
+            label)
+
+    def setUp(self):
+        self.error("setUp")
+
+    def tearDown(self):
+        self.error("tearDown")
+
+    def shortDescription(self):
+        return self.__description
+
+    def id(self):
+        return "%s.%s" % (self._strclass(), self.__description)
+
+    def __str__(self):
+        return "%s (%s)" % (self.__description, self._strclass())
+
+    def __repr__(self):
+        return "<%s description='%s'>" % \
+               (self._strclass(), self.__description)
+
+    def run(self, result=None):
+        if result is None: result = self.defaultTestResult()
+        result.startTest(self)
+        result.addError(self, (RemoteError("Cannot run RemotedTestCases.\n"), None, None))
+        result.stopTest(self)
+        
+    def _strclass(self):
+        cls = self.__class__
+        return "%s.%s" % (cls.__module__, cls.__name__)
