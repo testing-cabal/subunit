@@ -53,7 +53,7 @@ class TestProtocolServer(object):
             self.current_test_description == line[offset:-1]):
             self.state = TestProtocolServer.OUTSIDE_TEST
             self.current_test_description = None
-            self.addFailure("")
+            self.addFailure(self._current_test, RemoteError())
         elif (self.state == TestProtocolServer.TEST_STARTED and
             self.current_test_description + " [" == line[offset:-1]):
             self.state = TestProtocolServer.READING_FAILURE
@@ -82,7 +82,7 @@ class TestProtocolServer(object):
         if self.state == TestProtocolServer.READING_FAILURE:
             self.state = TestProtocolServer.OUTSIDE_TEST
             self.current_test_description = None
-            self.addFailure(self._message)
+            self.addFailure(self._current_test, RemoteError(self._message))
         elif self.state == TestProtocolServer.READING_ERROR:
             self.state = TestProtocolServer.OUTSIDE_TEST
             self.current_test_description = None
@@ -170,7 +170,9 @@ class RemoteException(Exception):
             return False
     
 
-def RemoteError(description):
+def RemoteError(description=""):
+    if description == "":
+        description = "\n"
     return (RemoteException("RemoteError:\n%s" % description), None, None)
 
 
