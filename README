@@ -1,0 +1,84 @@
+    
+  subunit: extensions to python unittest to get test results from subprocesses.
+  Copyright (C) 2005  Robert Collins <robertc@robertcollins.net>
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+
+
+Subunit is attempting to extend unittest with a clean and simple api to
+run arbitrary external test suites and return the results to standard 
+python unittest.
+
+Some requirements:
+  The shape of the external unittest should not need to be known a-priori.
+  After the test has run, tests should still exist as discrete objects, so that
+  anything taking a reference to them doesn't get 50 copies of the same object.
+
+
+it might look like this:
+
+foo:0:STARTTEST "test foo works."   result->startTest
+foo:0:SUCCESS                       result->addSuccess
+foo:0:ENDTEST "test foo works."     result->endTest
+foo:0:STARTTEST "tar a file."       result->startTest
+foo:0:FAILURE                       starts buffering
+ __init__.py : 300 undefined object 'foo'  
+foo:0:ENDTEST                       result->addFailure ( __i... ; result->endTest
+foo:0:STARTTEST "tar a different file."  result->startTest
+foo:0:FAILURE                            starts buffering
+foo.c:34:WARNING cannot compile foo.c
+foo:0:ENDTEST "tar a different file."    result->addFailure(foo:0...; result->endTest
+foo:0:STARTTEST "test an exception during teardown." result->startTest
+foo:0:ERROR
+foo:0:ENDTEST "test an exception during teardown." 
+foo:0:WARNING blahj blah balh      shown straight on stdout
+and more random text to stdout     ditto
+
+or like this:
+TEST: test foo works
+SUCCESS: test foo works.
+TEST: tar a file.
+FAILURE: tar a file. [
+..
+ ]..  space is eaten.
+foo.c:34 WARNING foo is not defined.
+]
+a writeln to stdout
+
+===========
+.F
+a writeln to stdout
+
+========================
+FAILURE: tar a file.
+-------------------
+..
+]..  space is eatern.
+foo.c:34 WARNING foo is not defined.
+========================
+
+
+test|testing|test:|testing:
+success|success:|successful|successful:
+failure: foo
+failure: foo [
+...
+]
+error: foo
+error: foo [
+]
+unexpected output on stdout -> stdout.
+exit w/0 or last test -> error
