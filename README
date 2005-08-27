@@ -75,7 +75,7 @@ def run:
       this process runs server
       child runs client and calls self.run() with a SubprocessTestResult 
 
-developing - write a server and feed it chosen strings, a mock child process etc.
+developing - write a server and feed it chosen strings DONE. a mock child process etc.
 write a client and check the right things come back for the various permutations
 check that stdout output in the client is passed to the real stdout.
 

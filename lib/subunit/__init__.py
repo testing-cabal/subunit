@@ -141,8 +141,9 @@ class TestProtocolServer(object):
         """Internal call to change state machine. Override startTest()."""
         if self.state == TestProtocolServer.OUTSIDE_TEST:
             self.state = TestProtocolServer.TEST_STARTED
+            self._current_test = RemotedTestCase(line[offset:-1])
             self.current_test_description = line[offset:-1]
-            self.startTest(self.current_test_description)
+            self.startTest(self._current_test)
         else:
             self.stdOutLineRecieved(line)
         
@@ -157,6 +158,12 @@ class RemoteError(Exception):
 class RemotedTestCase(unittest.TestCase):
     """A class to represent test cases run in child processes."""
 
+    def __eq__ (self, other):
+        try:
+            return self.__description == other.__description
+        except AttributeError:
+            return False
+        
     def __init__(self, description):
         """Create a psuedo test case with description description."""
         self.__description = description
