@@ -28,26 +28,6 @@ Some requirements:
   anything taking a reference to them doesn't get 50 copies of the same object.
 
 
-it might look like this:
-
-foo:0:STARTTEST "test foo works."   result->startTest
-foo:0:SUCCESS                       result->addSuccess
-foo:0:ENDTEST "test foo works."     result->endTest
-foo:0:STARTTEST "tar a file."       result->startTest
-foo:0:FAILURE                       starts buffering
- __init__.py : 300 undefined object 'foo'  
-foo:0:ENDTEST                       result->addFailure ( __i... ; result->endTest
-foo:0:STARTTEST "tar a different file."  result->startTest
-foo:0:FAILURE                            starts buffering
-foo.c:34:WARNING cannot compile foo.c
-foo:0:ENDTEST "tar a different file."    result->addFailure(foo:0...; result->endTest
-foo:0:STARTTEST "test an exception during teardown." result->startTest
-foo:0:ERROR
-foo:0:ENDTEST "test an exception during teardown." 
-foo:0:WARNING blahj blah balh      shown straight on stdout
-and more random text to stdout     ditto
-
-or like this:
 TEST: test foo works
 SUCCESS: test foo works.
 TEST: tar a file.
@@ -70,15 +50,29 @@ FAILURE: tar a file.
 foo.c:34 WARNING foo is not defined.
 ========================
 
-
-test|testing|test:|testing:
-success|success:|successful|successful:
-failure: foo
-failure: foo [
+control protocol: 
+test|testing|test:|testing: test label
+success|success:|successful|successful: test label
+failure: test label
+failure: test label [
 ...
 ]
-error: foo
-error: foo [
+error: test label
+error: test label [
 ]
 unexpected output on stdout -> stdout.
 exit w/0 or last test -> error
+
+rough structure of the server:
+SubprocessTestCase(unittest.TestCase):
+
+def run:
+    do a fork,
+      this process runs server
+      child runs client and calls self.run() with a SubprocessTestResult 
+
+developing - write a server and feed it chosen strings, a mock child process etc.
+write a client and check the right things come back for the various permutations
+check that stdout output in the client is passed to the real stdout.
+
+

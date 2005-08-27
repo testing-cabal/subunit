@@ -17,13 +17,9 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-from subunit.tests import TestUtil
-
-#def test_suite():
-#    loader = tests.TestLoader()
-#    result = loader.loadTestsFromName(__name__)
-#    return result
+from subunit.tests import TestUtil, test_test_protocol
 
 def test_suite():
-    return TestUtil.TestSuite()
-#    return sub.tests.test_suite()
+    result = TestUtil.TestSuite()
+    result.addTest(test_test_protocol.test_suite())
+    return result
