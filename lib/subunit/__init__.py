@@ -28,13 +28,55 @@ class TestProtocolServer(object):
 
     OUTSIDE_TEST = 0
     TEST_STARTED = 1
+    READING_FAILURE = 2
 
     def __init__(self):
         self.state = TestProtocolServer.OUTSIDE_TEST
         
-    def lineRecieved(self, line):
+    def _addFailure(self, offset, line):
+        if (self.state == TestProtocolServer.TEST_STARTED and
+            self.current_test_description == line[offset:-1]):
+            self.state = TestProtocolServer.OUTSIDE_TEST
+            self.current_test_description = None
+            self.addFailure("")
+        elif (self.state == TestProtocolServer.TEST_STARTED and
+            self.current_test_description + " [" == line[offset:-1]):
+            self.state = TestProtocolServer.READING_FAILURE
+            self._message = ""
+        else:
+            self.stdOutLineRecieved(line)
+
+    def _addSuccess(self, offset, line):
+        if (self.state == TestProtocolServer.TEST_STARTED and
+            self.current_test_description == line[offset:-1]):
+            self.addSuccess()
+            self.current_test_description = None
+            self.state = TestProtocolServer.OUTSIDE_TEST
+        else:
+            self.stdOutLineRecieved(line)
+        
+    def _appendMessage(self, line):
+        if line[0:2] == " ]":
+            # quoted ] start
+            self._message += line[1:]
+        else:
+            self._message += line
+        
+    def endQuote(self, line):
+        if self.state == TestProtocolServer.READING_FAILURE:
+            self.state = TestProtocolServer.OUTSIDE_TEST
+            self.current_test_description = None
+            self.addFailure(self._message)
+        else:
+            self.stdOutLineRecieved(line)
+        
+    def lineReceived(self, line):
         """Call the appropriate local method for the recieved line."""
-        if line.startswith("test:"):
+        if line == "]\n":
+            self.endQuote(line)
+        elif self.state == TestProtocolServer.READING_FAILURE:
+            self._appendMessage(line)
+        elif line.startswith("test:"):
             self._startTest(6, line)
         elif line.startswith("testing:"):
             self._startTest(9, line)
@@ -42,14 +84,30 @@ class TestProtocolServer(object):
             self._startTest(8, line)
         elif line.startswith("test"):
             self._startTest(5, line)
+        elif line.startswith("failure:"):
+            self._addFailure(9, line)
+        elif line.startswith("failure"):
+            self._addFailure(8, line)
+        elif line.startswith("successful:"):
+            self._addSuccess(12, line)
+        elif line.startswith("successful"):
+            self._addSuccess(11, line)
+        elif line.startswith("success:"):
+            self._addSuccess(9, line)
+        elif line.startswith("success"):
+            self._addSuccess(8, line)
         else:
             self.stdOutLineRecieved(line)
 
     def lostConnection(self):
         """The input connection has finished."""
-        if self.state != TestProtocolServer.OUTSIDE_TEST:
+        if self.state == TestProtocolServer.TEST_STARTED:
             self.addError("lost connection during test '%s'" 
                           % self.current_test_description)
+        elif self.state == TestProtocolServer.READING_FAILURE:
+            self.addError("lost connection during "
+                          "failure report of test "
+                          "'%s'" % self.current_test_description)
 
     def _startTest(self, offset, line):
         """Internal call to change state machine. Override startTest()."""
