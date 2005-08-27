@@ -64,8 +64,9 @@ class TestProtocolServer(object):
     def _addSuccess(self, offset, line):
         if (self.state == TestProtocolServer.TEST_STARTED and
             self.current_test_description == line[offset:-1]):
-            self.addSuccess()
+            self.addSuccess(self._current_test)
             self.current_test_description = None
+            self._current_test = None
             self.state = TestProtocolServer.OUTSIDE_TEST
         else:
             self.stdOutLineRecieved(line)
