@@ -169,7 +169,7 @@ class TestProtocolServer(object):
             self.client.stopTest(self._current_test)
 
     def readFrom(self, pipe):
-        for line in pipe.readlines(pipe):
+        for line in pipe.readlines():
             self.lineReceived(line)
         self.lostConnection()
 
@@ -341,17 +341,6 @@ class IsolatedTestCase(unittest.TestCase):
             os.close(c2pwrite)
             # hookup a protocol engine
             protocol = TestProtocolServer(result)
-            protocol.readFrom(StringIO(os.fdopen(c2pread, 'rU').read()))
-            
-
-#
-#    def debug(self):
-#        """Run the test without collecting errors in a TestResult"""
-#        self._run(unittest.TestCase.debug, unittest.TestResult())
-#    
-#    def _run(self, base_method, result):
-#        protocol = TestProtocolServer(result)
-#        output = subprocess.Popen([self.script],
-#                                  stdout=subprocess.PIPE).communicate()[0]
-#        protocol.readFrom(StringIO(output))
-#
+            protocol.readFrom(os.fdopen(c2pread, 'rU'))
+            os.waitpid(pid, 0)
+            # TODO return code evaluation.
