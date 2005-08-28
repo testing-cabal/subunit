@@ -67,16 +67,8 @@ error: test label [
 unexpected output on stdout -> stdout.
 exit w/0 or last test -> error
 
-rough structure of the server:
-SubprocessTestCase(unittest.TestCase):
-
+TODO:
 def run:
     do a fork,
       this process runs server
       child runs client and calls self.run() with a SubprocessTestResult 
-
-developing - write a server and feed it chosen strings DONE. a mock child process etc.
-write a client and check the right things come back for the various permutations
-check that stdout output in the client is passed to the real stdout.
-
-

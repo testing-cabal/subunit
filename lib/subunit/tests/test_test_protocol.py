@@ -116,6 +116,8 @@ class TestTestImports(unittest.TestCase):
         from subunit import RemotedTestCase
         from subunit import RemoteError
         from subunit import ExecTestCase
+        from subunit import IsolatedTestCase
+        from subunit import TestProtocolClient
 
 
 class TestTestProtocolServerPipe(unittest.TestCase):
@@ -553,6 +555,7 @@ class TestRemoteError(unittest.TestCase):
     def test_empty_constructor(self):
         self.assertEqual(subunit.RemoteError(), subunit.RemoteError(""))
 
+
 class TestExecTestCase(unittest.TestCase):
     
     class SampleExecTestCase(subunit.ExecTestCase):
@@ -590,10 +593,91 @@ class TestExecTestCase(unittest.TestCase):
     def test_count_test_cases(self):
         """TODO run the child process and count responses to determine the count."""
 
+
 class DoExecTestCase(subunit.ExecTestCase):
 
     def test_working_script(self):
         """./lib/subunit/tests/sample-two-script.py"""
+
+
+class TestIsolatedTestCase(unittest.TestCase):
+    
+    class SampleIsolatedTestCase(subunit.IsolatedTestCase):
+
+        SETUP = False
+        TEARDOWN = False
+        TEST = False
+
+        def setUp(self):
+            TestIsolatedTestCase.SampleIsolatedTestCase.SETUP = True
+            
+        def tearDown(self):
+            TestIsolatedTestCase.SampleIsolatedTestCase.TEARDOWN = True
+
+        def test_sets_global_state(self):
+            TestIsolatedTestCase.SampleIsolatedTestCase.TEST = True
+
+
+    def test_construct(self):
+        test = self.SampleIsolatedTestCase("test_sets_global_state")
+
+    def test_run(self):
+        result = unittest.TestResult()
+        test = self.SampleIsolatedTestCase("test_sets_global_state")
+        test.run(result)
+        self.assertEqual(result.testsRun, 1)
+        self.assertEqual(self.SampleIsolatedTestCase.SETUP, False)
+        self.assertEqual(self.SampleIsolatedTestCase.TEARDOWN, False)
+        self.assertEqual(self.SampleIsolatedTestCase.TEST, False)
+
+    def test_debug(self):
+        pass
+        #test = self.SampleExecTestCase("test_sample_method")
+        #test.debug()
+
+
+class TestTestProtocolClient(unittest.TestCase):
+
+    def setUp(self):
+        self.io = StringIO()
+        self.protocol = subunit.TestProtocolClient(self.io)
+        self.test = TestTestProtocolClient("test_start_test")
+
+
+    def test_start_test(self):
+        """Test startTest on a TestProtocolClient."""
+        self.protocol.startTest(self.test)
+        self.assertEqual(self.io.getvalue(), "test: Test startTest on a "
+                                             "TestProtocolClient.\n")
+
+    def test_stop_test(self):
+        """Test stopTest on a TestProtocolClient."""
+        self.protocol.stopTest(self.test)
+        self.assertEqual(self.io.getvalue(), "")
+
+    def test_add_success(self):
+        """Test addSuccess on a TestProtocolClient."""
+        self.protocol.addSuccess(self.test)
+        self.assertEqual(self.io.getvalue(), "successful: Test startTest on a "
+                                             "TestProtocolClient.\n")
+
+    def test_add_failure(self):
+        """Test addFailure on a TestProtocolClient."""
+        self.protocol.addFailure(self.test, subunit.RemoteError("boo"))
+        self.assertEqual(self.io.getvalue(), "failure: Test startTest on a "
+                                             "TestProtocolClient. [\n"
+                                             "RemoteError:\n"
+                                             "boo\n"
+                                             "]\n")
+
+    def test_add_error(self):
+        """Test stopTest on a TestProtocolClient."""
+        self.protocol.addError(self.test, subunit.RemoteError("phwoar"))
+        self.assertEqual(self.io.getvalue(), "error: Test startTest on a "
+                                             "TestProtocolClient. [\n"
+                                             "RemoteError:\n"
+                                             "phwoar\n"
+                                             "]\n")
 
 
 def test_suite():

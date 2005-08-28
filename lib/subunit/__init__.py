@@ -17,6 +17,7 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+import os
 from StringIO import StringIO
 import subprocess
 import sys
@@ -196,6 +197,36 @@ class RemoteException(Exception):
             return False
     
 
+class TestProtocolClient(unittest.TestResult):
+    """A class that looks like a TestResult and informs a TestProtocolServer."""
+    
+    def __init__(self, stream):
+        unittest.TestResult.__init__(self)
+        self._stream = stream
+    
+    def addError(self, test, error):
+        """Report an error in test test."""
+        self._stream.write("error: %s [\n" % test.shortDescription())
+        for line in self._exc_info_to_string(error, test).split():
+            self._stream.write("%s\n" % line)
+        self._stream.write("]\n")
+        
+    def addFailure(self, test, error):
+        """Report a failure in test test."""
+        self._stream.write("failure: %s [\n" % test.shortDescription())
+        for line in self._exc_info_to_string(error, test).split():
+            self._stream.write("%s\n" % line)
+        self._stream.write("]\n")
+
+    def addSuccess(self, test):
+        """Report a success in a test."""
+        self._stream.write("successful: %s\n" % test.shortDescription())
+
+    def startTest(self, test):
+        """Mark a test as starting its test run."""
+        self._stream.write("test: %s\n" % test.shortDescription())
+
+
 def RemoteError(description=""):
     if description == "":
         description = "\n"
@@ -260,19 +291,8 @@ class ExecTestCase(unittest.TestCase):
         testMethod = getattr(self, methodName)
         self.script = testMethod.__doc__
 
-    def setUp(self):
-        "Hook method for setting up the test fixture before exercising it."
-        pass
-
-    def tearDown(self):
-        "Hook method for deconstructing the test fixture after testing it."
-        pass
-
     def countTestCases(self):
         return 1
-
-    def defaultTestResult(self):
-        return TestResult()
 
     def run(self, result=None):
         if result is None: result = self.defaultTestResult()
@@ -288,3 +308,50 @@ class ExecTestCase(unittest.TestCase):
                                   stdout=subprocess.PIPE).communicate()[0]
         protocol.readFrom(StringIO(output))
 
+
+class IsolatedTestCase(unittest.TestCase):
+    """A TestCase which runs its tests in a forked process."""
+
+    def run(self, result=None):
+        if result is None: result = self.defaultTestResult()
+        c2pread, c2pwrite = os.pipe()
+        # fixme - error -> result
+        # now fork
+        pid = os.fork()
+        if pid == 0:
+            # Child
+            # Close parent's pipe ends
+            os.close(c2pread)
+            # Dup fds for child
+            os.dup2(c2pwrite, 1)
+            # Close pipe fds.
+            os.close(c2pwrite)
+
+            # at this point, sys.stdin is redirected, now we want
+            # to filter it to escape ]'s.
+            ### XXX: test and write that bit.
+
+            result = TestProtocolClient(sys.stdout)
+            unittest.TestCase.run(self, result)
+            # exit HARD, exit NOW.
+            os._exit()
+        else:
+            # Parent
+            # Close child pipe ends
+            os.close(c2pwrite)
+            # hookup a protocol engine
+            protocol = TestProtocolServer(result)
+            protocol.readFrom(StringIO(os.fdopen(c2pread, 'rU').read()))
+            
+
+#
+#    def debug(self):
+#        """Run the test without collecting errors in a TestResult"""
+#        self._run(unittest.TestCase.debug, unittest.TestResult())
+#    
+#    def _run(self, base_method, result):
+#        protocol = TestProtocolServer(result)
+#        output = subprocess.Popen([self.script],
+#                                  stdout=subprocess.PIPE).communicate()[0]
+#        protocol.readFrom(StringIO(output))
+#
