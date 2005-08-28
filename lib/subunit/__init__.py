@@ -17,6 +17,8 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+from StringIO import StringIO
+import subprocess
 import sys
 import unittest
 
@@ -245,3 +247,49 @@ class RemotedTestCase(unittest.TestCase):
     def _strclass(self):
         cls = self.__class__
         return "%s.%s" % (cls.__module__, cls.__name__)
+
+class ExecTestCase(unittest.TestCase):
+    """A test case which runs external scripts for test fixtures."""
+
+    def __init__(self, methodName='runTest'):
+        """Create an instance of the class that will use the named test
+           method when executed. Raises a ValueError if the instance does
+           not have a method with the specified name.
+        """
+        try:
+            self.__testMethodName = methodName
+            testMethod = getattr(self, methodName)
+            self.__testMethodDoc = testMethod.__doc__
+            self.script = self.__testMethodDoc
+        except AttributeError:
+            raise ValueError, "no such test method in %s: %s" % \
+                  (self.__class__, methodName)
+
+    def setUp(self):
+        "Hook method for setting up the test fixture before exercising it."
+        pass
+
+    def tearDown(self):
+        "Hook method for deconstructing the test fixture after testing it."
+        pass
+
+    def countTestCases(self):
+        return 1
+
+    def defaultTestResult(self):
+        return TestResult()
+
+    def run(self, result=None):
+        if result is None: result = self.defaultTestResult()
+        self._run(result)
+
+    def debug(self):
+        """Run the test without collecting errors in a TestResult"""
+        self._run(unittest.TestResult())
+    
+    def _run(self, result):
+        protocol = TestProtocolServer(result)
+        output = subprocess.Popen([self.script],
+                                  stdout=subprocess.PIPE).communicate()[0]
+        protocol.readFrom(StringIO(output))
+

@@ -115,6 +115,7 @@ class TestTestImports(unittest.TestCase):
         from subunit import TestProtocolServer
         from subunit import RemotedTestCase
         from subunit import RemoteError
+        from subunit import ExecTestCase
 
 
 class TestTestProtocolServerPipe(unittest.TestCase):
@@ -551,6 +552,43 @@ class TestRemoteError(unittest.TestCase):
 
     def test_empty_constructor(self):
         self.assertEqual(subunit.RemoteError(), subunit.RemoteError(""))
+
+class TestExecTestCase(unittest.TestCase):
+    
+    class SampleExecTestCase(subunit.ExecTestCase):
+
+        def test_sample_method(self):
+            """./lib/subunit/tests/sample-script.py"""
+            # the sample script runs three tests, one each
+            # that fails, errors and succeeds
+
+
+    def test_construct(self):
+        test = self.SampleExecTestCase("test_sample_method")
+        self.assertEqual(test.script, "./lib/subunit/tests/sample-script.py")
+
+    def test_run(self):
+        runner = MockTestProtocolServerClient()
+        test = self.SampleExecTestCase("test_sample_method")
+        test.run(runner)
+        mcdonald = subunit.RemotedTestCase("old mcdonald")
+        bing = subunit.RemotedTestCase("bing crosby")
+        an_error = subunit.RemotedTestCase("an error")
+        self.assertEqual(runner.error_calls, 
+                         [(an_error, subunit.RemoteError())])
+        self.assertEqual(runner.failure_calls, 
+                         [(bing, 
+                           subunit.RemoteError(
+                            "foo.c:53:ERROR invalid state\n"))])
+        self.assertEqual(runner.start_calls, [mcdonald, bing, an_error])
+        self.assertEqual(runner.end_calls, [mcdonald, bing, an_error])
+
+    def test_debug(self):
+        test = self.SampleExecTestCase("test_sample_method")
+        test.debug()
+
+    def test_count_test_cases(self):
+        """TODO run the child process and count responses to determine the count."""
 
 def test_suite():
     loader = subunit.tests.TestUtil.TestLoader()
