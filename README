@@ -22,6 +22,89 @@ Subunit is attempting to extend unittest with a clean and simple api to
 run arbitrary external test suites and return the results to standard 
 python unittest.
 
+Using subunit:
+
+1) As a runner for external tests (potentially in other languages)
+2) As a process boundary for unittest TestCases to prevent them fiddling with 
+   in-process state (i.e. singletons).
+3) As a wrapper around a TestCase (or Suite) to run a group of tests 
+   externally.
+
+1) As a runner for external tests
+=================================
+This is supported on all platforms with python 2.4.
+For each test script you want to run, declare a ExecTestCase with one
+or more tests whose docstring defines the script to run:
+
+import subunit
+import unittest
+class TestCProgram(subunit.ExecTestCase):
+
+    def test_script_one(self):
+        """./bin/script_one"""
+
+    def test_script_two(self):
+       """./bin/script_two"""
+
+# Yes, the test prefix on the methods matters.
+# Then run this in whatever normal way you would run python unittests.
+# If you don't have a specific test runner, you can run it using the
+# default one in unittest.py:
+ 
+if __name__ == '__main__':
+     unittest.main()
+
+2) As a process boundary for unittest TestCases
+===============================================
+This is currently supported only on platforms
+that support os.fork(), which allows us to 
+transparently introduce a process boundary
+without affecting manual test parameterisation.
+*** TODO explain in more detail and sketch out
+*** a solution for win32
+Just import subunit and derive your test cases 
+from subunit.IsolatedTestCase:
+
+import subunit
+
+class TestFoo(subunit.IsolatedTestCase):
+
+    def test_something_globally(self):
+        SomethingGlobal.do()
+        self.assertEqual(SomethingGlobal.value(), 3)
+        # the run() method of IsolatedTestCase will intercept the
+        # test execution, fork() python to create a new process, 
+        # then run the test and report the results back to the parent
+        # process.
+
+# you run this in the normal way you run test cases.
+
+3) As a wrapper around a TestCase to run a group of tests externally.
+=====================================================================
+This hasn't been implemented yet, but it will look something like:
+
+import subunit
+import unittest
+
+class TestFoo(unittest.TestCase):
+
+    def test_foo(self):
+        ...
+
+
+def test_suite():
+    result = subunit.IsolatedTestSuite()
+    loader = unittest.TestLoader()
+    result.addTestCase(loader.loadTestsFromName(__name__))
+    return result
+
+# you can test the result of test_suite() as follows (or in any normal python
+# manner.
+runner = unittest.TextTestRunner(verbosity=2)
+runner.run(test_suite())
+# enjoy.
+
+    
 Some requirements:
   The shape of the external unittest should not need to be known a-priori.
   After the test has run, tests should still exist as discrete objects, so that
