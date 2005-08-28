@@ -590,6 +590,12 @@ class TestExecTestCase(unittest.TestCase):
     def test_count_test_cases(self):
         """TODO run the child process and count responses to determine the count."""
 
+class DoExecTestCase(subunit.ExecTestCase):
+
+    def test_working_script(self):
+        """./lib/subunit/tests/sample-two-script.py"""
+
+
 def test_suite():
     loader = subunit.tests.TestUtil.TestLoader()
     result = loader.loadTestsFromName(__name__)

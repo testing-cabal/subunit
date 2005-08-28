@@ -256,14 +256,9 @@ class ExecTestCase(unittest.TestCase):
            method when executed. Raises a ValueError if the instance does
            not have a method with the specified name.
         """
-        try:
-            self.__testMethodName = methodName
-            testMethod = getattr(self, methodName)
-            self.__testMethodDoc = testMethod.__doc__
-            self.script = self.__testMethodDoc
-        except AttributeError:
-            raise ValueError, "no such test method in %s: %s" % \
-                  (self.__class__, methodName)
+        unittest.TestCase.__init__(self, methodName)
+        testMethod = getattr(self, methodName)
+        self.script = testMethod.__doc__
 
     def setUp(self):
         "Hook method for setting up the test fixture before exercising it."
