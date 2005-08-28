@@ -33,6 +33,16 @@ class TestProtocolServer(object):
     READING_ERROR = 3
 
     def __init__(self, client):
+        """Create a TestProtocol server instance. 
+
+        client should be an object that provides 
+         - startTest
+         - addSuccess
+         - addFailure
+         - addError
+         - endTest
+        methods, i.e. a TestResult.
+        """
         self.state = TestProtocolServer.OUTSIDE_TEST
         self.client = client
         
@@ -42,6 +52,7 @@ class TestProtocolServer(object):
             self.state = TestProtocolServer.OUTSIDE_TEST
             self.current_test_description = None
             self.client.addError(self._current_test, RemoteError(""))
+            self.client.endTest(self._current_test)
             self._current_test = None
         elif (self.state == TestProtocolServer.TEST_STARTED and
             self.current_test_description + " [" == line[offset:-1]):
@@ -56,6 +67,7 @@ class TestProtocolServer(object):
             self.state = TestProtocolServer.OUTSIDE_TEST
             self.current_test_description = None
             self.client.addFailure(self._current_test, RemoteError())
+            self.client.endTest(self._current_test)
         elif (self.state == TestProtocolServer.TEST_STARTED and
             self.current_test_description + " [" == line[offset:-1]):
             self.state = TestProtocolServer.READING_FAILURE
@@ -67,6 +79,7 @@ class TestProtocolServer(object):
         if (self.state == TestProtocolServer.TEST_STARTED and
             self.current_test_description == line[offset:-1]):
             self.client.addSuccess(self._current_test)
+            self.client.endTest(self._current_test)
             self.current_test_description = None
             self._current_test = None
             self.state = TestProtocolServer.OUTSIDE_TEST
@@ -86,11 +99,13 @@ class TestProtocolServer(object):
             self.current_test_description = None
             self.client.addFailure(self._current_test,
                                    RemoteError(self._message))
+            self.client.endTest(self._current_test)
         elif self.state == TestProtocolServer.READING_ERROR:
             self.state = TestProtocolServer.OUTSIDE_TEST
             self.current_test_description = None
             self.client.addError(self._current_test,
                                  RemoteError(self._message))
+            self.client.endTest(self._current_test)
         else:
             self.stdOutLineRecieved(line)
         
@@ -134,18 +149,21 @@ class TestProtocolServer(object):
             self.client.addError(self._current_test,
                                  RemoteError("lost connection during test '%s'"
                                              % self.current_test_description))
+            self.client.endTest(self._current_test)
         elif self.state == TestProtocolServer.READING_ERROR:
             self.client.addError(self._current_test,
                                  RemoteError("lost connection during "
                                              "error report of test "
                                              "'%s'" %
                                              self.current_test_description))
+            self.client.endTest(self._current_test)
         elif self.state == TestProtocolServer.READING_FAILURE:
             self.client.addError(self._current_test,
                                  RemoteError("lost connection during "
                                              "failure report of test "
                                              "'%s'" % 
                                              self.current_test_description))
+            self.client.endTest(self._current_test)
 
     def readFrom(self, pipe):
         for line in pipe.readlines(pipe):
