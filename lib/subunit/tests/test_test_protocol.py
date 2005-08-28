@@ -43,7 +43,7 @@ try:
         def addSuccess(self, test):
             self.success_calls.append(test)
 
-        def endTest(self, test):
+        def stopTest(self, test):
             self.end_calls.append(test)
             
         def startTest(self, test):
@@ -101,7 +101,7 @@ class TestMockTestProtocolServer(unittest.TestCase):
         
     def test_end_test(self):
         protocol = MockTestProtocolServerClient()
-        protocol.endTest(subunit.RemotedTestCase("test old mcdonald"))
+        protocol.stopTest(subunit.RemotedTestCase("test old mcdonald"))
         self.assertEqual(protocol.end_calls,
                          [subunit.RemotedTestCase("test old mcdonald")])
         self.assertEqual(protocol.error_calls, [])
@@ -120,7 +120,7 @@ class TestTestImports(unittest.TestCase):
 class TestTestProtocolServerPipe(unittest.TestCase):
 
     def test_story(self):
-        client = MockTestProtocolServerClient()
+        client = unittest.TestResult()
         protocol = subunit.TestProtocolServer(client)
         pipe = StringIO("test old mcdonald\n"
                         "success old mcdonald\n"
@@ -134,15 +134,12 @@ class TestTestProtocolServerPipe(unittest.TestCase):
         mcdonald = subunit.RemotedTestCase("old mcdonald")
         bing = subunit.RemotedTestCase("bing crosby")
         an_error = subunit.RemotedTestCase("an error")
-        self.assertEqual(client.start_calls, [mcdonald, bing, an_error])
-        self.assertEqual(client.end_calls, [mcdonald, bing, an_error])
-        self.assertEqual(client.error_calls, 
-                         [(an_error, subunit.RemoteError())])
-        self.assertEqual(client.failure_calls, 
+        self.assertEqual(client.errors, 
+                         [(an_error, 'RemoteError:\n\n\n')])
+        self.assertEqual(client.failures, 
                          [(bing,
-                           subunit.RemoteError("foo.c:53:ERROR "
-                                               "invalid state\n"))])
-        self.assertEqual(client.success_calls, [mcdonald])
+                           "RemoteError:\nfoo.c:53:ERROR invalid state\n\n")])
+        self.assertEqual(client.testsRun, 3)
 
 
 class TestTestProtocolServerStartTest(unittest.TestCase):
