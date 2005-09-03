@@ -334,7 +334,7 @@ class IsolatedTestCase(unittest.TestCase):
             result = TestProtocolClient(sys.stdout)
             unittest.TestCase.run(self, result)
             # exit HARD, exit NOW.
-            os._exit()
+            os._exit(0)
         else:
             # Parent
             # Close child pipe ends
