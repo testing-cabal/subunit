@@ -81,7 +81,6 @@ class TestFoo(subunit.IsolatedTestCase):
 
 3) As a wrapper around a TestCase to run a group of tests externally.
 =====================================================================
-This hasn't been implemented yet, but it will look something like:
 
 import subunit
 import unittest

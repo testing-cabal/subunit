@@ -314,35 +314,50 @@ class IsolatedTestCase(unittest.TestCase):
 
     def run(self, result=None):
         if result is None: result = self.defaultTestResult()
-        c2pread, c2pwrite = os.pipe()
-        # fixme - error -> result
-        # now fork
-        pid = os.fork()
-        if pid == 0:
-            # Child
-            # Close parent's pipe ends
-            os.close(c2pread)
-            # Dup fds for child
-            os.dup2(c2pwrite, 1)
-            # Close pipe fds.
-            os.close(c2pwrite)
+        run_isolated(unittest.TestCase, self, result)
 
-            # at this point, sys.stdin is redirected, now we want
-            # to filter it to escape ]'s.
-            ### XXX: test and write that bit.
 
-            result = TestProtocolClient(sys.stdout)
-            unittest.TestCase.run(self, result)
-            sys.stdout.flush()
-            sys.stderr.flush()
-            # exit HARD, exit NOW.
-            os._exit(0)
-        else:
-            # Parent
-            # Close child pipe ends
-            os.close(c2pwrite)
-            # hookup a protocol engine
-            protocol = TestProtocolServer(result)
-            protocol.readFrom(os.fdopen(c2pread, 'rU'))
-            os.waitpid(pid, 0)
-            # TODO return code evaluation.
+class IsolatedTestSuite(unittest.TestSuite):
+    """A TestCase which runs its tests in a forked process."""
+
+    def run(self, result=None):
+        if result is None: result = unittest.TestResult()
+        run_isolated(unittest.TestSuite, self, result)
+
+
+def run_isolated(klass, self, result):
+    """Run a test suite or case in a subprocess, using the run method on klass.
+    """
+    c2pread, c2pwrite = os.pipe()
+    # fixme - error -> result
+    # now fork
+    pid = os.fork()
+    if pid == 0:
+        # Child
+        # Close parent's pipe ends
+        os.close(c2pread)
+        # Dup fds for child
+        os.dup2(c2pwrite, 1)
+        # Close pipe fds.
+        os.close(c2pwrite)
+    
+        # at this point, sys.stdin is redirected, now we want
+        # to filter it to escape ]'s.
+        ### XXX: test and write that bit.
+    
+        result = TestProtocolClient(sys.stdout)
+        klass.run(self, result)
+        sys.stdout.flush()
+        sys.stderr.flush()
+        # exit HARD, exit NOW.
+        os._exit(0)
+    else:
+        # Parent
+        # Close child pipe ends
+        os.close(c2pwrite)
+        # hookup a protocol engine
+        protocol = TestProtocolServer(result)
+        protocol.readFrom(os.fdopen(c2pread, 'rU'))
+        os.waitpid(pid, 0)
+        # TODO return code evaluation.
+    return result

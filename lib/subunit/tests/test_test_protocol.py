@@ -636,6 +636,42 @@ class TestIsolatedTestCase(unittest.TestCase):
         #test.debug()
 
 
+class TestIsolatedTestSuite(unittest.TestCase):
+    
+    class SampleTestToIsolate(unittest.TestCase):
+
+        SETUP = False
+        TEARDOWN = False
+        TEST = False
+
+        def setUp(self):
+            TestIsolatedTestSuite.SampleTestToIsolate.SETUP = True
+            
+        def tearDown(self):
+            TestIsolatedTestSuite.SampleTestToIsolate.TEARDOWN = True
+
+        def test_sets_global_state(self):
+            TestIsolatedTestSuite.SampleTestToIsolate.TEST = True
+
+
+    def test_construct(self):
+        suite = subunit.IsolatedTestSuite()
+
+    def test_run(self):
+        result = unittest.TestResult()
+        suite = subunit.IsolatedTestSuite()
+        sub_suite = unittest.TestSuite()
+        sub_suite.addTest(self.SampleTestToIsolate("test_sets_global_state"))
+        sub_suite.addTest(self.SampleTestToIsolate("test_sets_global_state"))
+        suite.addTest(sub_suite)
+        suite.addTest(self.SampleTestToIsolate("test_sets_global_state"))
+        suite.run(result)
+        self.assertEqual(result.testsRun, 3)
+        self.assertEqual(self.SampleTestToIsolate.SETUP, False)
+        self.assertEqual(self.SampleTestToIsolate.TEARDOWN, False)
+        self.assertEqual(self.SampleTestToIsolate.TEST, False)
+
+
 class TestTestProtocolClient(unittest.TestCase):
 
     def setUp(self):
