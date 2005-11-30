@@ -333,6 +333,8 @@ class IsolatedTestCase(unittest.TestCase):
 
             result = TestProtocolClient(sys.stdout)
             unittest.TestCase.run(self, result)
+            sys.stdout.flush()
+            sys.stderr.flush()
             # exit HARD, exit NOW.
             os._exit(0)
         else:
