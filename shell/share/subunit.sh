@@ -17,4 +17,7 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-
+function subunit_start_test () {
+  # emit the current protocol start-marker for test test_name
+  echo "test: $1"
+}

@@ -110,10 +110,10 @@ Some requirements:
   anything taking a reference to them doesn't get 50 copies of the same object.
 
 
-TEST: test foo works
-SUCCESS: test foo works.
-TEST: tar a file.
-FAILURE: tar a file. [
+test: test foo works
+success: test foo works.
+test: tar a file.
+failure: tar a file. [
 ..
  ]..  space is eaten.
 foo.c:34 WARNING foo is not defined.

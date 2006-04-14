@@ -25,5 +25,30 @@
 # we expect to be run from the 'shell' tree root.
 
 echo 'test: shell bindings can be sourced'
+# if any output occurs, this has failed to source cleanly
+source_output=$(. share/subunit.sh 2>&1)
+if [ $? == 0 -a "x$source_output" = "x" ]; then
+  echo 'success: shell bindings can be sourced'
+else
+  echo 'failure: shell bindings can be sourced ['
+  echo 'got an error code or output during sourcing.:'
+  echo $source_output
+  echo ']' ;
+fi
+
+# now source it for real
 . share/subunit.sh
-echo 'success: shell bindings can be sourced'
+
+# we should have a test-start function
+echo 'test: subunit_start_test exists'
+found_type=$(type -t subunit_start_test)
+status=$?
+if [ $status == 0 -a "x$found_type" = "xfunction" ]; then
+  echo 'success: subunit_start_test exists'
+else
+  echo 'failure: subunit_start_test exists ['
+  echo 'subunit_start_test is not a function:'
+  echo "type -t status: $status"
+  echo "output: $found_type"
+  echo ']' ;
+fi

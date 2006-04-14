@@ -30,13 +30,17 @@ import logging
 
 class ShellTests(subunit.ExecTestCase):
 
-    def test_shell(self):
+    def test_sourcing(self):
         """./tests/test_source_library.sh"""
+
+    def test_functions(self):
+        """./tests/test_function_output.sh"""
 
 
 def test_suite():
     result = TestSuite()
-    result.addTest(ShellTests('test_shell'))
+    result.addTest(ShellTests('test_sourcing'))
+    result.addTest(ShellTests('test_functions'))
     return result
 
 
