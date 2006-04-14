@@ -41,3 +41,58 @@ else
   echo "output: '$func_output'"
   echo ']' ;
 fi
+
+subunit_start_test "subunit_pass_test output"
+func_output=$(subunit_pass_test "foo bar")
+func_status=$?
+if [ $func_status == 0 -a "x$func_output" = "xsuccess: foo bar" ]; then
+  subunit_pass_test "subunit_pass_test output"
+else
+  echo 'failure: subunit_pass_test output ['
+  echo 'got an error code or incorrect output:'
+  echo "exit: $func_status"
+  echo "output: '$func_output'"
+  echo ']' ;
+fi
+
+subunit_start_test "subunit_fail_test output"
+func_output=$(subunit_fail_test "foo bar" <<END
+something
+  wrong
+here
+END)
+func_status=$?
+if [ $func_status == 0 -a "x$func_output" = "xfailure: foo bar [
+something
+  wrong
+here
+]" ]; then
+  subunit_pass_test "subunit_fail_test output"
+else
+  echo 'failure: subunit_fail_test output ['
+  echo 'got an error code or incorrect output:'
+  echo "exit: $func_status"
+  echo "output: '$func_output'"
+  echo ']' ;
+fi
+
+subunit_start_test "subunit_error_test output"
+func_output=$(subunit_error_test "foo bar" <<END
+something
+  died
+here
+END)
+func_status=$?
+if [ $func_status == 0 -a "x$func_output" = "xerror: foo bar [
+something
+  died
+here
+]" ]; then
+  subunit_pass_test "subunit_error_test output"
+else
+  subunit_fail_test "subunit_error_test output" <<END
+got an error code or incorrect output:
+exit: $func_status
+output: '$func_output'
+END
+fi

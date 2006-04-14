@@ -18,6 +18,34 @@
 #
 
 function subunit_start_test () {
-  # emit the current protocol start-marker for test test_name
+  # emit the current protocol start-marker for test $1
   echo "test: $1"
+}
+
+
+function subunit_pass_test () {
+  # emit the current protocol test passed marker for test $1
+  echo "success: $1"
+}
+
+
+function subunit_fail_test () {
+  # emit the current protocol fail-marker for test $1, and emit stdin as
+  # the error text.
+  # we use stdin because the failure message can be arbitrarily long, and this
+  # makes it convenient to write in scripts (using <<END syntax.
+  echo "failure: $1 ["
+  cat -
+  echo "]"
+}
+
+
+function subunit_error_test () {
+  # emit the current protocol error-marker for test $1, and emit stdin as
+  # the error text.
+  # we use stdin because the failure message can be arbitrarily long, and this
+  # makes it convenient to write in scripts (using <<END syntax.
+  echo "error: $1 ["
+  cat -
+  echo "]"
 }

@@ -39,7 +39,7 @@ fi
 # now source it for real
 . share/subunit.sh
 
-# we should have a test-start function
+# we should have a start_test function
 echo 'test: subunit_start_test exists'
 found_type=$(type -t subunit_start_test)
 status=$?
@@ -48,6 +48,48 @@ if [ $status == 0 -a "x$found_type" = "xfunction" ]; then
 else
   echo 'failure: subunit_start_test exists ['
   echo 'subunit_start_test is not a function:'
+  echo "type -t status: $status"
+  echo "output: $found_type"
+  echo ']' ;
+fi
+
+# we should have a pass_test function
+echo 'test: subunit_pass_test exists'
+found_type=$(type -t subunit_pass_test)
+status=$?
+if [ $status == 0 -a "x$found_type" = "xfunction" ]; then
+  echo 'success: subunit_pass_test exists'
+else
+  echo 'failure: subunit_pass_test exists ['
+  echo 'subunit_pass_test is not a function:'
+  echo "type -t status: $status"
+  echo "output: $found_type"
+  echo ']' ;
+fi
+
+# we should have a fail_test function
+echo 'test: subunit_fail_test exists'
+found_type=$(type -t subunit_fail_test)
+status=$?
+if [ $status == 0 -a "x$found_type" = "xfunction" ]; then
+  echo 'success: subunit_fail_test exists'
+else
+  echo 'failure: subunit_fail_test exists ['
+  echo 'subunit_fail_test is not a function:'
+  echo "type -t status: $status"
+  echo "output: $found_type"
+  echo ']' ;
+fi
+
+# we should have a error_test function
+echo 'test: subunit_error_test exists'
+found_type=$(type -t subunit_error_test)
+status=$?
+if [ $status == 0 -a "x$found_type" = "xfunction" ]; then
+  echo 'success: subunit_error_test exists'
+else
+  echo 'failure: subunit_error_test exists ['
+  echo 'subunit_error_test is not a function:'
   echo "type -t status: $status"
   echo "output: $found_type"
   echo ']' ;

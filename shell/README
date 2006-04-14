@@ -23,5 +23,41 @@ test scripts. You can use `make check` to run the tests. There is a trivial
 python test_shell.py which uses the pyunit gui to expose the test results in a
 compact form.
 
+The shell bindings consist of four functions which you can use to output test
+metadata trivially. See share/subunit.sh for the functions and comments.
+
+However, this is not a full test environment, its support code for reporting to
+subunit. You can look at ShUnit (http://shunit.sourceforge.net) for 'proper' 
+shell based xUnit functionality. I am currently integrating subunit into ShUnit
+so you should be able to get both subunit an ShUnit easily.
+
+If you are a test environment maintainer - either homegrown, or ShUnit or some
+such, you will need to see how the subunit calls should be used. Here is what
+a manually written test using the bindings might look like:
 
 
+subunit_start_test "test name"
+# determine if test passes or fails
+result=$(something)
+if [ $result == 0 ]; then
+  subunit_pass_test "test name"
+else
+  subunit_fail_test "test name" <<END
+Something went wrong running something:
+exited with result: '$func_status'
+END
+fi
+
+Which when run with a subunit test runner will generate something like:
+test name ... ok
+
+on success, and:
+
+test name ... FAIL
+
+======================================================================
+FAIL: test name
+----------------------------------------------------------------------
+RemoteError:
+Something went wrong running something:
+exited with result: '1'
