@@ -20,7 +20,7 @@
 
 Subunit is attempting to extend unittest with a clean and simple api to
 run arbitrary external test suites and return the results to standard 
-python unittest.
+python unittest. For shell bindings see the shell/ subtree.
 
 Using subunit:
 

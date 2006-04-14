@@ -20,6 +20,8 @@
 #
 
 import unittest
+from subunit.tests.TestUtil import TestVisitor, TestSuite
+import subunit
 import sys
 import os
 import shutil
@@ -74,11 +76,9 @@ def earlyStopFactory(*args, **kwargs):
     result=EarlyStoppingTextTestResult(*args, **kwargs)
     return result
 
-from subunit.tests.TestUtil import TestVisitor, TestSuite
 
 def test_suite():
     result = TestSuite()
-    import subunit
     result.addTest(subunit.test_suite())
     return result
 
