@@ -1,0 +1,362 @@
+Index: shUnit
+===================================================================
+RCS file: /cvsroot/shunit/ShUnit/shUnit,v
+retrieving revision 1.14
+diff -u -p -r1.14 shUnit
+--- shUnit	18 Mar 2006 04:53:18 -0000	1.14
++++ shUnit	14 Apr 2006 16:18:51 -0000
+@@ -88,16 +88,59 @@ shuFmtNbrTests() {
+     fi
+ }
+ 
++function shuPrintStartRun () {
++  # print out the start of a test run.
++  printf "\n****** `basename ${0}` ******\n"
++  printf "%s to run:\n" "$shuRetFmtNbrTests"
++}
++
++function shuPrintStart () {
++  # print out the prelude to a single test
++  # $1 is the test name 
++  # $2 the test number
++  printf "    Test %i: %s    " ${2} "${1}"
++}
++
++function shuPrintAfter () {
++  # print out the result of a single test
++  # $1 is the test name
++  # SHU_STR_FAILED contains error text (if any)
++  printf "\n"
++
++  if test -n "${SHU_STR_FAILED}"
++  then 
++
++    OLD_IFS="${IFS}"
++    IFS="^"
++    set -- ${SHU_STR_FAILED}
++    IFS="${OLD_IFS}"
++    while [ ${#} -gt 0 ]
++    do
++      printf "      \"%s\" failed.\n" "${1}" 
++      shift 
++    done
++  fi
++}
++
++function shuPrintAfterRun () {
++  # print out the result of the run
++  # $1 is the number of tests run
++  # $2 the pass count
++  # $3 the failure count.
++  printf "\n%s run.\n" "${1}"
++  printf "  %s succeeded.\n" "${2}"
++  printf "  %s failed.\n\n" "${3}"
++}
++
+ shuStart() {
+   strInitFunction="${1}"
+ 
+   eval ${strInitFunction}
+ 
+-  printf "\n****** `basename ${0}` ******\n"
+-
+   SHU_TOTAL_NR_OF_TESTS=`echo ${SHU_STR_ALL_TESTS} | wc -w | sed -e 's/ *//'` 
+   shuFmtNbrTests "${SHU_TOTAL_NR_OF_TESTS}"
+-  printf "%s to run:\n" "$shuRetFmtNbrTests"
++
++  shuPrintStartRun 
+ 
+   SHU_TOTAL_NR_SUCCEEDED=0
+   shuTestNbr=0
+@@ -105,33 +148,19 @@ shuStart() {
+   do
+     SHU_STR_FAILED=""
+     shuTestNbr=`expr ${shuTestNbr} + 1`
+-    printf "    Test %i: %s    " ${shuTestNbr} "${STR_TEST}"
++    shuPrintStart "${STR_TEST}" ${shuTestNbr}
+     shuRunOneTest ${STR_TEST}
+-    printf "\n"
+-
+-    if test -n "${SHU_STR_FAILED}"
+-    then 
+-
+-      OLD_IFS="${IFS}"
+-      IFS="^"
+-      set -- ${SHU_STR_FAILED}
+-      IFS="${OLD_IFS}"
+-      while [ ${#} -gt 0 ]
+-      do
+-        printf "      \"%s\" failed.\n" "${1}" 
+-        shift 
+-      done
+-    fi
++    shuPrintAfter "${STR_TEST}"
+   done
+ 
+   shuFmtNbrTests "${shuTestNbr}"
+-  printf "\n%s run.\n" "${shuRetFmtNbrTests}"
+-
++  number_run="${shuRetFmtNbrTests}"
+   shuFmtNbrTests "${SHU_TOTAL_NR_SUCCEEDED}"
+-  printf "  %s succeeded.\n" "${shuRetFmtNbrTests}"
+-
++  number_passed="${shuRetFmtNbrTests}"
+   shuFmtNbrTests `expr ${shuTestNbr} - ${SHU_TOTAL_NR_SUCCEEDED}`
+-  printf "  %s failed.\n\n" "${shuRetFmtNbrTests}"
++  number_failed="${shuRetFmtNbrTests}"
++
++  shuPrintAfterRun "${number_run}" "${number_passed}" "${number_failed}"
+ }
+ 
+ shuRegisterFailedTest() {
+Index: shUnitTest
+===================================================================
+RCS file: /cvsroot/shunit/ShUnit/shUnitTest,v
+retrieving revision 1.16
+diff -u -p -r1.16 shUnitTest
+--- shUnitTest	31 Dec 2005 06:35:29 -0000	1.16
++++ shUnitTest	14 Apr 2006 16:18:51 -0000
+@@ -121,6 +121,53 @@ TestShuFmtNbrTests() {
+     shuAssert "Failed test case 100 returned [$shuRetFmtNbrTests]" $?
+ }
+ 
++
++TestShuPrintStartRun() {
++  # when not using subunit, print output an idea of what tests will run before starting.
++  expected=$(printf "\n****** `basename ${0}` ******\n"; printf "%s to run:\n" "$shuRetFmtNbrTests")
++  result=$(shuPrintStartRun)
++  [ "x$expected" = "x$result" ] && pass=0 || pass=1
++  shuAssert "Failed test case incorrect output [$result] wanted [$expected]" ${pass}
++}
++
++
++TestShuPrintStart() {
++  # when not using subunit, print output a human readable pre-test intro.
++  expected=$(printf "    Test 1: phwoar    ")
++  result=$(shuPrintStart phwoar 1)
++  [ "x$expected" = "x$result" ] && pass=0 || pass=1
++  shuAssert "Failed test case incorrect output [$result] wanted [$expected]" ${pass}
++}
++
++
++TestShuPrintAfter() {
++  # when not using subunit, print the error text normally.
++
++  # case one : passes
++  expected=$(printf "\n")
++  SHU_STR_FAILED=""
++  result=$(shuPrintAfter phwoar)
++  [ "x$expected" = "x$result" ] && pass=0 || pass=1
++  shuAssert "Failed test case incorrect output [$result] wanted [$expected]" ${pass}
++
++  # case two: errors
++  SHU_STR_FAILED=$(printf "some test\nmore text")
++  expected=$(printf "\n      \"some test\nmore text\" failed.")
++  result=$(shuPrintAfter phwoar)
++  SHU_STR_FAILED=""
++  [ "x$expected" = "x$result" ] && pass=0 || pass=1
++  shuAssert "Failed test case incorrect output [$result] wanted [$expected]" ${pass}
++}
++
++
++TestShuPrintAfterRun() {
++  # print out a summary of the tests run
++  expected=$(printf "\n5 run.\n  4 succeeded.\n  1 failed.\n\n")
++  result=$(shuPrintAfterRun 5 4 1)
++  [ "x$expected" = "x$result" ] && pass=0 || pass=1
++  shuAssert "Failed test case incorrect output [$result] wanted [$expected]" ${pass}
++}
++
+ InitFunction() {
+   shuRegTest TestIntentionalFailure
+   shuRegTest TestShuRegisterFailedTest
+@@ -130,6 +177,10 @@ InitFunction() {
+   shuRegTest TestShuRunOneTest
+   shuRegTest TestSetupCalledCorrectly
+   shuRegTest TestShuFmtNbrTests
++  shuRegTest TestShuPrintStartRun
++  shuRegTest TestShuPrintAfterRun
++  shuRegTest TestShuPrintStart
++  shuRegTest TestShuPrintAfter
+ } 
+ 
+ 
+--- /dev/null	2006-03-28 06:29:48.000000000 +1100
++++ shUnitSubUnit	2006-04-15 02:17:38.000000000 +1000
+@@ -0,0 +1,74 @@
++################################################################################
++# shUnit subunit integration
++# original by Robert Collins
++# $Source:  $
++# $Id: $
++################################################################################
++#
++
++. subunit.sh
++
++function shuPrintStartRun () {
++  # print out the start of a test run. This prints nothing
++  # when using subunit, because we are no longer doing the UI.
++  :
++}
++
++function shuPrintAfterRun () {
++  # print out the end of a test run. This prints nothing
++  # when using subunit, because we are no longer doing the UI.
++  :
++}
++
++function shuPrintStart () {
++  # print out the prelude to a single test
++  # $1 is the test name 
++  # $2 the test number
++  subunit_start_test "${1}"
++}
++
++function shuPrintAfter () {
++  # print out the result of a single test
++  # $1 is the test name
++  # SHU_STR_FAILED contains error text (if any)
++  test_name="${1}"
++  if test -n "${SHU_STR_FAILED}"
++  then 
++
++    OLD_IFS="${IFS}"
++    IFS="^"
++    set -- ${SHU_STR_FAILED}
++    subunit_fail_test "${test_name}" <<<${SHU_STR_FAILED}
++    IFS="${OLD_IFS}"
++  else
++    subunit_pass_test "${1}"
++  fi
++}
++
++
++shuAssert() {
++  # override assert to be quiet.
++  strMessage="${1:-}"
++  boolResult="${2:-${SHU_FALSE}}"
++
++  if [ ${boolResult} -ne ${SHU_TRUE} ]
++  then
++    shuRegisterFailedTest "${strMessage}"
++  else
++    SHU_TEST_SUCCEEDED=${SHU_TRUE}
++  fi
++}
++
++shuDeny() {
++  # override deny to be quiet.
++  strMessage="${1:-}"
++  boolResult="${2:-${SHU_TRUE}}"
++
++  if [ ${boolResult} -eq ${SHU_TRUE} ]
++  then
++    shuRegisterFailedTest "${strMessage}"
++  else
++    SHU_TEST_SUCCEEDED=${SHU_TRUE}
++  fi
++}
++
+--- /dev/null	2006-03-28 06:29:48.000000000 +1100
++++ shUnitSubUnitTest	2006-04-15 02:18:19.000000000 +1000
+@@ -0,0 +1,99 @@
++#! /usr/bin/env sh
++# Tests for the subunit client UI.
++################################################################################
++# $Id: $
++################################################################################
++
++#
++# find the shUnit file using the command as a reference
++#
++inherit() {
++    d=`expr ${0} : '\([a-zA-Z/._-]*\/\)'`
++    test `expr "$d" : '[./]'` -eq 0 && d="./$d"
++    . ${d}${1}
++}
++
++inherit shUnit
++inherit shUnitSubUnit
++
++
++shuSetUp() {
++    touch ./test.$$
++}
++
++shuTearDown() {
++    [ -f ./test.$$ ] && rm ./test.$$
++}
++
++TestShuAssert() {
++    shuAssert "" "${SHU_TRUE}"
++    shuAssert "Test case ${SHU_TRUE} failed" "${SHU_TRUE}"
++}
++
++TestShuDeny() {
++    shuDeny "" "${SHU_FALSE}"
++    shuDeny "return code ${SHU_FALSE} failed" "${SHU_FALSE}"
++    shuDeny "return code -1 failed" -1
++    shuDeny "return code 222 failed" 222
++}
++
++TestShuPrintAfter() {
++  # for subunit, we delegate to subunit on pass and fail output.
++
++  # case one : passes
++  expected=$(subunit_pass_test "Test 1")
++  SHU_STR_FAILED=""
++  result=$(shuPrintAfter "Test 1")
++  [ "x$expected" = "x$result" ] && pass=0 || pass=1
++  shuAssert "Failed test case incorrect output [$result] wanted [$expected]" ${pass}
++
++  # case two: errors
++  SHU_STR_FAILED=$(printf "some test\nmore text")
++  expected=$(subunit_fail_test "phwoar" <<END
++some test
++more text
++END)
++  result=$(shuPrintAfter phwoar)
++  SHU_STR_FAILED=""
++  [ "x$expected" = "x$result" ] && pass=0 || pass=1
++  shuAssert "Failed test case incorrect output [$result] wanted [$expected]" ${pass}
++}
++
++TestShuPrintStartRun() {
++  # when using subunit, print nothing at the start of the program run
++  expected=""
++  result=$(shuPrintStartRun)
++  [ "x$expected" = "x$result" ] && pass=0 || pass=1
++  shuAssert "Failed test case incorrect output [$result] wanted [$expected]" ${pass}
++}
++
++TestShuPrintStart() {
++  # when using subunit, print the subunit header
++  expected=$(subunit_start_test phwoar)
++  result=$(shuPrintStart phwoar 1)
++  [ "x$expected" = "x$result" ] && pass=0 || pass=1
++  shuAssert "Failed test case incorrect output [$result] wanted [$expected]" ${pass}
++}
++
++TestShuPrintAfterRun() {
++  # in subunit the runner UI prints out statistics.
++  expected=""
++  result=$(shuPrintAfterRun 5 4 1)
++  [ "x$expected" = "x$result" ] && pass=0 || pass=1
++  shuAssert "Failed test case incorrect output [$result] wanted [$expected]" ${pass}
++}
++
++InitFunction() {
++  shuRegTest TestShuAssert
++  shuRegTest TestShuDeny
++  shuRegTest TestShuPrintStartRun
++  shuRegTest TestShuPrintAfterRun
++  shuRegTest TestShuPrintStart
++  shuRegTest TestShuPrintAfter
++} 
++
++
++### Main
++
++shuStart InitFunction
++

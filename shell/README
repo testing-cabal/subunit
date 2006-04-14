@@ -28,8 +28,10 @@ metadata trivially. See share/subunit.sh for the functions and comments.
 
 However, this is not a full test environment, its support code for reporting to
 subunit. You can look at ShUnit (http://shunit.sourceforge.net) for 'proper' 
-shell based xUnit functionality. I am currently integrating subunit into ShUnit
-so you should be able to get both subunit an ShUnit easily.
+shell based xUnit functionality. There is a patch for ShUnit 1.3 
+(subunit-ui.patch) in the subunit source tree. I hope to have that integrated 
+upstream in the near future. I will delete the copy of the patch in the subunit
+tree a release or two later.
 
 If you are a test environment maintainer - either homegrown, or ShUnit or some
 such, you will need to see how the subunit calls should be used. Here is what
