@@ -20,7 +20,17 @@
 
 Subunit is attempting to extend unittest with a clean and simple api to
 run arbitrary external test suites and return the results to standard 
-python unittest. For shell bindings see the shell/ subtree.
+python unittest. 
+
+Subunit comes in two parts: There is a parent-process component and a 
+child procecss component. The parent component pretends to be a xUnit
+test suite in whatever language you are using for the parent. Currently
+there is only one implementation of the parent : Python.
+Secondly there is the child component that runs in the child process and
+reports to the parent as tests begin and end. There are currently 3 
+implementations of the child - Python, C and shell. 
+Look in the python/, shell/ or c/ directories for the sources in each 
+languages.
 
 Using subunit:
 
