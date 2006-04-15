@@ -1,0 +1,18 @@
+# setup our tools
+env = Environment()
+def run_test_scripts(source, target, env, for_signature):
+    """Run all the sources as executable scripts which return 0 on success."""
+    # TODO: make this cross platform compatible.
+    return ["LD_LIBRARY_PATH=%s %s" % (env['LIBPATH'], a_source) for a_source in source]
+test_script_runner = Builder(generator=run_test_scripts)
+env.Append(BUILDERS = {'TestRC' : test_script_runner})
+
+
+# describe what we need
+subunit = SharedLibrary('lib/subunit', ['lib/child.c'])
+test_child = Program('tests/test_child.c',
+    LIBS=['check', 'subunit'],
+    CPPPATH='include',
+    LIBPATH='lib')
+env.TestRC('check', test_child, LIBPATH='lib')
+Default(subunit)

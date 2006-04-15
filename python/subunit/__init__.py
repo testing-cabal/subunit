@@ -279,6 +279,7 @@ class RemotedTestCase(unittest.TestCase):
         cls = self.__class__
         return "%s.%s" % (cls.__module__, cls.__name__)
 
+
 class ExecTestCase(unittest.TestCase):
     """A test case which runs external scripts for test fixtures."""
 
