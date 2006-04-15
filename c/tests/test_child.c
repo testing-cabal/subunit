@@ -24,7 +24,15 @@
 
 #include "subunit/child.h"
 
-START_TEST (test_start)
+/**
+ * Helper function to capture stdout, run some call, and check what
+ * was written.
+ * @expected the expected stdout content
+ * @function the function to call.
+ **/
+static void
+test_stdout_function(char const * expected,
+                     void (*function)(void))
 {
     /* test that the start function emits a correct test: line. */
     int bytecount;
@@ -50,7 +58,7 @@ START_TEST (test_start)
     /* yes this can block. Its a test case with < 100 bytes of output.
      * DEAL.
      */
-    subunit_test_start("test case");
+    function();
     /* restore stdout now */
     if (dup2(old_stdout, 1) != 1) {
       close(old_stdout);
@@ -73,21 +81,87 @@ START_TEST (test_start)
     /* and we dont need the read side any more */
     fail_if(close(new_stdout[0]), "Failed to close write side of socketpair.");
     /* compare with expected outcome */
-#define EXPECTED "test: test case\n"
-    fail_if(strcmp(EXPECTED, buffer), "Did not get expected output [%s], got [%s]", EXPECTED, buffer);
-#undef EXPECTED
+    fail_if(strcmp(expected, buffer), "Did not get expected output [%s], got [%s]", expected, buffer);
+}
+
+
+static void
+call_test_start(void)
+{
+    subunit_test_start("test case");
+}
+
+
+START_TEST (test_start)
+{
+    test_stdout_function("test: test case\n", call_test_start);
 }
 END_TEST
 
 
-Suite *child_suite(void)
+static void
+call_test_pass(void)
+{
+    subunit_test_pass("test case");
+}
+
+
+START_TEST (test_pass)
+{
+    test_stdout_function("success: test case\n", call_test_pass);
+}
+END_TEST
+
+
+static void
+call_test_fail(void)
+{
+    subunit_test_fail("test case", "Multiple lines\n of error\n");
+}
+
+
+START_TEST (test_fail)
+{
+    test_stdout_function("failure: test case [\n"
+                         "Multiple lines\n"
+        		 " of error\n"
+			 "]\n",
+			 call_test_fail);
+}
+END_TEST
+
+
+static void
+call_test_error(void)
+{
+    subunit_test_error("test case", "Multiple lines\n of output\n");
+}
+
+
+START_TEST (error)
+{
+    test_stdout_function("failure: test case [\n"
+                         "Multiple lines\n"
+        		 " of output\n"
+			 "]\n",
+			 call_test_error);
+}
+END_TEST
+
+
+
+Suite *
+child_suite(void)
 {
     Suite *s = suite_create("subunit_child");
     TCase *tc_core = tcase_create("Core");
     suite_add_tcase (s, tc_core);
     tcase_add_test (tc_core, test_start);
+    tcase_add_test (tc_core, test_pass);
+    tcase_add_test (tc_core, test_fail);
     return s;
 }
+
 
 int
 main(void)

@@ -19,11 +19,48 @@
  **/
 
 #include <stdio.h>
+#include <string.h>
+
+/* these functions all flush to ensure that the test runner knows the action
+ * that has been taken even if the subsequent test etc takes a long time or
+ * never completes (i.e. a segfault).
+ */
 
 void
 subunit_test_start(char const * const name)
 {
   fprintf(stdout, "test: %s\n", name);
-  /* flush to ensure that the test runner knows we have started. */
+  fflush(stdout);
+}
+
+
+void
+subunit_test_pass(char const * const name)
+{
+  fprintf(stdout, "success: %s\n", name);
+  fflush(stdout);
+}
+
+
+void
+subunit_test_fail(char const * const name, char const * const error)
+{
+  fprintf(stdout, "failure: %s [\n", name);
+  fprintf(stdout, "%s", error);
+  if (error[strlen(error) - 1] != '\n')
+    fprintf(stdout, "\n");
+  fprintf(stdout, "]\n");
+  fflush(stdout);
+}
+
+
+void
+subunit_test_error(char const * const name, char const * const error)
+{
+  fprintf(stdout, "error: %s [\n", name);
+  fprintf(stdout, "%s", error);
+  if (error[strlen(error) - 1] != '\n')
+    fprintf(stdout, "\n");
+  fprintf(stdout, "]\n");
   fflush(stdout);
 }

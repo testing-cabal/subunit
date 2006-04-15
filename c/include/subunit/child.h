@@ -26,3 +26,34 @@
  * @name: test case name
  */
 extern void subunit_test_start(char const * const name);
+
+
+/**
+ * subunit_test_pass:
+ *
+ * Report that a test has passed.
+ * @name: test case name
+ */
+extern void subunit_test_pass(char const * const name);
+
+
+/**
+ * subunit_test_fail:
+ *
+ * Report that a test has failed.
+ * @name: test case name
+ * @error: a string describing the error.
+ */
+extern void subunit_test_fail(char const * const name, char const * const error);
+
+
+/**
+ * subunit_test_error:
+ *
+ * Report that a test has errored. An error is an unintentional failure - i.e.
+ * a segfault rather than a failed assertion.
+ * @name: test case name
+ * @error: a string describing the error.
+ */
+extern void subunit_test_error(char const * const name,
+                               char const * const error);
