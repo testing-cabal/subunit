@@ -1,5 +1,17 @@
 # setup our tools
+import os.path
+
+default_root = os.path.expanduser('~/local/')
+DESTDIR=ARGUMENTS.get('DESTDIR', default_root)
+if DESTDIR[-1] != '/':
+  DESTDIR += '/'
+include = os.path.join(DESTDIR, "include", "subunit")
+lib = os.path.join(DESTDIR, "lib")
+# bin = "#export/$PLATFORM/bin"
 env = Environment()
+Export('env')
+
+# support tools
 def run_test_scripts(source, target, env, for_signature):
     """Run all the sources as executable scripts which return 0 on success."""
     # TODO: make this cross platform compatible.
@@ -15,4 +27,8 @@ test_child = Program('tests/test_child.c',
     CPPPATH='include',
     LIBPATH='lib')
 env.TestRC('check', test_child, LIBPATH='lib')
+installs = []
+installs.append(env.Install(lib, subunit))
+installs.append(env.Install(include, 'include/subunit/child.h'))
+env.Alias('install', installs)
 Default(subunit)

@@ -1,5 +1,5 @@
 all:
-	scons
+	scons -Q
 
 check:
 	scons check
@@ -7,4 +7,7 @@ check:
 clean:
 	scons -c
 
-.PHONY: all check clean
+install:
+	scons install
+
+.PHONY: all check clean install
