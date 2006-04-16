@@ -1,0 +1,134 @@
+diff -u cppunit-1.10.2/src/cppunit/Makefile.am cppunit-1.10.2/src/cppunit/Makefile.am
+--- cppunit-1.10.2/src/cppunit/Makefile.am
++++ cppunit-1.10.2/src/cppunit/Makefile.am
+@@ -28,6 +28,7 @@
+   ProtectorChain.cpp \
+   SourceLine.cpp \
+   StringTools.cpp \
++  SubunitTestProgressListener.cpp \
+   SynchronizedObject.cpp \
+   Test.cpp \
+   TestAssert.cpp \
+@@ -74,0 +76,2 @@
++
++LIBRARY_LIBADD = $(LIBS)
+--- cppunit-1.10.2.orig/src/cppunit/SubunitTestProgressListener.cpp
++++ cppunit-1.10.2/src/cppunit/SubunitTestProgressListener.cpp
+@@ -0,0 +1,50 @@
++#include <cppunit/Exception.h>
++#include <cppunit/Test.h>
++#include <cppunit/TestFailure.h>
++#include <cppunit/SubunitTestProgressListener.h>
++#include <cppunit/TextOutputter.h>
++#include <iostream>
++
++#include "config.h"
++#ifdef HAVE_LIBSUBUNIT
++#include <subunit/child.h>
++
++
++CPPUNIT_NS_BEGIN
++
++
++void 
++SubunitTestProgressListener::startTest( Test *test )
++{
++  subunit_test_start(test->getName().c_str());
++  last_test_failed = false;
++}
++
++void 
++SubunitTestProgressListener::addFailure( const TestFailure &failure )
++{
++  std::ostringstream capture_stream;
++  TextOutputter outputter(NULL, capture_stream);
++  outputter.printFailureLocation(failure.sourceLine());
++  outputter.printFailureDetail(failure.thrownException());
++
++  if (failure.isError())
++      subunit_test_error(failure.failedTestName().c_str(),
++        		 capture_stream.str().c_str());
++  else
++      subunit_test_fail(failure.failedTestName().c_str(),
++                        capture_stream.str().c_str());
++  last_test_failed = true;
++}
++
++void 
++SubunitTestProgressListener::endTest( Test *test)
++{
++  if (!last_test_failed)
++      subunit_test_pass(test->getName().c_str());
++}
++
++
++CPPUNIT_NS_END
++
++#endif
+--- cppunit-1.10.2.orig/configure.in
++++ cppunit-1.10.2/configure.in
+@@ -65,6 +65,8 @@
+ # check for doxygen
+ BB_ENABLE_DOXYGEN
+ 
++# check for subunit
++AC_CHECK_LIB(subunit, subunit_test_start)
+ 
+ # Check for headers
+ # Note that the fourth argument to AC_CHECK_HEADERS is non-empty to force
+--- cppunit-1.10.2.orig/include/cppunit/Makefile.am
++++ cppunit-1.10.2/include/cppunit/Makefile.am
+@@ -15,6 +15,7 @@
+ 	Portability.h \
+ 	Protector.h \
+ 	SourceLine.h \
++	SubunitTestProgressListener.h \
+ 	SynchronizedObject.h \
+ 	Test.h \
+ 	TestAssert.h \
+only in patch2:
+unchanged:
+--- cppunit-1.10.2.orig/include/cppunit/SubunitTestProgressListener.h
++++ cppunit-1.10.2/include/cppunit/SubunitTestProgressListener.h
+@@ -0,0 +1,41 @@
++#ifndef CPPUNIT_SUBUNITTESTPROGRESSLISTENER_H
++#define CPPUNIT_SUBUNITTESTPROGRESSLISTENER_H
++
++#include <cppunit/TestListener.h>
++
++
++CPPUNIT_NS_BEGIN
++
++
++/*! 
++ * \brief TestListener that outputs subunit
++ * (http://www.robertcollins.net/unittest/subunit) compatible output.
++ * \ingroup TrackingTestExecution
++ */
++class CPPUNIT_API SubunitTestProgressListener : public TestListener
++{
++public:
++ 
++  SubunitTestProgressListener() {}
++  
++  void startTest( Test *test );
++
++  void addFailure( const TestFailure &failure );
++
++  void endTest( Test *test );
++
++private:
++  /// Prevents the use of the copy constructor.
++  SubunitTestProgressListener( const SubunitTestProgressListener &copy );
++
++  /// Prevents the use of the copy operator.
++  void operator =( const SubunitTestProgressListener &copy );
++
++private:
++  int last_test_failed;
++};
++
++
++CPPUNIT_NS_END
++
++#endif  // CPPUNIT_SUBUNITTESTPROGRESSLISTENER_H

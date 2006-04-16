@@ -19,6 +19,11 @@
  **/
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+ 
 /**
  * subunit_test_start:
  *
@@ -32,6 +37,7 @@ extern void subunit_test_start(char const * const name);
  * subunit_test_pass:
  *
  * Report that a test has passed.
+ 
  * @name: test case name
  */
 extern void subunit_test_pass(char const * const name);
@@ -57,3 +63,8 @@ extern void subunit_test_fail(char const * const name, char const * const error)
  */
 extern void subunit_test_error(char const * const name,
                                char const * const error);
+
+
+#ifdef __cplusplus
+}
+#endif
