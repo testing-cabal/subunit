@@ -18,7 +18,8 @@ include = os.path.join(DESTDIR, "include", "subunit")
 lib = os.path.join(DESTDIR, "lib")
 # bin = "#export/$PLATFORM/bin"
 env = Environment()
-Export('env', 'lib', 'include', 'DESTDIR')
+tests = []
+Export('env', 'lib', 'include', 'DESTDIR', 'tests')
 
 # support tools
 def run_test_scripts(source, target, env, for_signature):
@@ -28,14 +29,18 @@ def run_test_scripts(source, target, env, for_signature):
 test_script_runner = Builder(generator=run_test_scripts)
 def run_python_scripts(source, target, env, for_signature):
     """Run all the sources as executable scripts which return 0 on success."""
-    return ["PYTHONPATH=%s %s" % (env['PYTHONPATH'], a_source) for a_source in source]
+    return ["PYTHONPATH=%s python %s" % (env['PYTHONPATH'], a_source) for a_source in source]
 python_test_runner = Builder(generator=run_python_scripts)
 env.Append(BUILDERS = {'TestRC' : test_script_runner,
                        'TestPython' : python_test_runner})
 
+# tests
+tests.append(env.TestPython('check_python', 'runtests.py', PYTHONPATH='python'))
 
 SConscript([
     'c/SConscript',
     'c++/SConscript',
     'python/SConscript',
     'shell/SConscript'])
+
+env.Alias('check', tests)

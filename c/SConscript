@@ -5,9 +5,7 @@ test_child = Program('tests/test_child.c',
     LIBS=['check', 'subunit'],
     CPPPATH='include',
     LIBPATH='lib')
-tests=[]
 tests.append(env.TestRC('check', test_child, LIBPATH='lib'))
-env.Alias('check', tests)
 installs=[]
 installs.append(env.Install(lib, subunit))
 installs.append(env.Install(include, 'include/subunit/child.h'))

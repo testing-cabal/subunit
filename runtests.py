@@ -77,9 +77,20 @@ def earlyStopFactory(*args, **kwargs):
     return result
 
 
+class ShellTests(subunit.ExecTestCase):
+
+    def test_sourcing(self):
+        """./shell/tests/test_source_library.sh"""
+
+    def test_functions(self):
+        """./shell/tests/test_function_output.sh"""
+
+
 def test_suite():
     result = TestSuite()
     result.addTest(subunit.test_suite())
+    result.addTest(ShellTests('test_sourcing'))
+    result.addTest(ShellTests('test_functions'))
     return result
 
 

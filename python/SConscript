@@ -18,7 +18,3 @@ python_suffix = distutils.sysconfig.get_python_lib()[len(prefix):]
 # install path for python is then in DESTDIR + python_suffix
 python_installdir = DESTDIR + python_suffix + '/subunit'
 env.Alias('install', [Install(python_installdir, 'subunit/__init__.py')])
-# tests
-tests = []
-tests.append(env.TestPython('check_python', 'test_python.py', PYTHONPATH='python'))
-env.Alias('check', tests)
