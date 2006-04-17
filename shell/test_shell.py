@@ -31,10 +31,10 @@ import logging
 class ShellTests(subunit.ExecTestCase):
 
     def test_sourcing(self):
-        """./tests/test_source_library.sh"""
+        """./shell/tests/test_source_library.sh"""
 
     def test_functions(self):
-        """./tests/test_function_output.sh"""
+        """./shell/tests/test_function_output.sh"""
 
 
 def test_suite():

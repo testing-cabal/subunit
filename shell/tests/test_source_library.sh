@@ -22,11 +22,11 @@
 # It manually implements the control protocol so that it des not depend on the
 # bindings being complete yet.
 
-# we expect to be run from the 'shell' tree root.
+# we expect to be run from the tree root.
 
 echo 'test: shell bindings can be sourced'
 # if any output occurs, this has failed to source cleanly
-source_output=$(. share/subunit.sh 2>&1)
+source_output=$(. shell/share/subunit.sh 2>&1)
 if [ $? == 0 -a "x$source_output" = "x" ]; then
   echo 'success: shell bindings can be sourced'
 else
@@ -37,7 +37,7 @@ else
 fi
 
 # now source it for real
-. share/subunit.sh
+. shell/share/subunit.sh
 
 # we should have a start_test function
 echo 'test: subunit_start_test exists'

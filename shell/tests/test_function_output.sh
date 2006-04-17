@@ -27,7 +27,7 @@
 # have not, this test script may well fail strangely.
 
 # import the library.
-. share/subunit.sh
+. shell/share/subunit.sh
 
 echo 'test: subunit_start_test output'
 func_output=$(subunit_start_test "foo bar")

@@ -1,0 +1,12 @@
+Import('*')
+# describe what we need for Shell
+
+import test_shell
+
+shell_lib_installdir = DESTDIR + '/share/subunit'
+env.Alias('install', [Install(shell_lib_installdir, 'share/subunit.sh')])
+
+# tests
+tests = []
+tests.append(env.TestPython('check_shell', 'test_shell.py', PYTHONPATH='python'))
+env.Alias('check', tests)

@@ -1,0 +1,2 @@
+Import('*')
+# describe what we need for C++
