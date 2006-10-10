@@ -37,10 +37,6 @@ env.Append(BUILDERS = {'TestRC' : test_script_runner,
 # tests
 tests.append(env.TestPython('check_python', 'runtests.py', PYTHONPATH='python'))
 
-SConscript([
-    'c/SConscript',
-    'c++/SConscript',
-    'python/SConscript',
-    'shell/SConscript'])
+SConscript(dirs=['c', 'c++', 'python', 'shell'])
 
 env.Alias('check', tests)
