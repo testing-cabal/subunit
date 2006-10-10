@@ -28,7 +28,7 @@ def test_suite():
     return subunit.tests.test_suite()
 
 class TestProtocolServer(object):
-    """A class for recieving results from a TestProtocol client."""
+    """A class for receiving results from a TestProtocol client."""
 
     OUTSIDE_TEST = 0
     TEST_STARTED = 1
@@ -62,7 +62,7 @@ class TestProtocolServer(object):
             self.state = TestProtocolServer.READING_ERROR
             self._message = ""
         else:
-            self.stdOutLineRecieved(line)
+            self.stdOutLineReceived(line)
 
     def _addFailure(self, offset, line):
         if (self.state == TestProtocolServer.TEST_STARTED and
@@ -76,7 +76,7 @@ class TestProtocolServer(object):
             self.state = TestProtocolServer.READING_FAILURE
             self._message = ""
         else:
-            self.stdOutLineRecieved(line)
+            self.stdOutLineReceived(line)
 
     def _addSuccess(self, offset, line):
         if (self.state == TestProtocolServer.TEST_STARTED and
@@ -87,7 +87,7 @@ class TestProtocolServer(object):
             self._current_test = None
             self.state = TestProtocolServer.OUTSIDE_TEST
         else:
-            self.stdOutLineRecieved(line)
+            self.stdOutLineReceived(line)
         
     def _appendMessage(self, line):
         if line[0:2] == " ]":
@@ -110,10 +110,10 @@ class TestProtocolServer(object):
                                  RemoteError(self._message))
             self.client.stopTest(self._current_test)
         else:
-            self.stdOutLineRecieved(line)
+            self.stdOutLineReceived(line)
         
     def lineReceived(self, line):
-        """Call the appropriate local method for the recieved line."""
+        """Call the appropriate local method for the received line."""
         if line == "]\n":
             self.endQuote(line)
         elif (self.state == TestProtocolServer.READING_FAILURE or
@@ -144,7 +144,7 @@ class TestProtocolServer(object):
         elif line.startswith("success"):
             self._addSuccess(8, line)
         else:
-            self.stdOutLineRecieved(line)
+            self.stdOutLineReceived(line)
 
     def lostConnection(self):
         """The input connection has finished."""
@@ -181,9 +181,9 @@ class TestProtocolServer(object):
             self.current_test_description = line[offset:-1]
             self.client.startTest(self._current_test)
         else:
-            self.stdOutLineRecieved(line)
+            self.stdOutLineReceived(line)
         
-    def stdOutLineRecieved(self, line):
+    def stdOutLineReceived(self, line):
         sys.stdout.write(line)
 
 
