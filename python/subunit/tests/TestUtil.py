@@ -16,6 +16,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+import os
 import sys
 import logging
 import unittest
@@ -39,6 +40,11 @@ def makeCollectingLogger():
     return logger, handler
 
 
+def mockFile(filename):
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        filename)
+
+
 def visitTests(suite, visitor):
     """A foreign method for visiting the tests in a test suite."""
     for test in suite._tests:
@@ -50,7 +56,7 @@ def visitTests(suite, visitor):
             if isinstance(test, unittest.TestCase):
                 visitor.visitCase(test)
             elif isinstance(test, unittest.TestSuite):
-                visitor.visitSuite(test)
+                #visitor.visitSuite(test)
                 visitTests(test, visitor)
             else:
                 print "unvisitable non-unittest.TestCase element %r (%r)" % (test, test.__class__)
@@ -64,7 +70,7 @@ class TestSuite(unittest.TestSuite):
     def visit(self, visitor):
         """visit the composite. Visiting is depth-first.
         current callbacks are visitSuite and visitCase."""
-        visitor.visitSuite(self)
+        #visitor.visitSuite(self)
         visitTests(self, visitor)
 
 
