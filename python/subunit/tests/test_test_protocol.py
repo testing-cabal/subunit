@@ -139,10 +139,10 @@ class TestTestProtocolServerPipe(unittest.TestCase):
         bing = subunit.RemotedTestCase("bing crosby")
         an_error = subunit.RemotedTestCase("an error")
         self.assertEqual(client.errors, 
-                         [(an_error, 'RemoteError:\n\n\n')])
-        self.assertEqual(client.failures, 
-                         [(bing,
-                           "RemoteError:\nfoo.c:53:ERROR invalid state\n\n")])
+                         [(an_error, 'RemoteException: \n\n')])
+        self.assertEqual(
+            client.failures,
+            [(bing, "RemoteException: foo.c:53:ERROR invalid state\n\n")])
         self.assertEqual(client.testsRun, 3)
 
 
@@ -532,7 +532,7 @@ class TestRemotedTestCase(unittest.TestCase):
                          "'A test description'>", "%r" % test)
         result = unittest.TestResult()
         test.run(result)
-        self.assertEqual([(test, "RemoteError:\n"
+        self.assertEqual([(test, "RemoteException: "
                                  "Cannot run RemotedTestCases.\n\n")],
                          result.errors)
         self.assertEqual(1, result.testsRun)
@@ -705,7 +705,7 @@ class TestTestProtocolClient(unittest.TestCase):
         self.protocol.addFailure(self.test, subunit.RemoteError("boo"))
         self.assertEqual(self.io.getvalue(), "failure: Test startTest on a "
                                              "TestProtocolClient. [\n"
-                                             "RemoteError:\n"
+                                             "RemoteException:\n"
                                              "boo\n"
                                              "]\n")
 
@@ -714,7 +714,7 @@ class TestTestProtocolClient(unittest.TestCase):
         self.protocol.addError(self.test, subunit.RemoteError("phwoar"))
         self.assertEqual(self.io.getvalue(), "error: Test startTest on a "
                                              "TestProtocolClient. [\n"
-                                             "RemoteError:\n"
+                                             "RemoteException:\n"
                                              "phwoar\n"
                                              "]\n")
 

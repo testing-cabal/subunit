@@ -218,7 +218,7 @@ class TestProtocolClient(unittest.TestResult):
 def RemoteError(description=""):
     if description == "":
         description = "\n"
-    return (RemoteException("RemoteError:\n%s" % description), None, None)
+    return (RemoteException, RemoteException(description), None)
 
 
 class RemotedTestCase(unittest.TestCase):
