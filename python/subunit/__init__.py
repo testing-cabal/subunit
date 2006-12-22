@@ -119,32 +119,20 @@ class TestProtocolServer(object):
         elif (self.state == TestProtocolServer.READING_FAILURE or
               self.state == TestProtocolServer.READING_ERROR):
             self._appendMessage(line)
-        elif line.startswith("test:"):
-            self._startTest(6, line)
-        elif line.startswith("testing:"):
-            self._startTest(9, line)
-        elif line.startswith("testing"):
-            self._startTest(8, line)
-        elif line.startswith("test"):
-            self._startTest(5, line)
-        elif line.startswith("error:"):
-            self._addError(7, line)
-        elif line.startswith("error"):
-            self._addError(6, line)
-        elif line.startswith("failure:"):
-            self._addFailure(9, line)
-        elif line.startswith("failure"):
-            self._addFailure(8, line)
-        elif line.startswith("successful:"):
-            self._addSuccess(12, line)
-        elif line.startswith("successful"):
-            self._addSuccess(11, line)
-        elif line.startswith("success:"):
-            self._addSuccess(9, line)
-        elif line.startswith("success"):
-            self._addSuccess(8, line)
         else:
-            self.stdOutLineReceived(line)
+            cmd, rest = line.split(None, 1)
+            offset = len(cmd) + 1
+            cmd = cmd.strip(':')
+            if cmd in ('test', 'testing'):
+                self._startTest(offset, line)
+            elif cmd == 'error':
+                self._addError(offset, line)
+            elif cmd == 'failure':
+                self._addFailure(offset, line)
+            elif cmd in ('success', 'successful'):
+                self._addSuccess(offset, line)
+            else:
+                self.stdOutLineReceived(line)
 
     def lostConnection(self):
         """The input connection has finished."""
@@ -230,7 +218,7 @@ class TestProtocolClient(unittest.TestResult):
 def RemoteError(description=""):
     if description == "":
         description = "\n"
-    return (RemoteException("RemoteError:\n%s" % description), None, None)
+    return (RemoteException, RemoteException(description), None)
 
 
 class RemotedTestCase(unittest.TestCase):
