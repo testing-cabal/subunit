@@ -27,6 +27,11 @@ def test_suite():
     import subunit.tests
     return subunit.tests.test_suite()
 
+
+def sibpath(path, sibling):
+    return os.path.join(os.path.dirname(os.path.abspath(path)), sibling)
+
+
 class TestProtocolServer(object):
     """A class for receiving results from a TestProtocol client."""
 
