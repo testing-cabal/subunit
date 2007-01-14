@@ -36,9 +36,9 @@ class TestProtocolServer(object):
     READING_ERROR = 3
 
     def __init__(self, client):
-        """Create a TestProtocol server instance. 
+        """Create a TestProtocol server instance.
 
-        client should be an object that provides 
+        client should be an object that provides
          - startTest
          - addSuccess
          - addFailure
@@ -48,7 +48,7 @@ class TestProtocolServer(object):
         """
         self.state = TestProtocolServer.OUTSIDE_TEST
         self.client = client
-        
+
     def _addError(self, offset, line):
         if (self.state == TestProtocolServer.TEST_STARTED and
             self.current_test_description == line[offset:-1]):
@@ -88,14 +88,14 @@ class TestProtocolServer(object):
             self.state = TestProtocolServer.OUTSIDE_TEST
         else:
             self.stdOutLineReceived(line)
-        
+
     def _appendMessage(self, line):
         if line[0:2] == " ]":
             # quoted ] start
             self._message += line[1:]
         else:
             self._message += line
-        
+
     def endQuote(self, line):
         if self.state == TestProtocolServer.READING_FAILURE:
             self.state = TestProtocolServer.OUTSIDE_TEST
@@ -111,7 +111,7 @@ class TestProtocolServer(object):
             self.client.stopTest(self._current_test)
         else:
             self.stdOutLineReceived(line)
-        
+
     def lineReceived(self, line):
         """Call the appropriate local method for the received line."""
         if line == "]\n":
@@ -152,7 +152,7 @@ class TestProtocolServer(object):
             self.client.addError(self._current_test,
                                  RemoteError("lost connection during "
                                              "failure report of test "
-                                             "'%s'" % 
+                                             "'%s'" %
                                              self.current_test_description))
             self.client.stopTest(self._current_test)
 
@@ -170,7 +170,7 @@ class TestProtocolServer(object):
             self.client.startTest(self._current_test)
         else:
             self.stdOutLineReceived(line)
-        
+
     def stdOutLineReceived(self, line):
         sys.stdout.write(line)
 
@@ -183,22 +183,22 @@ class RemoteException(Exception):
             return self.args == other.args
         except AttributeError:
             return False
-    
+
 
 class TestProtocolClient(unittest.TestResult):
     """A class that looks like a TestResult and informs a TestProtocolServer."""
-    
+
     def __init__(self, stream):
         unittest.TestResult.__init__(self)
         self._stream = stream
-    
+
     def addError(self, test, error):
         """Report an error in test test."""
         self._stream.write("error: %s [\n" % test.shortDescription())
         for line in self._exc_info_to_string(error, test).split():
             self._stream.write("%s\n" % line)
         self._stream.write("]\n")
-        
+
     def addFailure(self, test, error):
         """Report a failure in test test."""
         self._stream.write("failure: %s [\n" % test.shortDescription())
@@ -229,7 +229,7 @@ class RemotedTestCase(unittest.TestCase):
             return self.__description == other.__description
         except AttributeError:
             return False
-        
+
     def __init__(self, description):
         """Create a psuedo test case with description description."""
         self.__description = description
@@ -262,7 +262,7 @@ class RemotedTestCase(unittest.TestCase):
         result.startTest(self)
         result.addError(self, RemoteError("Cannot run RemotedTestCases.\n"))
         result.stopTest(self)
-        
+
     def _strclass(self):
         cls = self.__class__
         return "%s.%s" % (cls.__module__, cls.__name__)
@@ -290,7 +290,7 @@ class ExecTestCase(unittest.TestCase):
     def debug(self):
         """Run the test without collecting errors in a TestResult"""
         self._run(unittest.TestResult())
-    
+
     def _run(self, result):
         protocol = TestProtocolServer(result)
         output = subprocess.Popen([self.script],
@@ -329,11 +329,11 @@ def run_isolated(klass, self, result):
         os.dup2(c2pwrite, 1)
         # Close pipe fds.
         os.close(c2pwrite)
-    
+
         # at this point, sys.stdin is redirected, now we want
         # to filter it to escape ]'s.
         ### XXX: test and write that bit.
-    
+
         result = TestProtocolClient(sys.stdout)
         klass.run(self, result)
         sys.stdout.flush()
