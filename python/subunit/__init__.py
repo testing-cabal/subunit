@@ -28,8 +28,18 @@ def test_suite():
     return subunit.tests.test_suite()
 
 
-def sibpath(path, sibling):
-    return os.path.join(os.path.dirname(os.path.abspath(path)), sibling)
+def join_dir(base_path, path):
+    """
+    Returns an absolute path to C{path}, calculated relative to the parent
+    of C{base_path}.
+
+    @param base_path: A path to a file or directory.
+    @param path: An absolute path, or a path relative to the containing
+    directory of C{base_path}.
+
+    @return: An absolute path to C{path}.
+    """
+    return os.path.join(os.path.dirname(os.path.abspath(base_path)), path)
 
 
 class TestProtocolServer(object):
@@ -283,8 +293,8 @@ class ExecTestCase(unittest.TestCase):
         """
         unittest.TestCase.__init__(self, methodName)
         testMethod = getattr(self, methodName)
-        self.script = sibpath(sys.modules[self.__class__.__module__].__file__,
-                              testMethod.__doc__)
+        self.script = join_dir(sys.modules[self.__class__.__module__].__file__,
+                               testMethod.__doc__)
 
     def countTestCases(self):
         return 1

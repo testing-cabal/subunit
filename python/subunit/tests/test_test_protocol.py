@@ -570,7 +570,7 @@ class TestExecTestCase(unittest.TestCase):
     def test_construct(self):
         test = self.SampleExecTestCase("test_sample_method")
         self.assertEqual(test.script,
-                         subunit.sibpath(__file__, 'sample-script.py'))
+                         subunit.join_dir(__file__, 'sample-script.py'))
 
     def test_run(self):
         runner = MockTestProtocolServerClient()
