@@ -562,14 +562,15 @@ class TestExecTestCase(unittest.TestCase):
     class SampleExecTestCase(subunit.ExecTestCase):
 
         def test_sample_method(self):
-            """./python/subunit/tests/sample-script.py"""
+            """sample-script.py"""
             # the sample script runs three tests, one each
             # that fails, errors and succeeds
 
 
     def test_construct(self):
         test = self.SampleExecTestCase("test_sample_method")
-        self.assertEqual(test.script, "./python/subunit/tests/sample-script.py")
+        self.assertEqual(test.script,
+                         subunit.sibpath(__file__, 'sample-script.py'))
 
     def test_run(self):
         runner = MockTestProtocolServerClient()
@@ -603,7 +604,7 @@ class TestExecTestCase(unittest.TestCase):
 class DoExecTestCase(subunit.ExecTestCase):
 
     def test_working_script(self):
-        """./python/subunit/tests/sample-two-script.py"""
+        """sample-two-script.py"""
 
 
 class TestIsolatedTestCase(unittest.TestCase):

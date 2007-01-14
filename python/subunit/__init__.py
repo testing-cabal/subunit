@@ -283,7 +283,8 @@ class ExecTestCase(unittest.TestCase):
         """
         unittest.TestCase.__init__(self, methodName)
         testMethod = getattr(self, methodName)
-        self.script = testMethod.__doc__
+        self.script = sibpath(sys.modules[self.__class__.__module__].__file__,
+                              testMethod.__doc__)
 
     def countTestCases(self):
         return 1
