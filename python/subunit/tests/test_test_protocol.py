@@ -595,8 +595,8 @@ class TestExecTestCase(unittest.TestCase):
     def test_count_test_cases(self):
         """TODO run the child process and count responses to determine the count."""
 
-    def test_sibpath(self):
-        sibling = subunit.sibpath(__file__, 'foo')
+    def test_join_dir(self):
+        sibling = subunit.join_dir(__file__, 'foo')
         expected = '%s/foo' % (os.path.split(__file__)[0],)
         self.assertEqual(sibling, expected)
 
