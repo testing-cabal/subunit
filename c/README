@@ -32,8 +32,8 @@ metadata trivially. See lib/subunit_child.[ch] for details.
 
 However, this is not a test runner - subunit provides no support for [for
 instance] managing assertions, cleaning up on errors etc. You can look at
-'check' (http://check.sourceforge.net/) or 
-'gunit' (http://kooditakomo.cs.tut.fi/projects/gunit/) for C unit test 
+'check' (http://check.sourceforge.net/) or
+'gunit' (http://kooditakomo.cs.tut.fi/projects/gunit/) for C unit test
 frameworks. I plan to write ui layers for both of these that use the subunit
 bindings for reporting. There is a patch for 'check' (check-subunit-patch-0.9.3)
 in this source tree. Its also available as request ID #1470750 in the sourceforge

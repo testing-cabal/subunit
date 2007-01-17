@@ -42,7 +42,7 @@ def makeCollectingLogger():
 def visitTests(suite, visitor):
     """A foreign method for visiting the tests in a test suite."""
     for test in suite._tests:
-        #Abusing types to avoid monkey patching unittest.TestCase. 
+        #Abusing types to avoid monkey patching unittest.TestCase.
         # Maybe that would be better?
         try:
             test.visit(visitor)
@@ -54,7 +54,7 @@ def visitTests(suite, visitor):
                 visitTests(test, visitor)
             else:
                 print "unvisitable non-unittest.TestCase element %r (%r)" % (test, test.__class__)
-    
+
 
 class TestSuite(unittest.TestSuite):
     """I am an extended TestSuite with a visitor interface.

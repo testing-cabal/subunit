@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- Mode: python -*-
 #
-# Copyright (C) 2004 Canonical.com 
+# Copyright (C) 2004 Canonical.com
 #       Author:      Robert Collins <robert.collins@canonical.com>
 #
 # This program is free software; you can redistribute it and/or modify
@@ -28,7 +28,7 @@ import shutil
 import logging
 
 class ParameterisableTextTestRunner(unittest.TextTestRunner):
-    """I am a TextTestRunner whose result class is 
+    """I am a TextTestRunner whose result class is
     parameterisable without further subclassing"""
     def __init__(self, **args):
         unittest.TextTestRunner.__init__(self, **args)
@@ -41,7 +41,7 @@ class ParameterisableTextTestRunner(unittest.TextTestRunner):
         if self._resultFactory is None:
             self._resultFactory=unittest._TextTestResult
         return self._resultFactory
-        
+
     def _makeResult(self):
         return self.resultFactory()(self.stream, self.descriptions, self.verbosity)
 

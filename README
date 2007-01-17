@@ -1,4 +1,4 @@
-    
+
   subunit: extensions to python unittest to get test results from subprocesses.
   Copyright (C) 2005  Robert Collins <robertc@robertcollins.net>
 
@@ -19,25 +19,25 @@
 
 
 Subunit is attempting to extend unittest with a clean and simple api to
-run arbitrary external test suites and return the results to standard 
-python unittest. 
+run arbitrary external test suites and return the results to standard
+python unittest.
 
-Subunit comes in two parts: There is a parent-process component and a 
+Subunit comes in two parts: There is a parent-process component and a
 child procecss component. The parent component pretends to be a xUnit
 test suite in whatever language you are using for the parent. Currently
 there is only one implementation of the parent : Python.
 Secondly there is the child component that runs in the child process and
-reports to the parent as tests begin and end. There are currently 3 
-implementations of the child - Python, C and shell. 
-Look in the python/, shell/ or c/ directories for the sources in each 
+reports to the parent as tests begin and end. There are currently 3
+implementations of the child - Python, C and shell.
+Look in the python/, shell/ or c/ directories for the sources in each
 languages.
 
 Using subunit:
 
 1) As a runner for external tests (potentially in other languages)
-2) As a process boundary for unittest TestCases to prevent them fiddling with 
+2) As a process boundary for unittest TestCases to prevent them fiddling with
    in-process state (i.e. singletons).
-3) As a wrapper around a TestCase (or Suite) to run a group of tests 
+3) As a wrapper around a TestCase (or Suite) to run a group of tests
    externally.
 
 1) As a runner for external tests
@@ -60,19 +60,19 @@ class TestCProgram(subunit.ExecTestCase):
 # Then run this in whatever normal way you would run python unittests.
 # If you don't have a specific test runner, you can run it using the
 # default one in unittest.py:
- 
+
 if __name__ == '__main__':
      unittest.main()
 
 2) As a process boundary for unittest TestCases
 ===============================================
 This is currently supported only on platforms
-that support os.fork(), which allows us to 
+that support os.fork(), which allows us to
 transparently introduce a process boundary
 without affecting manual test parameterisation.
 *** TODO explain in more detail and sketch out
 *** a solution for win32
-Just import subunit and derive your test cases 
+Just import subunit and derive your test cases
 from subunit.IsolatedTestCase:
 
 import subunit
@@ -83,7 +83,7 @@ class TestFoo(subunit.IsolatedTestCase):
         SomethingGlobal.do()
         self.assertEqual(SomethingGlobal.value(), 3)
         # the run() method of IsolatedTestCase will intercept the
-        # test execution, fork() python to create a new process, 
+        # test execution, fork() python to create a new process,
         # then run the test and report the results back to the parent
         # process.
 
@@ -113,7 +113,7 @@ runner = unittest.TextTestRunner(verbosity=2)
 runner.run(test_suite())
 # enjoy.
 
-    
+
 Some requirements:
   The shape of the external unittest should not need to be known a-priori.
   After the test has run, tests should still exist as discrete objects, so that
@@ -142,7 +142,7 @@ FAILURE: tar a file.
 foo.c:34 WARNING foo is not defined.
 ========================
 
-control protocol: 
+control protocol:
 test|testing|test:|testing: test label
 success|success:|successful|successful: test label
 failure test label
@@ -163,4 +163,4 @@ TODO:
 def run:
     do a fork,
       this process runs server
-      child runs client and calls self.run() with a SubprocessTestResult 
+      child runs client and calls self.run() with a SubprocessTestResult

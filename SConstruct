@@ -5,7 +5,7 @@ import sys
 # we want the subunit source in the path so we can use it to run
 # the tests. Yes this does make everything fall over in a screaming
 # heap when you break it - so dont break it
-# the system subunit does not have tests installed. So ensure we 
+# the system subunit does not have tests installed. So ensure we
 # use the devel copy.
 sys.path.insert(0, os.path.abspath('python'))
 import subunit

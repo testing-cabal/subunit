@@ -19,7 +19,7 @@
 
 Currently there are no native C++ bindings for subunit. However the C library
 can be used from C++ safely. There is also a patch for cppunit
-(http://cppunit.sourceforge.net/) to enable reporting via subunit 
+(http://cppunit.sourceforge.net/) to enable reporting via subunit
 (cppunit-subunit-1.10.2.patch).
 
 To use the patch, apply it and rebuild your cppunit. Then in your main do
@@ -32,16 +32,16 @@ To use the patch, apply it and rebuild your cppunit. Then in your main do
   // note this isn't needed for subunit...
   CPPUNIT_NS::TestResultCollector result;
   controller.addListener( &result );
-  
+
   // Add a listener that print test activity in subunit format.
   CPPUNIT_NS::SubunitTestProgressListener progress;
   controller.addListener( &progress );
-  
+
   // Add the top suite to the test runner
   CPPUNIT_NS::TestRunner runner;
   runner.addTest( CPPUNIT_NS::TestFactoryRegistry::getRegistry().makeTest() );
   runner.run( controller );
-  
+
   return result.wasSuccessful() ? 0 : 1;
 }
 

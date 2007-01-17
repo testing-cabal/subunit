@@ -12,7 +12,7 @@ prefix = os.path.commonprefix([
     distutils.sysconfig.get_python_lib(),
     distutils.sysconfig.get_python_inc(),
     ])
-# suffix to install .py files to is distutils.sysconfig.get_python_lib() 
+# suffix to install .py files to is distutils.sysconfig.get_python_lib()
 # after the common prefix
 python_suffix = distutils.sysconfig.get_python_lib()[len(prefix):]
 # install path for python is then in DESTDIR + python_suffix

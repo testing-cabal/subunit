@@ -23,7 +23,7 @@
 extern "C" {
 #endif
 
- 
+
 /**
  * subunit_test_start:
  *
@@ -37,7 +37,7 @@ extern void subunit_test_start(char const * const name);
  * subunit_test_pass:
  *
  * Report that a test has passed.
- 
+ *
  * @name: test case name
  */
 extern void subunit_test_pass(char const * const name);
