@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #  subunit shell bindings.
 #  Copyright (C) 2006  Robert Collins <robertc@robertcollins.net>
 #

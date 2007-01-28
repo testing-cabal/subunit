@@ -17,19 +17,19 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-function subunit_start_test () {
+subunit_start_test () {
   # emit the current protocol start-marker for test $1
   echo "test: $1"
 }
 
 
-function subunit_pass_test () {
+subunit_pass_test () {
   # emit the current protocol test passed marker for test $1
   echo "success: $1"
 }
 
 
-function subunit_fail_test () {
+subunit_fail_test () {
   # emit the current protocol fail-marker for test $1, and emit stdin as
   # the error text.
   # we use stdin because the failure message can be arbitrarily long, and this
@@ -40,7 +40,7 @@ function subunit_fail_test () {
 }
 
 
-function subunit_error_test () {
+subunit_error_test () {
   # emit the current protocol error-marker for test $1, and emit stdin as
   # the error text.
   # we use stdin because the failure message can be arbitrarily long, and this
