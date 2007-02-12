@@ -110,6 +110,7 @@ class TestMockTestProtocolServer(unittest.TestCase):
         self.assertEqual(protocol.success_calls, [])
         self.assertEqual(protocol.start_calls, [])
 
+
 class TestTestImports(unittest.TestCase):
 
     def test_imports(self):
@@ -177,15 +178,10 @@ class TestTestProtocolServerPassThrough(unittest.TestCase):
 
     def setUp(self):
         from StringIO import StringIO
-        self.real_stdout = sys.stdout
         self.stdout = StringIO()
-        sys.stdout = self.stdout
         self.test = subunit.RemotedTestCase("old mcdonald")
         self.client = MockTestProtocolServerClient()
-        self.protocol = subunit.TestProtocolServer(self.client)
-
-    def tearDown(self):
-        sys.stdout = self.real_stdout
+        self.protocol = subunit.TestProtocolServer(self.client, self.stdout)
 
     def keywords_before_test(self):
         self.protocol.lineReceived("failure a\n")
@@ -306,6 +302,15 @@ class TestTestProtocolServerPassThrough(unittest.TestCase):
         self.assertEqual(self.client.end_calls, [self.test])
         self.assertEqual(self.client.error_calls, [])
         self.assertEqual(self.client.success_calls, [])
+
+    def test_stdout_passthrough(self):
+        """
+        Verify that lines received which cannot be interpreted as any
+        protocol action are passed through to sys.stdout.
+        """
+        bytes = "randombytes\n"
+        self.protocol.lineReceived(bytes)
+        self.assertEqual(self.stdout.getvalue(), bytes)
 
 
 class TestTestProtocolServerLostConnection(unittest.TestCase):
