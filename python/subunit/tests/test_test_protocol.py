@@ -304,9 +304,8 @@ class TestTestProtocolServerPassThrough(unittest.TestCase):
         self.assertEqual(self.client.success_calls, [])
 
     def test_stdout_passthrough(self):
-        """
-        Verify that lines received which cannot be interpreted as any
-        protocol action are passed through to sys.stdout.
+        """Lines received which cannot be interpreted as any protocol action
+        should be passed through to sys.stdout.
         """
         bytes = "randombytes\n"
         self.protocol.lineReceived(bytes)
