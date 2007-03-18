@@ -50,7 +50,7 @@ class TestProtocolServer(object):
     READING_FAILURE = 2
     READING_ERROR = 3
 
-    def __init__(self, client):
+    def __init__(self, client, stream=sys.stdout):
         """Create a TestProtocol server instance.
 
         client should be an object that provides
@@ -63,6 +63,7 @@ class TestProtocolServer(object):
         """
         self.state = TestProtocolServer.OUTSIDE_TEST
         self.client = client
+        self._stream = stream
 
     def _addError(self, offset, line):
         if (self.state == TestProtocolServer.TEST_STARTED and
@@ -135,17 +136,21 @@ class TestProtocolServer(object):
               self.state == TestProtocolServer.READING_ERROR):
             self._appendMessage(line)
         else:
-            cmd, rest = line.split(None, 1)
-            offset = len(cmd) + 1
-            cmd = cmd.strip(':')
-            if cmd in ('test', 'testing'):
-                self._startTest(offset, line)
-            elif cmd == 'error':
-                self._addError(offset, line)
-            elif cmd == 'failure':
-                self._addFailure(offset, line)
-            elif cmd in ('success', 'successful'):
-                self._addSuccess(offset, line)
+            parts = line.split(None, 1)
+            if len(parts) == 2:
+                cmd, rest = parts
+                offset = len(cmd) + 1
+                cmd = cmd.strip(':')
+                if cmd in ('test', 'testing'):
+                    self._startTest(offset, line)
+                elif cmd == 'error':
+                    self._addError(offset, line)
+                elif cmd == 'failure':
+                    self._addFailure(offset, line)
+                elif cmd in ('success', 'successful'):
+                    self._addSuccess(offset, line)
+                else:
+                    self.stdOutLineReceived(line)
             else:
                 self.stdOutLineReceived(line)
 
@@ -187,7 +192,7 @@ class TestProtocolServer(object):
             self.stdOutLineReceived(line)
 
     def stdOutLineReceived(self, line):
-        sys.stdout.write(line)
+        self._stream.write(line)
 
 
 class RemoteException(Exception):
