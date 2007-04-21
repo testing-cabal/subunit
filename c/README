@@ -35,9 +35,10 @@ instance] managing assertions, cleaning up on errors etc. You can look at
 'check' (http://check.sourceforge.net/) or
 'gunit' (https://garage.maemo.org/projects/gunit) for C unit test
 frameworks. I plan to write ui layers for both of these that use the subunit
-bindings for reporting. There is a patch for 'check' (check-subunit-patch-0.9.3)
-in this source tree. Its also available as request ID #1470750 in the sourceforge
-request tracker http://sourceforge.net/tracker/index.php.
+bindings for reporting. There is a patch for 'check'
+(check-subunit-0.9.3.patch, and check-subunit-0.9.5.patch) in this source tree.
+Its also available as request ID #1470750 in the sourceforge request tracker
+http://sourceforge.net/tracker/index.php.
 
 If you are a test environment maintainer - either homegrown, or 'check' or
 'gunit' or some other, you will to know how the subunit calls should be used.
