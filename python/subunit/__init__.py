@@ -214,25 +214,25 @@ class TestProtocolClient(unittest.TestResult):
 
     def addError(self, test, error):
         """Report an error in test test."""
-        self._stream.write("error: %s [\n" % test.shortDescription())
+        self._stream.write("error: %s [\n" % test.id())
         for line in self._exc_info_to_string(error, test).split():
             self._stream.write("%s\n" % line)
         self._stream.write("]\n")
 
     def addFailure(self, test, error):
         """Report a failure in test test."""
-        self._stream.write("failure: %s [\n" % test.shortDescription())
+        self._stream.write("failure: %s [\n" % test.id())
         for line in self._exc_info_to_string(error, test).split():
             self._stream.write("%s\n" % line)
         self._stream.write("]\n")
 
     def addSuccess(self, test):
         """Report a success in a test."""
-        self._stream.write("successful: %s\n" % test.shortDescription())
+        self._stream.write("successful: %s\n" % test.id())
 
     def startTest(self, test):
         """Mark a test as starting its test run."""
-        self._stream.write("test: %s\n" % test.shortDescription())
+        self._stream.write("test: %s\n" % test.id())
 
 
 def RemoteError(description=""):
