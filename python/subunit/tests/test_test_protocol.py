@@ -709,19 +709,20 @@ class TestTestProtocolClient(unittest.TestCase):
 
     def test_add_failure(self):
         """Test addFailure on a TestProtocolClient."""
-        self.protocol.addFailure(self.test, subunit.RemoteError("boo"))
+        self.protocol.addFailure(
+            self.test, subunit.RemoteError("boo qux"))
         self.assertEqual(
             self.io.getvalue(),
-            'failure: %s [\nRemoteException:\nboo\n]\n' % self.test.id())
+            'failure: %s [\nRemoteException: boo qux\n]\n' % self.test.id())
 
     def test_add_error(self):
         """Test stopTest on a TestProtocolClient."""
-        self.protocol.addError(self.test, subunit.RemoteError("phwoar"))
+        self.protocol.addError(
+            self.test, subunit.RemoteError("phwoar crikey"))
         self.assertEqual(
             self.io.getvalue(),
             'error: %s [\n'
-            "RemoteException:\n"
-            "phwoar\n"
+            "RemoteException: phwoar crikey\n"
             "]\n" % self.test.id())
 
 
