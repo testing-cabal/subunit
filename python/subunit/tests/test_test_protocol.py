@@ -396,6 +396,18 @@ class TestTestProtocolServerLostConnection(unittest.TestCase):
         self.assertEqual(self.client.failure_calls, [])
         self.assertEqual(self.client.success_calls, [self.test])
 
+    def test_lost_connection_during_skip(self):
+        self.protocol.lineReceived("test old mcdonald\n")
+        self.protocol.lineReceived("skip old mcdonald [\n")
+        self.protocol.lostConnection()
+        self.assertEqual(self.client.start_calls, [self.test])
+        self.assertEqual(self.client.end_calls, [self.test])
+        self.assertEqual(self.client.error_calls, [
+            (self.test, subunit.RemoteError("lost connection during skip "
+                                            "report of test 'old mcdonald'"))])
+        self.assertEqual(self.client.failure_calls, [])
+        self.assertEqual(self.client.success_calls, [])
+
 
 class TestTestProtocolServerAddError(unittest.TestCase):
 
@@ -491,6 +503,61 @@ class TestTestProtocolServerAddFailure(unittest.TestCase):
 
     def test_failure_colon_quoted_bracket(self):
         self.failure_quoted_bracket("failure:")
+
+
+class TestTestProtocolServerAddSkip(unittest.TestCase):
+    """Tests for the skip keyword.
+
+    In python this thunks through to Success due to stdlib limitations.
+    """
+
+    def setUp(self):
+        """Setup a test object ready to be skipped."""
+        self.client = MockTestProtocolServerClient()
+        self.protocol = subunit.TestProtocolServer(self.client)
+        self.protocol.lineReceived("test mcdonalds farm\n")
+        self.test = self.client.start_calls[-1]
+
+    def simple_skip_keyword(self, keyword):
+        self.protocol.lineReceived("%s mcdonalds farm\n" % keyword)
+        self.assertEqual(self.client.start_calls, [self.test])
+        self.assertEqual(self.client.end_calls, [self.test])
+        self.assertEqual(self.client.error_calls, [])
+        self.assertEqual(self.client.failure_calls, [])
+        self.assertEqual(self.client.success_calls, [self.test])
+
+    def test_simple_skip(self):
+        self.simple_skip_keyword("skip")
+
+    def test_simple_skip_colon(self):
+        self.simple_skip_keyword("skip:")
+
+    def test_skip_empty_message(self):
+        self.protocol.lineReceived("skip mcdonalds farm [\n")
+        self.protocol.lineReceived("]\n")
+        self.assertEqual(self.client.start_calls, [self.test])
+        self.assertEqual(self.client.end_calls, [self.test])
+        self.assertEqual(self.client.error_calls, [])
+        self.assertEqual(self.client.failure_calls, [])
+        self.assertEqual(self.client.success_calls, [self.test])
+
+    def skip_quoted_bracket(self, keyword):
+        # This tests it is accepted, but cannot test it is used today, because
+        # of not having a way to expose it in python so far.
+        self.protocol.lineReceived("%s mcdonalds farm [\n" % keyword)
+        self.protocol.lineReceived(" ]\n")
+        self.protocol.lineReceived("]\n")
+        self.assertEqual(self.client.start_calls, [self.test])
+        self.assertEqual(self.client.end_calls, [self.test])
+        self.assertEqual(self.client.error_calls, [])
+        self.assertEqual(self.client.failure_calls, [])
+        self.assertEqual(self.client.success_calls, [self.test])
+
+    def test_skip_quoted_bracket(self):
+        self.skip_quoted_bracket("skip")
+
+    def test_skip_colon_quoted_bracket(self):
+        self.skip_quoted_bracket("skip:")
 
 
 class TestTestProtocolServerAddSuccess(unittest.TestCase):
