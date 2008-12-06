@@ -156,8 +156,14 @@ failure: test label [
 error: test label
 error: test label [
 ]
+tags: [-]TAG ...
 unexpected output on stdout -> stdout.
 exit w/0 or last test -> error
+tags given outside a test are applied to all following tests
+tags given within a test inherit the current global tags
+
+In python, tags are assigned to the .tags attribute on the RemoteTest objects
+created by the TestProtocolServer.
 
 TODO:
 def run:
