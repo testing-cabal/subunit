@@ -408,6 +408,30 @@ class TestTestProtocolServerLostConnection(unittest.TestCase):
         self.assertEqual(self.client.failure_calls, [])
         self.assertEqual(self.client.success_calls, [])
 
+    def test_lost_connection_during_xfail(self):
+        self.protocol.lineReceived("test old mcdonald\n")
+        self.protocol.lineReceived("xfail old mcdonald [\n")
+        self.protocol.lostConnection()
+        self.assertEqual(self.client.start_calls, [self.test])
+        self.assertEqual(self.client.end_calls, [self.test])
+        self.assertEqual(self.client.error_calls, [
+            (self.test, subunit.RemoteError("lost connection during xfail "
+                                            "report of test 'old mcdonald'"))])
+        self.assertEqual(self.client.failure_calls, [])
+        self.assertEqual(self.client.success_calls, [])
+
+    def test_lost_connection_during_success(self):
+        self.protocol.lineReceived("test old mcdonald\n")
+        self.protocol.lineReceived("success old mcdonald [\n")
+        self.protocol.lostConnection()
+        self.assertEqual(self.client.start_calls, [self.test])
+        self.assertEqual(self.client.end_calls, [self.test])
+        self.assertEqual(self.client.error_calls, [
+            (self.test, subunit.RemoteError("lost connection during success "
+                                            "report of test 'old mcdonald'"))])
+        self.assertEqual(self.client.failure_calls, [])
+        self.assertEqual(self.client.success_calls, [])
+
 
 class TestTestProtocolServerAddError(unittest.TestCase):
 
@@ -641,6 +665,33 @@ class TestTestProtocolServerAddSuccess(unittest.TestCase):
 
     def test_simple_success_colon(self):
         self.simple_success_keyword("successful:")
+
+    def test_success_empty_message(self):
+        self.protocol.lineReceived("success mcdonalds farm [\n")
+        self.protocol.lineReceived("]\n")
+        self.assertEqual(self.client.start_calls, [self.test])
+        self.assertEqual(self.client.end_calls, [self.test])
+        self.assertEqual(self.client.error_calls, [])
+        self.assertEqual(self.client.failure_calls, [])
+        self.assertEqual(self.client.success_calls, [self.test])
+
+    def success_quoted_bracket(self, keyword):
+        # This tests it is accepted, but cannot test it is used today, because
+        # of not having a way to expose it in python so far.
+        self.protocol.lineReceived("%s mcdonalds farm [\n" % keyword)
+        self.protocol.lineReceived(" ]\n")
+        self.protocol.lineReceived("]\n")
+        self.assertEqual(self.client.start_calls, [self.test])
+        self.assertEqual(self.client.end_calls, [self.test])
+        self.assertEqual(self.client.error_calls, [])
+        self.assertEqual(self.client.failure_calls, [])
+        self.assertEqual(self.client.success_calls, [self.test])
+
+    def test_success_quoted_bracket(self):
+        self.success_quoted_bracket("success")
+
+    def test_success_colon_quoted_bracket(self):
+        self.success_quoted_bracket("success:")
 
 
 class TestRemotedTestCase(unittest.TestCase):

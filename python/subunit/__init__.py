@@ -51,6 +51,7 @@ class TestProtocolServer(object):
     READING_ERROR = 3
     READING_SKIP = 4
     READING_XFAIL = 5
+    READING_SUCCESS = 6
 
     def __init__(self, client, stream=sys.stdout):
         """Create a TestProtocol server instance.
@@ -128,6 +129,10 @@ class TestProtocolServer(object):
         if (self.state == TestProtocolServer.TEST_STARTED and
             self.current_test_description == line[offset:-1]):
             self._succeedTest()
+        elif (self.state == TestProtocolServer.TEST_STARTED and
+            self.current_test_description + " [" == line[offset:-1]):
+            self.state = TestProtocolServer.READING_SUCCESS
+            self._message = ""
         else:
             self.stdOutLineReceived(line)
 
@@ -153,7 +158,9 @@ class TestProtocolServer(object):
             self.client.stopTest(self._current_test)
         elif self.state in (
             TestProtocolServer.READING_SKIP,
-            TestProtocolServer.READING_XFAIL):
+            TestProtocolServer.READING_SUCCESS,
+            TestProtocolServer.READING_XFAIL,
+            ):
             self._succeedTest()
         else:
             self.stdOutLineReceived(line)
@@ -204,10 +211,14 @@ class TestProtocolServer(object):
             self._lostConnectionInTest('error report of ')
         elif self.state == TestProtocolServer.READING_FAILURE:
             self._lostConnectionInTest('failure report of ')
+        elif self.state == TestProtocolServer.READING_SUCCESS:
+            self._lostConnectionInTest('success report of ')
         elif self.state == TestProtocolServer.READING_SKIP:
             self._lostConnectionInTest('skip report of ')
+        elif self.state == TestProtocolServer.READING_XFAIL:
+            self._lostConnectionInTest('xfail report of ')
         else:
-            self._lostConnection('unknown state of ')
+            self._lostConnectionInTest('unknown state of ')
 
     def readFrom(self, pipe):
         for line in pipe.readlines():
