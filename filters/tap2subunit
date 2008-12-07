@@ -22,4 +22,4 @@
 import sys
 
 from subunit import TAP2SubUnit
-return TAP2SubUnit(sys.stdin, sys.stdout)
+sys.exit(TAP2SubUnit(sys.stdin, sys.stdout))
