@@ -50,6 +50,7 @@ class TestProtocolServer(object):
     READING_FAILURE = 2
     READING_ERROR = 3
     READING_SKIP = 4
+    READING_XFAIL = 5
 
     def __init__(self, client, stream=sys.stdout):
         """Create a TestProtocol server instance.
@@ -77,6 +78,20 @@ class TestProtocolServer(object):
         elif (self.state == TestProtocolServer.TEST_STARTED and
             self.current_test_description + " [" == line[offset:-1]):
             self.state = TestProtocolServer.READING_ERROR
+            self._message = ""
+        else:
+            self.stdOutLineReceived(line)
+
+    def _addExpectedFail(self, offset, line):
+        if (self.state == TestProtocolServer.TEST_STARTED and
+            self.current_test_description == line[offset:-1]):
+            self.state = TestProtocolServer.OUTSIDE_TEST
+            self.current_test_description = None
+            self.client.addSuccess(self._current_test)
+            self.client.stopTest(self._current_test)
+        elif (self.state == TestProtocolServer.TEST_STARTED and
+            self.current_test_description + " [" == line[offset:-1]):
+            self.state = TestProtocolServer.READING_XFAIL
             self._message = ""
         else:
             self.stdOutLineReceived(line)
@@ -136,7 +151,9 @@ class TestProtocolServer(object):
             self.client.addError(self._current_test,
                                  RemoteError(self._message))
             self.client.stopTest(self._current_test)
-        elif self.state == TestProtocolServer.READING_SKIP:
+        elif self.state in (
+            TestProtocolServer.READING_SKIP,
+            TestProtocolServer.READING_XFAIL):
             self._succeedTest()
         else:
             self.stdOutLineReceived(line)
@@ -164,6 +181,8 @@ class TestProtocolServer(object):
                     self._addSkip(offset, line)
                 elif cmd in ('success', 'successful'):
                     self._addSuccess(offset, line)
+                elif cmd == 'xfail':
+                    self._addExpectedFail(offset, line)
                 else:
                     self.stdOutLineReceived(line)
             else:

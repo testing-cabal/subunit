@@ -505,6 +505,61 @@ class TestTestProtocolServerAddFailure(unittest.TestCase):
         self.failure_quoted_bracket("failure:")
 
 
+class TestTestProtocolServerAddxFail(unittest.TestCase):
+    """Tests for the xfail keyword.
+
+    In python this thunks through to Success due to stdlib limitations.
+    """
+
+    def setUp(self):
+        """Setup a test object ready to be xfailed."""
+        self.client = MockTestProtocolServerClient()
+        self.protocol = subunit.TestProtocolServer(self.client)
+        self.protocol.lineReceived("test mcdonalds farm\n")
+        self.test = self.client.start_calls[-1]
+
+    def simple_xfail_keyword(self, keyword):
+        self.protocol.lineReceived("%s mcdonalds farm\n" % keyword)
+        self.assertEqual(self.client.start_calls, [self.test])
+        self.assertEqual(self.client.end_calls, [self.test])
+        self.assertEqual(self.client.error_calls, [])
+        self.assertEqual(self.client.failure_calls, [])
+        self.assertEqual(self.client.success_calls, [self.test])
+
+    def test_simple_xfail(self):
+        self.simple_xfail_keyword("xfail")
+
+    def test_simple_xfail_colon(self):
+        self.simple_xfail_keyword("xfail:")
+
+    def test_xfail_empty_message(self):
+        self.protocol.lineReceived("xfail mcdonalds farm [\n")
+        self.protocol.lineReceived("]\n")
+        self.assertEqual(self.client.start_calls, [self.test])
+        self.assertEqual(self.client.end_calls, [self.test])
+        self.assertEqual(self.client.error_calls, [])
+        self.assertEqual(self.client.failure_calls, [])
+        self.assertEqual(self.client.success_calls, [self.test])
+
+    def xfail_quoted_bracket(self, keyword):
+        # This tests it is accepted, but cannot test it is used today, because
+        # of not having a way to expose it in python so far.
+        self.protocol.lineReceived("%s mcdonalds farm [\n" % keyword)
+        self.protocol.lineReceived(" ]\n")
+        self.protocol.lineReceived("]\n")
+        self.assertEqual(self.client.start_calls, [self.test])
+        self.assertEqual(self.client.end_calls, [self.test])
+        self.assertEqual(self.client.error_calls, [])
+        self.assertEqual(self.client.failure_calls, [])
+        self.assertEqual(self.client.success_calls, [self.test])
+
+    def test_xfail_quoted_bracket(self):
+        self.xfail_quoted_bracket("xfail")
+
+    def test_xfail_colon_quoted_bracket(self):
+        self.xfail_quoted_bracket("xfail:")
+
+
 class TestTestProtocolServerAddSkip(unittest.TestCase):
     """Tests for the skip keyword.
 

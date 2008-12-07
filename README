@@ -159,6 +159,9 @@ error: test label [
 skip[:] test label
 skip[:] test label [
 ]
+xfail[:] test label
+xfail[:] test label [
+]
 unexpected output on stdout -> stdout.
 exit w/0 or last test -> error
 
