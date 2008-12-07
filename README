@@ -17,22 +17,33 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
+Subunit
+-------
 
 Subunit is attempting to extend unittest with a clean and simple api to
 run arbitrary external test suites and return the results to standard
 python unittest.
 
-Subunit comes in two parts: There is a parent-process component and a
-child procecss component. The parent component pretends to be a xUnit
-test suite in whatever language you are using for the parent. Currently
-there is only one implementation of the parent : Python.
-Secondly there is the child component that runs in the child process and
-reports to the parent as tests begin and end. There are currently 3
-implementations of the child - Python, C and shell.
-Look in the python/, shell/ or c/ directories for the sources in each
-languages.
+Subunit comes in three parts:
+ * Protocol writers (clients)
+ * Protocol readers (servers)
+ * Filters
+ 
+The reader component acts as a test suite in the language that it is written
+for. Currently subunit only provides a Python protocol reader.
 
-Using subunit:
+Writers are used to output test results in subunit form. Writers are typically
+test suite runners or test suite result objects in specific languages.
+Currently subunit provides writers for Python, C, C++, and shell.
+
+Filters provide translation filtering capabilities and can be used to modify a
+stream on-the-fly. Currently subunit provides a single filter - tap2subunit.
+
+The subunit code is organised at the top level by directories, for language
+bindings, and additionally the filters directory for filters.
+
+Using subunit in Python
+-----------------------
 
 1) As a runner for external tests (potentially in other languages)
 2) As a process boundary for unittest TestCases to prevent them fiddling with
@@ -119,6 +130,8 @@ Some requirements:
   After the test has run, tests should still exist as discrete objects, so that
   anything taking a reference to them doesn't get 50 copies of the same object.
 
+Sample subunit wire contents
+----------------------------
 
 test: test foo works
 success: test foo works.
@@ -138,11 +151,13 @@ a writeln to stdout
 FAILURE: tar a file.
 -------------------
 ..
-]..  space is eatern.
+]..  space is eaten.
 foo.c:34 WARNING foo is not defined.
 ========================
 
-control protocol:
+
+Subunit protocol description
+----------------------------
 test|testing|test:|testing: test label
 success|success:|successful|successful: test label
 success|success:|successful|successful: test label [
@@ -167,6 +182,7 @@ xfail[:] test label [
 ]
 unexpected output on stdout -> stdout.
 exit w/0 or last test -> error
+
 
 TODO:
 def run:

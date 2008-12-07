@@ -21,6 +21,7 @@ import os
 from StringIO import StringIO
 import subprocess
 import sys
+import re
 import unittest
 
 def test_suite():
@@ -422,3 +423,111 @@ def run_isolated(klass, self, result):
         os.waitpid(pid, 0)
         # TODO return code evaluation.
     return result
+
+
+def TAP2SubUnit(tap, subunit):
+    """Filter a TAP pipe into a subunit pipe.
+    
+    :param tap: A tap pipe/stream/file object.
+    :param subunit: A pipe/stream/file object to write subunit results to.
+    :return: The exit code to exit with.
+    """
+    BEFORE_PLAN = 0
+    AFTER_PLAN = 1
+    SKIP_STREAM = 2
+    client = TestProtocolClient(subunit)
+    state = BEFORE_PLAN
+    plan_start = 1
+    plan_stop = 0
+    def _skipped_test(subunit, plan_start):
+        # Some tests were skipped.
+        subunit.write('test test %d\n' % plan_start)
+        subunit.write('error test %d [\n' % plan_start)
+        subunit.write('test missing from TAP output\n')
+        subunit.write(']\n')
+        return plan_start + 1
+    # Test data for the next test to emit
+    test_name = None
+    log = []
+    result = None
+    def _emit_test():
+        "write out a test"
+        if test_name is None:
+            return
+        subunit.write("test %s\n" % test_name)
+        if not log:
+            subunit.write("%s %s\n" % (result, test_name))
+        else:
+            subunit.write("%s %s [\n" % (result, test_name))
+        if log:
+            for line in log:
+                subunit.write("%s\n" % line)
+            subunit.write("]\n")
+        del log[:]
+    for line in tap:
+        if state == BEFORE_PLAN:
+            match = re.match("(\d+)\.\.(\d+)\s*(?:\#\s+(.*))?\n", line)
+            if match:
+                state = AFTER_PLAN
+                _, plan_stop, comment = match.groups()
+                plan_stop = int(plan_stop)
+                if plan_start > plan_stop and plan_stop == 0:
+                    # skipped file
+                    state = SKIP_STREAM
+                    subunit.write("test file skip\n")
+                    subunit.write("skip file skip [\n")
+                    subunit.write("%s\n" % comment)
+                    subunit.write("]\n")
+                continue
+        # not a plan line, or have seen one before
+        #match = re.match("(ok|not ok)\s+(\d+)?\s*([^#]*)\s*(?:#\s+(.*))\n", line)
+        match = re.match("(ok|not ok)(?:\s+(\d+)?)?(?:\s+([^#]*[^#\s]+)\s*)?(?:\s+#\s+(TODO|SKIP)(?:\s+(.*))?)?\n", line)
+        if match:
+            # new test, emit current one.
+            _emit_test()
+            status, number, description, directive, directive_comment = match.groups()
+            # status, number, description = match.groups()
+            if status == 'ok':
+                result = 'success'
+            else:
+                result = 'fail'
+            if description is None:
+                description = ''
+            else:
+                description = ' ' + description
+            if directive is not None:
+                if directive == 'TODO':
+                    result = 'xfail'
+                elif directive == 'SKIP':
+                    result = 'skip'
+                if directive_comment is not None:
+                    log.append(directive_comment)
+            if number is not None:
+                number = int(number)
+                while plan_start < number:
+                    plan_start = _skipped_test(subunit, plan_start)
+            test_name = "test %d%s" % (plan_start, description)
+            plan_start += 1
+            continue
+        match = re.match("Bail out\!(?:\s*(.*))?\n", line)
+        if match:
+            reason, = match.groups()
+            if reason is None:
+                extra = ''
+            else:
+                extra = ' %s' % reason
+            _emit_test()
+            test_name = "Bail out!%s" % extra
+            result = "error"
+            state = SKIP_STREAM
+            continue
+        match = re.match("\#.*\n", line)
+        if match:
+            log.append(line[:-1])
+            continue
+        subunit.write(line)
+    _emit_test()
+    while plan_start <= plan_stop:
+        # record missed tests
+        plan_start = _skipped_test(subunit, plan_start)
+    return 0

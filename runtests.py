@@ -95,7 +95,7 @@ def test_suite():
 
 
 class filteringVisitor(TestVisitor):
-    """I accruse all the testCases I visit that pass a regexp filter on id
+    """I accrue all the testCases I visit that pass a regexp filter on id
     into my suite
     """
 
