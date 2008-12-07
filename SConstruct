@@ -26,7 +26,7 @@ def run_test_scripts(source, target, env, for_signature):
     """Run all the sources as executable scripts which return 0 on success."""
     # TODO: make this cross platform compatible.
     return ["LD_LIBRARY_PATH=%s %s" % (os.path.join(str(target[0].dir), 
-				env['LIBPATH']), a_source) for a_source in source]
+                                env['LIBPATH']), a_source) for a_source in source]
 test_script_runner = Builder(generator=run_test_scripts)
 def run_python_scripts(source, target, env, for_signature):
     """Run all the sources as executable scripts which return 0 on success."""
