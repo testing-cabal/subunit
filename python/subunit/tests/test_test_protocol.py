@@ -22,6 +22,7 @@ from StringIO import StringIO
 import os
 import subunit
 import sys
+import time
 
 try:
     class MockTestProtocolServerClient(object):
@@ -745,6 +746,20 @@ class TestTestProtocolServerStreamTags(unittest.TestCase):
         self.protocol.lineReceived("tags: -bar quux\n")
         self.assertEqual(set(["foo", "quux"]), test.tags)
         self.assertEqual(set(["foo", "bar"]), self.protocol.tags)
+
+
+class TestTestProtocolServerStreamTime(unittest.TestCase):
+    """Test managing time information at the protocol level."""
+
+    def setUp(self):
+        self.client = MockTestProtocolServerClient()
+        self.stream = StringIO()
+        self.protocol = subunit.TestProtocolServer(self.client,
+            stream=self.stream)
+
+    def test_time_accepted(self):
+        self.protocol.lineReceived("time: 2001-12-12 12:59:59Z\n")
+        self.assertEqual("", self.stream.getvalue())
 
 
 class TestRemotedTestCase(unittest.TestCase):

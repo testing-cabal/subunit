@@ -213,8 +213,11 @@ class TestProtocolServer(object):
                     self._addSkip(offset, line)
                 elif cmd in ('success', 'successful'):
                     self._addSuccess(offset, line)
-                elif cmd in ('tags'):
+                elif cmd in ('tags',):
                     self._handleTags(offset, line)
+                elif cmd in ('time',):
+                    # Accept it, but do not do anything with it yet.
+                    pass
                 elif cmd == 'xfail':
                     self._addExpectedFail(offset, line)
                 else:
