@@ -171,7 +171,10 @@ class TestProtocolServer(object):
         if line == "]\n":
             self.endQuote(line)
         elif self.state in (TestProtocolServer.READING_FAILURE,
-            TestProtocolServer.READING_ERROR, TestProtocolServer.READING_SKIP):
+            TestProtocolServer.READING_ERROR, TestProtocolServer.READING_SKIP,
+            TestProtocolServer.READING_SUCCESS,
+            TestProtocolServer.READING_XFAIL
+            ):
             self._appendMessage(line)
         else:
             parts = line.split(None, 1)
