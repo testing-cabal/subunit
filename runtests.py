@@ -85,16 +85,12 @@ class ShellTests(subunit.ExecTestCase):
     def test_functions(self):
         """./shell/tests/test_function_output.sh"""
 
-    def test_cr3(self):
-        """./foo.sh"""
-
 
 def test_suite():
     result = TestSuite()
-    #result.addTest(subunit.test_suite())
-    #result.addTest(ShellTests('test_sourcing'))
-    #result.addTest(ShellTests('test_functions'))
-    result.addTest(ShellTests('test_cr3'))
+    result.addTest(subunit.test_suite())
+    result.addTest(ShellTests('test_sourcing'))
+    result.addTest(ShellTests('test_functions'))
     return result
 
 

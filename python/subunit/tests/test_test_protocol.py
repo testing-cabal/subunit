@@ -694,6 +694,59 @@ class TestTestProtocolServerAddSuccess(unittest.TestCase):
         self.success_quoted_bracket("success:")
 
 
+class TestTestProtocolServerStreamTags(unittest.TestCase):
+    """Test managing tags on the protocol level."""
+
+    def setUp(self):
+        self.client = MockTestProtocolServerClient()
+        self.protocol = subunit.TestProtocolServer(self.client)
+
+    def test_initial_tags(self):
+        self.protocol.lineReceived("tags: foo bar:baz  quux\n")
+        self.assertEqual(set(["foo", "bar:baz", "quux"]),
+            self.protocol.tags)
+
+    def test_minus_removes_tags(self):
+        self.protocol.lineReceived("tags: foo bar\n")
+        self.protocol.lineReceived("tags: -bar quux\n")
+        self.assertEqual(set(["foo", "quux"]),
+            self.protocol.tags)
+
+    def test_tags_get_set_on_test_no_tags(self):
+        self.protocol.lineReceived("test mcdonalds farm\n")
+        test = self.client.start_calls[-1]
+        self.assertEqual(set(), test.tags)
+
+    def test_tags_get_set_on_test_protocol_tags_only(self):
+        self.protocol.lineReceived("tags: foo bar\n")
+        self.protocol.lineReceived("test mcdonalds farm\n")
+        test = self.client.start_calls[-1]
+        self.assertEqual(set(["foo", "bar"]), test.tags)
+
+    def test_tags_get_set_on_test_simple(self):
+        self.protocol.lineReceived("test mcdonalds farm\n")
+        test = self.client.start_calls[-1]
+        self.protocol.lineReceived("tags: foo bar\n")
+        self.assertEqual(set(["foo", "bar"]), test.tags)
+        self.assertEqual(set(), self.protocol.tags)
+
+    def test_tags_get_set_on_test_minus_removes(self):
+        self.protocol.lineReceived("test mcdonalds farm\n")
+        test = self.client.start_calls[-1]
+        self.protocol.lineReceived("tags: foo bar\n")
+        self.protocol.lineReceived("tags: -bar quux\n")
+        self.assertEqual(set(["foo", "quux"]), test.tags)
+        self.assertEqual(set(), self.protocol.tags)
+
+    def test_test_tags_inherit_protocol_tags(self):
+        self.protocol.lineReceived("tags: foo bar\n")
+        self.protocol.lineReceived("test mcdonalds farm\n")
+        test = self.client.start_calls[-1]
+        self.protocol.lineReceived("tags: -bar quux\n")
+        self.assertEqual(set(["foo", "quux"]), test.tags)
+        self.assertEqual(set(["foo", "bar"]), self.protocol.tags)
+
+
 class TestRemotedTestCase(unittest.TestCase):
 
     def test_simple(self):

@@ -44,7 +44,10 @@ def join_dir(base_path, path):
 
 
 class TestProtocolServer(object):
-    """A class for receiving results from a TestProtocol client."""
+    """A class for receiving results from a TestProtocol client.
+    
+    :ivar tags: The current tags associated with the protocol stream.
+    """
 
     OUTSIDE_TEST = 0
     TEST_STARTED = 1
@@ -68,6 +71,7 @@ class TestProtocolServer(object):
         self.state = TestProtocolServer.OUTSIDE_TEST
         self.client = client
         self._stream = stream
+        self.tags = set()
 
     def _addError(self, offset, line):
         if (self.state == TestProtocolServer.TEST_STARTED and
@@ -166,6 +170,23 @@ class TestProtocolServer(object):
         else:
             self.stdOutLineReceived(line)
 
+    def _handleTags(self, offset, line):
+        """Process a tags command."""
+        tags = line[offset:].split()
+        new_tags = set()
+        gone_tags = set()
+        for tag in tags:
+            if tag[0] == '-':
+                gone_tags.add(tag[1:])
+            else:
+                new_tags.add(tag)
+        if self.state == TestProtocolServer.OUTSIDE_TEST:
+            update_tags = self.tags
+        else:
+            update_tags = self._current_test.tags
+        update_tags.update(new_tags)
+        update_tags.difference_update(gone_tags)
+
     def lineReceived(self, line):
         """Call the appropriate local method for the received line."""
         if line == "]\n":
@@ -192,6 +213,8 @@ class TestProtocolServer(object):
                     self._addSkip(offset, line)
                 elif cmd in ('success', 'successful'):
                     self._addSuccess(offset, line)
+                elif cmd in ('tags'):
+                    self._handleTags(offset, line)
                 elif cmd == 'xfail':
                     self._addExpectedFail(offset, line)
                 else:
@@ -236,6 +259,7 @@ class TestProtocolServer(object):
             self._current_test = RemotedTestCase(line[offset:-1])
             self.current_test_description = line[offset:-1]
             self.client.startTest(self._current_test)
+            self._current_test.tags = set(self.tags)
         else:
             self.stdOutLineReceived(line)
 
@@ -297,7 +321,14 @@ def RemoteError(description=""):
 
 
 class RemotedTestCase(unittest.TestCase):
-    """A class to represent test cases run in child processes."""
+    """A class to represent test cases run in child processes.
+    
+    Instances of this class are used to provide the python test API a TestCase
+    that can be printed to the screen, introspected for metadata and so on.
+    However, as they are a simply a memoisation of a test that was actually
+    run in the past by a separate process, they cannot perform any interactive
+    actions.
+    """
 
     def __eq__ (self, other):
         try:
