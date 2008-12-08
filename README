@@ -37,9 +37,10 @@ test suite runners or test suite result objects in specific languages.
 Currently subunit provides writers for Python, C, C++, and shell.
 
 Filters provide translation filtering capabilities and can be used to modify a
-stream on-the-fly. Currently subunit provides a two filters:
+stream on-the-fly. Currently subunit provides:
  * tap2subunit - convert perl's TestAnythingProtocol to subunit.
  * subunit2pyunit - convert a subunit stream to pyunit test results.
+ * subunit-tags - add or remove tags from a stream.
 
 The subunit code is organised at the top level by directories, for language
 bindings, and additionally the filters directory for filters.

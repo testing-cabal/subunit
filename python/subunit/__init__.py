@@ -43,6 +43,18 @@ def join_dir(base_path, path):
     return os.path.join(os.path.dirname(os.path.abspath(base_path)), path)
 
 
+def tags_to_new_gone(tags):
+    """Split a list of tags into a new_set and a gone_set."""
+    new_tags = set()
+    gone_tags = set()
+    for tag in tags:
+        if tag[0] == '-':
+            gone_tags.add(tag[1:])
+        else:
+            new_tags.add(tag)
+    return new_tags, gone_tags
+
+
 class TestProtocolServer(object):
     """A class for receiving results from a TestProtocol client.
     
@@ -173,13 +185,7 @@ class TestProtocolServer(object):
     def _handleTags(self, offset, line):
         """Process a tags command."""
         tags = line[offset:].split()
-        new_tags = set()
-        gone_tags = set()
-        for tag in tags:
-            if tag[0] == '-':
-                gone_tags.add(tag[1:])
-            else:
-                new_tags.add(tag)
+        new_tags, gone_tags = tags_to_new_gone(tags)
         if self.state == TestProtocolServer.OUTSIDE_TEST:
             update_tags = self.tags
         else:
@@ -567,4 +573,47 @@ def TAP2SubUnit(tap, subunit):
     while plan_start <= plan_stop:
         # record missed tests
         plan_start = _skipped_test(subunit, plan_start)
+    return 0
+
+
+def tag_stream(original, filtered, tags):
+    """Alter tags on a stream.
+
+    :param original: The input stream.
+    :param filtered: The output stream.
+    :param tags: The tags to apply. As in a normal stream - a list of 'TAG' or
+        '-TAG' commands.
+        A 'TAG' command will add the tag to the output stream,
+        and override any existing '-TAG' command in that stream.
+        Specifically:
+         * A global 'tags: TAG' will be added to the start of the stream.
+         * Any tags commands with -TAG will have the -TAG removed.
+        A '-TAG' command will remove the TAG command from the stream.
+        Specifically:
+         * A 'tags: -TAG' command will be added to the start of the stream.
+         * Any 'tags: TAG' command will have 'TAG' removed from it.
+        Additionally, any redundant tagging commands (adding a tag globally
+        present, or removing a tag globally removed) are stripped as a
+        by-product of the filtering.
+    :return: 0
+    """
+    new_tags, gone_tags = tags_to_new_gone(tags)
+    def write_tags(new_tags, gone_tags):
+        if new_tags or gone_tags:
+            filtered.write("tags: " + ' '.join(new_tags))
+            if gone_tags:
+                for tag in gone_tags:
+                    filtered.write("-" + tag)
+            filtered.write("\n")
+    write_tags(new_tags, gone_tags)
+    # TODO: use the protocol parser and thus don't mangle test comments.
+    for line in original:
+        if line.startswith("tags:"):
+            line_tags = line[5:].split()
+            line_new, line_gone = tags_to_new_gone(line_tags)
+            line_new = line_new - gone_tags
+            line_gone = line_gone - new_tags
+            write_tags(line_new, line_gone)
+        else:
+            filtered.write(line)
     return 0
