@@ -533,7 +533,7 @@ def TAP2SubUnit(tap, subunit):
             if status == 'ok':
                 result = 'success'
             else:
-                result = 'fail'
+                result = "failure"
             if description is None:
                 description = ''
             else:

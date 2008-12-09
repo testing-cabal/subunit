@@ -222,7 +222,7 @@ class TestTAP2SubUnit(unittest.TestCase):
             'test test 1 first test',
             'success test 1 first test',
             'test test 2 second test',
-            'fail test 2 second test',
+            'failure test 2 second test',
             'test test 3',
             'error test 3 [',
             'test missing from TAP output',
@@ -250,7 +250,7 @@ class TestTAP2SubUnit(unittest.TestCase):
             'test missing from TAP output',
             ']',
             'test test 3 third test',
-            'fail test 3 third test',
+            'failure test 3 third test',
             ],
             self.subunit.getvalue().splitlines())
 
@@ -272,7 +272,7 @@ class TestTAP2SubUnit(unittest.TestCase):
             'test missing from TAP output',
             ']',
             'test test 3 third test',
-            'fail test 3 third test',
+            'failure test 3 third test',
             ],
             self.subunit.getvalue().splitlines())
 
@@ -296,11 +296,11 @@ class TestTAP2SubUnit(unittest.TestCase):
             'test test 1 - first test in a script with no plan at all',
             'success test 1 - first test in a script with no plan at all',
             'test test 2 - second',
-            'fail test 2 - second',
+            'failure test 2 - second',
             'test test 3 - third',
             'success test 3 - third',
             'test test 4 - fourth',
-            'fail test 4 - fourth'
+            'failure test 4 - fourth'
             ],
             self.subunit.getvalue().splitlines())
 
@@ -324,11 +324,11 @@ class TestTAP2SubUnit(unittest.TestCase):
             'test test 1 - first test in a script with no plan at all',
             'success test 1 - first test in a script with no plan at all',
             'test test 2 - second',
-            'fail test 2 - second',
+            'failure test 2 - second',
             'test test 3 - third',
             'success test 3 - third',
             'test test 4 - fourth',
-            'fail test 4 - fourth'
+            'failure test 4 - fourth'
             ],
             self.subunit.getvalue().splitlines())
 
@@ -350,11 +350,11 @@ class TestTAP2SubUnit(unittest.TestCase):
             'test test 1 - first test in a script with no plan at all',
             'success test 1 - first test in a script with no plan at all',
             'test test 2 - second',
-            'fail test 2 - second',
+            'failure test 2 - second',
             'test test 3 - third',
             'success test 3 - third',
             'test test 4 - fourth',
-            'fail test 4 - fourth'
+            'failure test 4 - fourth'
             ],
             self.subunit.getvalue().splitlines())
 
