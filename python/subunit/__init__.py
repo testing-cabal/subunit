@@ -617,3 +617,66 @@ def tag_stream(original, filtered, tags):
         else:
             filtered.write(line)
     return 0
+
+
+class ProtocolTestCase(object):
+    """A test case which reports a subunit stream."""
+
+    def __init__(self, stream):
+        self._stream = stream
+
+    def __call__(self, result=None):
+        return self.run(result)
+
+    def run(self, result=None):
+        if result is None: result = self.defaultTestResult()
+        protocol = TestProtocolServer(result)
+        for line in self._stream:
+            protocol.lineReceived(line)
+        protocol.lostConnection()
+
+
+class TestResultStats(unittest.TestResult):
+    """A pyunit TestResult interface implementation for making statistics.
+    
+    :ivar total_tests: The total tests seen.
+    :ivar passed_tests: The tests that passed.
+    :ivar failed_tests: The tests that failed.
+    :ivar tags: The tags seen across all tests.
+    """
+
+    def __init__(self, stream):
+        """Create a TestResultStats which outputs to stream."""
+        unittest.TestResult.__init__(self)
+        self._stream = stream
+        self.failed_tests = 0
+        self.tags = set()
+
+    @property
+    def total_tests(self):
+        return self.testsRun
+
+    def addError(self, test, err):
+        self.failed_tests += 1
+
+    def addFailure(self, test, err):
+        self.failed_tests += 1
+
+    def formatStats(self):
+        self._stream.write("Total tests:  %5d\n" % self.total_tests)
+        self._stream.write("Passed tests: %5d\n" % self.passed_tests)
+        self._stream.write("Failed tests: %5d\n" % self.failed_tests)
+        tags = sorted(self.tags)
+        self._stream.write("Tags: %s\n" % (", ".join(tags)))
+
+    @property
+    def passed_tests(self):
+        return self.total_tests - self.failed_tests
+
+    def stopTest(self, test):
+        unittest.TestResult.stopTest(self, test)
+        self.tags.update(test.tags)
+
+    def wasSuccessful(self):
+        "Tells whether or not this result was a success"
+        return self.failed_tests == 0

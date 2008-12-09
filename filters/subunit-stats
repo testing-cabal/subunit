@@ -17,16 +17,18 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-"""Filter a subunit stream through python's default unittest test runner."""
+"""Filter a subunit stream to get aggregate satistics."""
 
 import sys
 import unittest
 
-from subunit import ProtocolTestCase, TestProtocolServer
+from subunit import ProtocolTestCase, TestResultStats
 
-runner = unittest.TextTestRunner(verbosity=2)
+result = TestResultStats(sys.stdout)
 test = ProtocolTestCase(sys.stdin)
-if runner.run(test).wasSuccessful():
+test.run(result)
+result.formatStats()
+if result.wasSuccessful():
     exit_code = 0
 else:
     exit_code = 1
