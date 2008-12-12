@@ -694,8 +694,7 @@ class TestTestProtocolClient(unittest.TestCase):
     def test_start_test(self):
         """Test startTest on a TestProtocolClient."""
         self.protocol.startTest(self.test)
-        self.assertEqual(self.io.getvalue(), "test: Test startTest on a "
-                                             "TestProtocolClient.\n")
+        self.assertEqual(self.io.getvalue(), "test: %s\n" % self.test.id())
 
     def test_stop_test(self):
         """Test stopTest on a TestProtocolClient."""
@@ -705,26 +704,26 @@ class TestTestProtocolClient(unittest.TestCase):
     def test_add_success(self):
         """Test addSuccess on a TestProtocolClient."""
         self.protocol.addSuccess(self.test)
-        self.assertEqual(self.io.getvalue(), "successful: Test startTest on a "
-                                             "TestProtocolClient.\n")
+        self.assertEqual(
+            self.io.getvalue(), "successful: %s\n" % self.test.id())
 
     def test_add_failure(self):
         """Test addFailure on a TestProtocolClient."""
-        self.protocol.addFailure(self.test, subunit.RemoteError("boo"))
-        self.assertEqual(self.io.getvalue(), "failure: Test startTest on a "
-                                             "TestProtocolClient. [\n"
-                                             "RemoteException:\n"
-                                             "boo\n"
-                                             "]\n")
+        self.protocol.addFailure(
+            self.test, subunit.RemoteError("boo qux"))
+        self.assertEqual(
+            self.io.getvalue(),
+            'failure: %s [\nRemoteException: boo qux\n]\n' % self.test.id())
 
     def test_add_error(self):
         """Test stopTest on a TestProtocolClient."""
-        self.protocol.addError(self.test, subunit.RemoteError("phwoar"))
-        self.assertEqual(self.io.getvalue(), "error: Test startTest on a "
-                                             "TestProtocolClient. [\n"
-                                             "RemoteException:\n"
-                                             "phwoar\n"
-                                             "]\n")
+        self.protocol.addError(
+            self.test, subunit.RemoteError("phwoar crikey"))
+        self.assertEqual(
+            self.io.getvalue(),
+            'error: %s [\n'
+            "RemoteException: phwoar crikey\n"
+            "]\n" % self.test.id())
 
 
 def test_suite():
