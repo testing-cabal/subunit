@@ -1,5 +1,5 @@
 #
-#  subunit: extensions to python unittest to get test results from subprocesses.
+#  subunit: extensions to Python unittest to get test results from subprocesses.
 #  Copyright (C) 2005  Robert Collins <robertc@robertcollins.net>
 #
 #  This program is free software; you can redistribute it and/or modify
@@ -220,7 +220,7 @@ class TestProtocolServer(object):
 
 
 class RemoteException(Exception):
-    """An exception that occured remotely to python."""
+    """An exception that occured remotely to Python."""
 
     def __eq__(self, other):
         try:
@@ -268,7 +268,7 @@ def RemoteError(description=""):
 class RemotedTestCase(unittest.TestCase):
     """A class to represent test cases run in child processes.
     
-    Instances of this class are used to provide the python test API a TestCase
+    Instances of this class are used to provide the Python test API a TestCase
     that can be printed to the screen, introspected for metadata and so on.
     However, as they are a simply a memoisation of a test that was actually
     run in the past by a separate process, they cannot perform any interactive

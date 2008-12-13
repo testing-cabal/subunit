@@ -1,5 +1,5 @@
 
-  subunit: extensions to python unittest to get test results from subprocesses.
+  subunit: extensions to Python unittest to get test results from subprocesses.
   Copyright (C) 2005  Robert Collins <robertc@robertcollins.net>
 
   This program is free software; you can redistribute it and/or modify
@@ -20,7 +20,7 @@
 
 Subunit is attempting to extend unittest with a clean and simple api to
 run arbitrary external test suites and return the results to standard
-python unittest.
+Python unittest.
 
 Subunit comes in two parts: There is a parent-process component and a
 child procecss component. The parent component pretends to be a xUnit
@@ -42,7 +42,7 @@ Using subunit:
 
 1) As a runner for external tests
 =================================
-This is supported on all platforms with python 2.4.
+This is supported on all platforms with Python 2.4.
 For each test script you want to run, declare a ExecTestCase with one
 or more tests whose docstring defines the script to run:
 
@@ -57,7 +57,7 @@ class TestCProgram(subunit.ExecTestCase):
        """./bin/script_two"""
 
 # Yes, the test prefix on the methods matters.
-# Then run this in whatever normal way you would run python unittests.
+# Then run this in whatever normal way you would run Python unittests.
 # If you don't have a specific test runner, you can run it using the
 # default one in unittest.py:
 
@@ -83,7 +83,7 @@ class TestFoo(subunit.IsolatedTestCase):
         SomethingGlobal.do()
         self.assertEqual(SomethingGlobal.value(), 3)
         # the run() method of IsolatedTestCase will intercept the
-        # test execution, fork() python to create a new process,
+        # test execution, fork() Python to create a new process,
         # then run the test and report the results back to the parent
         # process.
 
@@ -107,7 +107,7 @@ def test_suite():
     result.addTestCase(loader.loadTestsFromName(__name__))
     return result
 
-# you can test the result of test_suite() as follows (or in any normal python
+# you can test the result of test_suite() as follows (or in any normal Python
 # manner.
 runner = unittest.TextTestRunner(verbosity=2)
 runner.run(test_suite())
@@ -159,10 +159,13 @@ error: test label [
 tags: [-]TAG ...
 unexpected output on stdout -> stdout.
 exit w/0 or last test -> error
-tags given outside a test are applied to all following tests
-tags given within a test inherit the current global tags
+Tags given outside a test are applied to all following tests
+Tags given after a test: line and before the result line for the same test
+apply only to that test, and inheric the current global tags.
+A '-' before a tag is used to remove tags - e.g. to prevent a global tag
+applying to a single test, or to cancel a global tag.
 
-In python, tags are assigned to the .tags attribute on the RemoteTest objects
+In Python, tags are assigned to the .tags attribute on the RemoteTest objects
 created by the TestProtocolServer.
 
 TODO:
