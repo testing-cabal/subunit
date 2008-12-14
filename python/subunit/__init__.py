@@ -1,5 +1,5 @@
 #
-#  subunit: extensions to python unittest to get test results from subprocesses.
+#  subunit: extensions to Python unittest to get test results from subprocesses.
 #  Copyright (C) 2005  Robert Collins <robertc@robertcollins.net>
 #
 #  This program is free software; you can redistribute it and/or modify
@@ -284,7 +284,7 @@ class TestProtocolServer(object):
 
 
 class RemoteException(Exception):
-    """An exception that occured remotely to python."""
+    """An exception that occured remotely to Python."""
 
     def __eq__(self, other):
         try:
@@ -302,25 +302,25 @@ class TestProtocolClient(unittest.TestResult):
 
     def addError(self, test, error):
         """Report an error in test test."""
-        self._stream.write("error: %s [\n" % test.shortDescription())
-        for line in self._exc_info_to_string(error, test).split():
+        self._stream.write("error: %s [\n" % test.id())
+        for line in self._exc_info_to_string(error, test).splitlines():
             self._stream.write("%s\n" % line)
         self._stream.write("]\n")
 
     def addFailure(self, test, error):
         """Report a failure in test test."""
-        self._stream.write("failure: %s [\n" % test.shortDescription())
-        for line in self._exc_info_to_string(error, test).split():
+        self._stream.write("failure: %s [\n" % test.id())
+        for line in self._exc_info_to_string(error, test).splitlines():
             self._stream.write("%s\n" % line)
         self._stream.write("]\n")
 
     def addSuccess(self, test):
         """Report a success in a test."""
-        self._stream.write("successful: %s\n" % test.shortDescription())
+        self._stream.write("successful: %s\n" % test.id())
 
     def startTest(self, test):
         """Mark a test as starting its test run."""
-        self._stream.write("test: %s\n" % test.shortDescription())
+        self._stream.write("test: %s\n" % test.id())
 
 
 def RemoteError(description=""):
@@ -332,7 +332,7 @@ def RemoteError(description=""):
 class RemotedTestCase(unittest.TestCase):
     """A class to represent test cases run in child processes.
     
-    Instances of this class are used to provide the python test API a TestCase
+    Instances of this class are used to provide the Python test API a TestCase
     that can be printed to the screen, introspected for metadata and so on.
     However, as they are a simply a memoisation of a test that was actually
     run in the past by a separate process, they cannot perform any interactive
