@@ -193,11 +193,20 @@ Tags given after a test: line and before the result line for the same test
 apply only to that test, and inheric the current global tags.
 A '-' before a tag is used to remove tags - e.g. to prevent a global tag
 applying to a single test, or to cancel a global tag.
-The time tag acts as a clock event - it sets the time for all future events.
-Currently this is not exposed at the python API layer.
-
 In Python, tags are assigned to the .tags attribute on the RemoteTest objects
 created by the TestProtocolServer.
+
+The time element acts as a clock event - it sets the time for all future events.
+Currently this is not exposed at the python API layer.
+
+The skip result is used to indicate a test that was found by the runner but not
+[fully] executed due to some policy or dependency issue. Currently this is
+represented in Python as a successful test.
+The xfail result is used to indicate a test that was expected to fail failing
+in the expected manner. As this is a normal condition [for such tests] it is
+represented as a successful test in Python.
+In future, skip and xfail results will be represented semantically in Python,
+but some discussion is underway on the right way to do this.
 
 
 TODO:

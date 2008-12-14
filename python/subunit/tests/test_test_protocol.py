@@ -1,5 +1,5 @@
 #
-#  subunit: extensions to python unittest to get test results from subprocesses.
+#  subunit: extensions to Python unittest to get test results from subprocesses.
 #  Copyright (C) 2005  Robert Collins <robertc@robertcollins.net>
 #
 #  This program is free software; you can redistribute it and/or modify
@@ -533,7 +533,8 @@ class TestTestProtocolServerAddFailure(unittest.TestCase):
 class TestTestProtocolServerAddxFail(unittest.TestCase):
     """Tests for the xfail keyword.
 
-    In python this thunks through to Success due to stdlib limitations.
+    In Python this thunks through to Success due to stdlib limitations (see
+    README).
     """
 
     def setUp(self):
@@ -568,7 +569,7 @@ class TestTestProtocolServerAddxFail(unittest.TestCase):
 
     def xfail_quoted_bracket(self, keyword):
         # This tests it is accepted, but cannot test it is used today, because
-        # of not having a way to expose it in python so far.
+        # of not having a way to expose it in Python so far.
         self.protocol.lineReceived("%s mcdonalds farm [\n" % keyword)
         self.protocol.lineReceived(" ]\n")
         self.protocol.lineReceived("]\n")
@@ -588,7 +589,8 @@ class TestTestProtocolServerAddxFail(unittest.TestCase):
 class TestTestProtocolServerAddSkip(unittest.TestCase):
     """Tests for the skip keyword.
 
-    In python this thunks through to Success due to stdlib limitations.
+    In Python this thunks through to Success due to stdlib limitations. (See
+    README).
     """
 
     def setUp(self):
@@ -623,7 +625,7 @@ class TestTestProtocolServerAddSkip(unittest.TestCase):
 
     def skip_quoted_bracket(self, keyword):
         # This tests it is accepted, but cannot test it is used today, because
-        # of not having a way to expose it in python so far.
+        # of not having a way to expose it in Python so far.
         self.protocol.lineReceived("%s mcdonalds farm [\n" % keyword)
         self.protocol.lineReceived(" ]\n")
         self.protocol.lineReceived("]\n")
@@ -678,7 +680,7 @@ class TestTestProtocolServerAddSuccess(unittest.TestCase):
 
     def success_quoted_bracket(self, keyword):
         # This tests it is accepted, but cannot test it is used today, because
-        # of not having a way to expose it in python so far.
+        # of not having a way to expose it in Python so far.
         self.protocol.lineReceived("%s mcdonalds farm [\n" % keyword)
         self.protocol.lineReceived(" ]\n")
         self.protocol.lineReceived("]\n")
