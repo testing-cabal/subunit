@@ -29,10 +29,10 @@ Subunit comes in three parts:
  * Protocol readers (servers)
  * Filters
  
-The reader component acts as a test suite in the language that it is written
+A reader component acts as a test suite in the language that it is written
 for. Currently subunit only provides a Python protocol reader.
 
-Writers are used to output test results in subunit form. Writers are typically
+Writers output test results in subunit form. Writers are typically
 test suite runners or test suite result objects in specific languages.
 Currently subunit provides writers for Python, C, C++, and shell.
 
@@ -43,7 +43,7 @@ stream on-the-fly. Currently subunit provides:
  * subunit-stats - generate a summary of a subunit stream.
  * subunit-tags - add or remove tags from a stream.
 
-The subunit code is organised at the top level by directories, for language
+The subunit code is organised at the top level by directories for language
 bindings, and additionally the filters directory for filters.
 
 Using subunit in Python
@@ -200,10 +200,10 @@ The time element acts as a clock event - it sets the time for all future events.
 Currently this is not exposed at the python API layer.
 
 The skip result is used to indicate a test that was found by the runner but not
-[fully] executed due to some policy or dependency issue. Currently this is
+fully executed due to some policy or dependency issue. Currently this is
 represented in Python as a successful test.
 The xfail result is used to indicate a test that was expected to fail failing
-in the expected manner. As this is a normal condition [for such tests] it is
+in the expected manner. As this is a normal condition for such tests it is
 represented as a successful test in Python.
 In future, skip and xfail results will be represented semantically in Python,
 but some discussion is underway on the right way to do this.

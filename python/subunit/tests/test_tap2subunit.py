@@ -59,7 +59,9 @@ class TestTAP2SubUnit(unittest.TestCase):
     def test_ok_test_pass(self):
         # A file
         # ok
-        # results in a passed test with name 'test 1'
+        # results in a passed test with name 'test 1' (a synthetic name as tap
+        # does not require named fixtures - it is the first test in the tap
+        # stream).
         self.tap.write("ok\n")
         self.tap.seek(0)
         result = subunit.TAP2SubUnit(self.tap, self.subunit)
@@ -284,7 +286,7 @@ class TestTAP2SubUnit(unittest.TestCase):
         # not ok 4 - fourth
         # 1..4
         # results in four tests numbered and named
-        self.tap.write('ok 1 - first test in a script with no plan at all\n')
+        self.tap.write('ok 1 - first test in a script with trailing plan\n')
         self.tap.write('not ok 2 - second\n')
         self.tap.write('ok 3 - third\n')
         self.tap.write('not ok 4 - fourth\n')
@@ -293,8 +295,8 @@ class TestTAP2SubUnit(unittest.TestCase):
         result = subunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
         self.assertEqual([
-            'test test 1 - first test in a script with no plan at all',
-            'success test 1 - first test in a script with no plan at all',
+            'test test 1 - first test in a script with trailing plan',
+            'success test 1 - first test in a script with trailing plan',
             'test test 2 - second',
             'failure test 2 - second',
             'test test 3 - third',
@@ -313,7 +315,7 @@ class TestTAP2SubUnit(unittest.TestCase):
         # not ok 4 - fourth
         # results in four tests numbered and named
         self.tap.write('1..4\n')
-        self.tap.write('ok 1 - first test in a script with no plan at all\n')
+        self.tap.write('ok 1 - first test in a script with a plan\n')
         self.tap.write('not ok 2 - second\n')
         self.tap.write('ok 3 - third\n')
         self.tap.write('not ok 4 - fourth\n')
@@ -321,8 +323,8 @@ class TestTAP2SubUnit(unittest.TestCase):
         result = subunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
         self.assertEqual([
-            'test test 1 - first test in a script with no plan at all',
-            'success test 1 - first test in a script with no plan at all',
+            'test test 1 - first test in a script with a plan',
+            'success test 1 - first test in a script with a plan',
             'test test 2 - second',
             'failure test 2 - second',
             'test test 3 - third',

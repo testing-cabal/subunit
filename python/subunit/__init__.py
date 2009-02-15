@@ -523,13 +523,11 @@ def TAP2SubUnit(tap, subunit):
                     subunit.write("]\n")
                 continue
         # not a plan line, or have seen one before
-        #match = re.match("(ok|not ok)\s+(\d+)?\s*([^#]*)\s*(?:#\s+(.*))\n", line)
         match = re.match("(ok|not ok)(?:\s+(\d+)?)?(?:\s+([^#]*[^#\s]+)\s*)?(?:\s+#\s+(TODO|SKIP)(?:\s+(.*))?)?\n", line)
         if match:
             # new test, emit current one.
             _emit_test()
             status, number, description, directive, directive_comment = match.groups()
-            # status, number, description = match.groups()
             if status == 'ok':
                 result = 'success'
             else:
@@ -583,11 +581,13 @@ def tag_stream(original, filtered, tags):
     :param filtered: The output stream.
     :param tags: The tags to apply. As in a normal stream - a list of 'TAG' or
         '-TAG' commands.
+
         A 'TAG' command will add the tag to the output stream,
         and override any existing '-TAG' command in that stream.
         Specifically:
          * A global 'tags: TAG' will be added to the start of the stream.
          * Any tags commands with -TAG will have the -TAG removed.
+
         A '-TAG' command will remove the TAG command from the stream.
         Specifically:
          * A 'tags: -TAG' command will be added to the start of the stream.
@@ -629,7 +629,8 @@ class ProtocolTestCase(object):
         return self.run(result)
 
     def run(self, result=None):
-        if result is None: result = self.defaultTestResult()
+        if result is None:
+            result = self.defaultTestResult()
         protocol = TestProtocolServer(result)
         for line in self._stream:
             protocol.lineReceived(line)
@@ -678,5 +679,5 @@ class TestResultStats(unittest.TestResult):
         self.tags.update(test.tags)
 
     def wasSuccessful(self):
-        "Tells whether or not this result was a success"
+        """Tells whether or not this result was a success"""
         return self.failed_tests == 0
