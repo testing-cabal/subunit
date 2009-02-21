@@ -21,6 +21,7 @@ import os
 from StringIO import StringIO
 import subprocess
 import sys
+import re
 import unittest
 
 def test_suite():
@@ -42,6 +43,18 @@ def join_dir(base_path, path):
     return os.path.join(os.path.dirname(os.path.abspath(base_path)), path)
 
 
+def tags_to_new_gone(tags):
+    """Split a list of tags into a new_set and a gone_set."""
+    new_tags = set()
+    gone_tags = set()
+    for tag in tags:
+        if tag[0] == '-':
+            gone_tags.add(tag[1:])
+        else:
+            new_tags.add(tag)
+    return new_tags, gone_tags
+
+
 class TestProtocolServer(object):
     """A class for receiving results from a TestProtocol client.
     
@@ -52,6 +65,9 @@ class TestProtocolServer(object):
     TEST_STARTED = 1
     READING_FAILURE = 2
     READING_ERROR = 3
+    READING_SKIP = 4
+    READING_XFAIL = 5
+    READING_SUCCESS = 6
 
     def __init__(self, client, stream=sys.stdout):
         """Create a TestProtocol server instance.
@@ -84,6 +100,20 @@ class TestProtocolServer(object):
         else:
             self.stdOutLineReceived(line)
 
+    def _addExpectedFail(self, offset, line):
+        if (self.state == TestProtocolServer.TEST_STARTED and
+            self.current_test_description == line[offset:-1]):
+            self.state = TestProtocolServer.OUTSIDE_TEST
+            self.current_test_description = None
+            self.client.addSuccess(self._current_test)
+            self.client.stopTest(self._current_test)
+        elif (self.state == TestProtocolServer.TEST_STARTED and
+            self.current_test_description + " [" == line[offset:-1]):
+            self.state = TestProtocolServer.READING_XFAIL
+            self._message = ""
+        else:
+            self.stdOutLineReceived(line)
+
     def _addFailure(self, offset, line):
         if (self.state == TestProtocolServer.TEST_STARTED and
             self.current_test_description == line[offset:-1]):
@@ -98,14 +128,28 @@ class TestProtocolServer(object):
         else:
             self.stdOutLineReceived(line)
 
+    def _addSkip(self, offset, line):
+        if (self.state == TestProtocolServer.TEST_STARTED and
+            self.current_test_description == line[offset:-1]):
+            self.state = TestProtocolServer.OUTSIDE_TEST
+            self.current_test_description = None
+            self.client.addSuccess(self._current_test)
+            self.client.stopTest(self._current_test)
+        elif (self.state == TestProtocolServer.TEST_STARTED and
+            self.current_test_description + " [" == line[offset:-1]):
+            self.state = TestProtocolServer.READING_SKIP
+            self._message = ""
+        else:
+            self.stdOutLineReceived(line)
+
     def _addSuccess(self, offset, line):
         if (self.state == TestProtocolServer.TEST_STARTED and
             self.current_test_description == line[offset:-1]):
-            self.client.addSuccess(self._current_test)
-            self.client.stopTest(self._current_test)
-            self.current_test_description = None
-            self._current_test = None
-            self.state = TestProtocolServer.OUTSIDE_TEST
+            self._succeedTest()
+        elif (self.state == TestProtocolServer.TEST_STARTED and
+            self.current_test_description + " [" == line[offset:-1]):
+            self.state = TestProtocolServer.READING_SUCCESS
+            self._message = ""
         else:
             self.stdOutLineReceived(line)
 
@@ -129,19 +173,19 @@ class TestProtocolServer(object):
             self.client.addError(self._current_test,
                                  RemoteError(self._message))
             self.client.stopTest(self._current_test)
+        elif self.state in (
+            TestProtocolServer.READING_SKIP,
+            TestProtocolServer.READING_SUCCESS,
+            TestProtocolServer.READING_XFAIL,
+            ):
+            self._succeedTest()
         else:
             self.stdOutLineReceived(line)
 
     def _handleTags(self, offset, line):
         """Process a tags command."""
         tags = line[offset:].split()
-        new_tags = set()
-        gone_tags = set()
-        for tag in tags:
-            if tag[0] == '-':
-                gone_tags.add(tag[1:])
-            else:
-                new_tags.add(tag)
+        new_tags, gone_tags = tags_to_new_gone(tags)
         if self.state == TestProtocolServer.OUTSIDE_TEST:
             update_tags = self.tags
         else:
@@ -153,8 +197,11 @@ class TestProtocolServer(object):
         """Call the appropriate local method for the received line."""
         if line == "]\n":
             self.endQuote(line)
-        elif (self.state == TestProtocolServer.READING_FAILURE or
-              self.state == TestProtocolServer.READING_ERROR):
+        elif self.state in (TestProtocolServer.READING_FAILURE,
+            TestProtocolServer.READING_ERROR, TestProtocolServer.READING_SKIP,
+            TestProtocolServer.READING_SUCCESS,
+            TestProtocolServer.READING_XFAIL
+            ):
             self._appendMessage(line)
         else:
             parts = line.split(None, 1)
@@ -168,36 +215,46 @@ class TestProtocolServer(object):
                     self._addError(offset, line)
                 elif cmd == 'failure':
                     self._addFailure(offset, line)
+                elif cmd == 'skip':
+                    self._addSkip(offset, line)
                 elif cmd in ('success', 'successful'):
                     self._addSuccess(offset, line)
-                elif cmd in ('tags'):
+                elif cmd in ('tags',):
                     self._handleTags(offset, line)
+                elif cmd in ('time',):
+                    # Accept it, but do not do anything with it yet.
+                    pass
+                elif cmd == 'xfail':
+                    self._addExpectedFail(offset, line)
                 else:
                     self.stdOutLineReceived(line)
             else:
                 self.stdOutLineReceived(line)
 
+    def _lostConnectionInTest(self, state_string):
+        error_string = "lost connection during %stest '%s'" % (
+            state_string, self.current_test_description)
+        self.client.addError(self._current_test, RemoteError(error_string))
+        self.client.stopTest(self._current_test)
+
     def lostConnection(self):
         """The input connection has finished."""
+        if self.state == TestProtocolServer.OUTSIDE_TEST:
+            return
         if self.state == TestProtocolServer.TEST_STARTED:
-            self.client.addError(self._current_test,
-                                 RemoteError("lost connection during test '%s'"
-                                             % self.current_test_description))
-            self.client.stopTest(self._current_test)
+            self._lostConnectionInTest('')
         elif self.state == TestProtocolServer.READING_ERROR:
-            self.client.addError(self._current_test,
-                                 RemoteError("lost connection during "
-                                             "error report of test "
-                                             "'%s'" %
-                                             self.current_test_description))
-            self.client.stopTest(self._current_test)
+            self._lostConnectionInTest('error report of ')
         elif self.state == TestProtocolServer.READING_FAILURE:
-            self.client.addError(self._current_test,
-                                 RemoteError("lost connection during "
-                                             "failure report of test "
-                                             "'%s'" %
-                                             self.current_test_description))
-            self.client.stopTest(self._current_test)
+            self._lostConnectionInTest('failure report of ')
+        elif self.state == TestProtocolServer.READING_SUCCESS:
+            self._lostConnectionInTest('success report of ')
+        elif self.state == TestProtocolServer.READING_SKIP:
+            self._lostConnectionInTest('skip report of ')
+        elif self.state == TestProtocolServer.READING_XFAIL:
+            self._lostConnectionInTest('xfail report of ')
+        else:
+            self._lostConnectionInTest('unknown state of ')
 
     def readFrom(self, pipe):
         for line in pipe.readlines():
@@ -217,6 +274,13 @@ class TestProtocolServer(object):
 
     def stdOutLineReceived(self, line):
         self._stream.write(line)
+
+    def _succeedTest(self):
+        self.client.addSuccess(self._current_test)
+        self.client.stopTest(self._current_test)
+        self.current_test_description = None
+        self._current_test = None
+        self.state = TestProtocolServer.OUTSIDE_TEST
 
 
 class RemoteException(Exception):
@@ -402,3 +466,218 @@ def run_isolated(klass, self, result):
         os.waitpid(pid, 0)
         # TODO return code evaluation.
     return result
+
+
+def TAP2SubUnit(tap, subunit):
+    """Filter a TAP pipe into a subunit pipe.
+    
+    :param tap: A tap pipe/stream/file object.
+    :param subunit: A pipe/stream/file object to write subunit results to.
+    :return: The exit code to exit with.
+    """
+    BEFORE_PLAN = 0
+    AFTER_PLAN = 1
+    SKIP_STREAM = 2
+    client = TestProtocolClient(subunit)
+    state = BEFORE_PLAN
+    plan_start = 1
+    plan_stop = 0
+    def _skipped_test(subunit, plan_start):
+        # Some tests were skipped.
+        subunit.write('test test %d\n' % plan_start)
+        subunit.write('error test %d [\n' % plan_start)
+        subunit.write('test missing from TAP output\n')
+        subunit.write(']\n')
+        return plan_start + 1
+    # Test data for the next test to emit
+    test_name = None
+    log = []
+    result = None
+    def _emit_test():
+        "write out a test"
+        if test_name is None:
+            return
+        subunit.write("test %s\n" % test_name)
+        if not log:
+            subunit.write("%s %s\n" % (result, test_name))
+        else:
+            subunit.write("%s %s [\n" % (result, test_name))
+        if log:
+            for line in log:
+                subunit.write("%s\n" % line)
+            subunit.write("]\n")
+        del log[:]
+    for line in tap:
+        if state == BEFORE_PLAN:
+            match = re.match("(\d+)\.\.(\d+)\s*(?:\#\s+(.*))?\n", line)
+            if match:
+                state = AFTER_PLAN
+                _, plan_stop, comment = match.groups()
+                plan_stop = int(plan_stop)
+                if plan_start > plan_stop and plan_stop == 0:
+                    # skipped file
+                    state = SKIP_STREAM
+                    subunit.write("test file skip\n")
+                    subunit.write("skip file skip [\n")
+                    subunit.write("%s\n" % comment)
+                    subunit.write("]\n")
+                continue
+        # not a plan line, or have seen one before
+        match = re.match("(ok|not ok)(?:\s+(\d+)?)?(?:\s+([^#]*[^#\s]+)\s*)?(?:\s+#\s+(TODO|SKIP)(?:\s+(.*))?)?\n", line)
+        if match:
+            # new test, emit current one.
+            _emit_test()
+            status, number, description, directive, directive_comment = match.groups()
+            if status == 'ok':
+                result = 'success'
+            else:
+                result = "failure"
+            if description is None:
+                description = ''
+            else:
+                description = ' ' + description
+            if directive is not None:
+                if directive == 'TODO':
+                    result = 'xfail'
+                elif directive == 'SKIP':
+                    result = 'skip'
+                if directive_comment is not None:
+                    log.append(directive_comment)
+            if number is not None:
+                number = int(number)
+                while plan_start < number:
+                    plan_start = _skipped_test(subunit, plan_start)
+            test_name = "test %d%s" % (plan_start, description)
+            plan_start += 1
+            continue
+        match = re.match("Bail out\!(?:\s*(.*))?\n", line)
+        if match:
+            reason, = match.groups()
+            if reason is None:
+                extra = ''
+            else:
+                extra = ' %s' % reason
+            _emit_test()
+            test_name = "Bail out!%s" % extra
+            result = "error"
+            state = SKIP_STREAM
+            continue
+        match = re.match("\#.*\n", line)
+        if match:
+            log.append(line[:-1])
+            continue
+        subunit.write(line)
+    _emit_test()
+    while plan_start <= plan_stop:
+        # record missed tests
+        plan_start = _skipped_test(subunit, plan_start)
+    return 0
+
+
+def tag_stream(original, filtered, tags):
+    """Alter tags on a stream.
+
+    :param original: The input stream.
+    :param filtered: The output stream.
+    :param tags: The tags to apply. As in a normal stream - a list of 'TAG' or
+        '-TAG' commands.
+
+        A 'TAG' command will add the tag to the output stream,
+        and override any existing '-TAG' command in that stream.
+        Specifically:
+         * A global 'tags: TAG' will be added to the start of the stream.
+         * Any tags commands with -TAG will have the -TAG removed.
+
+        A '-TAG' command will remove the TAG command from the stream.
+        Specifically:
+         * A 'tags: -TAG' command will be added to the start of the stream.
+         * Any 'tags: TAG' command will have 'TAG' removed from it.
+        Additionally, any redundant tagging commands (adding a tag globally
+        present, or removing a tag globally removed) are stripped as a
+        by-product of the filtering.
+    :return: 0
+    """
+    new_tags, gone_tags = tags_to_new_gone(tags)
+    def write_tags(new_tags, gone_tags):
+        if new_tags or gone_tags:
+            filtered.write("tags: " + ' '.join(new_tags))
+            if gone_tags:
+                for tag in gone_tags:
+                    filtered.write("-" + tag)
+            filtered.write("\n")
+    write_tags(new_tags, gone_tags)
+    # TODO: use the protocol parser and thus don't mangle test comments.
+    for line in original:
+        if line.startswith("tags:"):
+            line_tags = line[5:].split()
+            line_new, line_gone = tags_to_new_gone(line_tags)
+            line_new = line_new - gone_tags
+            line_gone = line_gone - new_tags
+            write_tags(line_new, line_gone)
+        else:
+            filtered.write(line)
+    return 0
+
+
+class ProtocolTestCase(object):
+    """A test case which reports a subunit stream."""
+
+    def __init__(self, stream):
+        self._stream = stream
+
+    def __call__(self, result=None):
+        return self.run(result)
+
+    def run(self, result=None):
+        if result is None:
+            result = self.defaultTestResult()
+        protocol = TestProtocolServer(result)
+        for line in self._stream:
+            protocol.lineReceived(line)
+        protocol.lostConnection()
+
+
+class TestResultStats(unittest.TestResult):
+    """A pyunit TestResult interface implementation for making statistics.
+    
+    :ivar total_tests: The total tests seen.
+    :ivar passed_tests: The tests that passed.
+    :ivar failed_tests: The tests that failed.
+    :ivar tags: The tags seen across all tests.
+    """
+
+    def __init__(self, stream):
+        """Create a TestResultStats which outputs to stream."""
+        unittest.TestResult.__init__(self)
+        self._stream = stream
+        self.failed_tests = 0
+        self.tags = set()
+
+    @property
+    def total_tests(self):
+        return self.testsRun
+
+    def addError(self, test, err):
+        self.failed_tests += 1
+
+    def addFailure(self, test, err):
+        self.failed_tests += 1
+
+    def formatStats(self):
+        self._stream.write("Total tests:  %5d\n" % self.total_tests)
+        self._stream.write("Passed tests: %5d\n" % self.passed_tests)
+        self._stream.write("Failed tests: %5d\n" % self.failed_tests)
+        tags = sorted(self.tags)
+        self._stream.write("Tags: %s\n" % (", ".join(tags)))
+
+    @property
+    def passed_tests(self):
+        return self.total_tests - self.failed_tests
+
+    def stopTest(self, test):
+        unittest.TestResult.stopTest(self, test)
+        self.tags.update(test.tags)
+
+    def wasSuccessful(self):
+        """Tells whether or not this result was a success"""
+        return self.failed_tests == 0

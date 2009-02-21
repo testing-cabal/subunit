@@ -1,5 +1,5 @@
 #
-#  subunit: extensions to python unittest to get test results from subprocesses.
+#  subunit: extensions to Python unittest to get test results from subprocesses.
 #  Copyright (C) 2005  Robert Collins <robertc@robertcollins.net>
 #
 #  This program is free software; you can redistribute it and/or modify
@@ -22,6 +22,7 @@ from StringIO import StringIO
 import os
 import subunit
 import sys
+import time
 
 try:
     class MockTestProtocolServerClient(object):
@@ -396,6 +397,42 @@ class TestTestProtocolServerLostConnection(unittest.TestCase):
         self.assertEqual(self.client.failure_calls, [])
         self.assertEqual(self.client.success_calls, [self.test])
 
+    def test_lost_connection_during_skip(self):
+        self.protocol.lineReceived("test old mcdonald\n")
+        self.protocol.lineReceived("skip old mcdonald [\n")
+        self.protocol.lostConnection()
+        self.assertEqual(self.client.start_calls, [self.test])
+        self.assertEqual(self.client.end_calls, [self.test])
+        self.assertEqual(self.client.error_calls, [
+            (self.test, subunit.RemoteError("lost connection during skip "
+                                            "report of test 'old mcdonald'"))])
+        self.assertEqual(self.client.failure_calls, [])
+        self.assertEqual(self.client.success_calls, [])
+
+    def test_lost_connection_during_xfail(self):
+        self.protocol.lineReceived("test old mcdonald\n")
+        self.protocol.lineReceived("xfail old mcdonald [\n")
+        self.protocol.lostConnection()
+        self.assertEqual(self.client.start_calls, [self.test])
+        self.assertEqual(self.client.end_calls, [self.test])
+        self.assertEqual(self.client.error_calls, [
+            (self.test, subunit.RemoteError("lost connection during xfail "
+                                            "report of test 'old mcdonald'"))])
+        self.assertEqual(self.client.failure_calls, [])
+        self.assertEqual(self.client.success_calls, [])
+
+    def test_lost_connection_during_success(self):
+        self.protocol.lineReceived("test old mcdonald\n")
+        self.protocol.lineReceived("success old mcdonald [\n")
+        self.protocol.lostConnection()
+        self.assertEqual(self.client.start_calls, [self.test])
+        self.assertEqual(self.client.end_calls, [self.test])
+        self.assertEqual(self.client.error_calls, [
+            (self.test, subunit.RemoteError("lost connection during success "
+                                            "report of test 'old mcdonald'"))])
+        self.assertEqual(self.client.failure_calls, [])
+        self.assertEqual(self.client.success_calls, [])
+
 
 class TestTestProtocolServerAddError(unittest.TestCase):
 
@@ -493,6 +530,118 @@ class TestTestProtocolServerAddFailure(unittest.TestCase):
         self.failure_quoted_bracket("failure:")
 
 
+class TestTestProtocolServerAddxFail(unittest.TestCase):
+    """Tests for the xfail keyword.
+
+    In Python this thunks through to Success due to stdlib limitations (see
+    README).
+    """
+
+    def setUp(self):
+        """Setup a test object ready to be xfailed."""
+        self.client = MockTestProtocolServerClient()
+        self.protocol = subunit.TestProtocolServer(self.client)
+        self.protocol.lineReceived("test mcdonalds farm\n")
+        self.test = self.client.start_calls[-1]
+
+    def simple_xfail_keyword(self, keyword):
+        self.protocol.lineReceived("%s mcdonalds farm\n" % keyword)
+        self.assertEqual(self.client.start_calls, [self.test])
+        self.assertEqual(self.client.end_calls, [self.test])
+        self.assertEqual(self.client.error_calls, [])
+        self.assertEqual(self.client.failure_calls, [])
+        self.assertEqual(self.client.success_calls, [self.test])
+
+    def test_simple_xfail(self):
+        self.simple_xfail_keyword("xfail")
+
+    def test_simple_xfail_colon(self):
+        self.simple_xfail_keyword("xfail:")
+
+    def test_xfail_empty_message(self):
+        self.protocol.lineReceived("xfail mcdonalds farm [\n")
+        self.protocol.lineReceived("]\n")
+        self.assertEqual(self.client.start_calls, [self.test])
+        self.assertEqual(self.client.end_calls, [self.test])
+        self.assertEqual(self.client.error_calls, [])
+        self.assertEqual(self.client.failure_calls, [])
+        self.assertEqual(self.client.success_calls, [self.test])
+
+    def xfail_quoted_bracket(self, keyword):
+        # This tests it is accepted, but cannot test it is used today, because
+        # of not having a way to expose it in Python so far.
+        self.protocol.lineReceived("%s mcdonalds farm [\n" % keyword)
+        self.protocol.lineReceived(" ]\n")
+        self.protocol.lineReceived("]\n")
+        self.assertEqual(self.client.start_calls, [self.test])
+        self.assertEqual(self.client.end_calls, [self.test])
+        self.assertEqual(self.client.error_calls, [])
+        self.assertEqual(self.client.failure_calls, [])
+        self.assertEqual(self.client.success_calls, [self.test])
+
+    def test_xfail_quoted_bracket(self):
+        self.xfail_quoted_bracket("xfail")
+
+    def test_xfail_colon_quoted_bracket(self):
+        self.xfail_quoted_bracket("xfail:")
+
+
+class TestTestProtocolServerAddSkip(unittest.TestCase):
+    """Tests for the skip keyword.
+
+    In Python this thunks through to Success due to stdlib limitations. (See
+    README).
+    """
+
+    def setUp(self):
+        """Setup a test object ready to be skipped."""
+        self.client = MockTestProtocolServerClient()
+        self.protocol = subunit.TestProtocolServer(self.client)
+        self.protocol.lineReceived("test mcdonalds farm\n")
+        self.test = self.client.start_calls[-1]
+
+    def simple_skip_keyword(self, keyword):
+        self.protocol.lineReceived("%s mcdonalds farm\n" % keyword)
+        self.assertEqual(self.client.start_calls, [self.test])
+        self.assertEqual(self.client.end_calls, [self.test])
+        self.assertEqual(self.client.error_calls, [])
+        self.assertEqual(self.client.failure_calls, [])
+        self.assertEqual(self.client.success_calls, [self.test])
+
+    def test_simple_skip(self):
+        self.simple_skip_keyword("skip")
+
+    def test_simple_skip_colon(self):
+        self.simple_skip_keyword("skip:")
+
+    def test_skip_empty_message(self):
+        self.protocol.lineReceived("skip mcdonalds farm [\n")
+        self.protocol.lineReceived("]\n")
+        self.assertEqual(self.client.start_calls, [self.test])
+        self.assertEqual(self.client.end_calls, [self.test])
+        self.assertEqual(self.client.error_calls, [])
+        self.assertEqual(self.client.failure_calls, [])
+        self.assertEqual(self.client.success_calls, [self.test])
+
+    def skip_quoted_bracket(self, keyword):
+        # This tests it is accepted, but cannot test it is used today, because
+        # of not having a way to expose it in Python so far.
+        self.protocol.lineReceived("%s mcdonalds farm [\n" % keyword)
+        self.protocol.lineReceived(" ]\n")
+        self.protocol.lineReceived("]\n")
+        self.assertEqual(self.client.start_calls, [self.test])
+        self.assertEqual(self.client.end_calls, [self.test])
+        self.assertEqual(self.client.error_calls, [])
+        self.assertEqual(self.client.failure_calls, [])
+        self.assertEqual(self.client.success_calls, [self.test])
+
+    def test_skip_quoted_bracket(self):
+        self.skip_quoted_bracket("skip")
+
+    def test_skip_colon_quoted_bracket(self):
+        self.skip_quoted_bracket("skip:")
+
+
 class TestTestProtocolServerAddSuccess(unittest.TestCase):
 
     def setUp(self):
@@ -519,6 +668,33 @@ class TestTestProtocolServerAddSuccess(unittest.TestCase):
 
     def test_simple_success_colon(self):
         self.simple_success_keyword("successful:")
+
+    def test_success_empty_message(self):
+        self.protocol.lineReceived("success mcdonalds farm [\n")
+        self.protocol.lineReceived("]\n")
+        self.assertEqual(self.client.start_calls, [self.test])
+        self.assertEqual(self.client.end_calls, [self.test])
+        self.assertEqual(self.client.error_calls, [])
+        self.assertEqual(self.client.failure_calls, [])
+        self.assertEqual(self.client.success_calls, [self.test])
+
+    def success_quoted_bracket(self, keyword):
+        # This tests it is accepted, but cannot test it is used today, because
+        # of not having a way to expose it in Python so far.
+        self.protocol.lineReceived("%s mcdonalds farm [\n" % keyword)
+        self.protocol.lineReceived(" ]\n")
+        self.protocol.lineReceived("]\n")
+        self.assertEqual(self.client.start_calls, [self.test])
+        self.assertEqual(self.client.end_calls, [self.test])
+        self.assertEqual(self.client.error_calls, [])
+        self.assertEqual(self.client.failure_calls, [])
+        self.assertEqual(self.client.success_calls, [self.test])
+
+    def test_success_quoted_bracket(self):
+        self.success_quoted_bracket("success")
+
+    def test_success_colon_quoted_bracket(self):
+        self.success_quoted_bracket("success:")
 
 
 class TestTestProtocolServerStreamTags(unittest.TestCase):
@@ -572,6 +748,20 @@ class TestTestProtocolServerStreamTags(unittest.TestCase):
         self.protocol.lineReceived("tags: -bar quux\n")
         self.assertEqual(set(["foo", "quux"]), test.tags)
         self.assertEqual(set(["foo", "bar"]), self.protocol.tags)
+
+
+class TestTestProtocolServerStreamTime(unittest.TestCase):
+    """Test managing time information at the protocol level."""
+
+    def setUp(self):
+        self.client = MockTestProtocolServerClient()
+        self.stream = StringIO()
+        self.protocol = subunit.TestProtocolServer(self.client,
+            stream=self.stream)
+
+    def test_time_accepted(self):
+        self.protocol.lineReceived("time: 2001-12-12 12:59:59Z\n")
+        self.assertEqual("", self.stream.getvalue())
 
 
 class TestRemotedTestCase(unittest.TestCase):

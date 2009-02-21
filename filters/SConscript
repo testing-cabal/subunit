@@ -1,0 +1,19 @@
+Import('*')
+# describe what we need for filters
+
+EnsurePythonVersion(2, 4)
+
+import distutils.sysconfig
+import os.path
+
+# distutils default prefix is the common path between
+# distutils.sysconfig.get_python_lib and distutils.sysconfig.get_python_inc
+prefix = os.path.commonprefix([
+    distutils.sysconfig.get_python_lib(),
+    distutils.sysconfig.get_python_inc(),
+    ])
+# suffix to install .py files to is distutils.sysconfig.get_python_lib()
+# after the common prefix
+python_suffix = distutils.sysconfig.get_python_lib()[len(prefix):]
+# install path for python is then in DESTDIR + python_suffix
+python_installdir = DESTDIR + python_suffix + '/subunit'

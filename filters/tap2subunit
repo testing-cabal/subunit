@@ -1,6 +1,6 @@
-#
+#!/usr/bin/env python
 #  subunit: extensions to python unittest to get test results from subprocesses.
-#  Copyright (C) 2005  Robert Collins <robertc@robertcollins.net>
+#  Copyright (C) 2009  Robert Collins <robertc@robertcollins.net>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,18 +17,13 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-from subunit.tests import (
-    TestUtil,
-    test_subunit_stats,
-    test_subunit_tags,
-    test_tap2subunit,
-    test_test_protocol,
-    )
+"""A filter that reads a TAP stream and outputs a subunit stream.
 
-def test_suite():
-    result = TestUtil.TestSuite()
-    result.addTest(test_test_protocol.test_suite())
-    result.addTest(test_tap2subunit.test_suite())
-    result.addTest(test_subunit_tags.test_suite())
-    result.addTest(test_subunit_stats.test_suite())
-    return result
+More information on TAP is available at
+http://testanything.org/wiki/index.php/Main_Page.
+"""
+
+import sys
+
+from subunit import TAP2SubUnit
+sys.exit(TAP2SubUnit(sys.stdin, sys.stdout))
