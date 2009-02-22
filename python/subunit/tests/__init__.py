@@ -19,6 +19,7 @@
 
 from subunit.tests import (
     TestUtil,
+    test_subunit_filter,
     test_subunit_stats,
     test_subunit_tags,
     test_tap2subunit,
@@ -29,6 +30,7 @@ def test_suite():
     result = TestUtil.TestSuite()
     result.addTest(test_test_protocol.test_suite())
     result.addTest(test_tap2subunit.test_suite())
+    result.addTest(test_subunit_filter.test_suite())
     result.addTest(test_subunit_tags.test_suite())
     result.addTest(test_subunit_stats.test_suite())
     return result

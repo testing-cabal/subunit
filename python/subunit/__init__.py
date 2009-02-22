@@ -681,3 +681,52 @@ class TestResultStats(unittest.TestResult):
     def wasSuccessful(self):
         """Tells whether or not this result was a success"""
         return self.failed_tests == 0
+
+
+class TestResultFilter(unittest.TestResult):
+    """A pyunit TestResult interface implementation which filters tests.
+
+    Tests that pass the filter are handed on to another TestResult instance
+    for further processing/reporting. To obtain the filtered results, 
+    the other instance must be interrogated.
+
+    :ivar result: The result that tests are passed to after filtering.
+    """
+
+    def __init__(self, result, filter_error=False, filter_failure=False,
+        filter_success=True):
+        """Create a FilterResult object filtering to result.
+        
+        :param filter_error: Filter out errors.
+        :param filter_failure: Filter out failures.
+        :param filter_success: Filter out successful tests.
+        """
+        unittest.TestResult.__init__(self)
+        self.result = result
+        self._filter_error = filter_error
+        self._filter_failure = filter_failure
+        self._filter_success = filter_success
+        
+    def addError(self, test, err):
+        if not self._filter_error:
+            self.result.startTest(test)
+            self.result.addError(test, err)
+            self.result.stopTest(test)
+
+    def addFailure(self, test, err):
+        if not self._filter_failure:
+            self.result.startTest(test)
+            self.result.addFailure(test, err)
+            self.result.stopTest(test)
+
+    def addSuccess(self, test):
+        if not self._filter_success:
+            self.result.startTest(test)
+            self.result.addSuccess(test)
+            self.result.stopTest(test)
+
+    def id_to_orig_id(self, id):
+        if id.startswith("subunit.RemotedTestCase."):
+            return id[len("subunit.RemotedTestCase."):]
+        return id
+
