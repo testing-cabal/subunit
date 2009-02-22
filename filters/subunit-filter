@@ -1,0 +1,50 @@
+#!/usr/bin/env python
+#  subunit: extensions to python unittest to get test results from subprocesses.
+#  Copyright (C) 2008  Robert Collins <robertc@robertcollins.net>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+
+"""Filter a subunit stream to include/exclude tests.
+
+The default is to strip successful tests.
+"""
+
+from optparse import OptionParser
+import sys
+import unittest
+
+from subunit import ProtocolTestCase, TestResultFilter, TestProtocolClient
+
+parser = OptionParser(description=__doc__)
+parser.add_option("--error", action="store_false",
+    help="include errors", default=False, dest="error")
+parser.add_option("-e", "--no-error", action="store_true",
+    help="exclude errors", dest="error")
+parser.add_option("--failure", action="store_false",
+    help="include failures", default=False, dest="failure")
+parser.add_option("-f", "--no-failure", action="store_true",
+    help="include failures", dest="failure")
+parser.add_option("-s", "--success", action="store_false",
+    help="include successes", dest="success")
+parser.add_option("--no-success", action="store_true",
+    help="exclude successes", default=True, dest="success")
+(options, args) = parser.parse_args()
+result = TestProtocolClient(sys.stdout)
+result = TestResultFilter(result, filter_error=options.error, filter_failure=options.failure,
+    filter_success=options.success)
+test = ProtocolTestCase(sys.stdin)
+test.run(result)
+sys.exit(0)
