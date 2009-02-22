@@ -1,0 +1,67 @@
+#!/usr/bin/env python
+#  subunit: extensions to python unittest to get test results from subprocesses.
+#  Copyright (C) 2008  Robert Collins <robertc@robertcollins.net>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+
+"""List tests in a subunit stream."""
+
+import sys
+import unittest
+
+from subunit import ProtocolTestCase
+
+class FilterResult(unittest.TestResult):
+    """Filter test objects for display."""
+
+    def __init__(self, stream):
+        """Create a FilterResult object outputting to stream."""
+        unittest.TestResult.__init__(self)
+        self._stream = stream
+        self.failed_tests = 0
+        
+    def addError(self, test, err):
+        self.failed_tests += 1
+        self.reportTest(test)
+
+    def addFailure(self, test, err):
+        self.failed_tests += 1
+        self.reportTest(test)
+
+    def addSuccess(self, test):
+        self.reportTest(test)
+
+    def id_to_orig_id(self, id):
+        if id.startswith("subunit.RemotedTestCase."):
+            return id[len("subunit.RemotedTestCase."):]
+        return id
+
+    def reportTest(self, test):
+        self._stream.write(self.id_to_orig_id(test.id()) + '\n')
+
+    def wasSuccessful(self):
+        "Tells whether or not this result was a success"
+        return self.failed_tests == 0
+
+
+result = FilterResult(sys.stdout)
+test = ProtocolTestCase(sys.stdin)
+test.run(result)
+if result.wasSuccessful():
+    exit_code = 0
+else:
+    exit_code = 1
+sys.exit(exit_code)
