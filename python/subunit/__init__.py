@@ -363,7 +363,7 @@ class RemotedTestCase(unittest.TestCase):
         return self.__description
 
     def id(self):
-        return "%s.%s" % (self._strclass(), self.__description)
+        return "%s" % (self.__description,)
 
     def __str__(self):
         return "%s (%s)" % (self.__description, self._strclass())

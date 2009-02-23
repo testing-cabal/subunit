@@ -36,9 +36,9 @@ class TestTestResultFilter(unittest.TestCase):
         self.filtered_result = unittest.TestResult()
         self.filter = subunit.TestResultFilter(self.filtered_result)
         self.run_tests()
-        self.assertEqual(['subunit.RemotedTestCase.error'],
+        self.assertEqual(['error'],
             [error[0].id() for error in self.filtered_result.errors])
-        self.assertEqual(['subunit.RemotedTestCase.failed'],
+        self.assertEqual(['failed'],
             [failure[0].id() for failure in
             self.filtered_result.failures])
         self.assertEqual(2, self.filtered_result.testsRun)
@@ -50,7 +50,7 @@ class TestTestResultFilter(unittest.TestCase):
         self.run_tests()
         self.assertEqual([],
             [error[0].id() for error in self.filtered_result.errors])
-        self.assertEqual(['subunit.RemotedTestCase.failed'],
+        self.assertEqual(['failed'],
             [failure[0].id() for failure in
             self.filtered_result.failures])
         self.assertEqual(1, self.filtered_result.testsRun)
@@ -60,7 +60,7 @@ class TestTestResultFilter(unittest.TestCase):
         self.filter = subunit.TestResultFilter(self.filtered_result,
             filter_failure=True)
         self.run_tests()
-        self.assertEqual(['subunit.RemotedTestCase.error'],
+        self.assertEqual(['error'],
             [error[0].id() for error in self.filtered_result.errors])
         self.assertEqual([],
             [failure[0].id() for failure in
@@ -73,9 +73,9 @@ class TestTestResultFilter(unittest.TestCase):
         self.filter = subunit.TestResultFilter(self.filtered_result,
             filter_success=False)
         self.run_tests()
-        self.assertEqual(['subunit.RemotedTestCase.error'],
+        self.assertEqual(['error'],
             [error[0].id() for error in self.filtered_result.errors])
-        self.assertEqual(['subunit.RemotedTestCase.failed'],
+        self.assertEqual(['failed'],
             [failure[0].id() for failure in
             self.filtered_result.failures])
         self.assertEqual(5, self.filtered_result.testsRun)

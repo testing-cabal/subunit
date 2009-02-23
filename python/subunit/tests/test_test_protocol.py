@@ -772,7 +772,7 @@ class TestRemotedTestCase(unittest.TestCase):
         self.assertRaises(NotImplementedError, test.tearDown)
         self.assertEqual("A test description",
                          test.shortDescription())
-        self.assertEqual("subunit.RemotedTestCase.A test description",
+        self.assertEqual("A test description",
                          test.id())
         self.assertEqual("A test description (subunit.RemotedTestCase)", "%s" % test)
         self.assertEqual("<subunit.RemotedTestCase description="

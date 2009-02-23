@@ -44,13 +44,8 @@ class FilterResult(unittest.TestResult):
     def addSuccess(self, test):
         self.reportTest(test)
 
-    def id_to_orig_id(self, id):
-        if id.startswith("subunit.RemotedTestCase."):
-            return id[len("subunit.RemotedTestCase."):]
-        return id
-
     def reportTest(self, test):
-        self._stream.write(self.id_to_orig_id(test.id()) + '\n')
+        self._stream.write(test.id() + '\n')
 
     def wasSuccessful(self):
         "Tells whether or not this result was a success"
