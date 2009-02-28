@@ -133,7 +133,7 @@ class TestProtocolServer(object):
             self.current_test_description == line[offset:-1]):
             self.state = TestProtocolServer.OUTSIDE_TEST
             self.current_test_description = None
-            self.client.addSuccess(self._current_test)
+            self._skip_or_error()
             self.client.stopTest(self._current_test)
         elif (self.state == TestProtocolServer.TEST_STARTED and
             self.current_test_description + " [" == line[offset:-1]):
@@ -141,6 +141,16 @@ class TestProtocolServer(object):
             self._message = ""
         else:
             self.stdOutLineReceived(line)
+
+    def _skip_or_error(self, message=None):
+        """Report the current test as a skip if possible, or else an error."""
+        addSkip = getattr(self.client, 'addSkip', None)
+        if not callable(addSkip):
+            self.client.addError(self._current_test, RemoteError(message))
+        else:
+            if not message:
+                message = "No reason given"
+            addSkip(self._current_test, message)
 
     def _addSuccess(self, offset, line):
         if (self.state == TestProtocolServer.TEST_STARTED and
@@ -173,8 +183,12 @@ class TestProtocolServer(object):
             self.client.addError(self._current_test,
                                  RemoteError(self._message))
             self.client.stopTest(self._current_test)
+        elif self.state == TestProtocolServer.READING_SKIP:
+            self.state = TestProtocolServer.OUTSIDE_TEST
+            self.current_test_description = None
+            self._skip_or_error(self._message)
+            self.client.stopTest(self._current_test)
         elif self.state in (
-            TestProtocolServer.READING_SKIP,
             TestProtocolServer.READING_SUCCESS,
             TestProtocolServer.READING_XFAIL,
             ):
@@ -312,6 +326,12 @@ class TestProtocolClient(unittest.TestResult):
         self._stream.write("failure: %s [\n" % test.id())
         for line in self._exc_info_to_string(error, test).splitlines():
             self._stream.write("%s\n" % line)
+        self._stream.write("]\n")
+
+    def addSkip(self, test, reason):
+        """Report a skipped test."""
+        self._stream.write("skip: %s [\n" % test.id())
+        self._stream.write("%s\n" % reason)
         self._stream.write("]\n")
 
     def addSuccess(self, test):
@@ -651,6 +671,7 @@ class TestResultStats(unittest.TestResult):
         unittest.TestResult.__init__(self)
         self._stream = stream
         self.failed_tests = 0
+        self.skipped_tests = 0
         self.tags = set()
 
     @property
@@ -663,16 +684,20 @@ class TestResultStats(unittest.TestResult):
     def addFailure(self, test, err):
         self.failed_tests += 1
 
+    def addSkip(self, test, reason):
+        self.skipped_tests += 1
+
     def formatStats(self):
-        self._stream.write("Total tests:  %5d\n" % self.total_tests)
-        self._stream.write("Passed tests: %5d\n" % self.passed_tests)
-        self._stream.write("Failed tests: %5d\n" % self.failed_tests)
+        self._stream.write("Total tests:   %5d\n" % self.total_tests)
+        self._stream.write("Passed tests:  %5d\n" % self.passed_tests)
+        self._stream.write("Failed tests:  %5d\n" % self.failed_tests)
+        self._stream.write("Skipped tests: %5d\n" % self.skipped_tests)
         tags = sorted(self.tags)
         self._stream.write("Tags: %s\n" % (", ".join(tags)))
 
     @property
     def passed_tests(self):
-        return self.total_tests - self.failed_tests
+        return self.total_tests - self.failed_tests - self.skipped_tests
 
     def stopTest(self, test):
         unittest.TestResult.stopTest(self, test)
@@ -694,18 +719,20 @@ class TestResultFilter(unittest.TestResult):
     """
 
     def __init__(self, result, filter_error=False, filter_failure=False,
-        filter_success=True):
+        filter_success=True, filter_skip=False):
         """Create a FilterResult object filtering to result.
         
         :param filter_error: Filter out errors.
         :param filter_failure: Filter out failures.
         :param filter_success: Filter out successful tests.
+        :param filter_skip: Filter out skipped tests.
         """
         unittest.TestResult.__init__(self)
         self.result = result
         self._filter_error = filter_error
         self._filter_failure = filter_failure
         self._filter_success = filter_success
+        self._filter_skip = filter_skip
         
     def addError(self, test, err):
         if not self._filter_error:
@@ -717,6 +744,18 @@ class TestResultFilter(unittest.TestResult):
         if not self._filter_failure:
             self.result.startTest(test)
             self.result.addFailure(test, err)
+            self.result.stopTest(test)
+
+    def addSkip(self, test, reason):
+        if not self._filter_skip:
+            self.result.startTest(test)
+            # This is duplicated, it would be nice to have on a 'calls
+            # TestResults' mixin perhaps.
+            addSkip = getattr(self.result, 'addSkip', None)
+            if not callable(addSkip):
+                self.result.addError(test, RemoteError(reason))
+            else:
+                self.result.addSkip(test, reason)
             self.result.stopTest(test)
 
     def addSuccess(self, test):

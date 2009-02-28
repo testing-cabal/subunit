@@ -36,36 +36,47 @@ class TestTestResultFilter(unittest.TestCase):
         self.filtered_result = unittest.TestResult()
         self.filter = subunit.TestResultFilter(self.filtered_result)
         self.run_tests()
-        self.assertEqual(['error'],
+        # skips are seen as errors by default python TestResult.
+        self.assertEqual(['error', 'skipped'],
             [error[0].id() for error in self.filtered_result.errors])
         self.assertEqual(['failed'],
             [failure[0].id() for failure in
             self.filtered_result.failures])
-        self.assertEqual(2, self.filtered_result.testsRun)
+        self.assertEqual(3, self.filtered_result.testsRun)
 
     def test_exclude_errors(self):
         self.filtered_result = unittest.TestResult()
         self.filter = subunit.TestResultFilter(self.filtered_result,
             filter_error=True)
         self.run_tests()
-        self.assertEqual([],
+        # skips are seen as errors by default python TestResult.
+        self.assertEqual(['skipped'],
             [error[0].id() for error in self.filtered_result.errors])
         self.assertEqual(['failed'],
             [failure[0].id() for failure in
             self.filtered_result.failures])
-        self.assertEqual(1, self.filtered_result.testsRun)
+        self.assertEqual(2, self.filtered_result.testsRun)
 
     def test_exclude_failure(self):
         self.filtered_result = unittest.TestResult()
         self.filter = subunit.TestResultFilter(self.filtered_result,
             filter_failure=True)
         self.run_tests()
-        self.assertEqual(['error'],
+        self.assertEqual(['error', 'skipped'],
             [error[0].id() for error in self.filtered_result.errors])
         self.assertEqual([],
             [failure[0].id() for failure in
             self.filtered_result.failures])
-        self.assertEqual(1, self.filtered_result.testsRun)
+        self.assertEqual(2, self.filtered_result.testsRun)
+
+    def test_exclude_skips(self):
+        self.filtered_result = subunit.TestResultStats(None)
+        self.filter = subunit.TestResultFilter(self.filtered_result,
+            filter_skip=True)
+        self.run_tests()
+        self.assertEqual(0, self.filtered_result.skipped_tests)
+        self.assertEqual(2, self.filtered_result.failed_tests)
+        self.assertEqual(2, self.filtered_result.testsRun)
 
     def test_include_success(self):
         """Success's can be included if requested."""
@@ -73,13 +84,12 @@ class TestTestResultFilter(unittest.TestCase):
         self.filter = subunit.TestResultFilter(self.filtered_result,
             filter_success=False)
         self.run_tests()
-        self.assertEqual(['error'],
+        self.assertEqual(['error', 'skipped'],
             [error[0].id() for error in self.filtered_result.errors])
         self.assertEqual(['failed'],
             [failure[0].id() for failure in
             self.filtered_result.failures])
         self.assertEqual(5, self.filtered_result.testsRun)
-
 
     def run_tests(self):
         self.setUpTestStream()

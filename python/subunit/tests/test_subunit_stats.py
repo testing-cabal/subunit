@@ -62,15 +62,17 @@ xfail todo
         # Statistics are calculated usefully.
         self.setUpUsedStream()
         self.assertEqual(5, self.result.total_tests)
-        self.assertEqual(3, self.result.passed_tests)
+        self.assertEqual(2, self.result.passed_tests)
         self.assertEqual(2, self.result.failed_tests)
+        self.assertEqual(1, self.result.skipped_tests)
         self.assertEqual(set(["global", "local"]), self.result.tags)
 
     def test_stat_formatting(self):
         expected = ("""
-Total tests:      5
-Passed tests:     3
-Failed tests:     2
+Total tests:       5
+Passed tests:      2
+Failed tests:      2
+Skipped tests:     1
 Tags: global, local
 """)[1:]
         self.setUpUsedStream()

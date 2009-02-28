@@ -32,6 +32,7 @@ try:
             self.end_calls = []
             self.error_calls = []
             self.failure_calls = []
+            self.skip_calls = []
             self.start_calls = []
             self.success_calls = []
             super(MockTestProtocolServerClient, self).__init__()
@@ -41,6 +42,9 @@ try:
 
         def addFailure(self, test, error):
             self.failure_calls.append((test, error))
+
+        def addSkip(self, test, reason):
+            self.skip_calls.append((test, reason))
 
         def addSuccess(self, test):
             self.success_calls.append(test)
@@ -589,8 +593,8 @@ class TestTestProtocolServerAddxFail(unittest.TestCase):
 class TestTestProtocolServerAddSkip(unittest.TestCase):
     """Tests for the skip keyword.
 
-    In Python this thunks through to Success due to stdlib limitations. (See
-    README).
+    In python this meets the testtools extended TestResult contract.
+    (See https://launchpad.net/testtools).
     """
 
     def setUp(self):
@@ -606,7 +610,9 @@ class TestTestProtocolServerAddSkip(unittest.TestCase):
         self.assertEqual(self.client.end_calls, [self.test])
         self.assertEqual(self.client.error_calls, [])
         self.assertEqual(self.client.failure_calls, [])
-        self.assertEqual(self.client.success_calls, [self.test])
+        self.assertEqual(self.client.success_calls, [])
+        self.assertEqual(self.client.skip_calls,
+            [(self.test, 'No reason given')])
 
     def test_simple_skip(self):
         self.simple_skip_keyword("skip")
@@ -621,7 +627,9 @@ class TestTestProtocolServerAddSkip(unittest.TestCase):
         self.assertEqual(self.client.end_calls, [self.test])
         self.assertEqual(self.client.error_calls, [])
         self.assertEqual(self.client.failure_calls, [])
-        self.assertEqual(self.client.success_calls, [self.test])
+        self.assertEqual(self.client.success_calls, [])
+        self.assertEqual(self.client.skip_calls,
+            [(self.test, "No reason given")])
 
     def skip_quoted_bracket(self, keyword):
         # This tests it is accepted, but cannot test it is used today, because
@@ -633,7 +641,9 @@ class TestTestProtocolServerAddSkip(unittest.TestCase):
         self.assertEqual(self.client.end_calls, [self.test])
         self.assertEqual(self.client.error_calls, [])
         self.assertEqual(self.client.failure_calls, [])
-        self.assertEqual(self.client.success_calls, [self.test])
+        self.assertEqual(self.client.success_calls, [])
+        self.assertEqual(self.client.skip_calls,
+            [(self.test, "]\n")])
 
     def test_skip_quoted_bracket(self):
         self.skip_quoted_bracket("skip")
@@ -933,7 +943,6 @@ class TestTestProtocolClient(unittest.TestCase):
         self.protocol = subunit.TestProtocolClient(self.io)
         self.test = TestTestProtocolClient("test_start_test")
 
-
     def test_start_test(self):
         """Test startTest on a TestProtocolClient."""
         self.protocol.startTest(self.test)
@@ -967,6 +976,14 @@ class TestTestProtocolClient(unittest.TestCase):
             'error: %s [\n'
             "RemoteException: phwoar crikey\n"
             "]\n" % self.test.id())
+
+    def test_add_skip(self):
+        """Test addSkip on a TestProtocolClient."""
+        self.protocol.addSkip(
+            self.test, "Has it really?")
+        self.assertEqual(
+            self.io.getvalue(),
+            'skip: %s [\nHas it really?\n]\n' % self.test.id())
 
 
 def test_suite():

@@ -202,8 +202,10 @@ The time element acts as a clock event - it sets the time for all future events.
 Currently this is not exposed at the python API layer.
 
 The skip result is used to indicate a test that was found by the runner but not
-fully executed due to some policy or dependency issue. Currently this is
-represented in Python as a successful test.
+fully executed due to some policy or dependency issue. This is represented in
+python using the addSkip interface that testtools
+(https://edge.launchpad.net/testtools) defines. When communicating with a non
+skip aware test result, the test is reported as an error.
 The xfail result is used to indicate a test that was expected to fail failing
 in the expected manner. As this is a normal condition for such tests it is
 represented as a successful test in Python.
