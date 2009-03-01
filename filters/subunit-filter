@@ -39,12 +39,14 @@ parser.add_option("-f", "--no-failure", action="store_true",
     help="include failures", dest="failure")
 parser.add_option("-s", "--success", action="store_false",
     help="include successes", dest="success")
+parser.add_option("--no-skip", action="store_true",
+    help="exclude skips", dest="skip")
 parser.add_option("--no-success", action="store_true",
     help="exclude successes", default=True, dest="success")
 (options, args) = parser.parse_args()
 result = TestProtocolClient(sys.stdout)
 result = TestResultFilter(result, filter_error=options.error, filter_failure=options.failure,
-    filter_success=options.success)
+    filter_success=options.success, filter_skip=options.skip)
 test = ProtocolTestCase(sys.stdin)
 test.run(result)
 sys.exit(0)
