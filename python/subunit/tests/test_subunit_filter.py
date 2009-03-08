@@ -118,7 +118,6 @@ xfail todo
         self.input_stream.seek(0)
     
 
-
 def test_suite():
     loader = subunit.tests.TestUtil.TestLoader()
     result = loader.loadTestsFromName(__name__)

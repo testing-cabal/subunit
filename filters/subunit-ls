@@ -24,8 +24,7 @@ import unittest
 
 from subunit import ProtocolTestCase
 
-class FilterResult(unittest.TestResult):
-    """Filter test objects for display."""
+class TestIdPrintingResult(unittest.TestResult):
 
     def __init__(self, stream):
         """Create a FilterResult object outputting to stream."""
@@ -52,7 +51,7 @@ class FilterResult(unittest.TestResult):
         return self.failed_tests == 0
 
 
-result = FilterResult(sys.stdout)
+result = TestIdPrintingResult(sys.stdout)
 test = ProtocolTestCase(sys.stdin)
 test.run(result)
 if result.wasSuccessful():
