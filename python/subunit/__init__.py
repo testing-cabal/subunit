@@ -652,8 +652,10 @@ class ProtocolTestCase(object):
         if result is None:
             result = self.defaultTestResult()
         protocol = TestProtocolServer(result)
-        for line in self._stream:
+        line = self._stream.readline()
+        while line:
             protocol.lineReceived(line)
+            line = self._stream.readline()
         protocol.lostConnection()
 
 
