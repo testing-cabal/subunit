@@ -16,10 +16,10 @@ if DESTDIR[-1] != '/':
   DESTDIR += '/'
 include = os.path.join(DESTDIR, "include", "subunit")
 lib = os.path.join(DESTDIR, "lib")
-# bin = "#export/$PLATFORM/bin"
+bin = os.path.join(DESTDIR, "bin")
 env = Environment()
 tests = []
-Export('env', 'lib', 'include', 'DESTDIR', 'tests')
+Export('bin', 'env', 'lib', 'include', 'DESTDIR', 'tests')
 
 # support tools
 def run_test_scripts(source, target, env, for_signature):
