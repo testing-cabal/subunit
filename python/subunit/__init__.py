@@ -342,6 +342,9 @@ class TestProtocolClient(unittest.TestResult):
         """Mark a test as starting its test run."""
         self._stream.write("test: %s\n" % test.id())
 
+    def done(self):
+        """Obey the testtools result.done() interface."""
+
 
 def RemoteError(description=""):
     if description == "":
