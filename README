@@ -1,5 +1,5 @@
 
-  subunit: extensions to Python unittest to get test results from subprocesses.
+  subunit: A streaming protocol for test results
   Copyright (C) 2005  Robert Collins <robertc@robertcollins.net>
 
   This program is free software; you can redistribute it and/or modify
@@ -20,24 +20,27 @@
 Subunit
 -------
 
-Subunit is attempting to extend unittest with a clean and simple api to
-run arbitrary external test suites and return the results to standard
-Python unittest.
+Subunit is a streaming protocol for test results. The protocol is human
+readable and easily generated and parsed. By design all the components of 
+the protocol conceptually fit into the xUnit TestCase->TestResult interaction.
 
-Subunit comes in three parts:
- * Protocol writers (clients)
- * Protocol readers (servers)
- * Filters
- 
-A reader component acts as a test suite in the language that it is written
-for. Currently subunit only provides a Python protocol reader.
+Subunit comes with command line filters to process a subunit stream and
+language bindings for python, C, C++ and shell. Bindings are easy to write
+for other languages.
 
-Writers output test results in subunit form. Writers are typically
-test suite runners or test suite result objects in specific languages.
-Currently subunit provides writers for Python, C, C++, and shell.
+A number of useful things can be done easily with subunit:
+ * Test aggregation: Tests run separately can be combined and then
+   reported/displayed together. For instance, tests from different languages
+   can be shown as a seamless whole.
+ * Test archiving: A test run may be recorded and replayed later.
+ * Test isolation: Tests that may crash or otherwise interact badly with each
+   other can be run seperately and then aggregated, rather than interfering
+   with each other.
+ * Grid testing: subunit can act as the necessary serialisation and
+   deserialiation to get test runs on distributed machines to be reported in
+   real time.
 
-Filters provide translation filtering capabilities and can be used to modify a
-stream on-the-fly. Currently subunit provides:
+Subunit supplies the following filters:
  * tap2subunit - convert perl's TestAnythingProtocol to subunit.
  * subunit2pyunit - convert a subunit stream to pyunit test results.
  * subunit-filter - filter out tests from a subunit stream.
@@ -45,96 +48,111 @@ stream on-the-fly. Currently subunit provides:
  * subunit-stats - generate a summary of a subunit stream.
  * subunit-tags - add or remove tags from a stream.
 
+Subunit is attempting to extend unittest with a clean and simple api to
+run arbitrary external test suites and return the results to standard
+Python unittest.
+
+Integration with other tools
+----------------------------
+
+Subunit's language bindings act as integration with various test runners like
+'check', 'cppunit', Python's 'unittest'. Beyond that a small amount of glue
+(typically a few lines) will allow Subunit to be used in more sophisticated
+ways.
+
+Python
+======
+
+As a TestResult, Subunit can translate method calls from a test run into a
+Subunit stream::
+
+ # Get a TestSuite or TestCase to run
+ suite = make_suite()
+ # Create a stream (any object with a 'write' method)
+ stream = file('tests.log', 'wb')
+ # Create a subunit result object which will output to the stream
+ result = subunit.TestProtocolClient(stream)
+ # Run the test suite reporting to the subunit result object
+ suite.run(result)
+ # Close the stream.
+ stream.close()
+
+As a TestCase, subunit can read from a stream and inform a TestResult
+of the activity from the stream::
+
+ # Get a stream (any object with a readline() method), in this case example the
+ # stream output by the example before.
+ stream = file('tests.log', 'rb')
+ # Create a subunit ProtocolTestCase which will read from the stream and emit 
+ # activity to a result when run() is called.
+ suite = subunit.ProtocolTestCase(stream)
+ # Create a result object to show the contents of the stream.
+ result = unittest._TextTestResult(sys.stdout)
+ # 'run' the tests - process the stream and feed its contents to result.
+ suite.run(result)
+ stream.close()
+
+Subunit has support for non-blocking usage too, for use with asyncore or
+Twisted. See the TestProtocolServer class for more details.
+
+Building on these foundations, Subunit also offers some convenience tools.
+
+The ``IsolatedTestSuite`` class is a decorator that will fork() before running
+the decorated item, and gather the results from the child process via subunit.
+This is useful for handlings tests that mutate global state, or are testing C
+extensions that could crash the VM.
+
+Similarly, ``IsolatedTestCase`` is a base class which can be subclassed to get
+tests that will fork() before the test is run.
+
+Finally, ``ExecTestCase`` is a convenience wrapper for running an external 
+program to get a subunit stream and then report that back to an arbitrary
+result object::
+
+ class AggregateTests(subunit.ExecTestCase):
+
+     def test_script_one(self):
+         """./bin/script_one"""
+
+     def test_script_two(self):
+         """./bin/script_two"""
+ 
+ # Normally your normal test loading would take of this automatically,
+ # It is only spelt out in detail here for clarity.
+ suite = unittest.TestSuite([AggregateTests("test_script_one"),
+     AggregateTests("test_script_two")])
+ # Create any TestResult class you like.
+ result = unittest._TextTestResult(sys.stdout)
+ # And run your suite as normal, subunit will exec each external script as
+ # needed and report to your result object.
+ suite.run(result)
+
+C
+=
+
+Subunit has C bindings to emit the protocol, and comes with a patch for 'check'
+which has been nominally accepted by the 'check' developers. See 'c/README' for
+more details.
+
+C++
+===
+
+C++ uses the C bindings and includes a patch for cppunit. See 'c++/README' for
+details.
+
 The subunit code is organised at the top level by directories for language
 bindings, and additionally the filters directory for filters.
 
-Using subunit in Python
------------------------
+shell
+=====
 
-1) As a runner for external tests (potentially in other languages)
-2) As a process boundary for unittest TestCases to prevent them fiddling with
-   in-process state (i.e. singletons).
-3) As a wrapper around a TestCase (or Suite) to run a group of tests
-   externally.
-
-1) As a runner for external tests
-=================================
-This is supported on all platforms with Python 2.4.
-For each test script you want to run, declare a ExecTestCase with one
-or more tests whose docstring defines the script to run:
-
-import subunit
-import unittest
-class TestCProgram(subunit.ExecTestCase):
-
-    def test_script_one(self):
-        """./bin/script_one"""
-
-    def test_script_two(self):
-       """./bin/script_two"""
-
-# Yes, the test prefix on the methods matters.
-# Then run this in whatever normal way you would run Python unittests.
-# If you don't have a specific test runner, you can run it using the
-# default one in unittest.py:
-
-if __name__ == '__main__':
-     unittest.main()
-
-2) As a process boundary for unittest TestCases
-===============================================
-This is currently supported only on platforms
-that support os.fork(), which allows us to
-transparently introduce a process boundary
-without affecting manual test parameterisation.
-*** TODO explain in more detail and sketch out
-*** a solution for win32
-Just import subunit and derive your test cases
-from subunit.IsolatedTestCase:
-
-import subunit
-
-class TestFoo(subunit.IsolatedTestCase):
-
-    def test_something_globally(self):
-        SomethingGlobal.do()
-        self.assertEqual(SomethingGlobal.value(), 3)
-        # the run() method of IsolatedTestCase will intercept the
-        # test execution, fork() Python to create a new process,
-        # then run the test and report the results back to the parent
-        # process.
-
-# you run this in the normal way you run test cases.
-
-3) As a wrapper around a TestCase to run a group of tests externally.
-=====================================================================
-
-import subunit
-import unittest
-
-class TestFoo(unittest.TestCase):
-
-    def test_foo(self):
-        ...
+Similar to C, the shell bindings consist of simple functions to output protocol
+elements, and a patch for adding subunit output to the 'ShUnit' shell test
+runner. See 'shell/README' for details.
 
 
-def test_suite():
-    result = subunit.IsolatedTestSuite()
-    loader = unittest.TestLoader()
-    result.addTest(loader.loadTestsFromName(__name__))
-    return result
-
-# you can test the result of test_suite() as follows (or in any normal Python
-# manner.
-runner = unittest.TextTestRunner(verbosity=2)
-runner.run(test_suite())
-# enjoy.
-
-
-Some requirements:
-  The shape of the external unittest should not need to be known a-priori.
-  After the test has run, tests should still exist as discrete objects, so that
-  anything taking a reference to them doesn't get 50 copies of the same object.
+The protocol
+------------
 
 Sample subunit wire contents
 ----------------------------
@@ -163,7 +181,7 @@ foo.c:34 WARNING foo is not defined.
 
 
 Subunit protocol description
-----------------------------
+============================
 test|testing|test:|testing: test label
 success|success:|successful|successful: test label
 success|success:|successful|successful: test label [
@@ -211,10 +229,3 @@ in the expected manner. As this is a normal condition for such tests it is
 represented as a successful test in Python.
 In future, skip and xfail results will be represented semantically in Python,
 but some discussion is underway on the right way to do this.
-
-
-TODO:
-def run:
-    do a fork,
-      this process runs server
-      child runs client and calls self.run() with a SubprocessTestResult
