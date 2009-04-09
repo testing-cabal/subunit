@@ -121,7 +121,7 @@ class TestFoo(unittest.TestCase):
 def test_suite():
     result = subunit.IsolatedTestSuite()
     loader = unittest.TestLoader()
-    result.addTestCase(loader.loadTestsFromName(__name__))
+    result.addTest(loader.loadTestsFromName(__name__))
     return result
 
 # you can test the result of test_suite() as follows (or in any normal Python
