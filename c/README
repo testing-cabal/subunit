@@ -20,12 +20,9 @@
 This subtree contains an implementation of the subunit child protocol.
 Currently I have no plans to write a test runner in C, so I have not written
 an implementation of the parent protocol. [but will happily accept patches].
-This implementation is build using SCons and tested via 'check'.
+This implementation is built using SCons and tested via 'check'.
 See the tests/ directory for the test programs.
-You can use `make check` or `scons check` to run the tests. I plan to write a
-'check' runner which uses these bindings to provide subunit output, at which
-point creating a trivial python test_c.py script which uses the pyunit gui to
-will be added to me todo list.
+You can use `make check` or `scons check` to run the tests. 
 
 The C protocol consists of four functions which you can use to output test
 metadata trivially. See lib/subunit_child.[ch] for details.
@@ -34,11 +31,11 @@ However, this is not a test runner - subunit provides no support for [for
 instance] managing assertions, cleaning up on errors etc. You can look at
 'check' (http://check.sourceforge.net/) or
 'gunit' (https://garage.maemo.org/projects/gunit) for C unit test
-frameworks. I plan to write ui layers for both of these that use the subunit
-bindings for reporting. There is a patch for 'check'
-(check-subunit-0.9.3.patch, and check-subunit-0.9.5.patch) in this source tree.
+frameworks. 
+There is a patch for 'check' (check-subunit-*.patch) in this source tree.
 Its also available as request ID #1470750 in the sourceforge request tracker
-http://sourceforge.net/tracker/index.php.
+http://sourceforge.net/tracker/index.php. The 'check' developers have indicated
+they will merge this during the current release cycle.
 
 If you are a test environment maintainer - either homegrown, or 'check' or
 'gunit' or some other, you will to know how the subunit calls should be used.
