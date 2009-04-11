@@ -136,9 +136,6 @@ C++
 C++ uses the C bindings and includes a patch for cppunit. See 'c++/README' for
 details.
 
-The subunit code is organised at the top level by directories for language
-bindings, and additionally the filters directory for filters.
-
 shell
 =====
 
@@ -153,27 +150,27 @@ The protocol
 Sample subunit wire contents
 ----------------------------
 
-test: test foo works
-success: test foo works.
-test: tar a file.
-failure: tar a file. [
-..
- ]..  space is eaten.
-foo.c:34 WARNING foo is not defined.
-]
-a writeln to stdout
+The following::
+  test: test foo works
+  success: test foo works.
+  test: tar a file.
+  failure: tar a file. [
+  ..
+   ]..  space is eaten.
+  foo.c:34 WARNING foo is not defined.
+  ]
+  a writeln to stdout
 
-===========
-.F
-a writeln to stdout
+When run through subunit2pyunit::
+  .F
+  a writeln to stdout
 
-========================
-FAILURE: tar a file.
--------------------
-..
-]..  space is eaten.
-foo.c:34 WARNING foo is not defined.
-========================
+  ========================
+  FAILURE: tar a file.
+  -------------------
+  ..
+  ]..  space is eaten.
+  foo.c:34 WARNING foo is not defined.
 
 
 Subunit protocol description
