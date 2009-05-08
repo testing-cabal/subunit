@@ -62,6 +62,9 @@ check_PROGRAMS = \
 check_SCRIPTS = \
 	runtests.py
 
+clean-local:
+	find . -name "*.pyc" | xargs -r rm
+
 libsubunit_la_SOURCES = \
 	c/lib/child.c \
 	c/include/subunit/child.h
