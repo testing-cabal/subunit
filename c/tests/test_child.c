@@ -20,6 +20,7 @@
 
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 #include <check.h>
 
 #include "subunit/child.h"
@@ -138,9 +139,9 @@ call_test_error(void)
 }
 
 
-START_TEST (error)
+START_TEST (test_error)
 {
-    test_stdout_function("failure: test case [\n"
+    test_stdout_function("error: test case [\n"
                          "Multiple lines\n"
         		 " of output\n"
 			 "]\n",
@@ -148,9 +149,7 @@ START_TEST (error)
 }
 END_TEST
 
-
-
-Suite *
+static Suite *
 child_suite(void)
 {
     Suite *s = suite_create("subunit_child");
@@ -159,6 +158,7 @@ child_suite(void)
     tcase_add_test (tc_core, test_start);
     tcase_add_test (tc_core, test_pass);
     tcase_add_test (tc_core, test_fail);
+    tcase_add_test (tc_core, test_error);
     return s;
 }
 

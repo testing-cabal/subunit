@@ -1,0 +1,9 @@
+To install subunit
+------------------
+
+Bootstrap::
+  autoreconf -vi
+Configure::
+  ./configure
+Install::
+  make install

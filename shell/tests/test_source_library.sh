@@ -26,7 +26,7 @@
 
 echo 'test: shell bindings can be sourced'
 # if any output occurs, this has failed to source cleanly
-source_output=$(. shell/share/subunit.sh 2>&1)
+source_output=$(. ${SHELL_SHARE}subunit.sh 2>&1)
 if [ $? == 0 -a "x$source_output" = "x" ]; then
   echo 'success: shell bindings can be sourced'
 else
@@ -37,7 +37,7 @@ else
 fi
 
 # now source it for real
-. shell/share/subunit.sh
+. ${SHELL_SHARE}subunit.sh
 
 # we should have a start_test function
 echo 'test: subunit_start_test exists'

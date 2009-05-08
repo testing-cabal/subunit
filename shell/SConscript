@@ -1,5 +1,0 @@
-Import('*')
-# describe what we need for Shell
-
-shell_lib_installdir = DESTDIR + '/share/subunit'
-env.Alias('install', [Install(shell_lib_installdir, 'share/subunit.sh')])
