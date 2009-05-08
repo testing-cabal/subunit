@@ -20,6 +20,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include "subunit/child.h"
 
 /* these functions all flush to ensure that the test runner knows the action
  * that has been taken even if the subsequent test etc takes a long time or
