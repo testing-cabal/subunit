@@ -60,7 +60,8 @@ func_output=$(subunit_fail_test "foo bar" <<END
 something
   wrong
 here
-END)
+END
+)
 func_status=$?
 if [ $func_status == 0 -a "x$func_output" = "xfailure: foo bar [
 something
@@ -81,7 +82,8 @@ func_output=$(subunit_error_test "foo bar" <<END
 something
   died
 here
-END)
+END
+)
 func_status=$?
 if [ $func_status == 0 -a "x$func_output" = "xerror: foo bar [
 something
