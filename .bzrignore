@@ -29,3 +29,5 @@ config.log
 config.status
 Makefile
 config.h
+./perl/blib
+./perl/pm_to_blib
