@@ -19,14 +19,27 @@
 
 import sys
 
-from subunit import SubunitTestRunner
-from unittest import TestProgram
-import optparse
-import os
+from subunit import TestProtocolClient
 
-parser = optparse.OptionParser("subunitrun <tests>")
 
-args = parser.parse_args()[1]
+class SubunitTestRunner(object):
+    def __init__(self, stream=sys.stdout):
+        self.stream = stream
 
-runner = SubunitTestRunner()
-program = TestProgram(module=None, argv=[sys.argv[0]] + args, testRunner=runner)
+    def run(self, test):
+        "Run the given test case or test suite."
+        result = TestProtocolClient(self.stream)
+        test(result)
+        return result
+
+
+if __name__ == '__main__':
+    import optparse
+    from unittest import TestProgram
+    parser = optparse.OptionParser("subunitrun <tests>")
+
+    args = parser.parse_args()[1]
+
+    runner = SubunitTestRunner()
+    program = TestProgram(module=None, argv=[sys.argv[0]] + args, 
+                          testRunner=runner)

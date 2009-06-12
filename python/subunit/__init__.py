@@ -774,14 +774,3 @@ class TestResultFilter(unittest.TestResult):
             return id[len("subunit.RemotedTestCase."):]
         return id
 
-
-class SubunitTestRunner(object):
-    def __init__(self, stream=sys.stdout):
-        self.stream = stream
-
-    def run(self, test):
-        "Run the given test case or test suite."
-        result = TestProtocolClient(self.stream)
-        test(result)
-        return result
-
