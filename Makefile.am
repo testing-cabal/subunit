@@ -9,6 +9,7 @@ EXTRA_DIST =  \
 	c++/README \
 	c++/cppunit-subunit-1.10.2.patch \
 	python/subunit/__init__.py \
+	python/subunit/run.py \
 	python/subunit/tests/TestUtil.py \
 	python/subunit/tests/__init__.py \
 	python/subunit/tests/sample-script.py \
@@ -49,7 +50,8 @@ pcdatadir = $(libdir)/pkgconfig
 pcdata_DATA = libsubunit.pc
 
 pkgpython_PYTHON = \
-	python/subunit/__init__.py
+	python/subunit/__init__.py \
+	python/subunit/run.py
 
 lib_LTLIBRARIES = libsubunit.la
 

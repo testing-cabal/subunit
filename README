@@ -101,7 +101,7 @@ extensions that could crash the VM.
 Similarly, ``IsolatedTestCase`` is a base class which can be subclassed to get
 tests that will fork() before the test is run.
 
-Finally, ``ExecTestCase`` is a convenience wrapper for running an external 
+`ExecTestCase`` is a convenience wrapper for running an external 
 program to get a subunit stream and then report that back to an arbitrary
 result object::
 
@@ -122,6 +122,12 @@ result object::
  # And run your suite as normal, subunit will exec each external script as
  # needed and report to your result object.
  suite.run(result)
+
+Finally, subunit.run is a convenience wrapper to run a python test suite via
+the command line, reporting via subunit::
+
+  $ python -m subunit.run mylib.tests.test_suite
+ 
 
 C
 =
