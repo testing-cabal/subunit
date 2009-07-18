@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 import sys
+if len(sys.argv) == 2:
+    print "test fail"
+    print "error fail"
+    sys.exit(0)
 print "test old mcdonald"
 print "success old mcdonald"
 print "test bing crosby"
