@@ -432,8 +432,8 @@ class ExecTestCase(unittest.TestCase):
 
     def _run(self, result):
         protocol = TestProtocolServer(result)
-        output = subprocess.Popen([self.script],
-                                  stdout=subprocess.PIPE).communicate()[0]
+        output = subprocess.Popen(self.script, shell=True,
+            stdout=subprocess.PIPE).communicate()[0]
         protocol.readFrom(StringIO(output))
 
 

@@ -823,11 +823,20 @@ class TestExecTestCase(unittest.TestCase):
             # the sample script runs three tests, one each
             # that fails, errors and succeeds
 
+        def test_sample_method_args(self):
+            """sample-script.py foo"""
+            # sample that will run just one test.
 
     def test_construct(self):
         test = self.SampleExecTestCase("test_sample_method")
         self.assertEqual(test.script,
                          subunit.join_dir(__file__, 'sample-script.py'))
+
+    def test_args(self):
+        result = unittest.TestResult()
+        test = self.SampleExecTestCase("test_sample_method_args")
+        test.run(result)
+        self.assertEqual(1, result.testsRun)
 
     def test_run(self):
         runner = MockTestProtocolServerClient()
