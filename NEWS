@@ -1,0 +1,20 @@
+---------------------
+subunit release notes
+---------------------
+
+
+0.0.2 (IN DEVELOPMENT)
+----------------------
+
+  CHANGES:
+
+  IMPROVEMENTS:
+
+  BUG FIXES:
+
+  API CHANGES:
+
+  INTERNALS:
+
+    * ExecTestCase supports passing arguments to test scripts.
+
