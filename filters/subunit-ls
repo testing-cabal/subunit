@@ -74,8 +74,8 @@ class TestIdPrintingResult(unittest.TestResult):
 
 parser = OptionParser(description=__doc__)
 parser.add_option("--times", action="store_true",
-    help="list the time each test took in seconds "
-    "(requires a timestamped stream)", default=False)
+    help="list the time each test took (requires a timestamped stream)",
+        default=False)
 (options, args) = parser.parse_args()
 result = TestIdPrintingResult(sys.stdout, options.times)
 test = ProtocolTestCase(sys.stdin)

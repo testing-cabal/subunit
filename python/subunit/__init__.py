@@ -17,14 +17,16 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import calendar
+import datetime
 import os
 import re
 from StringIO import StringIO
 import subprocess
 import sys
-import time
 import unittest
+
+import iso8601
+
 
 def test_suite():
     import subunit.tests
@@ -211,11 +213,10 @@ class TestProtocolServer(object):
 
     def _handleTime(self, offset, line):
         # Accept it, but do not do anything with it yet.
-        event_time = time.strptime(line[offset:-1], "%Y-%m-%d %H:%M:%SZ")
-        time_seconds = calendar.timegm(event_time)
+        event_time = iso8601.parse_date(line[offset:-1])
         time_method = getattr(self.client, 'time', None)
         if callable(time_method):
-            time_method(time_seconds)
+            time_method(event_time)
 
     def lineReceived(self, line):
         """Call the appropriate local method for the received line."""

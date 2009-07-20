@@ -51,6 +51,7 @@ pcdata_DATA = libsubunit.pc
 
 pkgpython_PYTHON = \
 	python/subunit/__init__.py \
+	python/subunit/iso8601.py \
 	python/subunit/run.py
 
 lib_LTLIBRARIES = libsubunit.la

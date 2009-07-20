@@ -17,12 +17,14 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+import datetime
 import unittest
 from StringIO import StringIO
 import os
 import subunit
 import sys
-import time
+
+import subunit.iso8601 as iso8601
 
 
 class MockTestProtocolServerClient(object):
@@ -779,7 +781,8 @@ class TestTestProtocolServerStreamTime(unittest.TestCase):
             stream=self.stream)
         self.protocol.lineReceived("time: 2001-12-12 12:59:59Z\n")
         self.assertEqual("", self.stream.getvalue())
-        self.assertEqual(1008161999, self.result._time)
+        self.assertEqual(datetime.datetime(2001, 12, 12, 12, 59, 59, 0,
+            iso8601.Utc()), self.result._time)
 
 
 class TestRemotedTestCase(unittest.TestCase):
