@@ -44,7 +44,7 @@ Subunit supplies the following filters:
  * tap2subunit - convert perl's TestAnythingProtocol to subunit.
  * subunit2pyunit - convert a subunit stream to pyunit test results.
  * subunit-filter - filter out tests from a subunit stream.
- * subunit-ls - list the tests present in a subunit stream.
+ * subunit-ls - list info about tests present in a subunit stream.
  * subunit-stats - generate a summary of a subunit stream.
  * subunit-tags - add or remove tags from a stream.
 

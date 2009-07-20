@@ -19,6 +19,7 @@
 
 """List tests in a subunit stream."""
 
+from optparse import OptionParser
 import sys
 import unittest
 
@@ -26,32 +27,57 @@ from subunit import ProtocolTestCase
 
 class TestIdPrintingResult(unittest.TestResult):
 
-    def __init__(self, stream):
+    def __init__(self, stream, show_times=False):
         """Create a FilterResult object outputting to stream."""
         unittest.TestResult.__init__(self)
         self._stream = stream
         self.failed_tests = 0
+        self.__time = 0
+        self.show_times = show_times
+        self._test = None
+        self._test_duration = 0
         
     def addError(self, test, err):
         self.failed_tests += 1
-        self.reportTest(test)
+        self._test = test
 
     def addFailure(self, test, err):
         self.failed_tests += 1
-        self.reportTest(test)
+        self._test = test
 
     def addSuccess(self, test):
-        self.reportTest(test)
+        self._test = test
 
-    def reportTest(self, test):
-        self._stream.write(test.id() + '\n')
+    def reportTest(self, test, duration):
+        if self.show_times:
+            self._stream.write(test.id() + ' %s\n' % duration)
+        else:
+            self._stream.write(test.id() + '\n')
+
+    def startTest(self, test):
+        self._start_time = self._time()
+
+    def stopTest(self, test):
+        test_duration = self._time() - self._start_time
+        self.reportTest(self._test, test_duration)
+
+    def time(self, time):
+        self.__time = time
+
+    def _time(self):
+        return self.__time
 
     def wasSuccessful(self):
         "Tells whether or not this result was a success"
         return self.failed_tests == 0
 
 
-result = TestIdPrintingResult(sys.stdout)
+parser = OptionParser(description=__doc__)
+parser.add_option("--times", action="store_true",
+    help="list the time each test took in seconds "
+    "(requires a timestamped stream)", default=False)
+(options, args) = parser.parse_args()
+result = TestIdPrintingResult(sys.stdout, options.times)
 test = ProtocolTestCase(sys.stdin)
 test.run(result)
 if result.wasSuccessful():
