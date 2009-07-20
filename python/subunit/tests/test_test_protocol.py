@@ -24,39 +24,40 @@ import subunit
 import sys
 import time
 
-try:
-    class MockTestProtocolServerClient(object):
-        """A mock protocol server client to test callbacks."""
 
-        def __init__(self):
-            self.end_calls = []
-            self.error_calls = []
-            self.failure_calls = []
-            self.skip_calls = []
-            self.start_calls = []
-            self.success_calls = []
-            super(MockTestProtocolServerClient, self).__init__()
+class MockTestProtocolServerClient(object):
+    """A mock protocol server client to test callbacks."""
 
-        def addError(self, test, error):
-            self.error_calls.append((test, error))
+    def __init__(self):
+        self.end_calls = []
+        self.error_calls = []
+        self.failure_calls = []
+        self.skip_calls = []
+        self.start_calls = []
+        self.success_calls = []
+        self._time = None
+        super(MockTestProtocolServerClient, self).__init__()
 
-        def addFailure(self, test, error):
-            self.failure_calls.append((test, error))
+    def addError(self, test, error):
+        self.error_calls.append((test, error))
 
-        def addSkip(self, test, reason):
-            self.skip_calls.append((test, reason))
+    def addFailure(self, test, error):
+        self.failure_calls.append((test, error))
 
-        def addSuccess(self, test):
-            self.success_calls.append(test)
+    def addSkip(self, test, reason):
+        self.skip_calls.append((test, reason))
 
-        def stopTest(self, test):
-            self.end_calls.append(test)
+    def addSuccess(self, test):
+        self.success_calls.append(test)
 
-        def startTest(self, test):
-            self.start_calls.append(test)
+    def stopTest(self, test):
+        self.end_calls.append(test)
 
-except AttributeError:
-    MockTestProtocolServer = None
+    def startTest(self, test):
+        self.start_calls.append(test)
+
+    def time(self, time):
+        self._time = time
 
 
 class TestMockTestProtocolServer(unittest.TestCase):
@@ -763,15 +764,22 @@ class TestTestProtocolServerStreamTags(unittest.TestCase):
 class TestTestProtocolServerStreamTime(unittest.TestCase):
     """Test managing time information at the protocol level."""
 
-    def setUp(self):
-        self.client = MockTestProtocolServerClient()
+    def test_time_accepted_stdlib(self):
+        self.result = unittest.TestResult()
         self.stream = StringIO()
-        self.protocol = subunit.TestProtocolServer(self.client,
+        self.protocol = subunit.TestProtocolServer(self.result,
             stream=self.stream)
-
-    def test_time_accepted(self):
         self.protocol.lineReceived("time: 2001-12-12 12:59:59Z\n")
         self.assertEqual("", self.stream.getvalue())
+
+    def test_time_accepted_extended(self):
+        self.result = MockTestProtocolServerClient()
+        self.stream = StringIO()
+        self.protocol = subunit.TestProtocolServer(self.result,
+            stream=self.stream)
+        self.protocol.lineReceived("time: 2001-12-12 12:59:59Z\n")
+        self.assertEqual("", self.stream.getvalue())
+        self.assertEqual(1008161999, self.result._time)
 
 
 class TestRemotedTestCase(unittest.TestCase):

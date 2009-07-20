@@ -123,6 +123,12 @@ result object::
  # needed and report to your result object.
  suite.run(result)
 
+subunit includes extensions to the python ``TestResult`` protocol. The
+``time(seconds_since_epoch)`` method is called (if present) when a ``time:``
+directive is encountered in a subunit stream. This is used to tell a TestResult
+about the time that events in the stream occured at, to allow reconstructing
+test timing from a stream.
+
 Finally, subunit.run is a convenience wrapper to run a python test suite via
 the command line, reporting via subunit::
 
@@ -216,7 +222,6 @@ In Python, tags are assigned to the .tags attribute on the RemoteTest objects
 created by the TestProtocolServer.
 
 The time element acts as a clock event - it sets the time for all future events.
-Currently this is not exposed at the python API layer.
 
 The skip result is used to indicate a test that was found by the runner but not
 fully executed due to some policy or dependency issue. This is represented in

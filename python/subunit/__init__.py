@@ -17,11 +17,13 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+import calendar
 import os
+import re
 from StringIO import StringIO
 import subprocess
 import sys
-import re
+import time
 import unittest
 
 def test_suite():
@@ -207,6 +209,14 @@ class TestProtocolServer(object):
         update_tags.update(new_tags)
         update_tags.difference_update(gone_tags)
 
+    def _handleTime(self, offset, line):
+        # Accept it, but do not do anything with it yet.
+        event_time = time.strptime(line[offset:-1], "%Y-%m-%d %H:%M:%SZ")
+        time_seconds = calendar.timegm(event_time)
+        time_method = getattr(self.client, 'time', None)
+        if callable(time_method):
+            time_method(time_seconds)
+
     def lineReceived(self, line):
         """Call the appropriate local method for the received line."""
         if line == "]\n":
@@ -236,8 +246,7 @@ class TestProtocolServer(object):
                 elif cmd in ('tags',):
                     self._handleTags(offset, line)
                 elif cmd in ('time',):
-                    # Accept it, but do not do anything with it yet.
-                    pass
+                    self._handleTime(offset, line)
                 elif cmd == 'xfail':
                     self._addExpectedFail(offset, line)
                 else:
