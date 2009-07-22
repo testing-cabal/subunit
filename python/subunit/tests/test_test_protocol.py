@@ -969,7 +969,7 @@ class TestTestProtocolClient(unittest.TestCase):
         self.assertEqual(self.io.getvalue(), "test: %s\n" % self.test.id())
 
     def test_stop_test(self):
-        """Test stopTest on a TestProtocolClient."""
+        # stopTest doesn't output anything.
         self.protocol.stopTest(self.test)
         self.assertEqual(self.io.getvalue(), "")
 
@@ -1004,6 +1004,14 @@ class TestTestProtocolClient(unittest.TestCase):
         self.assertEqual(
             self.io.getvalue(),
             'skip: %s [\nHas it really?\n]\n' % self.test.id())
+
+    def test_time(self):
+        # Calling time() outputs a time signal immediately.
+        self.protocol.time(
+            datetime.datetime(2009,10,11,12,13,14,15, iso8601.Utc()))
+        self.assertEqual(
+            "time: 2009-10-11 12:13:14.000015Z\n",
+            self.io.getvalue())
 
 
 def test_suite():
