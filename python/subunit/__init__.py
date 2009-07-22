@@ -17,12 +17,16 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+import datetime
 import os
+import re
 from StringIO import StringIO
 import subprocess
 import sys
-import re
 import unittest
+
+import iso8601
+
 
 def test_suite():
     import subunit.tests
@@ -207,6 +211,16 @@ class TestProtocolServer(object):
         update_tags.update(new_tags)
         update_tags.difference_update(gone_tags)
 
+    def _handleTime(self, offset, line):
+        # Accept it, but do not do anything with it yet.
+        try:
+            event_time = iso8601.parse_date(line[offset:-1])
+        except TypeError, e:
+            raise TypeError("Failed to parse %r, got %r" % (line, e))
+        time_method = getattr(self.client, 'time', None)
+        if callable(time_method):
+            time_method(event_time)
+
     def lineReceived(self, line):
         """Call the appropriate local method for the received line."""
         if line == "]\n":
@@ -236,8 +250,7 @@ class TestProtocolServer(object):
                 elif cmd in ('tags',):
                     self._handleTags(offset, line)
                 elif cmd in ('time',):
-                    # Accept it, but do not do anything with it yet.
-                    pass
+                    self._handleTime(offset, line)
                 elif cmd == 'xfail':
                     self._addExpectedFail(offset, line)
                 else:
@@ -341,6 +354,16 @@ class TestProtocolClient(unittest.TestResult):
     def startTest(self, test):
         """Mark a test as starting its test run."""
         self._stream.write("test: %s\n" % test.id())
+
+    def time(self, a_datetime):
+        """Inform the client of the time.
+
+        ":param datetime: A datetime.datetime object.
+        """
+        time = a_datetime.astimezone(iso8601.Utc())
+        self._stream.write("time: %04d-%02d-%02d %02d:%02d:%02d.%06dZ\n" % (
+            time.year, time.month, time.day, time.hour, time.minute,
+            time.second, time.microsecond))
 
     def done(self):
         """Obey the testtools result.done() interface."""

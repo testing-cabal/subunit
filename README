@@ -17,6 +17,10 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
+  subunit reuses iso8601 by Michael Twomey, distributed under an MIT style
+  licence - see python/iso8601/LICENSE for details.
+
+
 Subunit
 -------
 
@@ -44,7 +48,7 @@ Subunit supplies the following filters:
  * tap2subunit - convert perl's TestAnythingProtocol to subunit.
  * subunit2pyunit - convert a subunit stream to pyunit test results.
  * subunit-filter - filter out tests from a subunit stream.
- * subunit-ls - list the tests present in a subunit stream.
+ * subunit-ls - list info about tests present in a subunit stream.
  * subunit-stats - generate a summary of a subunit stream.
  * subunit-tags - add or remove tags from a stream.
 
@@ -68,6 +72,9 @@ Subunit stream::
  stream = file('tests.log', 'wb')
  # Create a subunit result object which will output to the stream
  result = subunit.TestProtocolClient(stream)
+ # Optionally, to get timing data for performance analysis, wrap the
+ # serialiser with a timing decorator
+ result = subunit.test_results.AutoTimingTestResultDecorator(result)
  # Run the test suite reporting to the subunit result object
  suite.run(result)
  # Close the stream.
@@ -122,6 +129,12 @@ result object::
  # And run your suite as normal, subunit will exec each external script as
  # needed and report to your result object.
  suite.run(result)
+
+subunit includes extensions to the python ``TestResult`` protocol. The
+``time(a_datetime)`` method is called (if present) when a ``time:``
+directive is encountered in a subunit stream. This is used to tell a TestResult
+about the time that events in the stream occured at, to allow reconstructing
+test timing from a stream.
 
 Finally, subunit.run is a convenience wrapper to run a python test suite via
 the command line, reporting via subunit::
@@ -215,8 +228,8 @@ applying to a single test, or to cancel a global tag.
 In Python, tags are assigned to the .tags attribute on the RemoteTest objects
 created by the TestProtocolServer.
 
-The time element acts as a clock event - it sets the time for all future events.
-Currently this is not exposed at the python API layer.
+The time element acts as a clock event - it sets the time for all future
+events. The value should be a valid ISO8601 time.
 
 The skip result is used to indicate a test that was found by the runner but not
 fully executed due to some policy or dependency issue. This is represented in

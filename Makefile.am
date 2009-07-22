@@ -2,6 +2,7 @@ EXTRA_DIST =  \
 	INSTALL \
 	Makefile.am \
 	README \
+	NEWS \
 	c/README \
 	c/check-subunit-0.9.3.patch \
 	c/check-subunit-0.9.5.patch \
@@ -19,6 +20,7 @@ EXTRA_DIST =  \
 	python/subunit/tests/test_subunit_tags.py \
 	python/subunit/tests/test_tap2subunit.py \
 	python/subunit/tests/test_test_protocol.py \
+	python/subunit/tests/test_test_results.py \
 	runtests.py \
 	shell/README \
 	shell/share/subunit.sh \
@@ -51,7 +53,9 @@ pcdata_DATA = libsubunit.pc
 
 pkgpython_PYTHON = \
 	python/subunit/__init__.py \
-	python/subunit/run.py
+	python/subunit/iso8601.py \
+	python/subunit/run.py \
+	python/subunit/test_results.py
 
 lib_LTLIBRARIES = libsubunit.la
 

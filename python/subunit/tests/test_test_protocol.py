@@ -17,46 +17,49 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+import datetime
 import unittest
 from StringIO import StringIO
 import os
 import subunit
 import sys
-import time
 
-try:
-    class MockTestProtocolServerClient(object):
-        """A mock protocol server client to test callbacks."""
+import subunit.iso8601 as iso8601
 
-        def __init__(self):
-            self.end_calls = []
-            self.error_calls = []
-            self.failure_calls = []
-            self.skip_calls = []
-            self.start_calls = []
-            self.success_calls = []
-            super(MockTestProtocolServerClient, self).__init__()
 
-        def addError(self, test, error):
-            self.error_calls.append((test, error))
+class MockTestProtocolServerClient(object):
+    """A mock protocol server client to test callbacks."""
 
-        def addFailure(self, test, error):
-            self.failure_calls.append((test, error))
+    def __init__(self):
+        self.end_calls = []
+        self.error_calls = []
+        self.failure_calls = []
+        self.skip_calls = []
+        self.start_calls = []
+        self.success_calls = []
+        self._time = None
+        super(MockTestProtocolServerClient, self).__init__()
 
-        def addSkip(self, test, reason):
-            self.skip_calls.append((test, reason))
+    def addError(self, test, error):
+        self.error_calls.append((test, error))
 
-        def addSuccess(self, test):
-            self.success_calls.append(test)
+    def addFailure(self, test, error):
+        self.failure_calls.append((test, error))
 
-        def stopTest(self, test):
-            self.end_calls.append(test)
+    def addSkip(self, test, reason):
+        self.skip_calls.append((test, reason))
 
-        def startTest(self, test):
-            self.start_calls.append(test)
+    def addSuccess(self, test):
+        self.success_calls.append(test)
 
-except AttributeError:
-    MockTestProtocolServer = None
+    def stopTest(self, test):
+        self.end_calls.append(test)
+
+    def startTest(self, test):
+        self.start_calls.append(test)
+
+    def time(self, time):
+        self._time = time
 
 
 class TestMockTestProtocolServer(unittest.TestCase):
@@ -763,15 +766,23 @@ class TestTestProtocolServerStreamTags(unittest.TestCase):
 class TestTestProtocolServerStreamTime(unittest.TestCase):
     """Test managing time information at the protocol level."""
 
-    def setUp(self):
-        self.client = MockTestProtocolServerClient()
+    def test_time_accepted_stdlib(self):
+        self.result = unittest.TestResult()
         self.stream = StringIO()
-        self.protocol = subunit.TestProtocolServer(self.client,
+        self.protocol = subunit.TestProtocolServer(self.result,
             stream=self.stream)
-
-    def test_time_accepted(self):
         self.protocol.lineReceived("time: 2001-12-12 12:59:59Z\n")
         self.assertEqual("", self.stream.getvalue())
+
+    def test_time_accepted_extended(self):
+        self.result = MockTestProtocolServerClient()
+        self.stream = StringIO()
+        self.protocol = subunit.TestProtocolServer(self.result,
+            stream=self.stream)
+        self.protocol.lineReceived("time: 2001-12-12 12:59:59Z\n")
+        self.assertEqual("", self.stream.getvalue())
+        self.assertEqual(datetime.datetime(2001, 12, 12, 12, 59, 59, 0,
+            iso8601.Utc()), self.result._time)
 
 
 class TestRemotedTestCase(unittest.TestCase):
@@ -958,7 +969,7 @@ class TestTestProtocolClient(unittest.TestCase):
         self.assertEqual(self.io.getvalue(), "test: %s\n" % self.test.id())
 
     def test_stop_test(self):
-        """Test stopTest on a TestProtocolClient."""
+        # stopTest doesn't output anything.
         self.protocol.stopTest(self.test)
         self.assertEqual(self.io.getvalue(), "")
 
@@ -993,6 +1004,14 @@ class TestTestProtocolClient(unittest.TestCase):
         self.assertEqual(
             self.io.getvalue(),
             'skip: %s [\nHas it really?\n]\n' % self.test.id())
+
+    def test_time(self):
+        # Calling time() outputs a time signal immediately.
+        self.protocol.time(
+            datetime.datetime(2009,10,11,12,13,14,15, iso8601.Utc()))
+        self.assertEqual(
+            "time: 2009-10-11 12:13:14.000015Z\n",
+            self.io.getvalue())
 
 
 def test_suite():

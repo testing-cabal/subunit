@@ -24,10 +24,12 @@ from subunit.tests import (
     test_subunit_tags,
     test_tap2subunit,
     test_test_protocol,
+    test_test_results,
     )
 
 def test_suite():
     result = TestUtil.TestSuite()
+    result.addTest(test_test_results.test_suite())
     result.addTest(test_test_protocol.test_suite())
     result.addTest(test_tap2subunit.test_suite())
     result.addTest(test_subunit_filter.test_suite())
