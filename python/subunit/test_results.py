@@ -91,6 +91,11 @@ class HookedTestResultDecorator(object):
         self._before_event()
         return self.decorated.wasSuccessful()
 
+    @property
+    def shouldStop(self):
+        self._before_event()
+        return self.decorated.shouldStop
+
     def stop(self):
         self._before_event()
         return self.decorated.stop()
@@ -119,6 +124,10 @@ class AutoTimingTestResultDecorator(HookedTestResultDecorator):
         time = datetime.datetime.utcnow().replace(tzinfo=iso8601.Utc())
         self._call_maybe("time", time)
 
+    @property
+    def shouldStop(self):
+        return self.decorated.shouldStop
+
     def time(self, a_datetime):
         """Provide a timestamp for the current test activity.
 
@@ -129,3 +138,6 @@ class AutoTimingTestResultDecorator(HookedTestResultDecorator):
         """
         self._time = a_datetime
         return self._call_maybe("time", a_datetime)
+
+    def done(self):
+        """Transition function until stopTestRun is used."""

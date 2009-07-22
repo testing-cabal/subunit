@@ -111,6 +111,9 @@ class TestHookedTestResultDecorator(unittest.TestCase):
     def test_wasSuccessful(self):
         self.result.wasSuccessful()
 
+    def test_shouldStop(self):
+        self.result.shouldStop
+
     def test_stop(self):
         self.result.stop()
 
@@ -131,6 +134,11 @@ class TestAutoTimingTestResultDecorator(unittest.TestCase):
         self.result.startTest(self)
         self.assertEqual(1, len(self.result.decorated._calls))
         self.assertNotEqual(None, self.result.decorated._calls[0])
+
+    def test_no_time_from_shouldStop(self):
+        self.result.decorated.stop()
+        self.result.shouldStop
+        self.assertEqual(0, len(self.result.decorated._calls))
 
     def test_calling_time_inhibits_automatic_time(self):
         # Calling time() outputs a time signal immediately and prevents
