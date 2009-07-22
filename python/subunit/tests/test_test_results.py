@@ -49,6 +49,15 @@ class AssertBeforeTestResult(LoggingDecorator):
         super(AssertBeforeTestResult, self)._before_event()
 
 
+class TimeCapturingResult(unittest.TestResult):
+
+    def __init__(self):
+        super(TimeCapturingResult, self).__init__()
+        self._calls = []
+
+    def time(self, a_datetime):
+        self._calls.append(a_datetime)
+
 
 class TestHookedTestResultDecorator(unittest.TestCase):
 
@@ -104,7 +113,48 @@ class TestHookedTestResultDecorator(unittest.TestCase):
 
     def test_stop(self):
         self.result.stop()
-        
+
+    def test_time(self):
+        self.result.time(None)
+ 
+
+class TestAutoTimingTestResultDecorator(unittest.TestCase):
+
+    def setUp(self):
+        # And end to the chain which captures time events.
+        terminal = TimeCapturingResult()
+        # The result object under test.
+        self.result = subunit.test_results.AutoTimingTestResultDecorator(
+            terminal)
+
+    def test_without_time_calls_time_is_called_and_not_None(self):
+        self.result.startTest(self)
+        self.assertEqual(1, len(self.result.decorated._calls))
+        self.assertNotEqual(None, self.result.decorated._calls[0])
+
+    def test_calling_time_inhibits_automatic_time(self):
+        # Calling time() outputs a time signal immediately and prevents
+        # automatically adding one when other methods are called.
+        time = datetime.datetime(2009,10,11,12,13,14,15, iso8601.Utc())
+        self.result.time(time)
+        self.result.startTest(self)
+        self.result.stopTest(self)
+        self.assertEqual(1, len(self.result.decorated._calls))
+        self.assertEqual(time, self.result.decorated._calls[0])
+
+    def test_calling_time_None_enables_automatic_time(self):
+        time = datetime.datetime(2009,10,11,12,13,14,15, iso8601.Utc())
+        self.result.time(time)
+        self.assertEqual(1, len(self.result.decorated._calls))
+        self.assertEqual(time, self.result.decorated._calls[0])
+        # Calling None passes the None through, in case other results care.
+        self.result.time(None)
+        self.assertEqual(2, len(self.result.decorated._calls))
+        self.assertEqual(None, self.result.decorated._calls[1])
+        # Calling other methods doesn't generate an automatic time event.
+        self.result.startTest(self)
+        self.assertEqual(3, len(self.result.decorated._calls))
+        self.assertNotEqual(None, self.result.decorated._calls[2])
 
 
 def test_suite():

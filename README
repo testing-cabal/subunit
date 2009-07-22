@@ -72,6 +72,9 @@ Subunit stream::
  stream = file('tests.log', 'wb')
  # Create a subunit result object which will output to the stream
  result = subunit.TestProtocolClient(stream)
+ # Optionally, to get timing data for performance analysis, wrap the
+ # serialiser with a timing decorator
+ result = subunit.test_results.AutoTimingTestResultDecorator(result)
  # Run the test suite reporting to the subunit result object
  suite.run(result)
  # Close the stream.

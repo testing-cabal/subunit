@@ -19,11 +19,15 @@ subunit release notes
 
   INTERNALS:
 
-    * ExecTestCase supports passing arguments to test scripts.
+    * (python) Added ``subunit.test_results.AutoTimingTestResultDecorator``. Most
+      users of subunit will want to wrap their ``TestProtocolClient`` objects
+      in this decorator to get test timing data for performance analysis.
 
-    * New helper ``subunit.test_results.HookedTestResultDecorator`` which can
-      be used to call some code on every event, without having to implement all
-      the event methods.
+    * (python) ExecTestCase supports passing arguments to test scripts.
 
-    * ``TestProtocolClient.time(a_datetime)`` has been added which causes a
-      timestamp to be output to the stream.
+    * (python) New helper ``subunit.test_results.HookedTestResultDecorator``
+      which can be used to call some code on every event, without having to
+      implement all the event methods.
+
+    * (python) ``TestProtocolClient.time(a_datetime)`` has been added which
+      causes a timestamp to be output to the stream.

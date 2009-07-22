@@ -19,6 +19,9 @@
 
 """TestResult helper classes used to by subunit."""
 
+import datetime
+
+import iso8601
 
 class HookedTestResultDecorator(object):
     """A TestResult which calls a hook on every event."""
@@ -91,3 +94,38 @@ class HookedTestResultDecorator(object):
     def stop(self):
         self._before_event()
         return self.decorated.stop()
+
+    def time(self, a_datetime):
+        self._before_event()
+        return self._call_maybe("time", a_datetime)
+
+
+class AutoTimingTestResultDecorator(HookedTestResultDecorator):
+    """Decorate a TestResult to add time events to a test run.
+
+    By default this will cause a time event before every test event,
+    but if explicit time data is being provided by the test run, then
+    this decorator will turn itself off to prevent causing confusion.
+    """
+
+    def __init__(self, decorated):
+        self._time = None
+        super(AutoTimingTestResultDecorator, self).__init__(decorated)
+
+    def _before_event(self):
+        time = self._time
+        if time is not None:
+            return
+        time = datetime.datetime.utcnow().replace(tzinfo=iso8601.Utc())
+        self._call_maybe("time", time)
+
+    def time(self, a_datetime):
+        """Provide a timestamp for the current test activity.
+
+        :param a_datetime: If None, automatically add timestamps before every
+            event (this is the default behaviour if time() is not called at
+            all).  If not None, pass the provided time onto the decorated
+            result object and disable automatic timestamps.
+        """
+        self._time = a_datetime
+        return self._call_maybe("time", a_datetime)
