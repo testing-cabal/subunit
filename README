@@ -216,10 +216,12 @@ skip[:] test label [
 xfail[:] test label
 xfail[:] test label [
 ]
+progress: [+|-]X
 tags: [-]TAG ...
 time: YYYY-MM-DD HH:MM:SSZ
 unexpected output on stdout -> stdout.
-exit w/0 or last test -> error
+exit w/0 or last test completing -> error
+
 Tags given outside a test are applied to all following tests
 Tags given after a test: line and before the result line for the same test
 apply only to that test, and inheric the current global tags.
@@ -228,7 +230,19 @@ applying to a single test, or to cancel a global tag.
 In Python, tags are assigned to the .tags attribute on the RemoteTest objects
 created by the TestProtocolServer.
 
-The time element acts as a clock event - it sets the time for all future
+The progress directive is used to provide progress information about a stream
+so that stream consumer can provide completion estimates, progress bars and so
+on. Stream generators that know how many tests will be present in the stream
+should output "progress: COUNT". Stream filters that add tests should output
+"progress: +COUNT", and those that remove tests should output
+"progress: -COUNT". An absolute count should reset the progress indicators in
+use - it indicates that two separate streams from different generators have
+been trivially concatenated together, and there is no knowledge of how many
+more complete streams are incoming. Smart concatenation could scan each stream
+for their count and sum them, or alternatively translate absolute counts into
+relative counts inline.
+
+The time directive acts as a clock event - it sets the time for all future
 events. The value should be a valid ISO8601 time.
 
 The skip result is used to indicate a test that was found by the runner but not
