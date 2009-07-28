@@ -130,11 +130,16 @@ result object::
  # needed and report to your result object.
  suite.run(result)
 
-subunit includes extensions to the python ``TestResult`` protocol. The
-``time(a_datetime)`` method is called (if present) when a ``time:``
+subunit includes extensions to the python ``TestResult`` protocol.
+
+The ``time(a_datetime)`` method is called (if present) when a ``time:``
 directive is encountered in a subunit stream. This is used to tell a TestResult
 about the time that events in the stream occured at, to allow reconstructing
 test timing from a stream.
+
+The ``progress(offset, whence)`` method controls progress data for a stream.
+The offset parameter is an int, and whence is one of subunit.SEEK_CUR,
+subunit.SEEK_SET.
 
 Finally, subunit.run is a convenience wrapper to run a python test suite via
 the command line, reporting via subunit::

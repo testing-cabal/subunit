@@ -37,6 +37,7 @@ class MockTestProtocolServerClient(object):
         self.skip_calls = []
         self.start_calls = []
         self.success_calls = []
+        self.progress_calls = []
         self._time = None
         super(MockTestProtocolServerClient, self).__init__()
 
@@ -57,6 +58,9 @@ class MockTestProtocolServerClient(object):
 
     def startTest(self, test):
         self.start_calls.append(test)
+
+    def progress(self, offset, whence):
+        self.progress_calls.append((offset, whence))
 
     def time(self, time):
         self._time = time
@@ -117,6 +121,11 @@ class TestMockTestProtocolServer(unittest.TestCase):
         self.assertEqual(protocol.failure_calls, [])
         self.assertEqual(protocol.success_calls, [])
         self.assertEqual(protocol.start_calls, [])
+
+    def test_progress(self):
+        protocol = MockTestProtocolServerClient()
+        protocol.progress(-1, subunit.SEEK_CUR)
+        self.assertEqual(protocol.progress_calls, [(-1, subunit.SEEK_CUR)])
 
 
 class TestTestImports(unittest.TestCase):
@@ -710,6 +719,36 @@ class TestTestProtocolServerAddSuccess(unittest.TestCase):
         self.success_quoted_bracket("success:")
 
 
+class TestTestProtocolServerProgress(unittest.TestCase):
+    """Test receipt of progress: directives."""
+
+    def test_progress_accepted_stdlib(self):
+        # With a stdlib TestResult, progress events are swallowed.
+        self.result = unittest.TestResult()
+        self.stream = StringIO()
+        self.protocol = subunit.TestProtocolServer(self.result,
+            stream=self.stream)
+        self.protocol.lineReceived("progress: 23")
+        self.protocol.lineReceived("progress: -2")
+        self.protocol.lineReceived("progress: +4")
+        self.assertEqual("", self.stream.getvalue())
+
+    def test_progress_accepted_extended(self):
+        # With a progress capable TestResult, progress events are emitted.
+        self.result = MockTestProtocolServerClient()
+        self.stream = StringIO()
+        self.protocol = subunit.TestProtocolServer(self.result,
+            stream=self.stream)
+        self.protocol.lineReceived("progress: 23")
+        self.protocol.lineReceived("progress: -2")
+        self.protocol.lineReceived("progress: +4")
+        self.assertEqual("", self.stream.getvalue())
+        self.assertEqual(
+            [(23, subunit.SEEK_SET), (-2, subunit.SEEK_CUR),
+            (4, subunit.SEEK_CUR)],
+            self.result.progress_calls)
+
+
 class TestTestProtocolServerStreamTags(unittest.TestCase):
     """Test managing tags on the protocol level."""
 
@@ -1004,6 +1043,18 @@ class TestTestProtocolClient(unittest.TestCase):
         self.assertEqual(
             self.io.getvalue(),
             'skip: %s [\nHas it really?\n]\n' % self.test.id())
+
+    def test_progress_set(self):
+        self.protocol.progress(23, subunit.SEEK_SET)
+        self.assertEqual(self.io.getvalue(), 'progress: 23\n')
+
+    def test_progress_neg_cur(self):
+        self.protocol.progress(-23, subunit.SEEK_CUR)
+        self.assertEqual(self.io.getvalue(), 'progress: -23\n')
+
+    def test_progress_pos_cur(self):
+        self.protocol.progress(23, subunit.SEEK_CUR)
+        self.assertEqual(self.io.getvalue(), 'progress: +23\n')
 
     def test_time(self):
         # Calling time() outputs a time signal immediately.
