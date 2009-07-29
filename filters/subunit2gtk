@@ -160,7 +160,10 @@ class GTKTestResult(unittest.TestResult):
         self.update_counts()
 
     def addSkip(self, test, reason):
-        super(GTKTestResult, self).addSkipSuccess(test, reason)
+        try:
+            super(GTKTestResult, self).addSkipSuccess(test, reason)
+        except AttributeError:
+            pass
         self.update_counts()
 
     def addExpectedFailure(self, test, err):
