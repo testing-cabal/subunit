@@ -108,6 +108,9 @@ class TestHookedTestResultDecorator(unittest.TestCase):
     def test_addUnexpectedSuccess(self):
         self.result.addUnexpectedSuccess(self)
 
+    def test_progress(self):
+        self.result.progress(1, os.SEEK_SET)
+
     def test_wasSuccessful(self):
         self.result.wasSuccessful()
 
@@ -134,6 +137,10 @@ class TestAutoTimingTestResultDecorator(unittest.TestCase):
         self.result.startTest(self)
         self.assertEqual(1, len(self.result.decorated._calls))
         self.assertNotEqual(None, self.result.decorated._calls[0])
+
+    def test_no_time_from_progress(self):
+        self.result.progress(1, os.SEEK_CUR)
+        self.assertEqual(0, len(self.result.decorated._calls))
 
     def test_no_time_from_shouldStop(self):
         self.result.decorated.stop()

@@ -87,6 +87,10 @@ class HookedTestResultDecorator(object):
         self._before_event()
         return self._call_maybe("addUnexpectedSuccess", test)
 
+    def progress(self, offset, whence):
+        self._before_event()
+        return self._call_maybe("progress", offset, whence)
+
     def wasSuccessful(self):
         self._before_event()
         return self.decorated.wasSuccessful()
@@ -123,6 +127,9 @@ class AutoTimingTestResultDecorator(HookedTestResultDecorator):
             return
         time = datetime.datetime.utcnow().replace(tzinfo=iso8601.Utc())
         self._call_maybe("time", time)
+
+    def progress(self, offset, whence):
+        return self._call_maybe("progress", offset, whence)
 
     @property
     def shouldStop(self):

@@ -28,6 +28,10 @@ import unittest
 import iso8601
 
 
+SEEK_CUR = os.SEEK_CUR
+SEEK_SET = os.SEEK_SET
+
+
 def test_suite():
     import subunit.tests
     return subunit.tests.test_suite()
@@ -200,6 +204,18 @@ class TestProtocolServer(object):
         else:
             self.stdOutLineReceived(line)
 
+    def _handleProgress(self, offset, line):
+        """Process a progress directive."""
+        line = line[offset:].strip()
+        if line[0] in '+-':
+            whence = SEEK_CUR
+        else:
+            whence = SEEK_SET
+        delta = int(line)
+        progress_method = getattr(self.client, 'progress', None)
+        if callable(progress_method):
+            progress_method(delta, whence)
+
     def _handleTags(self, offset, line):
         """Process a tags command."""
         tags = line[offset:].split()
@@ -243,6 +259,8 @@ class TestProtocolServer(object):
                     self._addError(offset, line)
                 elif cmd == 'failure':
                     self._addFailure(offset, line)
+                elif cmd == 'progress':
+                    self._handleProgress(offset, line)
                 elif cmd == 'skip':
                     self._addSkip(offset, line)
                 elif cmd in ('success', 'successful'):
@@ -354,6 +372,21 @@ class TestProtocolClient(unittest.TestResult):
     def startTest(self, test):
         """Mark a test as starting its test run."""
         self._stream.write("test: %s\n" % test.id())
+
+    def progress(self, offset, whence):
+        """Provide indication about the progress/length of the test run.
+
+        :param offset: Information about the number of tests remaining. If
+            whence is SEEK_CUR, then offset increases/decreases the remaining
+            test count. If whence is SEEK_SET, then offset specifies exactly
+            the remaining test count.
+        :param whence: One of SEEK_CUR or SEEK_SET.
+        """
+        if whence == SEEK_CUR and offset > -1:
+            prefix = "+"
+        else:
+            prefix = ""
+        self._stream.write("progress: %s%s\n" % (prefix, offset))
 
     def time(self, a_datetime):
         """Inform the client of the time.

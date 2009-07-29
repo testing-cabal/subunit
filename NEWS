@@ -10,9 +10,22 @@ subunit release notes
 
   IMPROVEMENTS:
 
+    * Subunit streams can now include optional, incremental lookahead
+      information about progress. This allows reporters to make estimates
+      about completion, when such information is available. See the README
+      under ``progress`` for more details.
+
+    * ``subunit2pyunit`` has a --progress flag which will cause the bzrlib
+      test reporter to be used, which has a textual progress bar. This requires
+      a recent bzrlib as a minor bugfix was required in bzrlib to support this.
+
   BUG FIXES:
 
   API CHANGES:
+
+    * When a progress: directive is encountered in a subunit stream, the
+      python bindings now call the ``progress(offset, whence)`` method on
+      ``TestResult``.
 
     * When a time: directive is encountered in a subunit stream, the python
       bindings now call the ``time(seconds)`` method on ``TestResult``.
