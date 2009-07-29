@@ -218,7 +218,7 @@ class GIOProtocolTestCase(object):
 
     def hup(self, source, condition):
         self.protocol.lostConnection()
-        gobject.remove(self.read_id)
+        gobject.source_remove(self.read_id)
         self.on_finish()
 
 
