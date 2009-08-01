@@ -56,7 +56,7 @@ import pygtk
 pygtk.require('2.0')
 import gtk, gtk.gdk, gobject
 
-from subunit import ProtocolTestCase, TestProtocolServer
+from subunit import ProtocolTestCase, TestProtocolServer, SEEK_SET
 
 class GTKTestResult(unittest.TestResult):
 
@@ -160,22 +160,30 @@ class GTKTestResult(unittest.TestResult):
         self.update_counts()
 
     def addSkip(self, test, reason):
-        try:
-            super(GTKTestResult, self).addSkipSuccess(test, reason)
-        except AttributeError:
-            pass
+        # addSkip is new in Python 2.7/3.1
+        addSkip = getattr(super(GTKTestResult, self), 'addSkip', None)
+        if callable(addSkip):
+            addSkip(test, reason)
         self.update_counts()
 
     def addExpectedFailure(self, test, err):
-        super(GTKTestResult, self).addExpectedFailure(test, err)
+        # addExpectedFailure is new in Python 2.7/3.1
+        addExpectedFailure = getattr(super(GTKTestResult, self),
+            'addExpectedFailure', None)
+        if callable(addExpectedFailure):
+            addExpectedFailure(test, reason)
         self.update_counts()
 
     def addUnexpectedSuccess(self, test):
-        super(GTKTestResult, self).addUnexpectedSuccess(test)
+        # addUnexpectedSuccess is new in Python 2.7/3.1
+        addUnexpectedSuccess = getattr(super(GTKTestResult, self),
+            'addUnexpectedSuccess', None)
+        if callable(addUnexpectedSuccess):
+            addUnexpectedSuccess(test, reason)
         self.update_counts()
 
     def progress(self, offset, whence):
-        if whence == os.SEEK_SET:
+        if whence == SEEK_SET:
             self.total_tests = offset
         else:
             self.total_tests += offset
