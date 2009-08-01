@@ -22,6 +22,10 @@ subunit release notes
       test reporter to be used, which has a textual progress bar. This requires
       a recent bzrlib as a minor bugfix was required in bzrlib to support this.
 
+    * ``subunit2junitxml`` has been added. This filter converts a subunit
+      stream to a single JUnit style XML stream using the pyjunitxml
+      python library.
+
   BUG FIXES:
 
   API CHANGES:
