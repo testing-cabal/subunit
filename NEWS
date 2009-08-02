@@ -10,6 +10,10 @@ subunit release notes
 
   IMPROVEMENTS:
 
+    * A number of filters now support ``--no-passthrough`` to cause all
+      non-subunit content to be discarded. This is useful when precise control
+      over what is output is required - such as with subunit2junitxml.
+
     * Subunit streams can now include optional, incremental lookahead
       information about progress. This allows reporters to make estimates
       about completion, when such information is available. See the README

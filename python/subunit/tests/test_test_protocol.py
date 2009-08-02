@@ -131,12 +131,19 @@ class TestMockTestProtocolServer(unittest.TestCase):
 class TestTestImports(unittest.TestCase):
 
     def test_imports(self):
+        from subunit import DiscardStream
         from subunit import TestProtocolServer
         from subunit import RemotedTestCase
         from subunit import RemoteError
         from subunit import ExecTestCase
         from subunit import IsolatedTestCase
         from subunit import TestProtocolClient
+
+
+class TestDiscardStream(unittest.TestCase):
+
+    def test_write(self):
+        subunit.DiscardStream().write("content")
 
 
 class TestTestProtocolServerPipe(unittest.TestCase):
@@ -194,7 +201,6 @@ class TestTestProtocolServerStartTest(unittest.TestCase):
 class TestTestProtocolServerPassThrough(unittest.TestCase):
 
     def setUp(self):
-        from StringIO import StringIO
         self.stdout = StringIO()
         self.test = subunit.RemotedTestCase("old mcdonald")
         self.client = MockTestProtocolServerClient()

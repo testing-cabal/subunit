@@ -19,10 +19,11 @@
 
 """Filter a subunit stream to get aggregate statistics."""
 
+from optparse import OptionParser
 import sys
 import unittest
 
-from subunit import ProtocolTestCase
+from subunit import DiscardStream, ProtocolTestCase
 try:
     from junitxml import JUnitXmlResult
 except ImportError:
@@ -30,8 +31,16 @@ except ImportError:
         "http://pypi.python.org/pypi/junitxml) is required for this filter.")
     raise
 
+parser = OptionParser(description=__doc__)
+parser.add_option("--no-passthrough", action="store_true",
+    help="Hide all non subunit input.", default=True, dest="no_passthrough")
+(options, args) = parser.parse_args()
 result = JUnitXmlResult(sys.stdout)
-test = ProtocolTestCase(sys.stdin)
+if options.no_passthrough:
+    passthrough_stream = DiscardStream()
+else:
+    passthrough_stream = None
+test = ProtocolTestCase(sys.stdin, passthrough=passthrough_stream)
 result.startTestRun()
 test.run(result)
 result.stopTestRun()

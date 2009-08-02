@@ -63,6 +63,13 @@ def tags_to_new_gone(tags):
     return new_tags, gone_tags
 
 
+class DiscardStream(object):
+    """A filelike object which discards what is written to it."""
+
+    def write(self, bytes):
+        pass
+
+
 class TestProtocolServer(object):
     """A class for receiving results from a TestProtocol client.
     
@@ -77,19 +84,19 @@ class TestProtocolServer(object):
     READING_XFAIL = 5
     READING_SUCCESS = 6
 
-    def __init__(self, client, stream=sys.stdout):
+    def __init__(self, client, stream=None):
         """Create a TestProtocol server instance.
 
-        client should be an object that provides
-         - startTest
-         - addSuccess
-         - addFailure
-         - addError
-         - stopTest
-        methods, i.e. a TestResult.
+        :param client: An object meeting the unittest.TestResult protocol.
+        :param stream: The stream that lines received which are not part of the
+            subunit protocol should be written to. This allows custom handling
+            of mixed protocols. By default, sys.stdout will be used for
+            convenience.
         """
         self.state = TestProtocolServer.OUTSIDE_TEST
         self.client = client
+        if stream is None:
+            stream = sys.stdout
         self._stream = stream
         self.tags = set()
 
@@ -701,8 +708,16 @@ def tag_stream(original, filtered, tags):
 class ProtocolTestCase(object):
     """A test case which reports a subunit stream."""
 
-    def __init__(self, stream):
+    def __init__(self, stream, passthrough=None):
+        """Create a ProtocolTestCase reading from stream.
+
+        :param stream: A filelike object which a subunit stream can be read
+            from.
+        :param passthrough: A stream pass non subunit input on to. If not
+            supplied, the TestProtocolServer default is used.
+        """
         self._stream = stream
+        self._passthrough = passthrough
 
     def __call__(self, result=None):
         return self.run(result)
@@ -710,7 +725,7 @@ class ProtocolTestCase(object):
     def run(self, result=None):
         if result is None:
             result = self.defaultTestResult()
-        protocol = TestProtocolServer(result)
+        protocol = TestProtocolServer(result, self._passthrough)
         line = self._stream.readline()
         while line:
             protocol.lineReceived(line)

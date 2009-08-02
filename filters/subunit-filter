@@ -26,7 +26,12 @@ from optparse import OptionParser
 import sys
 import unittest
 
-from subunit import ProtocolTestCase, TestResultFilter, TestProtocolClient
+from subunit import (
+    DiscardStream,
+    ProtocolTestCase,
+    TestProtocolClient,
+    TestResultFilter,
+    )
 
 parser = OptionParser(description=__doc__)
 parser.add_option("--error", action="store_false",
@@ -37,6 +42,8 @@ parser.add_option("--failure", action="store_false",
     help="include failures", default=False, dest="failure")
 parser.add_option("-f", "--no-failure", action="store_true",
     help="include failures", dest="failure")
+parser.add_option("--no-passthrough", action="store_true",
+    help="Hide all non subunit input.", default=True, dest="no_passthrough")
 parser.add_option("-s", "--success", action="store_false",
     help="include successes", dest="success")
 parser.add_option("--no-skip", action="store_true",
@@ -45,8 +52,13 @@ parser.add_option("--no-success", action="store_true",
     help="exclude successes", default=True, dest="success")
 (options, args) = parser.parse_args()
 result = TestProtocolClient(sys.stdout)
-result = TestResultFilter(result, filter_error=options.error, filter_failure=options.failure,
-    filter_success=options.success, filter_skip=options.skip)
-test = ProtocolTestCase(sys.stdin)
+result = TestResultFilter(result, filter_error=options.error,
+  filter_failure=options.failure, filter_success=options.success,
+  filter_skip=options.skip)
+if options.no_passthrough:
+    passthrough_stream = DiscardStream()
+else:
+    passthrough_stream = None
+test = ProtocolTestCase(sys.stdin, passthrough=passthrough_stream)
 test.run(result)
 sys.exit(0)

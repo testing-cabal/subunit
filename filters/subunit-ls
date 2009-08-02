@@ -23,7 +23,7 @@ from optparse import OptionParser
 import sys
 import unittest
 
-from subunit import ProtocolTestCase
+from subunit import DiscardStream, ProtocolTestCase
 
 class TestIdPrintingResult(unittest.TestResult):
 
@@ -79,9 +79,15 @@ parser = OptionParser(description=__doc__)
 parser.add_option("--times", action="store_true",
     help="list the time each test took (requires a timestamped stream)",
         default=False)
+parser.add_option("--no-passthrough", action="store_true",
+    help="Hide all non subunit input.", default=True, dest="no_passthrough")
 (options, args) = parser.parse_args()
 result = TestIdPrintingResult(sys.stdout, options.times)
-test = ProtocolTestCase(sys.stdin)
+if options.no_passthrough:
+    passthrough_stream = DiscardStream()
+else:
+    passthrough_stream = None
+test = ProtocolTestCase(sys.stdin, passthrough=passthrough_stream)
 test.run(result)
 if result.wasSuccessful():
     exit_code = 0
