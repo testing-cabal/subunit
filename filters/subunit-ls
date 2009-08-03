@@ -80,7 +80,7 @@ parser.add_option("--times", action="store_true",
     help="list the time each test took (requires a timestamped stream)",
         default=False)
 parser.add_option("--no-passthrough", action="store_true",
-    help="Hide all non subunit input.", default=True, dest="no_passthrough")
+    help="Hide all non subunit input.", default=False, dest="no_passthrough")
 (options, args) = parser.parse_args()
 result = TestIdPrintingResult(sys.stdout, options.times)
 if options.no_passthrough:

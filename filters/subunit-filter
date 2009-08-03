@@ -43,7 +43,7 @@ parser.add_option("--failure", action="store_false",
 parser.add_option("-f", "--no-failure", action="store_true",
     help="include failures", dest="failure")
 parser.add_option("--no-passthrough", action="store_true",
-    help="Hide all non subunit input.", default=True, dest="no_passthrough")
+    help="Hide all non subunit input.", default=False, dest="no_passthrough")
 parser.add_option("-s", "--success", action="store_false",
     help="include successes", dest="success")
 parser.add_option("--no-skip", action="store_true",
