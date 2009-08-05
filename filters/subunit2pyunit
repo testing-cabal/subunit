@@ -23,14 +23,20 @@ from optparse import OptionParser
 import sys
 import unittest
 
-from subunit import ProtocolTestCase, TestProtocolServer
+from subunit import DiscardStream, ProtocolTestCase, TestProtocolServer
 
 parser = OptionParser(description=__doc__)
+parser.add_option("--no-passthrough", action="store_true",
+    help="Hide all non subunit input.", default=False, dest="no_passthrough")
 parser.add_option("--progress", action="store_true",
     help="Use bzrlib's test reporter (requires bzrlib)",
         default=False)
 (options, args) = parser.parse_args()
-test = ProtocolTestCase(sys.stdin)
+if options.no_passthrough:
+    passthrough_stream = DiscardStream()
+else:
+    passthrough_stream = None
+test = ProtocolTestCase(sys.stdin, passthrough=passthrough_stream)
 if options.progress:
     from bzrlib.tests import TextTestRunner
     from bzrlib import ui
