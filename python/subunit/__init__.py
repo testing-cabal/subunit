@@ -792,16 +792,22 @@ class TestResultFilter(unittest.TestResult):
     the other instance must be interrogated.
 
     :ivar result: The result that tests are passed to after filtering.
+    :ivar filter_predicate: The callback run to decide whether to pass 
+        a result.
     """
 
     def __init__(self, result, filter_error=False, filter_failure=False,
-        filter_success=True, filter_skip=False):
+        filter_success=True, filter_skip=False,
+        filter_predicate=None):
         """Create a FilterResult object filtering to result.
         
         :param filter_error: Filter out errors.
         :param filter_failure: Filter out failures.
         :param filter_success: Filter out successful tests.
         :param filter_skip: Filter out skipped tests.
+        :param filter_predicate: A callable taking (test, err) and 
+            returning True if the result should be passed through.
+            err is None for success.
         """
         unittest.TestResult.__init__(self)
         self.result = result
@@ -809,21 +815,24 @@ class TestResultFilter(unittest.TestResult):
         self._filter_failure = filter_failure
         self._filter_success = filter_success
         self._filter_skip = filter_skip
+        if filter_predicate is None:
+            filter_predicate = lambda test, err: True
+        self.filter_predicate = filter_predicate
         
     def addError(self, test, err):
-        if not self._filter_error:
+        if not self._filter_error and self.filter_predicate(test, err):
             self.result.startTest(test)
             self.result.addError(test, err)
             self.result.stopTest(test)
 
     def addFailure(self, test, err):
-        if not self._filter_failure:
+        if not self._filter_failure and self.filter_predicate(test, err):
             self.result.startTest(test)
             self.result.addFailure(test, err)
             self.result.stopTest(test)
 
     def addSkip(self, test, reason):
-        if not self._filter_skip:
+        if not self._filter_skip and self.filter_predicate(test, reason):
             self.result.startTest(test)
             # This is duplicated, it would be nice to have on a 'calls
             # TestResults' mixin perhaps.
@@ -835,7 +844,7 @@ class TestResultFilter(unittest.TestResult):
             self.result.stopTest(test)
 
     def addSuccess(self, test):
-        if not self._filter_success:
+        if not self._filter_success and self.filter_predicate(test, None):
             self.result.startTest(test)
             self.result.addSuccess(test)
             self.result.stopTest(test)

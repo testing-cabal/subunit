@@ -30,6 +30,9 @@ subunit release notes
       stream to a single JUnit style XML stream using the pyjunitxml
       python library.
 
+    * ``TestResultFilter`` takes a new optional constructor parameter 
+      ``filter_predicate``.  (Martin Pool)
+
   BUG FIXES:
 
   API CHANGES:
