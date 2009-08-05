@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #  subunit: extensions to python unittest to get test results from subprocesses.
 #  Copyright (C) 2008  Robert Collins <robertc@robertcollins.net>
+#            (C) 2009  Martin Pool
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,6 +26,7 @@ The default is to strip successful tests.
 from optparse import OptionParser
 import sys
 import unittest
+import re
 
 from subunit import (
     DiscardStream,
@@ -50,11 +52,37 @@ parser.add_option("--no-skip", action="store_true",
     help="exclude skips", dest="skip")
 parser.add_option("--no-success", action="store_true",
     help="exclude successes", default=True, dest="success")
+parser.add_option("-m", "--match", type=str,
+    help="regexp to include (case-sensitive by default)")
+parser.add_option("--anti-match", type=str,
+    help="regexp to exclude (case-sensitive by default)")
+
 (options, args) = parser.parse_args()
+
+def make_re_matcher(needle_re_string):
+    needle_re = re.compile(needle_re_string, re.MULTILINE)
+    return lambda test, err: (
+        needle_re.search(str(test)) or
+        ((err is not None) and needle_re.search(str(err))))
+
+if options.match:
+    match_predicate = make_re_matcher(options.match)
+else:
+    match_predicate = lambda test, err: True
+
+if options.anti_match:
+    anti_match_predicate = make_re_matcher(options.anti_match)
+else:
+    anti_match_predicate = lambda test, err: False
+
+filter_predicate = lambda test, err: (
+    match_predicate(test, err) and not anti_match_predicate(test, err))
+
 result = TestProtocolClient(sys.stdout)
 result = TestResultFilter(result, filter_error=options.error,
     filter_failure=options.failure, filter_success=options.success,
-    filter_skip=options.skip)
+    filter_skip=options.skip,
+    filter_predicate=filter_predicate)
 if options.no_passthrough:
     passthrough_stream = DiscardStream()
 else:
