@@ -28,7 +28,11 @@ import subunit.iso8601 as iso8601
 
 
 class MockTestProtocolServerClient(object):
-    """A mock protocol server client to test callbacks."""
+    """A mock protocol server client to test callbacks.
+    
+    Note that this is deliberately not python 2.7 complete, to allow
+    testing compatibility.
+    """
 
     def __init__(self):
         self.end_calls = []
@@ -555,41 +559,74 @@ class TestTestProtocolServerAddFailure(unittest.TestCase):
 class TestTestProtocolServerAddxFail(unittest.TestCase):
     """Tests for the xfail keyword.
 
-    In Python this thunks through to Success due to stdlib limitations (see
+    In Python this can thunk through to Success due to stdlib limitations (see
     README).
     """
 
-    def setUp(self):
-        """Setup a test object ready to be xfailed."""
+    def capture_expected_failure(self, test, err):
+        self._calls.append((test, err))
+
+    def setup_python26(self):
+        """Setup a test object ready to be xfailed and thunk to success."""
         self.client = MockTestProtocolServerClient()
+        self.setup_protocol()
+
+    def setup_python27(self):
+        """Setup a test object ready to be xfailed and thunk to success."""
+        self.client = MockTestProtocolServerClient()
+        self.client.addExpectedFailure = self.capture_expected_failure
+        self._calls = []
+        self.setup_protocol()
+
+    def setup_protocol(self):
+        """Setup the protocol based on self.client."""
         self.protocol = subunit.TestProtocolServer(self.client)
         self.protocol.lineReceived("test mcdonalds farm\n")
         self.test = self.client.start_calls[-1]
 
-    def simple_xfail_keyword(self, keyword):
+    def simple_xfail_keyword(self, keyword, as_success):
         self.protocol.lineReceived("%s mcdonalds farm\n" % keyword)
         self.assertEqual(self.client.start_calls, [self.test])
         self.assertEqual(self.client.end_calls, [self.test])
         self.assertEqual(self.client.error_calls, [])
         self.assertEqual(self.client.failure_calls, [])
-        self.assertEqual(self.client.success_calls, [self.test])
+        self.check_success_or_xfail(as_success)
+
+    def check_success_or_xfail(self, as_success):
+        if as_success:
+            self.assertEqual(self.client.success_calls, [self.test])
+        else:
+            self.assertEqual(1, len(self._calls))
+            self.assertEqual(self.test, self._calls[0][0])
 
     def test_simple_xfail(self):
-        self.simple_xfail_keyword("xfail")
+        self.setup_python26()
+        self.simple_xfail_keyword("xfail", True)
+        self.setup_python27()
+        self.simple_xfail_keyword("xfail",  False)
 
     def test_simple_xfail_colon(self):
-        self.simple_xfail_keyword("xfail:")
+        self.setup_python26()
+        self.simple_xfail_keyword("xfail:", True)
+        self.setup_python27()
+        self.simple_xfail_keyword("xfail:", False)
 
     def test_xfail_empty_message(self):
+        self.setup_python26()
+        self.empty_message(True)
+        self.setup_python27()
+        self.empty_message(False)
+
+    def empty_message(self, as_success):
         self.protocol.lineReceived("xfail mcdonalds farm [\n")
         self.protocol.lineReceived("]\n")
         self.assertEqual(self.client.start_calls, [self.test])
         self.assertEqual(self.client.end_calls, [self.test])
         self.assertEqual(self.client.error_calls, [])
         self.assertEqual(self.client.failure_calls, [])
-        self.assertEqual(self.client.success_calls, [self.test])
+        self.check_success_or_xfail(as_success)
 
-    def xfail_quoted_bracket(self, keyword):
+    def xfail_quoted_bracket(self, keyword, as_success):
         # This tests it is accepted, but cannot test it is used today, because
         # of not having a way to expose it in Python so far.
         self.protocol.lineReceived("%s mcdonalds farm [\n" % keyword)
@@ -599,13 +636,19 @@ class TestTestProtocolServerAddxFail(unittest.TestCase):
         self.assertEqual(self.client.end_calls, [self.test])
         self.assertEqual(self.client.error_calls, [])
         self.assertEqual(self.client.failure_calls, [])
-        self.assertEqual(self.client.success_calls, [self.test])
+        self.check_success_or_xfail(as_success)
 
     def test_xfail_quoted_bracket(self):
-        self.xfail_quoted_bracket("xfail")
+        self.setup_python26()
+        self.xfail_quoted_bracket("xfail", True)
+        self.setup_python27()
+        self.xfail_quoted_bracket("xfail", False)
 
     def test_xfail_colon_quoted_bracket(self):
-        self.xfail_quoted_bracket("xfail:")
+        self.setup_python26()
+        self.xfail_quoted_bracket("xfail:", True)
+        self.setup_python27()
+        self.xfail_quoted_bracket("xfail:", False)
 
 
 class TestTestProtocolServerAddSkip(unittest.TestCase):

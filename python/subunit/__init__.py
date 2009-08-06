@@ -120,7 +120,11 @@ class TestProtocolServer(object):
             self.current_test_description == line[offset:-1]):
             self.state = TestProtocolServer.OUTSIDE_TEST
             self.current_test_description = None
-            self.client.addSuccess(self._current_test)
+            xfail = getattr(self.client, 'addExpectedFailure', None)
+            if callable(xfail):
+                xfail(self._current_test, RemoteError())
+            else:
+                self.client.addSuccess(self._current_test)
             self.client.stopTest(self._current_test)
         elif (self.state == TestProtocolServer.TEST_STARTED and
             self.current_test_description + " [" == line[offset:-1]):
@@ -203,10 +207,16 @@ class TestProtocolServer(object):
             self.current_test_description = None
             self._skip_or_error(self._message)
             self.client.stopTest(self._current_test)
-        elif self.state in (
-            TestProtocolServer.READING_SUCCESS,
-            TestProtocolServer.READING_XFAIL,
-            ):
+        elif self.state == TestProtocolServer.READING_XFAIL:
+            self.state = TestProtocolServer.OUTSIDE_TEST
+            self.current_test_description = None
+            xfail = getattr(self.client, 'addExpectedFailure', None)
+            if callable(xfail):
+                xfail(self._current_test, RemoteError(self._message))
+            else:
+                self.client.addSuccess(self._current_test)
+            self.client.stopTest(self._current_test)
+        elif self.state == TestProtocolServer.READING_SUCCESS:
             self._succeedTest()
         else:
             self.stdOutLineReceived(line)
