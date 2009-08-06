@@ -21,6 +21,12 @@
 """Filter a subunit stream to include/exclude tests.
 
 The default is to strip successful tests.
+
+Tests can be filtered by Python regular expressions with --with and --without,
+which match both the test name and the error text (if any).  The result
+contains tests which match any of the --with expressions and none of the
+--without expressions.  For case-insensitive matching prepend '(?i)'.
+Remember to quote shell metacharacters.
 """
 
 from optparse import OptionParser
