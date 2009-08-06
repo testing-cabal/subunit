@@ -72,27 +72,37 @@ def _compile_re_from_list(l):
     return re.compile("|".join(l), re.MULTILINE)
 
 
-def check_regexps(test, err):
-    """Check if this test and error match the regexp filters."""
-    test_str = str(test)
-    err_str = err and str(err) # may be None
-    if options.with_regexps:
-        with_re = _compile_re_from_list(options.with_regexps)
-        if not (with_re.search(test_str)
-            or with_re.search(err_str)):
-            return False
-    if options.without_regexps:
-        without_re = _compile_re_from_list(options.without_regexps)
-        if (without_re.search(test_str) or without_re.search(err_str)):
-            return False
-    return True
+def _make_regexp_filter(with_regexps, without_regexps):
+    """Make a callback that checks tests against regexps.
+
+    with_regexps and without_regexps are each either a list of regexp strings,
+    or None.
+    """
+    with_re = with_regexps and _compile_re_from_list(with_regexps)
+    without_re = without_regexps and _compile_re_from_list(without_regexps)
+
+    def check_regexps(test, err):
+        """Check if this test and error match the regexp filters."""
+        test_str = str(test)
+        err_str = err and str(err) # may be None
+        if with_re:
+            if not (with_re.search(test_str)
+                or with_re.search(err_str)):
+                return False
+        if without_re:
+            if (without_re.search(test_str) or without_re.search(err_str)):
+                return False
+        return True
+    return check_regexps
 
 
+regexp_filter = _make_regexp_filter(options.with_regexps,
+        options.without_regexps)
 result = TestProtocolClient(sys.stdout)
 result = TestResultFilter(result, filter_error=options.error,
     filter_failure=options.failure, filter_success=options.success,
     filter_skip=options.skip,
-    filter_predicate=check_regexps)
+    filter_predicate=regexp_filter)
 if options.no_passthrough:
     passthrough_stream = DiscardStream()
 else:
