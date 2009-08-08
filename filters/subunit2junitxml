@@ -34,16 +34,26 @@ except ImportError:
 parser = OptionParser(description=__doc__)
 parser.add_option("--no-passthrough", action="store_true",
     help="Hide all non subunit input.", default=False, dest="no_passthrough")
+parser.add_option("-o", "--output-to",
+    help="Output the XML to this path rather than stdout.")
 (options, args) = parser.parse_args()
-result = JUnitXmlResult(sys.stdout)
-if options.no_passthrough:
-    passthrough_stream = DiscardStream()
+if options.output_to is None:
+    output_to = sys.stdout
 else:
-    passthrough_stream = None
-test = ProtocolTestCase(sys.stdin, passthrough=passthrough_stream)
-result.startTestRun()
-test.run(result)
-result.stopTestRun()
+    output_to = file(options.output_to, 'wb')
+try:
+    result = JUnitXmlResult(output_to)
+    if options.no_passthrough:
+        passthrough_stream = DiscardStream()
+    else:
+        passthrough_stream = None
+    test = ProtocolTestCase(sys.stdin, passthrough=passthrough_stream)
+    result.startTestRun()
+    test.run(result)
+    result.stopTestRun()
+finally:
+    if options.output_to is not None:
+        output_to.close()
 if result.wasSuccessful():
     exit_code = 0
 else:
