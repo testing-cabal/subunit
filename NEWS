@@ -32,6 +32,11 @@ subunit release notes
 
   BUG FIXES:
 
+    * ``xfail`` outcomes are now passed to python TestResult's via
+      addExpectedFailure if it is present on the TestResult. Python 2.6 and
+      earlier which do not have this function will have ``xfail`` outcomes
+      passed through as success outcomes as earlier versions of subunit did.
+
   API CHANGES:
 
     * When a progress: directive is encountered in a subunit stream, the
