@@ -30,8 +30,9 @@ import subunit.iso8601 as iso8601
 class MockTestProtocolServerClient(object):
     """A mock protocol server client to test callbacks.
     
-    Note that this is deliberately not python 2.7 complete, to allow
-    testing compatibility.
+    Note that this is deliberately not Python 2.7 complete, to allow
+    testing compatibility - we need a TestResult that will not have new methods
+    like addExpectedFailure.
     """
 
     def __init__(self):
@@ -654,7 +655,7 @@ class TestTestProtocolServerAddxFail(unittest.TestCase):
 class TestTestProtocolServerAddSkip(unittest.TestCase):
     """Tests for the skip keyword.
 
-    In python this meets the testtools extended TestResult contract.
+    In Python this meets the testtools extended TestResult contract.
     (See https://launchpad.net/testtools).
     """
 
