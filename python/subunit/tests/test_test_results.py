@@ -21,10 +21,11 @@ import datetime
 import unittest
 from StringIO import StringIO
 import os
-import subunit.test_results
 import sys
 
+import subunit
 import subunit.iso8601 as iso8601
+import subunit.test_results
 
 
 class LoggingDecorator(subunit.test_results.HookedTestResultDecorator):
@@ -109,7 +110,7 @@ class TestHookedTestResultDecorator(unittest.TestCase):
         self.result.addUnexpectedSuccess(self)
 
     def test_progress(self):
-        self.result.progress(1, os.SEEK_SET)
+        self.result.progress(1, subunit.PROGRESS_SET)
 
     def test_wasSuccessful(self):
         self.result.wasSuccessful()
@@ -139,7 +140,7 @@ class TestAutoTimingTestResultDecorator(unittest.TestCase):
         self.assertNotEqual(None, self.result.decorated._calls[0])
 
     def test_no_time_from_progress(self):
-        self.result.progress(1, os.SEEK_CUR)
+        self.result.progress(1, subunit.PROGRESS_CUR)
         self.assertEqual(0, len(self.result.decorated._calls))
 
     def test_no_time_from_shouldStop(self):
