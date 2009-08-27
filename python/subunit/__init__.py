@@ -28,8 +28,10 @@ import unittest
 import iso8601
 
 
-SEEK_CUR = os.SEEK_CUR
-SEEK_SET = os.SEEK_SET
+PROGRESS_SET = 0
+PROGRESS_CUR = 1
+PROGRESS_PUSH = 2
+PROGRESS_POP = 3
 
 
 def test_suite():
@@ -225,10 +227,17 @@ class TestProtocolServer(object):
         """Process a progress directive."""
         line = line[offset:].strip()
         if line[0] in '+-':
-            whence = SEEK_CUR
+            whence = PROGRESS_CUR
+            delta = int(line)
+        elif line == "push":
+            whence = PROGRESS_PUSH
+            delta = None
+        elif line == "pop":
+            whence = PROGRESS_POP
+            delta = None
         else:
-            whence = SEEK_SET
-        delta = int(line)
+            whence = PROGRESS_SET
+            delta = int(line)
         progress_method = getattr(self.client, 'progress', None)
         if callable(progress_method):
             progress_method(delta, whence)
@@ -394,13 +403,20 @@ class TestProtocolClient(unittest.TestResult):
         """Provide indication about the progress/length of the test run.
 
         :param offset: Information about the number of tests remaining. If
-            whence is SEEK_CUR, then offset increases/decreases the remaining
-            test count. If whence is SEEK_SET, then offset specifies exactly
-            the remaining test count.
-        :param whence: One of SEEK_CUR or SEEK_SET.
+            whence is PROGRESS_CUR, then offset increases/decreases the
+            remaining test count. If whence is PROGRESS_SET, then offset
+            specifies exactly the remaining test count.
+        :param whence: One of PROGRESS_CUR, PROGRESS_SET, PROGRESS_PUSH,
+            PROGRESS_POP.
         """
-        if whence == SEEK_CUR and offset > -1:
+        if whence == PROGRESS_CUR and offset > -1:
             prefix = "+"
+        elif whence == PROGRESS_PUSH:
+            prefix = ""
+            offset = "push"
+        elif whence == PROGRESS_POP:
+            prefix = ""
+            offset = "pop"
         else:
             prefix = ""
         self._stream.write("progress: %s%s\n" % (prefix, offset))

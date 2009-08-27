@@ -56,7 +56,15 @@ import pygtk
 pygtk.require('2.0')
 import gtk, gtk.gdk, gobject
 
-from subunit import ProtocolTestCase, TestProtocolServer, SEEK_SET
+from subunit import (
+    PROGRESS_POP,
+    PROGRESS_PUSH,
+    PROGRESS_SET,
+    ProtocolTestCase,
+    TestProtocolServer,
+    )
+from subunit.progress_model import  ProgressModel
+
 
 class GTKTestResult(unittest.TestResult):
 
@@ -91,6 +99,7 @@ class GTKTestResult(unittest.TestResult):
         align.add(self.pbar)
         self.pbar.set_text("Running")
         self.pbar.show()
+        self.progress = ProgressModel()
 
         separator = gtk.HSeparator()
         vbox.pack_start(separator, False, False, 0)
@@ -135,10 +144,12 @@ class GTKTestResult(unittest.TestResult):
 
     def stopTest(self, test):
         super(GTKTestResult, self).stopTest(test)
-        if not self.total_tests:
+        self.progress.advance()
+        if self.progress.width() == 0:
             self.pbar.pulse()
         else:
-            self.pbar.set_fraction(self.testsRun/float(self.total_tests))
+            self.pbar.set_fraction(
+                self.progress.pos() / float(self.progress.width()))
 
     def stopTestRun(self):
         try:
@@ -183,10 +194,16 @@ class GTKTestResult(unittest.TestResult):
         self.update_counts()
 
     def progress(self, offset, whence):
-        if whence == SEEK_SET:
+        if whence == PROGRESS_PUSH:
+            self.progress.push()
+        elif whence == PROGRESS_POP:
+            self.progress.pop()
+        elif whence == PROGRESS_SET:
             self.total_tests = offset
+            self.progress.set_width(offset)
         else:
             self.total_tests += offset
+            self.progress.adjust_width(offset)
 
     def time(self, a_datetime):
         # We don't try to estimate completion yet.

@@ -129,8 +129,8 @@ class TestMockTestProtocolServer(unittest.TestCase):
 
     def test_progress(self):
         protocol = MockTestProtocolServerClient()
-        protocol.progress(-1, subunit.SEEK_CUR)
-        self.assertEqual(protocol.progress_calls, [(-1, subunit.SEEK_CUR)])
+        protocol.progress(-1, subunit.PROGRESS_CUR)
+        self.assertEqual(protocol.progress_calls, [(-1, subunit.PROGRESS_CUR)])
 
 
 class TestTestImports(unittest.TestCase):
@@ -790,12 +790,15 @@ class TestTestProtocolServerProgress(unittest.TestCase):
         self.protocol = subunit.TestProtocolServer(self.result,
             stream=self.stream)
         self.protocol.lineReceived("progress: 23")
+        self.protocol.lineReceived("progress: push")
         self.protocol.lineReceived("progress: -2")
+        self.protocol.lineReceived("progress: pop")
         self.protocol.lineReceived("progress: +4")
         self.assertEqual("", self.stream.getvalue())
         self.assertEqual(
-            [(23, subunit.SEEK_SET), (-2, subunit.SEEK_CUR),
-            (4, subunit.SEEK_CUR)],
+            [(23, subunit.PROGRESS_SET), (None, subunit.PROGRESS_PUSH),
+             (-2, subunit.PROGRESS_CUR), (None, subunit.PROGRESS_POP),
+             (4, subunit.PROGRESS_CUR)],
             self.result.progress_calls)
 
 
@@ -1095,16 +1098,24 @@ class TestTestProtocolClient(unittest.TestCase):
             'skip: %s [\nHas it really?\n]\n' % self.test.id())
 
     def test_progress_set(self):
-        self.protocol.progress(23, subunit.SEEK_SET)
+        self.protocol.progress(23, subunit.PROGRESS_SET)
         self.assertEqual(self.io.getvalue(), 'progress: 23\n')
 
     def test_progress_neg_cur(self):
-        self.protocol.progress(-23, subunit.SEEK_CUR)
+        self.protocol.progress(-23, subunit.PROGRESS_CUR)
         self.assertEqual(self.io.getvalue(), 'progress: -23\n')
 
     def test_progress_pos_cur(self):
-        self.protocol.progress(23, subunit.SEEK_CUR)
+        self.protocol.progress(23, subunit.PROGRESS_CUR)
         self.assertEqual(self.io.getvalue(), 'progress: +23\n')
+
+    def test_progress_pop(self):
+        self.protocol.progress(1234, subunit.PROGRESS_POP)
+        self.assertEqual(self.io.getvalue(), 'progress: pop\n')
+
+    def test_progress_push(self):
+        self.protocol.progress(1234, subunit.PROGRESS_PUSH)
+        self.assertEqual(self.io.getvalue(), 'progress: push\n')
 
     def test_time(self):
         # Calling time() outputs a time signal immediately.

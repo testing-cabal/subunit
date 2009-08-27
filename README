@@ -140,8 +140,9 @@ about the time that events in the stream occured at, to allow reconstructing
 test timing from a stream.
 
 The ``progress(offset, whence)`` method controls progress data for a stream.
-The offset parameter is an int, and whence is one of subunit.SEEK_CUR,
-subunit.SEEK_SET.
+The offset parameter is an int, and whence is one of subunit.PROGRESS_CUR,
+subunit.PROGRESS_SET, PROGRESS_PUSH, PROGRESS_POP. Push and pop operations
+ignore the offset parameter.
 
 Finally, subunit.run is a convenience wrapper to run a python test suite via
 the command line, reporting via subunit::
@@ -224,6 +225,8 @@ xfail[:] test label
 xfail[:] test label [
 ]
 progress: [+|-]X
+progress: push
+progress: pop
 tags: [-]TAG ...
 time: YYYY-MM-DD HH:MM:SSZ
 unexpected output on stdout -> stdout.
@@ -247,7 +250,13 @@ use - it indicates that two separate streams from different generators have
 been trivially concatenated together, and there is no knowledge of how many
 more complete streams are incoming. Smart concatenation could scan each stream
 for their count and sum them, or alternatively translate absolute counts into
-relative counts inline.
+relative counts inline. It is recommended that outputters avoid absolute counts
+unless necessary. The push and pop directives are used to provide local regions
+for progress reporting. This fits with hierarchically operating test
+environments - such as those that organise tests into suites - the top-most
+runner can report on the number of suites, and each suite surround its output
+with a (push, pop) pair. Interpreters should interpret a pop as also advancing
+the progress of the restored level by one step.
 
 The time directive acts as a clock event - it sets the time for all future
 events. The value should be a valid ISO8601 time.
