@@ -39,7 +39,7 @@ class TestTestResultStats(unittest.TestCase):
         self.assertEqual(0, self.result.total_tests)
         self.assertEqual(0, self.result.passed_tests)
         self.assertEqual(0, self.result.failed_tests)
-        self.assertEqual(set(), self.result.tags)
+        self.assertEqual(set(), self.result.seen_tags)
 
     def setUpUsedStream(self):
         self.input_stream.write("""tags: global
@@ -65,7 +65,7 @@ xfail todo
         self.assertEqual(2, self.result.passed_tests)
         self.assertEqual(2, self.result.failed_tests)
         self.assertEqual(1, self.result.skipped_tests)
-        self.assertEqual(set(["global", "local"]), self.result.tags)
+        self.assertEqual(set(["global", "local"]), self.result.seen_tags)
 
     def test_stat_formatting(self):
         expected = ("""
@@ -73,7 +73,7 @@ Total tests:       5
 Passed tests:      2
 Failed tests:      2
 Skipped tests:     1
-Tags: global, local
+Seen tags: global, local
 """)[1:]
         self.setUpUsedStream()
         self.result.formatStats()

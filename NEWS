@@ -42,6 +42,11 @@ subunit release notes
 
   API CHANGES:
 
+    * tags are no longer passed around in python via the ``TestCase.tags``
+      attribute. Instead ``TestResult.tags(new_tags, gone_tags)`` is called,
+      and like in the protocol, if called while a test is active only applies
+      to the test. (Robert Collins)
+
     * ``TestResultFilter`` takes a new optional constructor parameter 
       ``filter_predicate``.  (Martin Pool)
 

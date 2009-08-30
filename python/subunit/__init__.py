@@ -100,7 +100,6 @@ class TestProtocolServer(object):
         if stream is None:
             stream = sys.stdout
         self._stream = stream
-        self.tags = set()
 
     def _addError(self, offset, line):
         if (self.state == TestProtocolServer.TEST_STARTED and
@@ -246,12 +245,9 @@ class TestProtocolServer(object):
         """Process a tags command."""
         tags = line[offset:].split()
         new_tags, gone_tags = tags_to_new_gone(tags)
-        if self.state == TestProtocolServer.OUTSIDE_TEST:
-            update_tags = self.tags
-        else:
-            update_tags = self._current_test.tags
-        update_tags.update(new_tags)
-        update_tags.difference_update(gone_tags)
+        tags_method = getattr(self.client, 'tags', None)
+        if tags_method is not None:
+            tags_method(new_tags, gone_tags)
 
     def _handleTime(self, offset, line):
         # Accept it, but do not do anything with it yet.
@@ -339,7 +335,6 @@ class TestProtocolServer(object):
             self._current_test = RemotedTestCase(line[offset:-1])
             self.current_test_description = line[offset:-1]
             self.client.startTest(self._current_test)
-            self._current_test.tags = set(self.tags)
         else:
             self.stdOutLineReceived(line)
 
@@ -765,7 +760,7 @@ class TestResultStats(unittest.TestResult):
     :ivar total_tests: The total tests seen.
     :ivar passed_tests: The tests that passed.
     :ivar failed_tests: The tests that failed.
-    :ivar tags: The tags seen across all tests.
+    :ivar seen_tags: The tags seen across all tests.
     """
 
     def __init__(self, stream):
@@ -774,7 +769,7 @@ class TestResultStats(unittest.TestResult):
         self._stream = stream
         self.failed_tests = 0
         self.skipped_tests = 0
-        self.tags = set()
+        self.seen_tags = set()
 
     @property
     def total_tests(self):
@@ -794,16 +789,15 @@ class TestResultStats(unittest.TestResult):
         self._stream.write("Passed tests:  %5d\n" % self.passed_tests)
         self._stream.write("Failed tests:  %5d\n" % self.failed_tests)
         self._stream.write("Skipped tests: %5d\n" % self.skipped_tests)
-        tags = sorted(self.tags)
-        self._stream.write("Tags: %s\n" % (", ".join(tags)))
+        tags = sorted(self.seen_tags)
+        self._stream.write("Seen tags: %s\n" % (", ".join(tags)))
 
     @property
     def passed_tests(self):
         return self.total_tests - self.failed_tests - self.skipped_tests
 
-    def stopTest(self, test):
-        unittest.TestResult.stopTest(self, test)
-        self.tags.update(test.tags)
+    def tags(self, new_tags, gone_tags):
+        self.seen_tags.update(new_tags)
 
     def wasSuccessful(self):
         """Tells whether or not this result was a success"""
@@ -844,18 +838,22 @@ class TestResultFilter(unittest.TestResult):
         if filter_predicate is None:
             filter_predicate = lambda test, err: True
         self.filter_predicate = filter_predicate
+        # The current test (for filtering tags)
+        self._current_test = None
+        # Has the current test been filtered (for outputting test tags)
+        self._current_test_filtered = None
+        # The new, gone tags for the current test.
+        self._current_test_tags = None
         
     def addError(self, test, err):
         if not self._filter_error and self.filter_predicate(test, err):
             self.result.startTest(test)
             self.result.addError(test, err)
-            self.result.stopTest(test)
 
     def addFailure(self, test, err):
         if not self._filter_failure and self.filter_predicate(test, err):
             self.result.startTest(test)
             self.result.addFailure(test, err)
-            self.result.stopTest(test)
 
     def addSkip(self, test, reason):
         if not self._filter_skip and self.filter_predicate(test, reason):
@@ -867,13 +865,50 @@ class TestResultFilter(unittest.TestResult):
                 self.result.addError(test, RemoteError(reason))
             else:
                 self.result.addSkip(test, reason)
-            self.result.stopTest(test)
 
     def addSuccess(self, test):
         if not self._filter_success and self.filter_predicate(test, None):
             self.result.startTest(test)
             self.result.addSuccess(test)
+
+    def startTest(self, test):
+        """Start a test.
+        
+        Not directly passed to the client, but used for handling of tags
+        correctly.
+        """
+        self._current_test = test
+        self._current_test_filtered = False
+        self._current_test_tags = set(), set()
+    
+    def stopTest(self, test):
+        """Stop a test.
+        
+        Not directly passed to the client, but used for handling of tags
+        correctly.
+        """
+        if not self._current_test_filtered:
+            # Tags to output for this test.
+            if self._current_test_tags[0] or self._current_test_tags[1]:
+                tags_method = getattr(self.result, 'tags', None)
+                if callable(tags_method):
+                    self.result.tags(*self._current_test_tags)
             self.result.stopTest(test)
+        self._current_test = None
+        self._current_test_filtered = None
+        self._current_test_tags = None
+
+    def tags(self, new_tags, gone_tags):
+        if self._current_test is not None:
+            # gather the tags until the test stops.
+            self._current_test_tags[0].update(new_tags)
+            self._current_test_tags[0].difference_update(gone_tags)
+            self._current_test_tags[1].update(gone_tags)
+            self._current_test_tags[1].difference_update(new_tags)
+        tags_method = getattr(self.result, 'tags', None)
+        if tags_method is None:
+            return
+        return tags_method(new_tags, gone_tags)
 
     def id_to_orig_id(self, id):
         if id.startswith("subunit.RemotedTestCase."):
