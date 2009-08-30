@@ -91,6 +91,19 @@ class TestTestResultFilter(unittest.TestCase):
             self.filtered_result.failures])
         self.assertEqual(5, self.filtered_result.testsRun)
 
+    def test_filter_predicate(self):
+        """You can filter by predicate callbacks"""
+        self.filtered_result = unittest.TestResult()
+        filter_cb = lambda test, err: str(err).find('error details') != -1
+        self.filter = subunit.TestResultFilter(self.filtered_result,
+            filter_predicate=filter_cb,
+            filter_success=False)
+        self.run_tests()
+        self.assertEqual(1,
+            self.filtered_result.testsRun)
+        # I'd like to test filtering the xfail but it's blocked by
+        # https://bugs.edge.launchpad.net/subunit/+bug/409193 -- mbp 20090805
+
     def run_tests(self):
         self.setUpTestStream()
         self.test = subunit.ProtocolTestCase(self.input_stream)
@@ -109,7 +122,9 @@ test failed
 tags: local
 failure failed
 test error
-error error
+error error [
+error details
+]
 test skipped
 skip skipped
 test todo

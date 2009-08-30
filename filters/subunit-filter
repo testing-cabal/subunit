@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #  subunit: extensions to python unittest to get test results from subprocesses.
 #  Copyright (C) 2008  Robert Collins <robertc@robertcollins.net>
+#            (C) 2009  Martin Pool
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,11 +21,18 @@
 """Filter a subunit stream to include/exclude tests.
 
 The default is to strip successful tests.
+
+Tests can be filtered by Python regular expressions with --with and --without,
+which match both the test name and the error text (if any).  The result
+contains tests which match any of the --with expressions and none of the
+--without expressions.  For case-insensitive matching prepend '(?i)'.
+Remember to quote shell metacharacters.
 """
 
 from optparse import OptionParser
 import sys
 import unittest
+import re
 
 from subunit import (
     DiscardStream,
@@ -50,11 +58,51 @@ parser.add_option("--no-skip", action="store_true",
     help="exclude skips", dest="skip")
 parser.add_option("--no-success", action="store_true",
     help="exclude successes", default=True, dest="success")
+parser.add_option("-m", "--with", type=str,
+    help="regexp to include (case-sensitive by default)",
+    action="append", dest="with_regexps")
+parser.add_option("--without", type=str,
+    help="regexp to exclude (case-sensitive by default)",
+    action="append", dest="without_regexps")
+
 (options, args) = parser.parse_args()
+
+
+def _compile_re_from_list(l):
+    return re.compile("|".join(l), re.MULTILINE)
+
+
+def _make_regexp_filter(with_regexps, without_regexps):
+    """Make a callback that checks tests against regexps.
+
+    with_regexps and without_regexps are each either a list of regexp strings,
+    or None.
+    """
+    with_re = with_regexps and _compile_re_from_list(with_regexps)
+    without_re = without_regexps and _compile_re_from_list(without_regexps)
+
+    def check_regexps(test, err):
+        """Check if this test and error match the regexp filters."""
+        test_str = str(test)
+        err_str = err and str(err) # may be None
+        if with_re:
+            if not (with_re.search(test_str)
+                or with_re.search(err_str)):
+                return False
+        if without_re:
+            if (without_re.search(test_str) or without_re.search(err_str)):
+                return False
+        return True
+    return check_regexps
+
+
+regexp_filter = _make_regexp_filter(options.with_regexps,
+        options.without_regexps)
 result = TestProtocolClient(sys.stdout)
 result = TestResultFilter(result, filter_error=options.error,
     filter_failure=options.failure, filter_success=options.success,
-    filter_skip=options.skip)
+    filter_skip=options.skip,
+    filter_predicate=regexp_filter)
 if options.no_passthrough:
     passthrough_stream = DiscardStream()
 else:

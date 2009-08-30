@@ -170,6 +170,13 @@ Similar to C, the shell bindings consist of simple functions to output protocol
 elements, and a patch for adding subunit output to the 'ShUnit' shell test
 runner. See 'shell/README' for details.
 
+Filter recipes
+--------------
+
+To ignore some failing tests whose root cause is already known::
+
+  subunit-filter --without 'AttributeError.*flavor'
+
 
 The protocol
 ------------
