@@ -94,3 +94,18 @@ else
   echo "output: $found_type"
   echo ']' ;
 fi
+
+# we should have a skip_test function
+echo 'test: subunit_skip_test exists'
+found_type=$(type -t subunit_skip_test)
+status=$?
+if [ $status == 0 -a "x$found_type" = "xfunction" ]; then
+  echo 'success: subunit_skip_test exists'
+else
+  echo 'failure: subunit_skip_test exists ['
+  echo 'subunit_skip_test is not a function:'
+  echo "type -t status: $status"
+  echo "output: $found_type"
+  echo ']' ;
+fi
+

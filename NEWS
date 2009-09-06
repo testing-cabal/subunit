@@ -33,6 +33,8 @@ subunit release notes
       stream to a single JUnit style XML stream using the pyjunitxml
       python library.
 
+    * The shell functions support skipping via ``subunit_skip_test`` now.
+
   BUG FIXES:
 
     * ``xfail`` outcomes are now passed to python TestResult's via

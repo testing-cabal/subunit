@@ -49,3 +49,11 @@ subunit_error_test () {
   cat -
   echo "]"
 }
+
+
+subunit_skip_test () {
+  # emit the current protocol test skipped marker for test $1
+  echo "skip: $1"
+}
+
+
