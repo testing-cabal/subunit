@@ -78,3 +78,10 @@ libsubunit_la_SOURCES = \
 tests_LDADD = @CHECK_LIBS@ $(top_builddir)/libsubunit.la
 c_tests_test_child_CFLAGS = $(SUBUNIT_CFLAGS) @CHECK_CFLAGS@
 c_tests_test_child_LDADD = $(tests_LDADD)
+
+SUBDIRS = . perl
+
+all-local: perl/Makefile
+
+perl/Makefile: perl/Makefile.PL
+	cd perl && perl Makefile.PL

@@ -31,3 +31,4 @@ Makefile
 config.h
 ./perl/blib
 ./perl/pm_to_blib
+perl/Makefile.old
