@@ -23,6 +23,7 @@ import unittest
 from StringIO import StringIO
 
 import subunit
+import subunit.test_results
 
 
 class TestSubUnitTags(unittest.TestCase):

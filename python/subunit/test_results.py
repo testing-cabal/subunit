@@ -23,13 +23,23 @@ import datetime
 
 import iso8601
 
-class HookedTestResultDecorator(object):
-    """A TestResult which calls a hook on every event."""
+
+# NOT a TestResult, because we are implementing the interface, not inheriting
+# it.
+class TestResultDecorator(object):
+    """General pass-through decorator.
+
+    This provides a base that other TestResults can inherit from to 
+    gain basic forwarding functionality. It also takes care of 
+    handling the case where the target doesn't support newer methods
+    or features by degrading them.
+    """
 
     def __init__(self, decorated):
+        """Create a TestResultDecorator forwarding to decorated."""
         self.decorated = decorated
 
-    def _call_maybe(self, method_name, *params):
+    def _call_maybe(self, method_name, fallback, *params):
         """Call method_name on self.decorated, if present.
         
         This is used to guard newer methods which older pythons do not
@@ -38,75 +48,139 @@ class HookedTestResultDecorator(object):
         the one to filter them out.
 
         :param method_name: The name of the method to call.
+        :param fallback: If not None, the fallback to call to handle downgrading
+            this method. Otherwise when method_name is not available, no
+            exception is raised and None is returned.
         :param *params: Parameters to pass to method_name.
         :return: The result of self.decorated.method_name(*params), if it
             exists, and None otherwise.
         """
         method = getattr(self.decorated, method_name, None)
         if method is None:
+            if fallback is not None:
+                return fallback(*params)
             return
         return method(*params)
 
     def startTest(self, test):
-        self._before_event()
         return self.decorated.startTest(test)
 
     def startTestRun(self):
-        self._before_event()
-        return self._call_maybe("startTestRun")
+        return self._call_maybe("startTestRun", None)
 
     def stopTest(self, test):
-        self._before_event()
         return self.decorated.stopTest(test)
 
     def stopTestRun(self):
-        self._before_event()
-        return self._call_maybe("stopTestRun")
+        return self._call_maybe("stopTestRun", None)
 
     def addError(self, test, err):
-        self._before_event()
         return self.decorated.addError(test, err)
 
     def addFailure(self, test, err):
-        self._before_event()
         return self.decorated.addFailure(test, err)
 
     def addSuccess(self, test):
-        self._before_event()
         return self.decorated.addSuccess(test)
 
     def addSkip(self, test, reason):
-        self._before_event()
-        return self._call_maybe("addSkip", test, reason)
+        return self._call_maybe("addSkip", self._degrade_skip, test, reason)
+
+    def _degrade_skip(self, test, reason):
+        return self.decorated.addSuccess(test)
 
     def addExpectedFailure(self, test, err):
-        self._before_event()
-        return self._call_maybe("addExpectedFailure", test, err)
+        return self._call_maybe("addExpectedFailure",
+            self.decorated.addFailure, test, err)
 
     def addUnexpectedSuccess(self, test):
-        self._before_event()
-        return self._call_maybe("addUnexpectedSuccess", test)
+        return self._call_maybe("addUnexpectedSuccess",
+            self.decorated.addSuccess, test)
 
     def progress(self, offset, whence):
-        self._before_event()
-        return self._call_maybe("progress", offset, whence)
+        return self._call_maybe("progress", None, offset, whence)
 
     def wasSuccessful(self):
-        self._before_event()
         return self.decorated.wasSuccessful()
 
     @property
     def shouldStop(self):
-        self._before_event()
         return self.decorated.shouldStop
 
     def stop(self):
-        self._before_event()
         return self.decorated.stop()
 
     def time(self, a_datetime):
+        return self._call_maybe("time", None, a_datetime)
+
+
+class HookedTestResultDecorator(TestResultDecorator):
+    """A TestResult which calls a hook on every event."""
+
+    def __init__(self, decorated):
+        self.super = super(HookedTestResultDecorator, self)
+        self.super.__init__(decorated)
+
+    def startTest(self, test):
         self._before_event()
-        return self._call_maybe("time", a_datetime)
+        return self.super.startTest(test)
+
+    def startTestRun(self):
+        self._before_event()
+        return self.super.startTestRun()
+
+    def stopTest(self, test):
+        self._before_event()
+        return self.super.stopTest(test)
+
+    def stopTestRun(self):
+        self._before_event()
+        return self.super.stopTestRun()
+
+    def addError(self, test, err):
+        self._before_event()
+        return self.super.addError(test, err)
+
+    def addFailure(self, test, err):
+        self._before_event()
+        return self.super.addFailure(test, err)
+
+    def addSuccess(self, test):
+        self._before_event()
+        return self.super.addSuccess(test)
+
+    def addSkip(self, test, reason):
+        self._before_event()
+        return self.super.addSkip(test, reason)
+
+    def addExpectedFailure(self, test, err):
+        self._before_event()
+        return self.super.addExpectedFailure(test, err)
+
+    def addUnexpectedSuccess(self, test):
+        self._before_event()
+        return self.super.addUnexpectedSuccess(test)
+
+    def progress(self, offset, whence):
+        self._before_event()
+        return self.super.progress(offset, whence)
+
+    def wasSuccessful(self):
+        self._before_event()
+        return self.super.wasSuccessful()
+
+    @property
+    def shouldStop(self):
+        self._before_event()
+        return self.super.shouldStop
+
+    def stop(self):
+        self._before_event()
+        return self.super.stop()
+
+    def time(self, a_datetime):
+        self._before_event()
+        return self.super.time(a_datetime)
 
 
 class AutoTimingTestResultDecorator(HookedTestResultDecorator):
@@ -126,10 +200,10 @@ class AutoTimingTestResultDecorator(HookedTestResultDecorator):
         if time is not None:
             return
         time = datetime.datetime.utcnow().replace(tzinfo=iso8601.Utc())
-        self._call_maybe("time", time)
+        self._call_maybe("time", None, time)
 
     def progress(self, offset, whence):
-        return self._call_maybe("progress", offset, whence)
+        return self._call_maybe("progress", None, offset, whence)
 
     @property
     def shouldStop(self):
@@ -144,7 +218,4 @@ class AutoTimingTestResultDecorator(HookedTestResultDecorator):
             result object and disable automatic timestamps.
         """
         self._time = a_datetime
-        return self._call_maybe("time", a_datetime)
-
-    def done(self):
-        """Transition function until stopTestRun is used."""
+        return self._call_maybe("time", None, a_datetime)

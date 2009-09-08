@@ -71,6 +71,19 @@ class MockTestProtocolServerClient(object):
         self._time = time
 
 
+class MockExtendedTestProtocolServerClient(MockTestProtocolServerClient):
+    """An extended TestResult for testing which implements tags() etc."""
+
+    def __init__(self):
+        MockTestProtocolServerClient.__init__(self)
+        self.new_tags = set()
+        self.gone_tags = set()
+
+    def tags(self, new_tags, gone_tags):
+        self.new_tags = new_tags
+        self.gone_tags = gone_tags
+
+
 class TestMockTestProtocolServer(unittest.TestCase):
 
     def test_start_test(self):
@@ -806,53 +819,41 @@ class TestTestProtocolServerStreamTags(unittest.TestCase):
     """Test managing tags on the protocol level."""
 
     def setUp(self):
-        self.client = MockTestProtocolServerClient()
+        self.client = MockExtendedTestProtocolServerClient()
         self.protocol = subunit.TestProtocolServer(self.client)
 
     def test_initial_tags(self):
         self.protocol.lineReceived("tags: foo bar:baz  quux\n")
         self.assertEqual(set(["foo", "bar:baz", "quux"]),
-            self.protocol.tags)
+            self.client.new_tags)
+        self.assertEqual(set(), self.client.gone_tags)
 
     def test_minus_removes_tags(self):
         self.protocol.lineReceived("tags: foo bar\n")
+        self.assertEqual(set(["foo", "bar"]),
+            self.client.new_tags)
+        self.assertEqual(set(), self.client.gone_tags)
         self.protocol.lineReceived("tags: -bar quux\n")
-        self.assertEqual(set(["foo", "quux"]),
-            self.protocol.tags)
+        self.assertEqual(set(["quux"]), self.client.new_tags)
+        self.assertEqual(set(["bar"]), self.client.gone_tags)
 
-    def test_tags_get_set_on_test_no_tags(self):
+    def test_tags_do_not_get_set_on_test(self):
         self.protocol.lineReceived("test mcdonalds farm\n")
         test = self.client.start_calls[-1]
-        self.assertEqual(set(), test.tags)
+        self.assertEqual(None, getattr(test, 'tags', None))
 
-    def test_tags_get_set_on_test_protocol_tags_only(self):
+    def test_tags_do_not_get_set_on_global_tags(self):
         self.protocol.lineReceived("tags: foo bar\n")
         self.protocol.lineReceived("test mcdonalds farm\n")
         test = self.client.start_calls[-1]
-        self.assertEqual(set(["foo", "bar"]), test.tags)
+        self.assertEqual(None, getattr(test, 'tags', None))
 
-    def test_tags_get_set_on_test_simple(self):
+    def test_tags_get_set_on_test_tags(self):
         self.protocol.lineReceived("test mcdonalds farm\n")
         test = self.client.start_calls[-1]
         self.protocol.lineReceived("tags: foo bar\n")
-        self.assertEqual(set(["foo", "bar"]), test.tags)
-        self.assertEqual(set(), self.protocol.tags)
-
-    def test_tags_get_set_on_test_minus_removes(self):
-        self.protocol.lineReceived("test mcdonalds farm\n")
-        test = self.client.start_calls[-1]
-        self.protocol.lineReceived("tags: foo bar\n")
-        self.protocol.lineReceived("tags: -bar quux\n")
-        self.assertEqual(set(["foo", "quux"]), test.tags)
-        self.assertEqual(set(), self.protocol.tags)
-
-    def test_test_tags_inherit_protocol_tags(self):
-        self.protocol.lineReceived("tags: foo bar\n")
-        self.protocol.lineReceived("test mcdonalds farm\n")
-        test = self.client.start_calls[-1]
-        self.protocol.lineReceived("tags: -bar quux\n")
-        self.assertEqual(set(["foo", "quux"]), test.tags)
-        self.assertEqual(set(["foo", "bar"]), self.protocol.tags)
+        self.protocol.lineReceived("success mcdonalds farm\n")
+        self.assertEqual(None, getattr(test, 'tags', None))
 
 
 class TestTestProtocolServerStreamTime(unittest.TestCase):

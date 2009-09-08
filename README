@@ -134,6 +134,12 @@ result object::
 
 subunit includes extensions to the python ``TestResult`` protocol.
 
+The ``tags(new_tags, gone_tags)`` method is called (if present) to add or
+remove tags in the test run that is currently executing. If called when no
+test is in progress (that is, if called outside of the ``startTest``, 
+``stopTest`` pair), the the tags apply to all sebsequent tests. If called
+when a test is in progress, then the tags only apply to that test.
+
 The ``time(a_datetime)`` method is called (if present) when a ``time:``
 directive is encountered in a subunit stream. This is used to tell a TestResult
 about the time that events in the stream occured at, to allow reconstructing
@@ -241,11 +247,9 @@ exit w/0 or last test completing -> error
 
 Tags given outside a test are applied to all following tests
 Tags given after a test: line and before the result line for the same test
-apply only to that test, and inheric the current global tags.
+apply only to that test, and inherit the current global tags.
 A '-' before a tag is used to remove tags - e.g. to prevent a global tag
 applying to a single test, or to cancel a global tag.
-In Python, tags are assigned to the .tags attribute on the RemoteTest objects
-created by the TestProtocolServer.
 
 The progress directive is used to provide progress information about a stream
 so that stream consumer can provide completion estimates, progress bars and so
