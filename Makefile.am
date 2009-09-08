@@ -41,6 +41,8 @@ dist_bin_SCRIPTS = \
 	filters/subunit-ls \
 	filters/subunit-stats \
 	filters/subunit-tags \
+	filters/subunit2gtk \
+	filters/subunit2junitxml \
 	filters/subunit2pyunit \
 	filters/tap2subunit
 

@@ -7,3 +7,13 @@ Configure::
   ./configure
 Install::
   make install
+
+Dependencies
+------------
+
+Python for the filters
+A C compiler for the C bindings
+Perl for the Perl tools (including subunit-diff)
+Check to run the subunit test suite.
+python-gtk2 if you wish to use subunit2gtk
+python-junitxml if you wish to use subunit2junitxml
