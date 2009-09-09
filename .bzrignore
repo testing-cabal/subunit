@@ -31,3 +31,5 @@ Makefile
 config.h
 ./perl/blib
 ./perl/pm_to_blib
+subunit-*.tar.gz
+perl/Makefile.PL

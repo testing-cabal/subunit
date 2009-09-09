@@ -1,0 +1,12 @@
+use ExtUtils::MakeMaker;
+WriteMakefile(
+    'NAME'	=> 'Subunit',
+    'VERSION' => '@SUBUNIT_VERSION@',
+    'test' => { 'TESTS' => 'tests/*.pl' },
+    'PMLIBDIRS' => [ 'perl/lib' ],
+);
+sub MY::postamble {
+<<'EOT';
+check: # test
+EOT
+}

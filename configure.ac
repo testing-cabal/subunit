@@ -52,5 +52,6 @@ AC_CONFIG_HEADERS([config.h])
 
 AC_CONFIG_FILES([libsubunit.pc
                  Makefile
+		 perl/Makefile.PL
                  ])
 AC_OUTPUT

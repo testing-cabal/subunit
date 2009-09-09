@@ -9,7 +9,12 @@ EXTRA_DIST =  \
 	c/check-subunit-0.9.6.patch \
 	c++/README \
 	c++/cppunit-subunit-1.10.2.patch \
+	perl/diff-subunit.pl \
+	perl/Makefile.PL \
+	perl/lib/Subunit/Diff.pm \
+	perl/lib/Subunit.pm \
 	python/subunit/__init__.py \
+	python/subunit/progress_model.py \
 	python/subunit/run.py \
 	python/subunit/tests/TestUtil.py \
 	python/subunit/tests/__init__.py \
@@ -19,6 +24,7 @@ EXTRA_DIST =  \
 	python/subunit/tests/test_subunit_stats.py \
 	python/subunit/tests/test_subunit_tags.py \
 	python/subunit/tests/test_tap2subunit.py \
+	python/subunit/tests/test_progress_model.py \
 	python/subunit/tests/test_test_protocol.py \
 	python/subunit/tests/test_test_results.py \
 	runtests.py \
@@ -70,9 +76,6 @@ check_PROGRAMS = \
 check_SCRIPTS = \
 	runtests.py
 
-clean-local:
-	find . -name "*.pyc" | xargs -r rm
-
 libsubunit_la_SOURCES = \
 	c/lib/child.c \
 	c/include/subunit/child.h
@@ -80,3 +83,32 @@ libsubunit_la_SOURCES = \
 tests_LDADD = @CHECK_LIBS@ $(top_builddir)/libsubunit.la
 c_tests_test_child_CFLAGS = $(SUBUNIT_CFLAGS) @CHECK_CFLAGS@
 c_tests_test_child_LDADD = $(tests_LDADD)
+
+
+all-local: perl/Makefile
+	cd perl && $(MAKE) all
+
+check-local: perl/Makefile
+	cd perl && $(MAKE) check
+
+clean-local:
+	find . -name "*.pyc" | xargs -r rm
+	rm -f perl/Makefile
+
+# Remove perl dir for VPATH builds.
+distclean-local:
+	-rmdir perl
+	-rm perl/Makefile.PL
+
+# NB: Installs to a perl lib dir, not usr/bin.
+install-exec-local: perl/Makefile
+	cd perl && $(MAKE) install
+
+mostlyclean-local:
+	rm -rf perl/blib
+	rm -rf perl/pm_to_blib
+
+perl/Makefile: perl/Makefile.PL
+	mkdir -p perl
+	cd perl && perl @abs_top_srcdir@/perl/Makefile.PL
+	-rm perl/Makefile.old > /dev/null
