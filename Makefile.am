@@ -9,7 +9,7 @@ EXTRA_DIST =  \
 	c/check-subunit-0.9.6.patch \
 	c++/README \
 	c++/cppunit-subunit-1.10.2.patch \
-	perl/diff-subunit.pl \
+	perl/diff-subunit \
 	perl/Makefile.PL \
 	perl/lib/Subunit/Diff.pm \
 	perl/lib/Subunit.pm \
