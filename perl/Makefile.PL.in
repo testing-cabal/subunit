@@ -4,7 +4,7 @@ WriteMakefile(
     'VERSION' => '@SUBUNIT_VERSION@',
     'test' => { 'TESTS' => 'tests/*.pl' },
     'PMLIBDIRS' => [ 'lib' ],
-	'EXE_FILES' => [ 'diff-subunit.pl' ],
+    'EXE_FILES' => [ 'diff-subunit' ],
 );
 sub MY::postamble {
 <<'EOT';
