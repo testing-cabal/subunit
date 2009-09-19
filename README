@@ -49,6 +49,7 @@ Subunit supplies the following filters:
  * subunit2pyunit - convert a subunit stream to pyunit test results.
  * subunit2gtk - show a subunit stream in GTK.
  * subunit2junitxml - convert a subunit stream to JUnit's XML format.
+ * subunit-diff - compare two subunit streams.
  * subunit-filter - filter out tests from a subunit stream.
  * subunit-ls - list info about tests present in a subunit stream.
  * subunit-stats - generate a summary of a subunit stream.
