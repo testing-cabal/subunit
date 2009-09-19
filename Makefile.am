@@ -9,7 +9,7 @@ EXTRA_DIST =  \
 	c/check-subunit-0.9.6.patch \
 	c++/README \
 	c++/cppunit-subunit-1.10.2.patch \
-	perl/diff-subunit \
+	perl/subunit-diff \
 	perl/Makefile.PL.in \
 	perl/lib/Subunit/Diff.pm \
 	perl/lib/Subunit.pm \
@@ -111,7 +111,7 @@ mostlyclean-local:
 uninstall-local:
 	if [ "_inst" = `basename ${prefix}` ]; then \
 	  $(MAKE) -C perl uninstall_distcheck; \
-	    rm -f "$(DESTDIR)$(bindir)"/diff-subunit; \
+	    rm -f "$(DESTDIR)$(bindir)"/subunit-diff; \
 	fi
 
 perl/Makefile: perl/Makefile.PL
