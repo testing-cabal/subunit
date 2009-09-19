@@ -66,96 +66,17 @@ ways.
 Python
 ======
 
-As a TestResult, Subunit can translate method calls from a test run into a
-Subunit stream::
+Subunit has excellent Python support: most of the filters and tools are written
+in python and there are facilities for using Subunit to increase test isolation
+seamlessly within a test suite.
 
- # Get a TestSuite or TestCase to run
- suite = make_suite()
- # Create a stream (any object with a 'write' method)
- stream = file('tests.log', 'wb')
- # Create a subunit result object which will output to the stream
- result = subunit.TestProtocolClient(stream)
- # Optionally, to get timing data for performance analysis, wrap the
- # serialiser with a timing decorator
- result = subunit.test_results.AutoTimingTestResultDecorator(result)
- # Run the test suite reporting to the subunit result object
- suite.run(result)
- # Close the stream.
- stream.close()
+One simple way to run an existing python test suite and have it output subunit
+is the module ``subunit.run``::
 
-As a TestCase, subunit can read from a stream and inform a TestResult
-of the activity from the stream::
-
- # Get a stream (any object with a readline() method), in this case example the
- # stream output by the example before.
- stream = file('tests.log', 'rb')
- # Create a subunit ProtocolTestCase which will read from the stream and emit 
- # activity to a result when run() is called.
- suite = subunit.ProtocolTestCase(stream)
- # Create a result object to show the contents of the stream.
- result = unittest._TextTestResult(sys.stdout)
- # 'run' the tests - process the stream and feed its contents to result.
- suite.run(result)
- stream.close()
-
-Subunit has support for non-blocking usage too, for use with asyncore or
-Twisted. See the TestProtocolServer class for more details.
-
-Building on these foundations, Subunit also offers some convenience tools.
-
-The ``IsolatedTestSuite`` class is a decorator that will fork() before running
-the decorated item, and gather the results from the child process via subunit.
-This is useful for handlings tests that mutate global state, or are testing C
-extensions that could crash the VM.
-
-Similarly, ``IsolatedTestCase`` is a base class which can be subclassed to get
-tests that will fork() before the test is run.
-
-`ExecTestCase`` is a convenience wrapper for running an external 
-program to get a subunit stream and then report that back to an arbitrary
-result object::
-
- class AggregateTests(subunit.ExecTestCase):
-
-     def test_script_one(self):
-         """./bin/script_one"""
-
-     def test_script_two(self):
-         """./bin/script_two"""
+  $ python -m subunit.run mypackage.tests.test_suite
  
- # Normally your normal test loading would take of this automatically,
- # It is only spelt out in detail here for clarity.
- suite = unittest.TestSuite([AggregateTests("test_script_one"),
-     AggregateTests("test_script_two")])
- # Create any TestResult class you like.
- result = unittest._TextTestResult(sys.stdout)
- # And run your suite as normal, subunit will exec each external script as
- # needed and report to your result object.
- suite.run(result)
-
-subunit includes extensions to the python ``TestResult`` protocol.
-
-The ``tags(new_tags, gone_tags)`` method is called (if present) to add or
-remove tags in the test run that is currently executing. If called when no
-test is in progress (that is, if called outside of the ``startTest``, 
-``stopTest`` pair), the the tags apply to all sebsequent tests. If called
-when a test is in progress, then the tags only apply to that test.
-
-The ``time(a_datetime)`` method is called (if present) when a ``time:``
-directive is encountered in a subunit stream. This is used to tell a TestResult
-about the time that events in the stream occured at, to allow reconstructing
-test timing from a stream.
-
-The ``progress(offset, whence)`` method controls progress data for a stream.
-The offset parameter is an int, and whence is one of subunit.PROGRESS_CUR,
-subunit.PROGRESS_SET, PROGRESS_PUSH, PROGRESS_POP. Push and pop operations
-ignore the offset parameter.
-
-Finally, subunit.run is a convenience wrapper to run a python test suite via
-the command line, reporting via subunit::
-
-  $ python -m subunit.run mylib.tests.test_suite
- 
+For more information on the Python support Subunit offers , please see
+``pydoc subunit``, or the source in ``python/subunit/__init__.py``
 
 C
 =

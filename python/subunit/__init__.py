@@ -17,6 +17,92 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+"""Subunit - a streaming test protocol
+
+Overview
+========
+
+The ``subunit`` python package provides a number of ``unittest`` extensions
+which can be used to cause tests to output Subunit, to parse Subunit streams
+into test activity, perform seamless test isolation within a regular test
+case and variously sort, filter and report on test runs.
+
+
+Key Classes
+-----------
+
+The ``subunit.TestProtocolClient`` class is a ``unittest.TestResult``
+extension which will translate a test run into a Subunit stream.
+
+The ``subunit.ProtocolTestCase`` class is an adapter between the Subunit wire
+protocol and the ``unittest.TestCase`` object protocol. It is used to translate
+a stream into a test run, which regular ``unittest.TestResult`` objects can
+process and report/inspect.
+
+Subunit has support for non-blocking usage too, for use with asyncore or
+Twisted. See the TestProtocolServer parser class for more details.
+
+Subunit includes extensions to the python ``TestResult`` protocol. These are
+all done in a compatible manner: ``TestResult`` objects that do not implement
+the extension methods will not cause errors to be raised, instead the extesion
+will either lose fidelity (for instance, folding expected failures to success
+in python versions < 2.7 or 3.1), or discard the extended data (for tags,
+timestamping and progress markers).
+
+The ``tags(new_tags, gone_tags)`` method is called (if present) to add or
+remove tags in the test run that is currently executing. If called when no
+test is in progress (that is, if called outside of the ``startTest``, 
+``stopTest`` pair), the the tags apply to all sebsequent tests. If called
+when a test is in progress, then the tags only apply to that test.
+
+The ``time(a_datetime)`` method is called (if present) when a ``time:``
+directive is encountered in a subunit stream. This is used to tell a TestResult
+about the time that events in the stream occured at, to allow reconstructing
+test timing from a stream.
+
+The ``progress(offset, whence)`` method controls progress data for a stream.
+The offset parameter is an int, and whence is one of subunit.PROGRESS_CUR,
+subunit.PROGRESS_SET, PROGRESS_PUSH, PROGRESS_POP. Push and pop operations
+ignore the offset parameter.
+
+
+Python test support
+-------------------
+
+``subunit.run`` is a convenience wrapper to run a python test suite via
+the command line, reporting via subunit::
+
+  $ python -m subunit.run mylib.tests.test_suite
+
+The ``IsolatedTestSuite`` class is a TestSuite that forks before running its
+tests, allowing isolation between the test runner and some tests.
+
+Similarly, ``IsolatedTestCase`` is a base class which can be subclassed to get
+tests that will fork() before that individual test is run.
+
+`ExecTestCase`` is a convenience wrapper for running an external 
+program to get a subunit stream and then report that back to an arbitrary
+result object::
+
+ class AggregateTests(subunit.ExecTestCase):
+
+     def test_script_one(self):
+         './bin/script_one'
+
+     def test_script_two(self):
+         './bin/script_two'
+ 
+ # Normally your normal test loading would take of this automatically,
+ # It is only spelt out in detail here for clarity.
+ suite = unittest.TestSuite([AggregateTests("test_script_one"),
+     AggregateTests("test_script_two")])
+ # Create any TestResult class you like.
+ result = unittest._TextTestResult(sys.stdout)
+ # And run your suite as normal, subunit will exec each external script as
+ # needed and report to your result object.
+ suite.run(result)
+"""
+
 import datetime
 import os
 import re
@@ -73,7 +159,7 @@ class DiscardStream(object):
 
 
 class TestProtocolServer(object):
-    """A class for receiving results from a TestProtocol client.
+    """A parser for subunit.
     
     :ivar tags: The current tags associated with the protocol stream.
     """
@@ -87,7 +173,7 @@ class TestProtocolServer(object):
     READING_SUCCESS = 6
 
     def __init__(self, client, stream=None):
-        """Create a TestProtocol server instance.
+        """Create a TestProtocolServer instance.
 
         :param client: An object meeting the unittest.TestResult protocol.
         :param stream: The stream that lines received which are not part of the
@@ -360,7 +446,22 @@ class RemoteException(Exception):
 
 
 class TestProtocolClient(unittest.TestResult):
-    """A class that looks like a TestResult and informs a TestProtocolServer."""
+    """A TestResult which generates a subunit stream for a test run.
+    
+    # Get a TestSuite or TestCase to run
+    suite = make_suite()
+    # Create a stream (any object with a 'write' method)
+    stream = file('tests.log', 'wb')
+    # Create a subunit result object which will output to the stream
+    result = subunit.TestProtocolClient(stream)
+    # Optionally, to get timing data for performance analysis, wrap the
+    # serialiser with a timing decorator
+    result = subunit.test_results.AutoTimingTestResultDecorator(result)
+    # Run the test suite reporting to the subunit result object
+    suite.run(result)
+    # Close the stream.
+    stream.close()
+    """
 
     def __init__(self, stream):
         unittest.TestResult.__init__(self)
@@ -522,7 +623,12 @@ class ExecTestCase(unittest.TestCase):
 
 
 class IsolatedTestCase(unittest.TestCase):
-    """A TestCase which runs its tests in a forked process."""
+    """A TestCase which executes in a forked process.
+    
+    Each test gets its own process, which has a performance overhead but will
+    provide excellent isolation from global state (such as django configs,
+    zope utilities and so on).
+    """
 
     def run(self, result=None):
         if result is None: result = self.defaultTestResult()
@@ -530,7 +636,13 @@ class IsolatedTestCase(unittest.TestCase):
 
 
 class IsolatedTestSuite(unittest.TestSuite):
-    """A TestCase which runs its tests in a forked process."""
+    """A TestSuite which runs its tests in a forked process.
+    
+    This decorator that will fork() before running the tests and report the
+    results from the child process using a Subunit stream.  This is useful for
+    handling tests that mutate global state, or are testing C extensions that
+    could crash the VM.
+    """
 
     def run(self, result=None):
         if result is None: result = unittest.TestResult()
@@ -727,7 +839,29 @@ def tag_stream(original, filtered, tags):
 
 
 class ProtocolTestCase(object):
-    """A test case which reports a subunit stream."""
+    """Subunit wire protocol to unittest.TestCase adapter.
+
+    ProtocolTestCase honours the core of ``unittest.TestCase`` protocol -
+    calling a ProtocolTestCase or invoking the run() method will make a 'test
+    run' happen. The 'test run' will simply be a replay of the test activity
+    that has been encoded into the stream. The ``unittest.TestCase`` ``debug``
+    and ``countTestCases`` methods are not supported because there isn't a
+    sensible mapping for those methods.
+    
+    # Get a stream (any object with a readline() method), in this case the
+    # stream output by the example from ``subunit.TestProtocolClient``.
+    stream = file('tests.log', 'rb')
+    # Create a parser which will read from the stream and emit 
+    # activity to a unittest.TestResult when run() is called.
+    suite = subunit.ProtocolTestCase(stream)
+    # Create a result object to accept the contents of that stream.
+    result = unittest._TextTestResult(sys.stdout)
+    # 'run' the tests - process the stream and feed its contents to result.
+    suite.run(result)
+    stream.close()
+
+    :seealso: TestProtocolServer (the subunit wire protocol parser).
+    """
 
     def __init__(self, stream, passthrough=None):
         """Create a ProtocolTestCase reading from stream.

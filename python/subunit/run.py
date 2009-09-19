@@ -17,6 +17,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+"""Run a unittest testcase reporting results as subunit.
+
+  $ python -m subunit.run mylib.tests.test_suite
+"""
+
 import sys
 
 from subunit import TestProtocolClient
@@ -36,7 +41,7 @@ class SubunitTestRunner(object):
 if __name__ == '__main__':
     import optparse
     from unittest import TestProgram
-    parser = optparse.OptionParser("subunitrun <tests>")
+    parser = optparse.OptionParser(__doc__)
     args = parser.parse_args()[1]
     runner = SubunitTestRunner()
     program = TestProgram(module=None, argv=[sys.argv[0]] + args,
