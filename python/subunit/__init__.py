@@ -22,7 +22,7 @@
 Overview
 ========
 
-The ``subunit`` python package provides a number of ``unittest`` extensions
+The ``subunit`` Python package provides a number of ``unittest`` extensions
 which can be used to cause tests to output Subunit, to parse Subunit streams
 into test activity, perform seamless test isolation within a regular test
 case and variously sort, filter and report on test runs.
@@ -40,13 +40,13 @@ a stream into a test run, which regular ``unittest.TestResult`` objects can
 process and report/inspect.
 
 Subunit has support for non-blocking usage too, for use with asyncore or
-Twisted. See the TestProtocolServer parser class for more details.
+Twisted. See the ``TestProtocolServer`` parser class for more details.
 
-Subunit includes extensions to the python ``TestResult`` protocol. These are
+Subunit includes extensions to the Python ``TestResult`` protocol. These are
 all done in a compatible manner: ``TestResult`` objects that do not implement
 the extension methods will not cause errors to be raised, instead the extesion
 will either lose fidelity (for instance, folding expected failures to success
-in python versions < 2.7 or 3.1), or discard the extended data (for tags,
+in Python versions < 2.7 or 3.1), or discard the extended data (for tags,
 timestamping and progress markers).
 
 The ``tags(new_tags, gone_tags)`` method is called (if present) to add or
@@ -56,7 +56,7 @@ test is in progress (that is, if called outside of the ``startTest``,
 when a test is in progress, then the tags only apply to that test.
 
 The ``time(a_datetime)`` method is called (if present) when a ``time:``
-directive is encountered in a subunit stream. This is used to tell a TestResult
+directive is encountered in a Subunit stream. This is used to tell a TestResult
 about the time that events in the stream occured at, to allow reconstructing
 test timing from a stream.
 
@@ -69,8 +69,8 @@ ignore the offset parameter.
 Python test support
 -------------------
 
-``subunit.run`` is a convenience wrapper to run a python test suite via
-the command line, reporting via subunit::
+``subunit.run`` is a convenience wrapper to run a Python test suite via
+the command line, reporting via Subunit::
 
   $ python -m subunit.run mylib.tests.test_suite
 
@@ -81,7 +81,7 @@ Similarly, ``IsolatedTestCase`` is a base class which can be subclassed to get
 tests that will fork() before that individual test is run.
 
 `ExecTestCase`` is a convenience wrapper for running an external 
-program to get a subunit stream and then report that back to an arbitrary
+program to get a Subunit stream and then report that back to an arbitrary
 result object::
 
  class AggregateTests(subunit.ExecTestCase):
@@ -98,7 +98,7 @@ result object::
      AggregateTests("test_script_two")])
  # Create any TestResult class you like.
  result = unittest._TextTestResult(sys.stdout)
- # And run your suite as normal, subunit will exec each external script as
+ # And run your suite as normal, Subunit will exec each external script as
  # needed and report to your result object.
  suite.run(result)
 """

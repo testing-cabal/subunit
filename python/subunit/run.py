@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-"""Run a unittest testcase reporting results as subunit.
+"""Run a unittest testcase reporting results as Subunit.
 
   $ python -m subunit.run mylib.tests.test_suite
 """
