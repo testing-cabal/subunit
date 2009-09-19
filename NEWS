@@ -14,6 +14,9 @@ subunit release notes
       non-subunit content to be discarded. This is useful when precise control
       over what is output is required - such as with subunit2junitxml.
 
+    * A small perl parser is now included, and a new ``subunit-diff`` tool
+      using that is included. (Jelmer Vernooij)
+
     * Subunit streams can now include optional, incremental lookahead
       information about progress. This allows reporters to make estimates
       about completion, when such information is available. See the README
