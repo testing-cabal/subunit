@@ -10,7 +10,7 @@ EXTRA_DIST =  \
 	c++/README \
 	c++/cppunit-subunit-1.10.2.patch \
 	perl/diff-subunit \
-	perl/Makefile.PL \
+	perl/Makefile.PL.in \
 	perl/lib/Subunit/Diff.pm \
 	perl/lib/Subunit.pm \
 	python/subunit/__init__.py \
@@ -86,10 +86,10 @@ c_tests_test_child_LDADD = $(tests_LDADD)
 
 
 all-local: perl/Makefile
-	cd perl && $(MAKE) all
+	$(MAKE) -C perl all
 
 check-local: perl/Makefile
-	cd perl && $(MAKE) check
+	$(MAKE) -C perl check
 
 clean-local:
 	find . -name "*.pyc" | xargs -r rm
@@ -97,18 +97,24 @@ clean-local:
 
 # Remove perl dir for VPATH builds.
 distclean-local:
-	-rmdir perl
-	-rm perl/Makefile.PL
+	-rmdir perl > /dev/null
+	-rm perl/Makefile.PL > /dev/null
 
-# NB: Installs to a perl lib dir, not usr/bin.
 install-exec-local: perl/Makefile
-	cd perl && $(MAKE) install
+	$(MAKE) -C perl install
 
 mostlyclean-local:
 	rm -rf perl/blib
 	rm -rf perl/pm_to_blib
 
+# 'uninstall' perl files during distcheck
+uninstall-local:
+	if [ "_inst" = `basename ${prefix}` ]; then \
+	  $(MAKE) -C perl uninstall_distcheck; \
+	    rm -f "$(DESTDIR)$(bindir)"/diff-subunit; \
+	fi
+
 perl/Makefile: perl/Makefile.PL
 	mkdir -p perl
-	cd perl && perl @abs_top_srcdir@/perl/Makefile.PL
+	cd perl && perl Makefile.PL
 	-rm perl/Makefile.old > /dev/null
