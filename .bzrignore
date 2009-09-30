@@ -29,6 +29,15 @@ config.log
 config.status
 Makefile
 config.h
+debian/files
+debian/libsubunit0
+debian/libsubunit-dev
+debian/subunit
+debian/python-subunit
+debian/*.log
+debian/*.debhelper
+debian/tmp
+debian/*.substvars
 ./perl/blib
 ./perl/pm_to_blib
 subunit-*.tar.gz

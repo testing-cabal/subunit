@@ -2,9 +2,26 @@
 subunit release notes
 ---------------------
 
-
-0.0.2 (IN DEVELOPMENT)
+0.0.3 (In development)
 ----------------------
+
+  CHANGES:
+
+  IMPROVEMENTS:
+
+    * INSTALLDIRS can be set to control the perl MakeMaker 'INSTALLDIRS'
+      viarable when installing.
+
+  BUG FIXES:
+
+    * Install progress_model.py correctly.
+
+  API CHANGES:
+
+  INTERNALS:
+
+0.0.2
+-----
 
   CHANGES:
 

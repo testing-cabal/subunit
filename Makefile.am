@@ -62,6 +62,7 @@ pcdata_DATA = libsubunit.pc
 pkgpython_PYTHON = \
 	python/subunit/__init__.py \
 	python/subunit/iso8601.py \
+	python/subunit/progress_model.py \
 	python/subunit/run.py \
 	python/subunit/test_results.py
 
@@ -114,7 +115,10 @@ uninstall-local:
 	    rm -f "$(DESTDIR)$(bindir)"/subunit-diff; \
 	fi
 
+# The default for MakeMaker; can be overridden by exporting
+INSTALLDIRS ?= site
+
 perl/Makefile: perl/Makefile.PL
 	mkdir -p perl
-	cd perl && perl Makefile.PL
+	cd perl && perl Makefile.PL INSTALLDIRS=${INSTALLDIRS}
 	-rm perl/Makefile.old > /dev/null
