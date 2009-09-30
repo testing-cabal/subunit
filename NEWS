@@ -6,6 +6,10 @@ subunit release notes
 ----------------------
 
   CHANGES:
+  
+    * License change, by unanimous agreement of contributors to BSD/Apache
+      License Version 2.0. This makes Subunit compatible with more testing
+      frameworks.
 
   IMPROVEMENTS:
 
