@@ -19,6 +19,28 @@
 #include <string.h>
 #include "subunit/child.h"
 
+/* Write details about a test event. It is the callers responsibility to ensure
+ * that details are only provided for events the protocol expects details on.
+ * @event: The event - e.g. 'skip'
+ * @name: The test name/id.
+ * @details: The details of the event, may be NULL if no details are present.
+ */
+static void
+subunit_send_event(char const * const event, char const * const name,
+		   char const * const details)
+{
+  if (NULL == details) {
+    fprintf(stdout, "%s: %s\n", event, name);
+  } else {
+    fprintf(stdout, "%s: %s [\n", event, name);
+    fprintf(stdout, "%s", details);
+    if (details[strlen(details) - 1] != '\n')
+      fprintf(stdout, "\n");
+    fprintf(stdout, "]\n");
+  }
+  fflush(stdout);
+}
+
 /* these functions all flush to ensure that the test runner knows the action
  * that has been taken even if the subsequent test etc takes a long time or
  * never completes (i.e. a segfault).
@@ -27,38 +49,34 @@
 void
 subunit_test_start(char const * const name)
 {
-  fprintf(stdout, "test: %s\n", name);
-  fflush(stdout);
+  subunit_send_event("test", name, NULL);
 }
 
 
 void
 subunit_test_pass(char const * const name)
 {
-  fprintf(stdout, "success: %s\n", name);
-  fflush(stdout);
+  /* TODO: add success details as an option */
+  subunit_send_event("success", name, NULL);
 }
 
 
 void
 subunit_test_fail(char const * const name, char const * const error)
 {
-  fprintf(stdout, "failure: %s [\n", name);
-  fprintf(stdout, "%s", error);
-  if (error[strlen(error) - 1] != '\n')
-    fprintf(stdout, "\n");
-  fprintf(stdout, "]\n");
-  fflush(stdout);
+  subunit_send_event("failure", name, error);
 }
 
 
 void
 subunit_test_error(char const * const name, char const * const error)
 {
-  fprintf(stdout, "error: %s [\n", name);
-  fprintf(stdout, "%s", error);
-  if (error[strlen(error) - 1] != '\n')
-    fprintf(stdout, "\n");
-  fprintf(stdout, "]\n");
-  fflush(stdout);
+  subunit_send_event("error", name, error);
+}
+
+
+void
+subunit_test_skip(char const * const name, char const * const reason)
+{
+  subunit_send_event("skip", name, reason);
 }

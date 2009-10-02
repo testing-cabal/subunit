@@ -16,6 +16,8 @@ subunit release notes
     * INSTALLDIRS can be set to control the perl MakeMaker 'INSTALLDIRS'
       viarable when installing.
 
+    * The C library now has ``subunit_test_skip``.
+
   BUG FIXES:
 
     * Install progress_model.py correctly.

@@ -62,6 +62,18 @@ extern void subunit_test_error(char const * const name,
                                char const * const error);
 
 
+/**
+ * subunit_test_skip:
+ *
+ * Report that a test has been skipped. An skip is a test that has not run to
+ * conclusion but hasn't given an error either - its result is unknown.
+ * @name: test case name
+ * @reason: a string describing the reason for the skip.
+ */
+extern void subunit_test_skip(char const * const name, 
+			      char const * const reason);
+
+
 #ifdef __cplusplus
 }
 #endif
