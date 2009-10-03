@@ -18,7 +18,6 @@
   subunit reuses iso8601 by Michael Twomey, distributed under an MIT style
   licence - see python/iso8601/LICENSE for details.
 
-
 Subunit
 -------
 
@@ -86,8 +85,8 @@ more details.
 C++
 ===
 
-C++ uses the C bindings and includes a patch for cppunit. See 'c++/README' for
-details.
+The C library is includable and usable directly from C++. A TestListener for
+CPPUnit is included in the Subunit distribution. See 'c++/README' for details.
 
 shell
 =====

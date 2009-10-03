@@ -18,6 +18,7 @@ AC_SUBST([SUBUNIT_MICRO_VERSION])
 AC_SUBST([SUBUNIT_VERSION])
 AC_USE_SYSTEM_EXTENSIONS
 AC_PROG_CC
+AC_PROG_CXX
 AM_PROG_CC_C_O
 AC_PROG_INSTALL
 AC_PROG_LN_S
@@ -46,11 +47,14 @@ AC_FUNC_REALLOC
 # Easier memory management.
 # C unit testing.
 PKG_CHECK_MODULES([CHECK], [check >= 0.9.4])
+# C++ unit testing.
+PKG_CHECK_MODULES([CPPUNIT], [cppunit])
 
 # Output files
 AC_CONFIG_HEADERS([config.h])
 
 AC_CONFIG_FILES([libsubunit.pc
+		 libcppunit_subunit.pc
                  Makefile
 		 perl/Makefile.PL
                  ])

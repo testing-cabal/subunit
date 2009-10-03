@@ -39,6 +39,9 @@ ACLOCAL_AMFLAGS = -I m4
 SUBUNIT_CFLAGS = -Wall -Werror -Wextra -Wstrict-prototypes -Wmissing-prototypes \
 	-Wwrite-strings -Wno-variadic-macros -I$(top_srcdir)/c/include
 AM_CFLAGS = $(SUBUNIT_CFLAGS)
+SUBUNIT_CXXFLAGS = -Wall -Werror -Wextra -Wwrite-strings -Wno-variadic-macros \
+	-I$(top_srcdir)/c/include
+AM_CXXFLAGS = $(SUBUNIT_CXXFLAGS)
 
 include_subunitdir = $(includedir)/subunit
 
@@ -67,9 +70,11 @@ pkgpython_PYTHON = \
 	python/subunit/test_results.py
 
 lib_LTLIBRARIES = libsubunit.la
+lib_LTLIBRARIES +=  libcppunit_subunit.la
 
 include_subunit_HEADERS = \
-	c/include/subunit/child.h
+	c/include/subunit/child.h \
+	c++/SubunitTestProgressListener.h
 
 check_PROGRAMS = \
 	c/tests/test_child
@@ -80,6 +85,10 @@ check_SCRIPTS = \
 libsubunit_la_SOURCES = \
 	c/lib/child.c \
 	c/include/subunit/child.h
+
+libcppunit_subunit_la_SOURCES = \
+	c++/SubunitTestProgressListener.cpp \
+	c++/SubunitTestProgressListener.h
 
 tests_LDADD = @CHECK_LIBS@ $(top_builddir)/libsubunit.la
 c_tests_test_child_CFLAGS = $(SUBUNIT_CFLAGS) @CHECK_CFLAGS@
