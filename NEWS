@@ -16,6 +16,10 @@ subunit release notes
     * INSTALLDIRS can be set to control the perl MakeMaker 'INSTALLDIRS'
       viarable when installing.
 
+    * Multipart test outcomes are tentatively supported; the exact protocol
+      for them, both serialiser and object is not yet finalised. Testers and
+      early adopters are sought.
+
   BUG FIXES:
 
     * Install progress_model.py correctly.
