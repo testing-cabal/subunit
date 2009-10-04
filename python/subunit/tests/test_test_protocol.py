@@ -21,7 +21,7 @@ import os
 import sys
 
 import subunit
-from subunit.content import Content
+from subunit.content import Content, TracebackContent
 from subunit.content_type import ContentType
 import subunit.iso8601 as iso8601
 
@@ -1056,6 +1056,9 @@ class TestTestProtocolClient(unittest.TestCase):
         self.test = TestTestProtocolClient("test_start_test")
         self.sample_details = {'something':Content(
             ContentType('text', 'plain'), lambda:['serialised\nform'])}
+        self.sample_tb_details = dict(self.sample_details)
+        self.sample_tb_details['traceback'] = TracebackContent(
+            subunit.RemoteError("boo qux"))
 
     def test_start_test(self):
         """Test startTest on a TestProtocolClient."""
@@ -1074,13 +1077,13 @@ class TestTestProtocolClient(unittest.TestCase):
             self.io.getvalue(), "successful: %s\n" % self.test.id())
 
     def test_add_success_details(self):
-        """Test addSuccess on a TestProtocolClient."""
+        """Test addSuccess on a TestProtocolClient with details."""
         self.protocol.addSuccess(self.test, details=self.sample_details)
         self.assertEqual(
             self.io.getvalue(), "successful: %s [ multipart\n"
                 "Content-Type: text/plain\n"
                 "something\n"
-                "15\nserialised\nform0\n]\n"% self.test.id())
+                "15\nserialised\nform0\n]\n" % self.test.id())
 
     def test_add_failure(self):
         """Test addFailure on a TestProtocolClient."""
@@ -1089,6 +1092,22 @@ class TestTestProtocolClient(unittest.TestCase):
         self.assertEqual(
             self.io.getvalue(),
             'failure: %s [\nRemoteException: boo qux\n]\n' % self.test.id())
+
+    def test_add_failure_details(self):
+        """Test addFailure on a TestProtocolClient with details."""
+        self.protocol.addFailure(
+            self.test, details=self.sample_tb_details)
+        self.assertEqual(
+            self.io.getvalue(),
+            "failure: %s [ multipart\n"
+            "Content-Type: text/plain\n"
+            "something\n"
+            "15\nserialised\nform0\n"
+            "Content-Type: text/x-traceback;language=python\n"
+            "traceback\n"
+            "25\nRemoteException: boo qux\n0\n"
+            "]\n" % self.test.id())
+
 
     def test_add_error(self):
         """Test stopTest on a TestProtocolClient."""

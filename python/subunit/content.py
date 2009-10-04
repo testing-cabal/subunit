@@ -63,5 +63,5 @@ class TracebackContent(Content):
             {"language": "python"})
         self._result = TestResult()
         super(TracebackContent, self).__init__(content_type,
-            lambda:self._result._exc_info_to_string(err,
-                subunit.RemotedTestCase('')))
+            lambda:[self._result._exc_info_to_string(err,
+                subunit.RemotedTestCase(''))])

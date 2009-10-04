@@ -46,8 +46,9 @@ will either lose fidelity (for instance, folding expected failures to success
 in Python versions < 2.7 or 3.1), or discard the extended data (for extra
 details, tags, timestamping and progress markers).
 
-The test outcome methods ``addSuccess`` take an optional keyword parameter
-``details`` which can be used instead of the usual python unittest parameter.
+The test outcome methods ``addSuccess``, ``addFailure`` take an optional
+keyword parameter ``details`` which can be used instead of the usual python
+unittest parameter.
 When used the value of details should be a dict from ``string`` to 
 ``subunit.content.Content`` objects. This is a draft API being worked on with
 the Python Testing In Python mail list, with the goal of permitting a common
@@ -479,11 +480,28 @@ class TestProtocolClient(unittest.TestResult):
             self._stream.write("%s\n" % line)
         self._stream.write("]\n")
 
-    def addFailure(self, test, error):
-        """Report a failure in test test."""
-        self._stream.write("failure: %s [\n" % test.id())
-        for line in self._exc_info_to_string(error, test).splitlines():
-            self._stream.write("%s\n" % line)
+    def addFailure(self, test, error=None, details=None):
+        """Report a failure in test test.
+        
+        Only one of error and details should be provided: conceptually there
+        are two separate methods:
+            addFailure(self, test, error)
+            addFailure(self, test, details)
+
+        :param error: Standard unittest positional argument form - an
+            exc_info tuple.
+        :param details: New Testing-in-python drafted API; a dict from string
+            to subunit.Content objects.
+        """
+        self._stream.write("failure: %s" % test.id())
+        if error is None and details is None:
+            raise ValueError
+        if error is not None:
+            self._stream.write(" [\n")
+            for line in self._exc_info_to_string(error, test).splitlines():
+                self._stream.write("%s\n" % line)
+        else:
+            self._write_details(details)
         self._stream.write("]\n")
 
     def addSkip(self, test, reason):
@@ -498,14 +516,7 @@ class TestProtocolClient(unittest.TestResult):
         if not details:
             self._stream.write("\n")
         else:
-            self._stream.write(" [ multipart\n")
-            for name, content in details.iteritems():
-                self._stream.write("Content-Type: %s/%s\n" %
-                    (content.content_type.type, content.content_type.subtype))
-                self._stream.write("%s\n" % name)
-                for bytes in content.iter_bytes():
-                    self._stream.write("%d\n%s" % (len(bytes), bytes))
-                self._stream.write("0\n")
+            self._write_details(details)
             self._stream.write("]\n")
 
     def startTest(self, test):
@@ -543,6 +554,27 @@ class TestProtocolClient(unittest.TestResult):
         self._stream.write("time: %04d-%02d-%02d %02d:%02d:%02d.%06dZ\n" % (
             time.year, time.month, time.day, time.hour, time.minute,
             time.second, time.microsecond))
+
+    def _write_details(self, details):
+        """Output details to the stream.
+
+        :param details: An extended details dict for a test outcome.
+        """
+        self._stream.write(" [ multipart\n")
+        for name, content in sorted(details.iteritems()):
+            self._stream.write("Content-Type: %s/%s" %
+                (content.content_type.type, content.content_type.subtype))
+            parameters = content.content_type.parameters
+            if parameters:
+                self._stream.write(";")
+                param_strs = []
+                for param, value in parameters.iteritems():
+                    param_strs.append("%s=%s" % (param, value))
+                self._stream.write(",".join(param_strs))
+            self._stream.write("\n%s\n" % name)
+            for bytes in content.iter_bytes():
+                self._stream.write("%d\n%s" % (len(bytes), bytes))
+            self._stream.write("0\n")
 
     def done(self):
         """Obey the testtools result.done() interface."""
