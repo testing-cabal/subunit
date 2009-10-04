@@ -163,9 +163,9 @@ time: YYYY-MM-DD HH:MM:SSZ
 DETAILS ::= BRACKETED | MULTIPART
 BRACKETED ::= '[' CR lines ']' CR
 MULTIPART ::= '[ multiparent' CR PART* ']' CR
-PART ::= PART_TYPE CR PART_LENGTH CR PART_BYTES CR
+PART ::= PART_TYPE CR PART_BYTES CR
 PART_TYPE ::= Content-Type: type/sub-type(;parameter=label)
-PART_LENGTH ::= DIGITS
+PART_BYTES ::= (DIGITS CR BYTE{DIGITS})* '0' CR
 
 unexpected output on stdout -> stdout.
 exit w/0 or last test completing -> error

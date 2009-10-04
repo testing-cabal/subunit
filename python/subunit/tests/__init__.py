@@ -16,6 +16,7 @@
 
 from subunit.tests import (
     TestUtil,
+    test_content_type,
     test_progress_model,
     test_subunit_filter,
     test_subunit_stats,
@@ -27,6 +28,7 @@ from subunit.tests import (
 
 def test_suite():
     result = TestUtil.TestSuite()
+    result.addTest(test_content_type.test_suite())
     result.addTest(test_progress_model.test_suite())
     result.addTest(test_test_results.test_suite())
     result.addTest(test_test_protocol.test_suite())
