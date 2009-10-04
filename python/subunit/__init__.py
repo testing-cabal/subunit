@@ -41,10 +41,18 @@ Twisted. See the ``TestProtocolServer`` parser class for more details.
 
 Subunit includes extensions to the Python ``TestResult`` protocol. These are
 all done in a compatible manner: ``TestResult`` objects that do not implement
-the extension methods will not cause errors to be raised, instead the extesion
+the extension methods will not cause errors to be raised, instead the extension
 will either lose fidelity (for instance, folding expected failures to success
-in Python versions < 2.7 or 3.1), or discard the extended data (for tags,
-timestamping and progress markers).
+in Python versions < 2.7 or 3.1), or discard the extended data (for extra
+details, tags, timestamping and progress markers).
+
+The test outcome methods ``addSuccess`` take an optional keyword parameter
+``details`` which can be used instead of the usual python unittest parameter.
+When used the value of details should be a dict from ``string`` to 
+``subunit.content.Content`` objects. This is a draft API being worked on with
+the Python Testing In Python mail list, with the goal of permitting a common
+way to provide additional data beyond a traceback, such as captured data from
+disk, logging messages etc.
 
 The ``tags(new_tags, gone_tags)`` method is called (if present) to add or
 remove tags in the test run that is currently executing. If called when no
@@ -484,9 +492,21 @@ class TestProtocolClient(unittest.TestResult):
         self._stream.write("%s\n" % reason)
         self._stream.write("]\n")
 
-    def addSuccess(self, test):
+    def addSuccess(self, test, details=None):
         """Report a success in a test."""
-        self._stream.write("successful: %s\n" % test.id())
+        self._stream.write("successful: %s" % test.id())
+        if not details:
+            self._stream.write("\n")
+        else:
+            self._stream.write(" [ multipart\n")
+            for name, content in details.iteritems():
+                self._stream.write("Content-Type: %s/%s\n" %
+                    (content.content_type.type, content.content_type.subtype))
+                self._stream.write("%s\n" % name)
+                for bytes in content.iter_bytes():
+                    self._stream.write("%d\n%s" % (len(bytes), bytes))
+                self._stream.write("0\n")
+            self._stream.write("]\n")
 
     def startTest(self, test):
         """Mark a test as starting its test run."""

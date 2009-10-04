@@ -18,9 +18,11 @@ import datetime
 import unittest
 from StringIO import StringIO
 import os
-import subunit
 import sys
 
+import subunit
+from subunit.content import Content
+from subunit.content_type import ContentType
 import subunit.iso8601 as iso8601
 
 
@@ -1052,6 +1054,8 @@ class TestTestProtocolClient(unittest.TestCase):
         self.io = StringIO()
         self.protocol = subunit.TestProtocolClient(self.io)
         self.test = TestTestProtocolClient("test_start_test")
+        self.sample_details = {'something':Content(
+            ContentType('text', 'plain'), lambda:['serialised\nform'])}
 
     def test_start_test(self):
         """Test startTest on a TestProtocolClient."""
@@ -1068,6 +1072,15 @@ class TestTestProtocolClient(unittest.TestCase):
         self.protocol.addSuccess(self.test)
         self.assertEqual(
             self.io.getvalue(), "successful: %s\n" % self.test.id())
+
+    def test_add_success_details(self):
+        """Test addSuccess on a TestProtocolClient."""
+        self.protocol.addSuccess(self.test, details=self.sample_details)
+        self.assertEqual(
+            self.io.getvalue(), "successful: %s [ multipart\n"
+                "Content-Type: text/plain\n"
+                "something\n"
+                "15\nserialised\nform0\n]\n"% self.test.id())
 
     def test_add_failure(self):
         """Test addFailure on a TestProtocolClient."""
