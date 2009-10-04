@@ -60,7 +60,9 @@ TESTS = runtests.py $(check_PROGRAMS)
 
 ## install libsubunit.pc
 pcdatadir = $(libdir)/pkgconfig
-pcdata_DATA = libsubunit.pc
+pcdata_DATA = \
+	libsubunit.pc \
+	libcppunit_subunit.pc
 
 pkgpython_PYTHON = \
 	python/subunit/__init__.py \
