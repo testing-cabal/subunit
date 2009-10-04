@@ -33,3 +33,11 @@ class ContentType(object):
         self.type = primary_type
         self.subtype = sub_type
         self.parameters = parameters or {}
+
+    def __eq__(self, other):
+        if type(other) != ContentType:
+            return False
+        return self.__dict__ == other.__dict__
+
+    def __repr__(self):
+        return "%s/%s params=%s" % (self.type, self.subtype, self.parameters)

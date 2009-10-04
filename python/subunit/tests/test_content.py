@@ -16,7 +16,7 @@
 
 import unittest
 import subunit
-from subunit.content import Content
+from subunit.content import Content,  TracebackContent
 from subunit.content_type import ContentType
 
 
@@ -39,3 +39,19 @@ class TestContent(unittest.TestCase):
         content = Content(content_type, lambda:["bytes"])
         self.assertEqual(content_type, content.content_type)
         self.assertEqual(["bytes"], list(content.iter_bytes()))
+
+
+class TestTracebackContent(unittest.TestCase):
+
+    def test___init___None_errors(self):
+        self.assertRaises(ValueError, TracebackContent, None)
+
+    def test___init___sets_ivars(self):
+        content = TracebackContent(subunit.RemoteError("weird"))
+        content_type = ContentType("text", "x-traceback",
+            {"language":"python"})
+        self.assertEqual(content_type, content.content_type)
+        result = unittest.TestResult()
+        expected = result._exc_info_to_string(subunit.RemoteError("weird"),
+            subunit.RemotedTestCase(''))
+        self.assertEqual(expected, ''.join(list(content.iter_bytes())))

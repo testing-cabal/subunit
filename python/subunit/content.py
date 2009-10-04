@@ -16,6 +16,12 @@
 
 """Content - a MIME-like Content object."""
 
+from unittest import TestResult
+
+import subunit
+from subunit.content_type import ContentType
+
+
 class Content(object):
     """A MIME-like Content object.
     
@@ -39,3 +45,23 @@ class Content(object):
     def iter_bytes(self):
         """Iterate over bytestrings of the serialised content."""
         return self._get_bytes()
+
+
+class TracebackContent(Content):
+    """Content object for tracebacks.
+
+    This adapts an exc_info tuple to the Content interface.
+    text/x-traceback;language=python is used for the mime type, in order to
+    provide room for other languages to format their tracebacks differently.
+    """
+
+    def __init__(self, err):
+        """Create a TracebackContent for err."""
+        if err is None:
+            raise ValueError("err may not be None")
+        content_type = ContentType('text', 'x-traceback',
+            {"language": "python"})
+        self._result = TestResult()
+        super(TracebackContent, self).__init__(content_type,
+            lambda:self._result._exc_info_to_string(err,
+                subunit.RemotedTestCase('')))

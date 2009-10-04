@@ -41,3 +41,10 @@ class TestContentType(unittest.TestCase):
     def test___init___with_parameters(self):
         content_type = ContentType("foo", "bar", {"quux":"thing"})
         self.assertEqual({"quux":"thing"}, content_type.parameters)
+
+    def test___eq__(self):
+        content_type1 = ContentType("foo", "bar", {"quux":"thing"})
+        content_type2 = ContentType("foo", "bar", {"quux":"thing"})
+        content_type3 = ContentType("foo", "bar", {"quux":"thing2"})
+        self.assertTrue(content_type1.__eq__(content_type2))
+        self.assertFalse(content_type1.__eq__(content_type3))
