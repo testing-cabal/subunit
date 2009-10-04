@@ -16,6 +16,7 @@
 
 import unittest
 import subunit
+from subunit.content import Content
 from subunit.content_type import ContentType
 
 
@@ -25,19 +26,16 @@ def test_suite():
     return result
 
 
-class TestContentType(unittest.TestCase):
+class TestContent(unittest.TestCase):
 
     def test___init___None_errors(self):
-        self.assertRaises(ValueError, ContentType, None, None)
-        self.assertRaises(ValueError, ContentType, None, "traceback")
-        self.assertRaises(ValueError, ContentType, "text", None)
+        self.assertRaises(ValueError, Content, None, None)
+        self.assertRaises(ValueError, Content, None, lambda:["traceback"])
+        self.assertRaises(ValueError, Content,
+            ContentType("text", "traceback"), None)
 
     def test___init___sets_ivars(self):
         content_type = ContentType("foo", "bar")
-        self.assertEqual("foo", content_type.type)
-        self.assertEqual("bar", content_type.subtype)
-        self.assertEqual({}, content_type.parameters)
-
-    def test___init___with_parameters(self):
-        content_type = ContentType("foo", "bar", {"quux":"thing"})
-        self.assertEqual({"quux":"thing"}, content_type.parameters)
+        content = Content(content_type, lambda:["bytes"])
+        self.assertEqual(content_type, content.content_type)
+        self.assertEqual(["bytes"], list(content.iter_bytes()))
