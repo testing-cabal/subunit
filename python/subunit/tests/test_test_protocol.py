@@ -1108,7 +1108,6 @@ class TestTestProtocolClient(unittest.TestCase):
             "25\nRemoteException: boo qux\n0\n"
             "]\n" % self.test.id())
 
-
     def test_add_error(self):
         """Test stopTest on a TestProtocolClient."""
         self.protocol.addError(
@@ -1117,6 +1116,21 @@ class TestTestProtocolClient(unittest.TestCase):
             self.io.getvalue(),
             'error: %s [\n'
             "RemoteException: phwoar crikey\n"
+            "]\n" % self.test.id())
+
+    def test_add_error_details(self):
+        """Test stopTest on a TestProtocolClient with details."""
+        self.protocol.addError(
+            self.test, details=self.sample_tb_details)
+        self.assertEqual(
+            self.io.getvalue(),
+            "error: %s [ multipart\n"
+            "Content-Type: text/plain\n"
+            "something\n"
+            "15\nserialised\nform0\n"
+            "Content-Type: text/x-traceback;language=python\n"
+            "traceback\n"
+            "25\nRemoteException: boo qux\n0\n"
             "]\n" % self.test.id())
 
     def test_add_skip(self):
