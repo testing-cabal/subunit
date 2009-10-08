@@ -1140,6 +1140,20 @@ class TestTestProtocolClient(unittest.TestCase):
         self.assertEqual(
             self.io.getvalue(),
             'skip: %s [\nHas it really?\n]\n' % self.test.id())
+    
+    def test_add_skip_details(self):
+        """Test addSkip on a TestProtocolClient with details."""
+        details = {'reason':Content(
+            ContentType('text', 'plain'), lambda:['Has it really?'])}
+        self.protocol.addSkip(
+            self.test, details=details)
+        self.assertEqual(
+            self.io.getvalue(),
+            "skip: %s [ multipart\n"
+            "Content-Type: text/plain\n"
+            "reason\n"
+            "14\nHas it really?0\n"
+            "]\n" % self.test.id())
 
     def test_progress_set(self):
         self.protocol.progress(23, subunit.PROGRESS_SET)

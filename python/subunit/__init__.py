@@ -46,9 +46,9 @@ will either lose fidelity (for instance, folding expected failures to success
 in Python versions < 2.7 or 3.1), or discard the extended data (for extra
 details, tags, timestamping and progress markers).
 
-The test outcome methods ``addSuccess``, ``addError``, ``addFailure`` take an
-optional keyword parameter ``details`` which can be used instead of the usual
-python unittest parameter.
+The test outcome methods ``addSuccess``, ``addError``, ``addFailure``,
+``addSkip`` take an optional keyword parameter ``details`` which can be used
+instead of the usual python unittest parameter.
 When used the value of details should be a dict from ``string`` to 
 ``subunit.content.Content`` objects. This is a draft API being worked on with
 the Python Testing In Python mail list, with the goal of permitting a common
@@ -118,6 +118,8 @@ import sys
 import unittest
 
 import iso8601
+
+import content, content_type
 
 
 PROGRESS_SET = 0
@@ -529,11 +531,14 @@ class TestProtocolClient(unittest.TestResult):
             self._write_details(details)
         self._stream.write("]\n")
 
-    def addSkip(self, test, reason):
+    def addSkip(self, test, reason=None, details=None):
         """Report a skipped test."""
-        self._stream.write("skip: %s [\n" % test.id())
-        self._stream.write("%s\n" % reason)
-        self._stream.write("]\n")
+        if reason is None:
+            self._addOutcome("skip", test, error=None, details=details)
+        else:
+            self._stream.write("skip: %s [\n" % test.id())
+            self._stream.write("%s\n" % reason)
+            self._stream.write("]\n")
 
     def addSuccess(self, test, details=None):
         """Report a success in a test."""
