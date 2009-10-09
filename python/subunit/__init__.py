@@ -46,9 +46,9 @@ will either lose fidelity (for instance, folding expected failures to success
 in Python versions < 2.7 or 3.1), or discard the extended data (for extra
 details, tags, timestamping and progress markers).
 
-The test outcome methods ``addSuccess``, ``addError``, ``addFailure``,
-``addSkip`` take an optional keyword parameter ``details`` which can be used
-instead of the usual python unittest parameter.
+The test outcome methods ``addSuccess``, ``addError``, ``addExpectedFailure``,
+``addFailure``, ``addSkip`` take an optional keyword parameter ``details``
+which can be used instead of the usual python unittest parameter.
 When used the value of details should be a dict from ``string`` to 
 ``subunit.content.Content`` objects. This is a draft API being worked on with
 the Python Testing In Python mail list, with the goal of permitting a common
@@ -489,6 +489,21 @@ class TestProtocolClient(unittest.TestResult):
             to subunit.Content objects.
         """
         self._addOutcome("error", test, error=error, details=details)
+
+    def addExpectedFailure(self, test, error=None, details=None):
+        """Report an expected failure in test test.
+        
+        Only one of error and details should be provided: conceptually there
+        are two separate methods:
+            addError(self, test, error)
+            addError(self, test, details)
+
+        :param error: Standard unittest positional argument form - an
+            exc_info tuple.
+        :param details: New Testing-in-python drafted API; a dict from string
+            to subunit.Content objects.
+        """
+        self._addOutcome("xfail", test, error=error, details=details)
 
     def addFailure(self, test, error=None, details=None):
         """Report a failure in test test.

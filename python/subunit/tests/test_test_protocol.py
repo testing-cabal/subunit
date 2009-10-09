@@ -1133,6 +1133,31 @@ class TestTestProtocolClient(unittest.TestCase):
             "25\nRemoteException: boo qux\n0\n"
             "]\n" % self.test.id())
 
+    def test_add_expected_failure(self):
+        """Test addExpectedFailure on a TestProtocolClient."""
+        self.protocol.addExpectedFailure(
+            self.test, subunit.RemoteError("phwoar crikey"))
+        self.assertEqual(
+            self.io.getvalue(),
+            'xfail: %s [\n'
+            "RemoteException: phwoar crikey\n"
+            "]\n" % self.test.id())
+
+    def test_add_expected_failure_details(self):
+        """Test addExpectedFailure on a TestProtocolClient with details."""
+        self.protocol.addExpectedFailure(
+            self.test, details=self.sample_tb_details)
+        self.assertEqual(
+            self.io.getvalue(),
+            "xfail: %s [ multipart\n"
+            "Content-Type: text/plain\n"
+            "something\n"
+            "15\nserialised\nform0\n"
+            "Content-Type: text/x-traceback;language=python\n"
+            "traceback\n"
+            "25\nRemoteException: boo qux\n0\n"
+            "]\n" % self.test.id())
+
     def test_add_skip(self):
         """Test addSkip on a TestProtocolClient."""
         self.protocol.addSkip(
