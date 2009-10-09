@@ -13,6 +13,9 @@ subunit release notes
 
   IMPROVEMENTS:
 
+    * CPPUnit is now directly supported: subunit builds a cppunit listener
+      ``libcppunit-subunit``. 
+
     * INSTALLDIRS can be set to control the perl MakeMaker 'INSTALLDIRS'
       viarable when installing.
 
