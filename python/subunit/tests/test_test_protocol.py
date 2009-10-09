@@ -1208,6 +1208,21 @@ class TestTestProtocolClient(unittest.TestCase):
             "time: 2009-10-11 12:13:14.000015Z\n",
             self.io.getvalue())
 
+    def test_add_unexpected_success(self):
+        """Test addUnexpectedSuccess on a TestProtocolClient."""
+        self.protocol.addUnexpectedSuccess(self.test)
+        self.assertEqual(
+            self.io.getvalue(), "successful: %s\n" % self.test.id())
+
+    def test_add_unexpected_success_details(self):
+        """Test addUnexpectedSuccess on a TestProtocolClient with details."""
+        self.protocol.addUnexpectedSuccess(self.test, details=self.sample_details)
+        self.assertEqual(
+            self.io.getvalue(), "successful: %s [ multipart\n"
+                "Content-Type: text/plain\n"
+                "something\n"
+                "15\nserialised\nform0\n]\n" % self.test.id())
+
 
 def test_suite():
     loader = subunit.tests.TestUtil.TestLoader()

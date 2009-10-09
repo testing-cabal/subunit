@@ -563,6 +563,7 @@ class TestProtocolClient(unittest.TestResult):
         else:
             self._write_details(details)
             self._stream.write("]\n")
+    addUnexpectedSuccess = addSuccess
 
     def startTest(self, test):
         """Mark a test as starting its test run."""
