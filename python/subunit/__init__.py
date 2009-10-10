@@ -241,75 +241,68 @@ class _ParserState(object):
 class _InTest(_ParserState):
     """State for the subunit parser after reading a test: directive."""
 
-    def addError(self, offset, line):
-        """An 'error:' directive has been read."""
+    def _outcome(self, offset, line, no_details, simple_details_state):
+        """An outcome directive has been read.
+        
+        :param no_details: Callable to call when no details are presented.
+        :param simple_details_state: The state to switch to for simple details
+            processing of this outcome.
+        """
         if self.parser.current_test_description == line[offset:-1]:
             self.parser._state = self.parser._outside_test
             self.parser.current_test_description = None
-            self.parser.client.addError(self.parser._current_test, RemoteError(""))
+            no_details()
             self.parser.client.stopTest(self.parser._current_test)
             self.parser._current_test = None
         elif self.parser.current_test_description + " [" == line[offset:-1]:
-            self.parser._state = self.parser._reading_error_details
+            self.parser._state = simple_details_state
             self.parser._message = ""
         else:
             self.parser.stdOutLineReceived(line)
+
+    def _error(self):
+        self.parser.client.addError(self.parser._current_test, RemoteError(""))
+
+    def addError(self, offset, line):
+        """An 'error:' directive has been read."""
+        self._outcome(offset, line, self._error,
+            self.parser._reading_error_details)
+
+    def _xfail(self):
+        xfail = getattr(self.parser.client, 'addExpectedFailure', None)
+        if callable(xfail):
+            xfail(self.parser._current_test, RemoteError())
+        else:
+            self.parser.client.addSuccess(self.parser._current_test)
 
     def addExpectedFail(self, offset, line):
         """An 'xfail:' directive has been read."""
-        if self.parser.current_test_description == line[offset:-1]:
-            self.parser._state = self.parser._outside_test
-            self.parser.current_test_description = None
-            xfail = getattr(self.parser.client, 'addExpectedFailure', None)
-            if callable(xfail):
-                xfail(self.parser._current_test, RemoteError())
-            else:
-                self.parser.client.addSuccess(self.parser._current_test)
-            self.parser.client.stopTest(self.parser._current_test)
-        elif self.parser.current_test_description + " [" == line[offset:-1]:
-            self.parser._state = self.parser._reading_xfail_details
-            self.parser._message = ""
-        else:
-            self.parser.stdOutLineReceived(line)
+        self._outcome(offset, line, self._xfail,
+            self.parser._reading_xfail_details)
+
+    def _failure(self):
+        self.parser.client.addFailure(self.parser._current_test, RemoteError())
 
     def addFailure(self, offset, line):
         """A 'failure:' directive has been read."""
-        if self.parser.current_test_description == line[offset:-1]:
-            self.parser._state = self.parser._outside_test
-            self.parser.current_test_description = None
-            self.parser.client.addFailure(self.parser._current_test, RemoteError())
-            self.parser.client.stopTest(self.parser._current_test)
-        elif self.parser.current_test_description + " [" == line[offset:-1]:
-            self.parser._state = self.parser._reading_failure_details
-            self.parser._message = ""
-        else:
-            self.parser.stdOutLineReceived(line)
+        self._outcome(offset, line, self._failure,
+            self.parser._reading_failure_details)
+
+    def _skip(self):
+        self.parser._skip_or_error()
 
     def addSkip(self, offset, line):
         """A 'skip:' directive has been read."""
-        if self.parser.current_test_description == line[offset:-1]:
-            self.parser._state = self.parser._outside_test
-            self.parser.current_test_description = None
-            self.parser._skip_or_error()
-            self.parser.client.stopTest(self.parser._current_test)
-        elif self.parser.current_test_description + " [" == line[offset:-1]:
-            self.parser._state = self.parser._reading_skip_details
-            self.parser._message = ""
-        else:
-            self.parser.stdOutLineReceived(line)
+        self._outcome(offset, line, self._skip,
+            self.parser._reading_skip_details)
+
+    def _succeed(self):
+        self.parser.client.addSuccess(self.parser._current_test)
 
     def addSuccess(self, offset, line):
         """A 'success:' directive has been read."""
-        if self.parser.current_test_description == line[offset:-1]:
-            self.parser._state = self.parser._outside_test
-            self.parser.current_test_description = None
-            self.parser.client.addSuccess(self.parser._current_test)
-            self.parser.client.stopTest(self.parser._current_test)
-        elif self.parser.current_test_description + " [" == line[offset:-1]:
-            self.parser._state = self.parser._reading_success_details
-            self.parser._message = ""
-        else:
-            self.parser.stdOutLineReceived(line)
+        self._outcome(offset, line, self._succeed,
+            self.parser._reading_success_details)
 
     def lostConnection(self):
         """Connection lost."""
