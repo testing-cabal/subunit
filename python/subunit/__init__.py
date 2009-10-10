@@ -107,6 +107,13 @@ result object::
  # And run your suite as normal, Subunit will exec each external script as
  # needed and report to your result object.
  suite.run(result)
+
+Utility modules
+---------------
+
+* subunit.chunked contains HTTP chunked encoding/decoding logic.
+* subunit.content contains a minimal assumptions MIME content representation.
+* subunit.content_type contains a MIME Content-Type representation.
 """
 
 import datetime
@@ -119,7 +126,7 @@ import unittest
 
 import iso8601
 
-import content, content_type
+import chunked, content, content_type
 
 
 PROGRESS_SET = 0
@@ -618,9 +625,9 @@ class TestProtocolClient(unittest.TestResult):
                     param_strs.append("%s=%s" % (param, value))
                 self._stream.write(",".join(param_strs))
             self._stream.write("\n%s\n" % name)
-            for bytes in content.iter_bytes():
-                self._stream.write("%d\n%s" % (len(bytes), bytes))
-            self._stream.write("0\n")
+            encoder = chunked.Encoder(self._stream)
+            map(encoder.write, content.iter_bytes())
+            encoder.close()
 
     def done(self):
         """Obey the testtools result.done() interface."""

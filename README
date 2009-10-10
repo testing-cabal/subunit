@@ -164,7 +164,7 @@ BRACKETED ::= '[' CR lines ']' CR
 MULTIPART ::= '[ multipart' CR PART* ']' CR
 PART ::= PART_TYPE CR NAME CR PART_BYTES CR
 PART_TYPE ::= Content-Type: type/sub-type(;parameter=value,parameter=value)
-PART_BYTES ::= (DIGITS CR BYTE{DIGITS})* '0' CR
+PART_BYTES ::= (DIGITS CR LF BYTE{DIGITS})* '0' CR LF
 
 unexpected output on stdout -> stdout.
 exit w/0 or last test completing -> error

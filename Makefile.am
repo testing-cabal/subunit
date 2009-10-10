@@ -16,6 +16,7 @@ EXTRA_DIST =  \
 	python/subunit/tests/__init__.py \
 	python/subunit/tests/sample-script.py \
 	python/subunit/tests/sample-two-script.py \
+	python/subunit/tests/test_chunked.py \
 	python/subunit/tests/test_content.py \
 	python/subunit/tests/test_content_type.py \
 	python/subunit/tests/test_subunit_filter.py \
@@ -64,6 +65,7 @@ pcdata_DATA = \
 
 pkgpython_PYTHON = \
 	python/subunit/__init__.py \
+	python/subunit/chunked.py \
 	python/subunit/content.py \
 	python/subunit/content_type.py \
 	python/subunit/iso8601.py \

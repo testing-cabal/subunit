@@ -16,6 +16,7 @@
 
 from subunit.tests import (
     TestUtil,
+    test_chunked,
     test_content_type,
     test_content,
     test_progress_model,
@@ -29,6 +30,7 @@ from subunit.tests import (
 
 def test_suite():
     result = TestUtil.TestSuite()
+    result.addTest(test_chunked.test_suite())
     result.addTest(test_content_type.test_suite())
     result.addTest(test_content.test_suite())
     result.addTest(test_progress_model.test_suite())

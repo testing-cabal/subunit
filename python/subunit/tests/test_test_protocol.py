@@ -1083,7 +1083,7 @@ class TestTestProtocolClient(unittest.TestCase):
             self.io.getvalue(), "successful: %s [ multipart\n"
                 "Content-Type: text/plain\n"
                 "something\n"
-                "15\nserialised\nform0\n]\n" % self.test.id())
+                "F\r\nserialised\nform0\r\n]\n" % self.test.id())
 
     def test_add_failure(self):
         """Test addFailure on a TestProtocolClient."""
@@ -1102,10 +1102,10 @@ class TestTestProtocolClient(unittest.TestCase):
             "failure: %s [ multipart\n"
             "Content-Type: text/plain\n"
             "something\n"
-            "15\nserialised\nform0\n"
+            "F\r\nserialised\nform0\r\n"
             "Content-Type: text/x-traceback;language=python\n"
             "traceback\n"
-            "25\nRemoteException: boo qux\n0\n"
+            "19\r\nRemoteException: boo qux\n0\r\n"
             "]\n" % self.test.id())
 
     def test_add_error(self):
@@ -1127,10 +1127,10 @@ class TestTestProtocolClient(unittest.TestCase):
             "error: %s [ multipart\n"
             "Content-Type: text/plain\n"
             "something\n"
-            "15\nserialised\nform0\n"
+            "F\r\nserialised\nform0\r\n"
             "Content-Type: text/x-traceback;language=python\n"
             "traceback\n"
-            "25\nRemoteException: boo qux\n0\n"
+            "19\r\nRemoteException: boo qux\n0\r\n"
             "]\n" % self.test.id())
 
     def test_add_expected_failure(self):
@@ -1152,10 +1152,10 @@ class TestTestProtocolClient(unittest.TestCase):
             "xfail: %s [ multipart\n"
             "Content-Type: text/plain\n"
             "something\n"
-            "15\nserialised\nform0\n"
+            "F\r\nserialised\nform0\r\n"
             "Content-Type: text/x-traceback;language=python\n"
             "traceback\n"
-            "25\nRemoteException: boo qux\n0\n"
+            "19\r\nRemoteException: boo qux\n0\r\n"
             "]\n" % self.test.id())
 
     def test_add_skip(self):
@@ -1177,7 +1177,7 @@ class TestTestProtocolClient(unittest.TestCase):
             "skip: %s [ multipart\n"
             "Content-Type: text/plain\n"
             "reason\n"
-            "14\nHas it really?0\n"
+            "E\r\nHas it really?0\r\n"
             "]\n" % self.test.id())
 
     def test_progress_set(self):
@@ -1221,7 +1221,7 @@ class TestTestProtocolClient(unittest.TestCase):
             self.io.getvalue(), "successful: %s [ multipart\n"
                 "Content-Type: text/plain\n"
                 "something\n"
-                "15\nserialised\nform0\n]\n" % self.test.id())
+                "F\r\nserialised\nform0\r\n]\n" % self.test.id())
 
 
 def test_suite():
