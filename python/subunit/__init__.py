@@ -199,42 +199,35 @@ class _ParserState(object):
         """A 'success:' directive has been read."""
         self.parser.stdOutLineReceived(line)
 
-    def endQuote(self, line):
-        """The end of a details section has been reached."""
-        self.parser.stdOutLineReceived(line)
-
     def lineReceived(self, line):
         """a line has been received."""
-        if line == "]\n":
-            self.endQuote(line)
-        else:
-            parts = line.split(None, 1)
-            if len(parts) == 2:
-                cmd, rest = parts
-                offset = len(cmd) + 1
-                cmd = cmd.strip(':')
-                if cmd in ('test', 'testing'):
-                    self.startTest(offset, line)
-                elif cmd == 'error':
-                    self.addError(offset, line)
-                elif cmd == 'failure':
-                    self.addFailure(offset, line)
-                elif cmd == 'progress':
-                    self.parser._handleProgress(offset, line)
-                elif cmd == 'skip':
-                    self.addSkip(offset, line)
-                elif cmd in ('success', 'successful'):
-                    self.addSuccess(offset, line)
-                elif cmd in ('tags',):
-                    self.parser._handleTags(offset, line)
-                elif cmd in ('time',):
-                    self.parser._handleTime(offset, line)
-                elif cmd == 'xfail':
-                    self.addExpectedFail(offset, line)
-                else:
-                    self.parser.stdOutLineReceived(line)
+        parts = line.split(None, 1)
+        if len(parts) == 2:
+            cmd, rest = parts
+            offset = len(cmd) + 1
+            cmd = cmd.strip(':')
+            if cmd in ('test', 'testing'):
+                self.startTest(offset, line)
+            elif cmd == 'error':
+                self.addError(offset, line)
+            elif cmd == 'failure':
+                self.addFailure(offset, line)
+            elif cmd == 'progress':
+                self.parser._handleProgress(offset, line)
+            elif cmd == 'skip':
+                self.addSkip(offset, line)
+            elif cmd in ('success', 'successful'):
+                self.addSuccess(offset, line)
+            elif cmd in ('tags',):
+                self.parser._handleTags(offset, line)
+            elif cmd in ('time',):
+                self.parser._handleTime(offset, line)
+            elif cmd == 'xfail':
+                self.addExpectedFail(offset, line)
             else:
                 self.parser.stdOutLineReceived(line)
+        else:
+            self.parser.stdOutLineReceived(line)
 
     def lostConnection(self):
         """Connection lost."""
@@ -340,7 +333,7 @@ class _OutSideTest(_ParserState):
 class _ReadingDetails(_ParserState):
     """Common logic for readin state details."""
 
-    def endQuote(self, line):
+    def _endQuote(self, line):
         """The end of a details section has been reached."""
         self.parser._state = self.parser._outside_test
         self.parser.current_test_description = None
@@ -349,6 +342,8 @@ class _ReadingDetails(_ParserState):
 
     def lineReceived(self, line):
         """a line has been received."""
+        if line == "]\n":
+            self._endQuote(line)
         self.parser._appendMessage(line)
 
     def lostConnection(self):
@@ -447,18 +442,6 @@ class TestProtocolServer(object):
         # start with outside test.
         self._state = self._outside_test
 
-    def _addError(self, offset, line):
-        self._state.addError(offset, line)
-
-    def _addExpectedFail(self, offset, line):
-        self._state.addExpectedFail(offset, line)
-
-    def _addFailure(self, offset, line):
-        self._state.addFailure(offset, line)
-
-    def _addSkip(self, offset, line):
-        self._state.addSkip(offset, line)
-
     def _skip_or_error(self, message=None):
         """Report the current test as a skip if possible, or else an error."""
         addSkip = getattr(self.client, 'addSkip', None)
@@ -469,18 +452,12 @@ class TestProtocolServer(object):
                 message = "No reason given"
             addSkip(self._current_test, message)
 
-    def _addSuccess(self, offset, line):
-        self._state.addSuccess(offset, line)
-
     def _appendMessage(self, line):
         if line[0:2] == " ]":
             # quoted ] start
             self._message += line[1:]
         else:
             self._message += line
-
-    def endQuote(self, line):
-        self._state.endQuote(line)
 
     def _handleProgress(self, offset, line):
         """Process a progress directive."""
@@ -521,10 +498,7 @@ class TestProtocolServer(object):
 
     def lineReceived(self, line):
         """Call the appropriate local method for the received line."""
-        if line == "]\n":
-            self.endQuote(line)
-        else:
-            self._state.lineReceived(line)
+        self._state.lineReceived(line)
 
     def _lostConnectionInTest(self, state_string):
         error_string = "lost connection during %stest '%s'" % (
