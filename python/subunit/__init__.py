@@ -173,13 +173,31 @@ class DiscardStream(object):
         pass
 
 
+class _OutSideTest(object):
+    """State for the subunit parser."""
+
+    def __init__(self, parser):
+        self.parser = parser
+
+    def lostConnection(self):
+        """Connection lost."""
+
+    def startTest(self, offset, line):
+        """A test start command received."""
+        self.parser.state = TestProtocolServer.TEST_STARTED
+        self.parser._state = None
+        self.parser._current_test = RemotedTestCase(line[offset:-1])
+        self.parser.current_test_description = line[offset:-1]
+        self.parser.client.startTest(self.parser._current_test)
+
+
 class TestProtocolServer(object):
     """A parser for subunit.
     
     :ivar tags: The current tags associated with the protocol stream.
     """
 
-    OUTSIDE_TEST = 0
+    STATE_OBJECT = 0
     TEST_STARTED = 1
     READING_FAILURE = 2
     READING_ERROR = 3
@@ -196,16 +214,19 @@ class TestProtocolServer(object):
             of mixed protocols. By default, sys.stdout will be used for
             convenience.
         """
-        self.state = TestProtocolServer.OUTSIDE_TEST
         self.client = client
         if stream is None:
             stream = sys.stdout
         self._stream = stream
+        self._outside_test = _OutSideTest(self)
+        self._state = self._outside_test
+        self.state = TestProtocolServer.STATE_OBJECT
 
     def _addError(self, offset, line):
         if (self.state == TestProtocolServer.TEST_STARTED and
             self.current_test_description == line[offset:-1]):
-            self.state = TestProtocolServer.OUTSIDE_TEST
+            self._state = self._outside_test
+            self.state = TestProtocolServer.STATE_OBJECT
             self.current_test_description = None
             self.client.addError(self._current_test, RemoteError(""))
             self.client.stopTest(self._current_test)
@@ -220,7 +241,8 @@ class TestProtocolServer(object):
     def _addExpectedFail(self, offset, line):
         if (self.state == TestProtocolServer.TEST_STARTED and
             self.current_test_description == line[offset:-1]):
-            self.state = TestProtocolServer.OUTSIDE_TEST
+            self._state = self._outside_test
+            self.state = TestProtocolServer.STATE_OBJECT
             self.current_test_description = None
             xfail = getattr(self.client, 'addExpectedFailure', None)
             if callable(xfail):
@@ -238,7 +260,8 @@ class TestProtocolServer(object):
     def _addFailure(self, offset, line):
         if (self.state == TestProtocolServer.TEST_STARTED and
             self.current_test_description == line[offset:-1]):
-            self.state = TestProtocolServer.OUTSIDE_TEST
+            self._state = self._outside_test
+            self.state = TestProtocolServer.STATE_OBJECT
             self.current_test_description = None
             self.client.addFailure(self._current_test, RemoteError())
             self.client.stopTest(self._current_test)
@@ -252,7 +275,8 @@ class TestProtocolServer(object):
     def _addSkip(self, offset, line):
         if (self.state == TestProtocolServer.TEST_STARTED and
             self.current_test_description == line[offset:-1]):
-            self.state = TestProtocolServer.OUTSIDE_TEST
+            self._state = self._outside_test
+            self.state = TestProtocolServer.STATE_OBJECT
             self.current_test_description = None
             self._skip_or_error()
             self.client.stopTest(self._current_test)
@@ -293,24 +317,28 @@ class TestProtocolServer(object):
 
     def endQuote(self, line):
         if self.state == TestProtocolServer.READING_FAILURE:
-            self.state = TestProtocolServer.OUTSIDE_TEST
+            self._state = self._outside_test
+            self.state = TestProtocolServer.STATE_OBJECT
             self.current_test_description = None
             self.client.addFailure(self._current_test,
                                    RemoteError(self._message))
             self.client.stopTest(self._current_test)
         elif self.state == TestProtocolServer.READING_ERROR:
-            self.state = TestProtocolServer.OUTSIDE_TEST
+            self._state = self._outside_test
+            self.state = TestProtocolServer.STATE_OBJECT
             self.current_test_description = None
             self.client.addError(self._current_test,
                                  RemoteError(self._message))
             self.client.stopTest(self._current_test)
         elif self.state == TestProtocolServer.READING_SKIP:
-            self.state = TestProtocolServer.OUTSIDE_TEST
+            self._state = self._outside_test
+            self.state = TestProtocolServer.STATE_OBJECT
             self.current_test_description = None
             self._skip_or_error(self._message)
             self.client.stopTest(self._current_test)
         elif self.state == TestProtocolServer.READING_XFAIL:
-            self.state = TestProtocolServer.OUTSIDE_TEST
+            self._state = self._outside_test
+            self.state = TestProtocolServer.STATE_OBJECT
             self.current_test_description = None
             xfail = getattr(self.client, 'addExpectedFailure', None)
             if callable(xfail):
@@ -407,7 +435,8 @@ class TestProtocolServer(object):
 
     def lostConnection(self):
         """The input connection has finished."""
-        if self.state == TestProtocolServer.OUTSIDE_TEST:
+        if self.state == TestProtocolServer.STATE_OBJECT:
+            self._state.lostConnection()
             return
         if self.state == TestProtocolServer.TEST_STARTED:
             self._lostConnectionInTest('')
@@ -431,11 +460,8 @@ class TestProtocolServer(object):
 
     def _startTest(self, offset, line):
         """Internal call to change state machine. Override startTest()."""
-        if self.state == TestProtocolServer.OUTSIDE_TEST:
-            self.state = TestProtocolServer.TEST_STARTED
-            self._current_test = RemotedTestCase(line[offset:-1])
-            self.current_test_description = line[offset:-1]
-            self.client.startTest(self._current_test)
+        if self.state == TestProtocolServer.STATE_OBJECT:
+            self._state.startTest(offset, line)
         else:
             self.stdOutLineReceived(line)
 
@@ -447,7 +473,8 @@ class TestProtocolServer(object):
         self.client.stopTest(self._current_test)
         self.current_test_description = None
         self._current_test = None
-        self.state = TestProtocolServer.OUTSIDE_TEST
+        self._state = self._outside_test
+        self.state = TestProtocolServer.STATE_OBJECT
 
 
 class RemoteException(Exception):
