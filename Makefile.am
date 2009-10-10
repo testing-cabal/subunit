@@ -8,14 +8,10 @@ EXTRA_DIST =  \
 	c/check-subunit-0.9.5.patch \
 	c/check-subunit-0.9.6.patch \
 	c++/README \
-	c++/cppunit-subunit-1.10.2.patch \
 	perl/subunit-diff \
 	perl/Makefile.PL.in \
 	perl/lib/Subunit/Diff.pm \
 	perl/lib/Subunit.pm \
-	python/subunit/__init__.py \
-	python/subunit/progress_model.py \
-	python/subunit/run.py \
 	python/subunit/tests/TestUtil.py \
 	python/subunit/tests/__init__.py \
 	python/subunit/tests/sample-script.py \
