@@ -146,6 +146,24 @@ START_TEST (test_error)
 }
 END_TEST
 
+
+static void
+call_test_skip(void)
+{
+    subunit_test_skip("test case", "Multiple lines\n of output\n");
+}
+
+
+START_TEST (test_skip)
+{
+    test_stdout_function("skip: test case [\n"
+                         "Multiple lines\n"
+        		 " of output\n"
+			 "]\n",
+			 call_test_skip);
+}
+END_TEST
+
 static Suite *
 child_suite(void)
 {
@@ -156,6 +174,7 @@ child_suite(void)
     tcase_add_test (tc_core, test_pass);
     tcase_add_test (tc_core, test_fail);
     tcase_add_test (tc_core, test_error);
+    tcase_add_test (tc_core, test_skip);
     return s;
 }
 

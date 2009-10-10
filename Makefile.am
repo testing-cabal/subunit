@@ -8,14 +8,10 @@ EXTRA_DIST =  \
 	c/check-subunit-0.9.5.patch \
 	c/check-subunit-0.9.6.patch \
 	c++/README \
-	c++/cppunit-subunit-1.10.2.patch \
 	perl/subunit-diff \
 	perl/Makefile.PL.in \
 	perl/lib/Subunit/Diff.pm \
 	perl/lib/Subunit.pm \
-	python/subunit/__init__.py \
-	python/subunit/progress_model.py \
-	python/subunit/run.py \
 	python/subunit/tests/TestUtil.py \
 	python/subunit/tests/__init__.py \
 	python/subunit/tests/sample-script.py \
@@ -39,6 +35,9 @@ ACLOCAL_AMFLAGS = -I m4
 SUBUNIT_CFLAGS = -Wall -Werror -Wextra -Wstrict-prototypes -Wmissing-prototypes \
 	-Wwrite-strings -Wno-variadic-macros -I$(top_srcdir)/c/include
 AM_CFLAGS = $(SUBUNIT_CFLAGS)
+SUBUNIT_CXXFLAGS = -Wall -Werror -Wextra -Wwrite-strings -Wno-variadic-macros \
+	-I$(top_srcdir)/c/include
+AM_CXXFLAGS = $(SUBUNIT_CXXFLAGS)
 
 include_subunitdir = $(includedir)/subunit
 
@@ -57,7 +56,9 @@ TESTS = runtests.py $(check_PROGRAMS)
 
 ## install libsubunit.pc
 pcdatadir = $(libdir)/pkgconfig
-pcdata_DATA = libsubunit.pc
+pcdata_DATA = \
+	libsubunit.pc \
+	libcppunit_subunit.pc
 
 pkgpython_PYTHON = \
 	python/subunit/__init__.py \
@@ -67,9 +68,11 @@ pkgpython_PYTHON = \
 	python/subunit/test_results.py
 
 lib_LTLIBRARIES = libsubunit.la
+lib_LTLIBRARIES +=  libcppunit_subunit.la
 
 include_subunit_HEADERS = \
-	c/include/subunit/child.h
+	c/include/subunit/child.h \
+	c++/SubunitTestProgressListener.h
 
 check_PROGRAMS = \
 	c/tests/test_child
@@ -80,6 +83,10 @@ check_SCRIPTS = \
 libsubunit_la_SOURCES = \
 	c/lib/child.c \
 	c/include/subunit/child.h
+
+libcppunit_subunit_la_SOURCES = \
+	c++/SubunitTestProgressListener.cpp \
+	c++/SubunitTestProgressListener.h
 
 tests_LDADD = @CHECK_LIBS@ $(top_builddir)/libsubunit.la
 c_tests_test_child_CFLAGS = $(SUBUNIT_CFLAGS) @CHECK_CFLAGS@

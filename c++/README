@@ -18,32 +18,33 @@
 #
 
 Currently there are no native C++ bindings for subunit. However the C library
-can be used from C++ safely. There is also a patch for cppunit
-(http://cppunit.sourceforge.net/) to enable reporting via subunit
-(cppunit-subunit-1.10.2.patch).
+can be used from C++ safely. A CPPUnit listener is built as part of Subunit to
+allow CPPUnit users to simply get Subunit output.
 
-To use the patch, apply it and rebuild your cppunit. Then in your main do
-{
-  // Create the event manager and test controller
-  CPPUNIT_NS::TestResult controller;
+To use the listener, use pkg-config (or your preferred replacement) to get the
+cflags and link settings from libcppunit_subunit.pc.
 
-  // Add a listener that collects test result
-  // so we can get the overall status.
-  // note this isn't needed for subunit...
-  CPPUNIT_NS::TestResultCollector result;
-  controller.addListener( &result );
+In your test driver main, use SubunitTestProgressListener, as shown in this
+example main::
 
-  // Add a listener that print test activity in subunit format.
-  CPPUNIT_NS::SubunitTestProgressListener progress;
-  controller.addListener( &progress );
-
-  // Add the top suite to the test runner
-  CPPUNIT_NS::TestRunner runner;
-  runner.addTest( CPPUNIT_NS::TestFactoryRegistry::getRegistry().makeTest() );
-  runner.run( controller );
-
-  return result.wasSuccessful() ? 0 : 1;
-}
-
-
-See the c/README for documentation on the C bindings for subunit.
+  {
+    // Create the event manager and test controller
+    CPPUNIT_NS::TestResult controller;
+  
+    // Add a listener that collects test result
+    // so we can get the overall status.
+    // note this isn't needed for subunit...
+    CPPUNIT_NS::TestResultCollector result;
+    controller.addListener( &result );
+  
+    // Add a listener that print test activity in subunit format.
+    CPPUNIT_NS::SubunitTestProgressListener progress;
+    controller.addListener( &progress );
+  
+    // Add the top suite to the test runner
+    CPPUNIT_NS::TestRunner runner;
+    runner.addTest( CPPUNIT_NS::TestFactoryRegistry::getRegistry().makeTest() );
+    runner.run( controller );
+  
+    return result.wasSuccessful() ? 0 : 1;
+  }

@@ -1152,4 +1152,3 @@ class TestResultFilter(unittest.TestResult):
         if id.startswith("subunit.RemotedTestCase."):
             return id[len("subunit.RemotedTestCase."):]
         return id
-
