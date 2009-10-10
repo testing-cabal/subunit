@@ -511,6 +511,11 @@ class TestProtocolServer(object):
         self._state.lostConnection()
 
     def readFrom(self, pipe):
+        """Blocking convenience API to parse an entire stream.
+        
+        :param pipe: A file-like object supporting readlines().
+        :return: None.
+        """
         for line in pipe.readlines():
             self.lineReceived(line)
         self.lostConnection()
