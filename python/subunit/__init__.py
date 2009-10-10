@@ -302,7 +302,8 @@ class _InTest(_ParserState):
             self.parser._skip_or_error()
             self.parser.client.stopTest(self.parser._current_test)
         elif self.parser.current_test_description + " [" == line[offset:-1]:
-            self.parser.state = TestProtocolServer.READING_SKIP
+            self.parser._state = self.parser._reading_skip_details
+            self.parser.state = TestProtocolServer.STATE_OBJECT
             self.parser._message = ""
         else:
             self.parser.stdOutLineReceived(line)
@@ -384,6 +385,16 @@ class _ReadingErrorDetails(_ReadingDetails):
         return "error"
 
 
+class _ReadingSkipDetails(_ReadingDetails):
+    """State for the subunit parser when reading skip details."""
+
+    def _report_outcome(self):
+        self.parser._skip_or_error(self.parser._message)
+
+    def _outcome_label(self):
+        return "skip"
+
+
 class TestProtocolServer(object):
     """A parser for subunit.
     
@@ -392,7 +403,6 @@ class TestProtocolServer(object):
 
     STATE_OBJECT = 0
     STATE_OBJECTS = [0]
-    READING_SKIP = 4
     READING_XFAIL = 5
     READING_SUCCESS = 6
 
@@ -414,6 +424,7 @@ class TestProtocolServer(object):
         self._outside_test = _OutSideTest(self)
         self._reading_error_details = _ReadingErrorDetails(self)
         self._reading_failure_details = _ReadingFailureDetails(self)
+        self._reading_skip_details = _ReadingSkipDetails(self)
         # start with outside test.
         self._state = self._outside_test
         self.state = TestProtocolServer.STATE_OBJECT
@@ -468,12 +479,6 @@ class TestProtocolServer(object):
     def endQuote(self, line):
         if self.state in TestProtocolServer.STATE_OBJECTS:
             self._state.endQuote(line)
-        elif self.state == TestProtocolServer.READING_SKIP:
-            self._state = self._outside_test
-            self.state = TestProtocolServer.STATE_OBJECT
-            self.current_test_description = None
-            self._skip_or_error(self._message)
-            self.client.stopTest(self._current_test)
         elif self.state == TestProtocolServer.READING_XFAIL:
             self._state = self._outside_test
             self.state = TestProtocolServer.STATE_OBJECT
@@ -533,7 +538,6 @@ class TestProtocolServer(object):
         elif self.state in TestProtocolServer.STATE_OBJECTS:
             self._state.lineReceived(line)
         elif self.state in (
-            TestProtocolServer.READING_SKIP,
             TestProtocolServer.READING_SUCCESS,
             TestProtocolServer.READING_XFAIL
             ):
@@ -579,8 +583,6 @@ class TestProtocolServer(object):
             self._state.lostConnection()
         elif self.state == TestProtocolServer.READING_SUCCESS:
             self._lostConnectionInTest('success report of ')
-        elif self.state == TestProtocolServer.READING_SKIP:
-            self._lostConnectionInTest('skip report of ')
         elif self.state == TestProtocolServer.READING_XFAIL:
             self._lostConnectionInTest('xfail report of ')
         else:
