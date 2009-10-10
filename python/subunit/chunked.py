@@ -16,13 +16,112 @@
 
 """Encoder/decoder for http style chunked encoding."""
 
+class Decoder(object):
+    """Decode chunked content to a byte stream."""
+
+    def __init__(self, output):
+        """Create a decoder decoding to output.
+
+        :param output: A file-like object. Bytes written to the Decoder are
+            decoded to strip off the chunking and written to the output.
+            Up to a full write worth of data or a single control line  may be
+            buffered (whichever is larger). The close method should be called
+            when no more data is available, to detect short streams; the
+            write method will return none-None when the end of a stream is
+            detected.
+        """
+        self.output = output
+        self.buffered_bytes = []
+        self.state = self._read_length
+        self.body_length = 0
+
+    def close(self):
+        """Close the decoder.
+
+        :raises ValueError: If the stream is incomplete ValueError is raised.
+        """
+        if self.state != self._finished:
+            raise ValueError("incomplete stream")
+
+    def _finished(self):
+        """Finished reading, return any remaining bytes."""
+        if self.buffered_bytes:
+            buffered_bytes = self.buffered_bytes
+            self.buffered_bytes = []
+            return ''.join(buffered_bytes)
+        else:
+            raise ValueError("stream is finished")
+
+    def _read_body(self):
+        """Pass body bytes to the output."""
+        while self.body_length and self.buffered_bytes:
+            if self.body_length >= self.buffered_bytes[0]:
+                self.output.write(self.buffered_bytes[0])
+                self.body_length -= len(self.buffered_bytes[0])
+                self.state = self._read_length
+                # No more data.
+            else:
+                self.output.write(self.buffered_bytes[0][:self.body_length])
+                self.buffered_bytes[0] = \
+                    self.buffered_bytes[0][self.body_length:]
+                self.body_length = 0
+                self.state = self._read_length
+                return self.state()
+
+    def _read_length(self):
+        """Try to decode a length from the bytes."""
+        count = -1
+        match_chars = "0123456789abcdefABCDEF\r\n"
+        count_chars = []
+        for bytes in self.buffered_bytes:
+            for byte in bytes:
+                if byte not in match_chars:
+                    break
+                count_chars.append(byte)
+                if byte == '\n':
+                    break
+        if not count_chars:
+            return
+        if count_chars[-1][-1] != '\n':
+            return
+        count_str = ''.join(count_chars)
+        self.body_length = int(count_str[:-2], 16)
+        excess_bytes = len(count_str)
+        while excess_bytes:
+            if excess_bytes >= len(self.buffered_bytes[0]):
+                excess_bytes -= len(self.buffered_bytes[0])
+                del self.buffered_bytes[0]
+            else:
+                self.buffered_bytes[0] = self.buffered_bytes[0][excess_bytes:]
+                excess_bytes = 0
+        if not self.body_length:
+            self.state = self._finished
+            if not self.buffered_bytes:
+                # May not call into self._finished with no buffered data.
+                return ''
+        else:
+            self.state = self._read_body
+        return self.state()
+
+    def write(self, bytes):
+        """Decode bytes to the output stream.
+        
+        :raises ValueError: If the stream has already seen the end of file
+            marker.
+        :returns: None, or the excess bytes beyond the end of file marker.
+        """
+        if bytes:
+            self.buffered_bytes.append(bytes)
+        return self.state()
+
+
 class Encoder(object):
     """Encode content to a stream using HTTP Chunked coding."""
 
     def __init__(self, output):
         """Create an encoder encoding to output.
 
-        :param output: A file-like object. Bytes written  to the Encoder
+        :param output: A file-like object. Bytes written to the Encoder
             will be encoded using HTTP chunking. Small writes may be buffered
             and the ``close`` method must be called to finish the stream.
         """

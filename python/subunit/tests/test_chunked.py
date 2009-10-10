@@ -26,9 +26,66 @@ def test_suite():
     return result
 
 
+class TestDecode(unittest.TestCase):
+
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+        self.output = StringIO()
+        self.decoder = subunit.chunked.Decoder(self.output)
+
+    def test_close_read_length_short_errors(self):
+        self.assertRaises(ValueError, self.decoder.close)
+
+    def test_close_body_short_errors(self):
+        self.assertEqual(None, self.decoder.write('2\r\na'))
+        self.assertRaises(ValueError, self.decoder.close)
+
+    def test_close_body_buffered_data_errors(self):
+        self.assertEqual(None, self.decoder.write('2\r'))
+        self.assertRaises(ValueError, self.decoder.close)
+
+    def test_close_after_finished_stream_safe(self):
+        self.assertEqual(None, self.decoder.write('2\r\nab'))
+        self.assertEqual('', self.decoder.write('0\r\n'))
+        self.decoder.close()
+
+    def test_decode_nothing(self):
+        self.assertEqual('', self.decoder.write('0\r\n'))
+        self.assertEqual('', self.output.getvalue())
+
+    def test_decode_short(self):
+        self.assertEqual('', self.decoder.write('3\r\nabc0\r\n'))
+        self.assertEqual('abc', self.output.getvalue())
+
+    def test_decode_combines_short(self):
+        self.assertEqual('', self.decoder.write('6\r\nabcdef0\r\n'))
+        self.assertEqual('abcdef', self.output.getvalue())
+
+    def test_decode_excess_bytes_from_write(self):
+        self.assertEqual('1234', self.decoder.write('3\r\nabc0\r\n1234'))
+        self.assertEqual('abc', self.output.getvalue())
+
+    def test_decode_write_after_finished_errors(self):
+        self.assertEqual('1234', self.decoder.write('3\r\nabc0\r\n1234'))
+        self.assertRaises(ValueError, self.decoder.write, '')
+
+    def test_decode_hex(self):
+        self.assertEqual('', self.decoder.write('A\r\n12345678900\r\n'))
+        self.assertEqual('1234567890', self.output.getvalue())
+
+    def test_decode_long_ranges(self):
+        self.assertEqual(None, self.decoder.write('10000\r\n'))
+        self.assertEqual(None, self.decoder.write('1' * 65536))
+        self.assertEqual(None, self.decoder.write('10000\r\n'))
+        self.assertEqual(None, self.decoder.write('2' * 65536))
+        self.assertEqual('', self.decoder.write('0\r\n'))
+        self.assertEqual('1' * 65536 + '2' * 65536, self.output.getvalue())
+
+
 class TestEncode(unittest.TestCase):
 
     def setUp(self):
+        unittest.TestCase.setUp(self)
         self.output = StringIO()
         self.encoder = subunit.chunked.Encoder(self.output)
 
