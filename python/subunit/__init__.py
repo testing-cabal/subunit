@@ -241,11 +241,11 @@ class _ParserState(object):
 class _InTest(_ParserState):
     """State for the subunit parser after reading a test: directive."""
 
-    def _outcome(self, offset, line, no_details, simple_details_state):
+    def _outcome(self, offset, line, no_details, details_state):
         """An outcome directive has been read.
         
         :param no_details: Callable to call when no details are presented.
-        :param simple_details_state: The state to switch to for simple details
+        :param details_state: The state to switch to for details
             processing of this outcome.
         """
         if self.parser.current_test_description == line[offset:-1]:
@@ -255,7 +255,11 @@ class _InTest(_ParserState):
             self.parser.client.stopTest(self.parser._current_test)
             self.parser._current_test = None
         elif self.parser.current_test_description + " [" == line[offset:-1]:
-            self.parser._state = simple_details_state
+            self.parser._state = details_state
+            self.parser._message = ""
+        elif self.parser.current_test_description + " [ multipart" == \
+            line[offset:-1]:
+            self.parser._state = details_state
             self.parser._message = ""
         else:
             self.parser.stdOutLineReceived(line)

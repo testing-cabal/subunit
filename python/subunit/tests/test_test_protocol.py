@@ -388,17 +388,23 @@ class TestTestProtocolServerLostConnection(unittest.TestCase):
             (self.test, subunit.RemoteError(""))])
         self.assertEqual(self.client.success_calls, [])
 
-    def test_lost_connection_during_error(self):
+    def do_connection_lost(self, outcome, opening):
         self.protocol.lineReceived("test old mcdonald\n")
-        self.protocol.lineReceived("error old mcdonald [\n")
+        self.protocol.lineReceived("%s old mcdonald %s" % (outcome, opening))
         self.protocol.lostConnection()
         self.assertEqual(self.client.start_calls, [self.test])
         self.assertEqual(self.client.end_calls, [self.test])
         self.assertEqual(self.client.error_calls, [
-            (self.test, subunit.RemoteError("lost connection during error "
-                                            "report of test 'old mcdonald'"))])
+            (self.test, subunit.RemoteError("lost connection during %s "
+                "report of test 'old mcdonald'" % outcome))])
         self.assertEqual(self.client.failure_calls, [])
         self.assertEqual(self.client.success_calls, [])
+
+    def test_lost_connection_during_error(self):
+        self.do_connection_lost("error", "[\n")
+
+    def test_lost_connection_during_error_details(self):
+        self.do_connection_lost("error", "[ multipart\n")
 
     def test_lost_connected_after_failure(self):
         self.protocol.lineReceived("test old mcdonald\n")
@@ -413,18 +419,10 @@ class TestTestProtocolServerLostConnection(unittest.TestCase):
         self.assertEqual(self.client.success_calls, [])
 
     def test_lost_connection_during_failure(self):
-        self.protocol.lineReceived("test old mcdonald\n")
-        self.protocol.lineReceived("failure old mcdonald [\n")
-        self.protocol.lostConnection()
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.error_calls,
-                         [(self.test,
-                           subunit.RemoteError("lost connection during "
-                                               "failure report"
-                                               " of test 'old mcdonald'"))])
-        self.assertEqual(self.client.failure_calls, [])
-        self.assertEqual(self.client.success_calls, [])
+        self.do_connection_lost("failure", "[\n")
+
+    def test_lost_connection_during_failure_details(self):
+        self.do_connection_lost("failure", "[ multipart\n")
 
     def test_lost_connection_after_success(self):
         self.protocol.lineReceived("test old mcdonald\n")
@@ -436,41 +434,23 @@ class TestTestProtocolServerLostConnection(unittest.TestCase):
         self.assertEqual(self.client.failure_calls, [])
         self.assertEqual(self.client.success_calls, [self.test])
 
+    def test_lost_connection_during_success(self):
+        self.do_connection_lost("success", "[\n")
+
+    def test_lost_connection_during_success_details(self):
+        self.do_connection_lost("success", "[ multipart\n")
+
     def test_lost_connection_during_skip(self):
-        self.protocol.lineReceived("test old mcdonald\n")
-        self.protocol.lineReceived("skip old mcdonald [\n")
-        self.protocol.lostConnection()
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.error_calls, [
-            (self.test, subunit.RemoteError("lost connection during skip "
-                                            "report of test 'old mcdonald'"))])
-        self.assertEqual(self.client.failure_calls, [])
-        self.assertEqual(self.client.success_calls, [])
+        self.do_connection_lost("skip", "[\n")
+
+    def test_lost_connection_during_skip_details(self):
+        self.do_connection_lost("skip", "[ multipart\n")
 
     def test_lost_connection_during_xfail(self):
-        self.protocol.lineReceived("test old mcdonald\n")
-        self.protocol.lineReceived("xfail old mcdonald [\n")
-        self.protocol.lostConnection()
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.error_calls, [
-            (self.test, subunit.RemoteError("lost connection during xfail "
-                                            "report of test 'old mcdonald'"))])
-        self.assertEqual(self.client.failure_calls, [])
-        self.assertEqual(self.client.success_calls, [])
+        self.do_connection_lost("xfail", "[\n")
 
-    def test_lost_connection_during_success(self):
-        self.protocol.lineReceived("test old mcdonald\n")
-        self.protocol.lineReceived("success old mcdonald [\n")
-        self.protocol.lostConnection()
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.error_calls, [
-            (self.test, subunit.RemoteError("lost connection during success "
-                                            "report of test 'old mcdonald'"))])
-        self.assertEqual(self.client.failure_calls, [])
-        self.assertEqual(self.client.success_calls, [])
+    def test_lost_connection_during_xfail_details(self):
+        self.do_connection_lost("xfail", "[ multipart\n")
 
 
 class TestTestProtocolServerAddError(unittest.TestCase):
