@@ -453,6 +453,24 @@ class TestTestProtocolServerLostConnection(unittest.TestCase):
         self.do_connection_lost("xfail", "[ multipart\n")
 
 
+class TestInTestMultipart(unittest.TestCase):
+
+    def setUp(self):
+        self.client = MockTestProtocolServerClient()
+        self.protocol = subunit.TestProtocolServer(self.client)
+        self.protocol.lineReceived("test mcdonalds farm\n")
+        self.test = subunit.RemotedTestCase("mcdonalds farm")
+
+    def test__outcome_sets_details_parser(self):
+        self.protocol._reading_success_details.details_parser = None
+        self.protocol._state._outcome(0, "mcdonalds farm [ multipart\n",
+            None, self.protocol._reading_success_details)
+        parser = self.protocol._reading_success_details.details_parser
+        self.assertNotEqual(None, parser)
+        self.assertTrue(isinstance(parser,
+            subunit.details.MultipartDetailsParser))
+
+
 class TestTestProtocolServerAddError(unittest.TestCase):
 
     def setUp(self):

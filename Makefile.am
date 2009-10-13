@@ -19,6 +19,7 @@ EXTRA_DIST =  \
 	python/subunit/tests/test_chunked.py \
 	python/subunit/tests/test_content.py \
 	python/subunit/tests/test_content_type.py \
+	python/subunit/tests/test_details.py \
 	python/subunit/tests/test_subunit_filter.py \
 	python/subunit/tests/test_subunit_stats.py \
 	python/subunit/tests/test_subunit_tags.py \
@@ -68,6 +69,7 @@ pkgpython_PYTHON = \
 	python/subunit/chunked.py \
 	python/subunit/content.py \
 	python/subunit/content_type.py \
+	python/subunit/details.py \
 	python/subunit/iso8601.py \
 	python/subunit/progress_model.py \
 	python/subunit/run.py \

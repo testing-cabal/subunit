@@ -126,7 +126,7 @@ import unittest
 
 import iso8601
 
-import chunked, content, content_type
+import chunked, content, content_type, details
 
 
 PROGRESS_SET = 0
@@ -256,11 +256,11 @@ class _InTest(_ParserState):
             self.parser._current_test = None
         elif self.parser.current_test_description + " [" == line[offset:-1]:
             self.parser._state = details_state
-            self.parser._message = ""
+            details_state.set_simple()
         elif self.parser.current_test_description + " [ multipart" == \
             line[offset:-1]:
             self.parser._state = details_state
-            self.parser._message = ""
+            details_state.set_multipart()
         else:
             self.parser.stdOutLineReceived(line)
 
@@ -330,7 +330,7 @@ class _OutSideTest(_ParserState):
 class _ReadingDetails(_ParserState):
     """Common logic for readin state details."""
 
-    def _endQuote(self, line):
+    def endDetails(self):
         """The end of a details section has been reached."""
         self.parser._state = self.parser._outside_test
         self.parser.current_test_description = None
@@ -339,9 +339,7 @@ class _ReadingDetails(_ParserState):
 
     def lineReceived(self, line):
         """a line has been received."""
-        if line == "]\n":
-            self._endQuote(line)
-        self.parser._appendMessage(line)
+        self.details_parser.lineReceived(line)
 
     def lostConnection(self):
         """Connection lost."""
@@ -352,13 +350,21 @@ class _ReadingDetails(_ParserState):
         """The label to describe this outcome."""
         raise NotImplementedError(self._outcome_label)
 
+    def set_simple(self):
+        """Start a simple details parser."""
+        self.details_parser = details.SimpleDetailsParser(self)
+
+    def set_multipart(self):
+        """Start a multipart details parser."""
+        self.details_parser = details.MultipartDetailsParser(self)
+
 
 class _ReadingFailureDetails(_ReadingDetails):
     """State for the subunit parser when reading failure details."""
 
     def _report_outcome(self):
         self.parser.client.addFailure(self.parser._current_test,
-                               RemoteError(self.parser._message))
+            RemoteError(self.details_parser.get_message()))
 
     def _outcome_label(self):
         return "failure"
@@ -369,7 +375,7 @@ class _ReadingErrorDetails(_ReadingDetails):
 
     def _report_outcome(self):
         self.parser.client.addError(self.parser._current_test,
-                             RemoteError(self.parser._message))
+            RemoteError(self.details_parser.get_message()))
 
     def _outcome_label(self):
         return "error"
@@ -381,7 +387,8 @@ class _ReadingExpectedFailureDetails(_ReadingDetails):
     def _report_outcome(self):
         xfail = getattr(self.parser.client, 'addExpectedFailure', None)
         if callable(xfail):
-            xfail(self.parser._current_test, RemoteError(self.parser._message))
+            xfail(self.parser._current_test,
+                RemoteError(self.details_parser.get_message()))
         else:
             self.parser.client.addSuccess(self.parser._current_test)
 
@@ -393,7 +400,7 @@ class _ReadingSkipDetails(_ReadingDetails):
     """State for the subunit parser when reading skip details."""
 
     def _report_outcome(self):
-        self.parser._skip_or_error(self.parser._message)
+        self.parser._skip_or_error(self.details_parser.get_message())
 
     def _outcome_label(self):
         return "skip"
@@ -448,13 +455,6 @@ class TestProtocolServer(object):
             if not message:
                 message = "No reason given"
             addSkip(self._current_test, message)
-
-    def _appendMessage(self, line):
-        if line[0:2] == " ]":
-            # quoted ] start
-            self._message += line[1:]
-        else:
-            self._message += line
 
     def _handleProgress(self, offset, line):
         """Process a progress directive."""
