@@ -53,6 +53,11 @@ class TestDecode(unittest.TestCase):
         self.assertEqual('', self.decoder.write('0\r\n'))
         self.assertEqual('', self.output.getvalue())
 
+    def test_decode_serialised_form(self):
+        self.assertEqual(None, self.decoder.write("F\r\n"))
+        self.assertEqual(None, self.decoder.write("serialised\n"))
+        self.assertEqual('', self.decoder.write("form0\r\n"))
+
     def test_decode_short(self):
         self.assertEqual('', self.decoder.write('3\r\nabc0\r\n'))
         self.assertEqual('abc', self.output.getvalue())
