@@ -18,7 +18,7 @@ from cStringIO import StringIO
 import unittest
 
 import subunit.tests
-from subunit import details
+from subunit import content, content_type, details
 
 
 def test_suite():
@@ -60,3 +60,21 @@ class TestMultipartDetails(unittest.TestCase):
     def test_get_details(self):
         parser = details.MultipartDetailsParser(None)
         self.assertEqual({}, parser.get_details())
+
+    def test_parts(self):
+        parser = details.MultipartDetailsParser(None)
+        parser.lineReceived("Content-Type: text/plain\n")
+        parser.lineReceived("something\n")
+        parser.lineReceived("F\r\n")
+        parser.lineReceived("serialised\n")
+        parser.lineReceived("form0\r\n")
+        expected = {}
+        expected['something'] = content.Content(
+            content_type.ContentType("text", "plain"),
+            lambda:["serialised\nform"])
+        found = parser.get_details()
+        self.assertEqual(expected.keys(), found.keys())
+        self.assertEqual(expected['something'].content_type,
+            found['something'].content_type)
+        self.assertEqual(''.join(expected['something'].iter_bytes()),
+            ''.join(found['something'].iter_bytes()))

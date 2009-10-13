@@ -16,6 +16,11 @@
 
 """Handlers for outcome details."""
 
+from cStringIO import StringIO
+
+import chunked, content, content_type
+
+
 class DetailsParser(object):
     """Base class/API reference for details parsing."""
 
@@ -50,9 +55,40 @@ class MultipartDetailsParser(DetailsParser):
     def __init__(self, state):
         self._state = state
         self._details = {}
+        self._parse_state = self._look_for_content
+
+    def _look_for_content(self, line):
+        if line == "]\n":
+            self._state.endDetails()
+            return
+        # TODO error handling
+        field, value = line[:-1].split(' ', 1)
+        main, sub = value.split('/')
+        self._content_type = content_type.ContentType(main, sub)
+        self._parse_state = self._get_name
+
+    def _get_name(self, line):
+        self._name = line[:-1]
+        self._body = StringIO()
+        self._chunk_parser = chunked.Decoder(self._body)
+        self._parse_state = self._feed_chunks
+
+    def _feed_chunks(self, line):
+        residue = self._chunk_parser.write(line)
+        if residue is not None:
+            # Line based use always ends on no residue.
+            assert residue == ''
+            body = self._body
+            self._details[self._name] = content.Content(
+                self._content_type, lambda:[body.getvalue()])
+            self._chunk_parser.close()
+            self._parse_state = self._look_for_content
 
     def get_details(self):
         return self._details
 
     def get_message(self):
         return None
+
+    def lineReceived(self, line):
+        self._parse_state(line)
