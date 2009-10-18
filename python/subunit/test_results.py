@@ -20,6 +20,8 @@ import datetime
 
 import iso8601
 
+import subunit
+
 
 # NOT a TestResult, because we are implementing the interface, not inheriting
 # it.
@@ -216,3 +218,131 @@ class AutoTimingTestResultDecorator(HookedTestResultDecorator):
         """
         self._time = a_datetime
         return self._call_maybe("time", None, a_datetime)
+
+
+class ExtendedToOriginalDecorator(object):
+    """Permit new TestResult API code to degrade gracefully with old results.
+
+    This decorates an existing TestResult and converts missing outcomes
+    such as addSkip to older outcomes such as addSuccess. It also supports
+    the extended details protocol. In all cases the most recent protocol
+    is attempted first, and fallbacks only occur when the decorated result
+    does not support the newer style of calling.
+    """
+
+    def __init__(self, decorated):
+        self.decorated = decorated
+
+    def addError(self, test, err=None, details=None):
+        self._check_args(err, details)
+        if details is not None:
+            try:
+                return self.decorated.addError(test, details=details)
+            except TypeError, e:
+                # have to convert
+                err = self._details_to_exc_info(details)
+        return self.decorated.addError(test, err)
+
+    def addExpectedFailure(self, test, err=None, details=None):
+        self._check_args(err, details)
+        addExpectedFailure = getattr(self.decorated, 'addExpectedFailure', None)
+        if addExpectedFailure is None:
+            addExpectedFailure = self.decorated.addFailure
+        if details is not None:
+            try:
+                return addExpectedFailure(test, details=details)
+            except TypeError, e:
+                # have to convert
+                err = self._details_to_exc_info(details)
+        return addExpectedFailure(test, err)
+
+    def addFailure(self, test, err=None, details=None):
+        self._check_args(err, details)
+        if details is not None:
+            try:
+                return self.decorated.addFailure(test, details=details)
+            except TypeError, e:
+                # have to convert
+                err = self._details_to_exc_info(details)
+        return self.decorated.addFailure(test, err)
+
+    def addSkip(self, test, reason=None, details=None):
+        self._check_args(reason, details)
+        addSkip = getattr(self.decorated, 'addSkip', None)
+        if addSkip is None:
+            return self.decorated.addSuccess(test)
+        if details is not None:
+            try:
+                return addSkip(test, details=details)
+            except TypeError, e:
+                # have to convert
+                reason = self._details_to_str(details)
+        return addSkip(test, reason)
+
+    def addUnexpectedSuccess(self, test, details=None):
+        outcome = getattr(self.decorated, 'addUnexpectedSuccess', None)
+        if outcome is None:
+            return self.decorated.addSuccess(test)
+        if details is not None:
+            try:
+                return outcome(test, details=details)
+            except TypeError, e:
+                pass
+        return outcome(test)
+
+    def addSuccess(self, test, details=None):
+        if details is not None:
+            try:
+                return self.decorated.addSuccess(test, details=details)
+            except TypeError, e:
+                pass
+        return self.decorated.addSuccess(test)
+
+    def _check_args(self, err, details):
+        param_count = 0
+        if err is not None:
+            param_count += 1
+        if details is not None:
+            param_count += 1
+        if param_count != 1:
+            raise ValueError("Must pass only one of err '%s' and details '%s"
+                % (err, details))
+
+    def _details_to_exc_info(self, details):
+        """Convert a details dict to an exc_info tuple."""
+        return subunit.RemoteError(self._details_to_str(details))
+
+    def _details_to_str(self, details):
+        """Convert a details dict to a string."""
+        lines = []
+        # sorted is for testing, may want to remove that and use a dict
+        # subclass with defined order for iteritems instead.
+        for key, content in sorted(details.iteritems()):
+            if content.content_type.type != 'text':
+                lines.append('Binary content: %s\n' % key)
+                continue
+            lines.append('Text attachment: %s\n' % key)
+            lines.append('------------\n')
+            lines.extend(content.iter_bytes())
+            if not lines[-1].endswith('\n'):
+                lines.append('\n')
+            lines.append('------------\n')
+        return ''.join(lines)
+
+    def startTest(self, test):
+        return self.decorated.startTest(test)
+
+    def startTestRun(self):
+        try:
+            return self.decorated.startTestRun()
+        except AttributeError:
+            return
+
+    def stopTest(self, test):
+        return self.decorated.stopTest(test)
+
+    def stopTestRun(self):
+        try:
+            return self.decorated.stopTestRun()
+        except AttributeError:
+            return

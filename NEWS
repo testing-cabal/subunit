@@ -37,6 +37,10 @@ subunit release notes
 
   INTERNALS:
 
+    * subunit.test_results.ExtendedToOriginalDecorator provides an automatic
+      converter for multipart API use to unconverted code that does not
+      accept ``details`` parameters on outcomes.
+
 0.0.2
 -----
 

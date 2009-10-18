@@ -23,6 +23,8 @@ import sys
 import subunit
 import subunit.iso8601 as iso8601
 import subunit.test_results
+from subunit.content_type import ContentType
+from subunit.content import Content
 
 
 class LoggingDecorator(subunit.test_results.HookedTestResultDecorator):
@@ -55,6 +57,362 @@ class TimeCapturingResult(unittest.TestResult):
 
     def time(self, a_datetime):
         self._calls.append(a_datetime)
+
+
+class LoggingResult(object):
+    """Basic support for logging of results."""
+    
+    def __init__(self):
+        self._calls = []
+
+
+class Python26TestResult(LoggingResult):
+    """A python 2.6 like test result, that logs."""
+
+    def addError(self, test, err):
+        self._calls.append(('addError', test, err))
+
+    def addFailure(self, test, err):
+        self._calls.append(('addFailure', test, err))
+
+    def addSuccess(self, test):
+        self._calls.append(('addSuccess', test))
+
+    def startTest(self, test):
+        self._calls.append(('startTest', test))
+
+    def stopTest(self, test):
+        self._calls.append(('stopTest', test))
+
+
+class Python27TestResult(Python26TestResult):
+    """A python 2.7 like test result, that logs."""
+
+    def addExpectedFailure(self, test, err):
+        self._calls.append(('addExpectedFailure', test, err))
+
+    def addSkip(self, test, reason):
+        self._calls.append(('addSkip', test, reason))
+
+    def addUnexpectedSuccess(self, test):
+        self._calls.append(('addUnexpectedSuccess', test))
+
+    def startTestRun(self):
+        self._calls.append(('startTestRun',))
+
+    def stopTestRun(self):
+        self._calls.append(('stopTestRun',))
+
+
+class ExtendedTestResult(Python27TestResult):
+    """A test result like the proposed extended unittest result API."""
+
+    def addError(self, test, err=None, details=None):
+        self._calls.append(('addError', test, err or details))
+
+    def addFailure(self, test, err=None, details=None):
+        self._calls.append(('addFailure', test, err or details))
+
+    def addExpectedFailure(self, test, err=None, details=None):
+        self._calls.append(('addExpectedFailure', test, err or details))
+
+    def addSkip(self, test, reason=None, details=None):
+        self._calls.append(('addSkip', test, reason or details))
+
+    def addSuccess(self, test, details=None):
+        if details:
+            self._calls.append(('addSuccess', test, details))
+        else:
+            self._calls.append(('addSuccess', test))
+
+    def addUnexpectedSuccess(self, test, details=None):
+        if details:
+            self._calls.append(('addUnexpectedSuccess', test, details))
+        else:
+            self._calls.append(('addUnexpectedSuccess', test))
+
+
+class TestExtendedToOriginalResultDecoratorBase(unittest.TestCase):
+
+    def make_26_result(self):
+        self.result = Python26TestResult()
+        self.make_converter()
+
+    def make_27_result(self):
+        self.result = Python27TestResult()
+        self.make_converter()
+
+    def make_converter(self):
+        self.converter = \
+            subunit.test_results.ExtendedToOriginalDecorator(self.result)
+
+    def make_extended_result(self):
+        self.result = ExtendedTestResult()
+        self.make_converter()
+
+    def check_outcome_details(self, outcome):
+        """Call an outcome with a details dict to be passed through."""
+        # This dict is /not/ convertible - thats deliberate, as it should
+        # not hit the conversion code path.
+        details = {'foo': 'bar'}
+        getattr(self.converter, outcome)(self, details=details)
+        self.assertEqual([(outcome, self, details)], self.result._calls)
+
+    def get_details_and_string(self):
+        """Get a details dict and expected string."""
+        text1 = lambda:["1\n2\n"]
+        text2 = lambda:["3\n4\n"]
+        bin1 = lambda:["5\n"]
+        details = {'text 1': Content(ContentType('text', 'plain'), text1),
+            'text 2': Content(ContentType('text', 'strange'), text2),
+            'bin 1': Content(ContentType('application', 'binary'), bin1)}
+        return (details, "Binary content: bin 1\n"
+            "Text attachment: text 1\n------------\n1\n2\n"
+            "------------\nText attachment: text 2\n------------\n"
+            "3\n4\n------------\n")
+
+    def check_outcome_details_to_exec_info(self, outcome, expected=None):
+        """Call an outcome with a details dict to be made into exc_info."""
+        # The conversion is a done using RemoteError and the string contents
+        # of the text types in the details dict.
+        if not expected:
+            expected = outcome
+        details, err_str = self.get_details_and_string()
+        getattr(self.converter, outcome)(self, details=details)
+        err = subunit.RemoteError(err_str)
+        self.assertEqual([(expected, self, err)], self.result._calls)
+
+    def check_outcome_details_to_nothing(self, outcome, expected=None):
+        """Call an outcome with a details dict to be swallowed."""
+        if not expected:
+            expected = outcome
+        details = {'foo': 'bar'}
+        getattr(self.converter, outcome)(self, details=details)
+        self.assertEqual([(expected, self)], self.result._calls)
+
+    def check_outcome_details_to_string(self, outcome):
+        """Call an outcome with a details dict to be stringified."""
+        details, err_str = self.get_details_and_string()
+        getattr(self.converter, outcome)(self, details=details)
+        self.assertEqual([(outcome, self, err_str)], self.result._calls)
+
+    def check_outcome_exc_info(self, outcome, expected=None):
+        """Check that calling a legacy outcome still works."""
+        # calling some outcome with the legacy exc_info style api (no keyword
+        # parameters) gets passed through.
+        if not expected:
+            expected = outcome
+        err = subunit.RemoteError("foo\nbar\n")
+        getattr(self.converter, outcome)(self, err)
+        self.assertEqual([(expected, self, err)], self.result._calls)
+
+    def check_outcome_nothing(self, outcome, expected=None):
+        """Check that calling a legacy outcome still works."""
+        if not expected:
+            expected = outcome
+        getattr(self.converter, outcome)(self)
+        self.assertEqual([(expected, self)], self.result._calls)
+
+    def check_outcome_string_nothing(self, outcome, expected):
+        """Check that calling outcome with a string calls expected."""
+        getattr(self.converter, outcome)(self, "foo")
+        self.assertEqual([(expected, self)], self.result._calls)
+
+    def check_outcome_string(self, outcome):
+        """Check that calling outcome with a string works."""
+        getattr(self.converter, outcome)(self, "foo")
+        self.assertEqual([(outcome, self, "foo")], self.result._calls)
+
+
+class TestExtendedToOriginalResultDecorator(
+    TestExtendedToOriginalResultDecoratorBase):
+
+    def test_startTest_py26(self):
+        self.make_26_result()
+        self.converter.startTest(self)
+        self.assertEqual([('startTest', self)], self.result._calls)
+    
+    def test_startTest_py27(self):
+        self.make_27_result()
+        self.converter.startTest(self)
+        self.assertEqual([('startTest', self)], self.result._calls)
+
+    def test_startTest_pyextended(self):
+        self.make_extended_result()
+        self.converter.startTest(self)
+        self.assertEqual([('startTest', self)], self.result._calls)
+
+    def test_startTestRun_py26(self):
+        self.make_26_result()
+        self.converter.startTestRun()
+        self.assertEqual([], self.result._calls)
+    
+    def test_startTestRun_py27(self):
+        self.make_27_result()
+        self.converter.startTestRun()
+        self.assertEqual([('startTestRun',)], self.result._calls)
+
+    def test_startTestRun_pyextended(self):
+        self.make_extended_result()
+        self.converter.startTestRun()
+        self.assertEqual([('startTestRun',)], self.result._calls)
+
+    def test_stopTest_py26(self):
+        self.make_26_result()
+        self.converter.stopTest(self)
+        self.assertEqual([('stopTest', self)], self.result._calls)
+    
+    def test_stopTest_py27(self):
+        self.make_27_result()
+        self.converter.stopTest(self)
+        self.assertEqual([('stopTest', self)], self.result._calls)
+
+    def test_stopTest_pyextended(self):
+        self.make_extended_result()
+        self.converter.stopTest(self)
+        self.assertEqual([('stopTest', self)], self.result._calls)
+
+    def test_stopTestRun_py26(self):
+        self.make_26_result()
+        self.converter.stopTestRun()
+        self.assertEqual([], self.result._calls)
+    
+    def test_stopTestRun_py27(self):
+        self.make_27_result()
+        self.converter.stopTestRun()
+        self.assertEqual([('stopTestRun',)], self.result._calls)
+
+    def test_stopTestRun_pyextended(self):
+        self.make_extended_result()
+        self.converter.stopTestRun()
+        self.assertEqual([('stopTestRun',)], self.result._calls)
+
+
+class TestExtendedToOriginalAddError(TestExtendedToOriginalResultDecoratorBase):
+
+    outcome = 'addError'
+
+    def test_outcome_Original_py26(self):
+        self.make_26_result()
+        self.check_outcome_exc_info(self.outcome)
+    
+    def test_outcome_Original_py27(self):
+        self.make_27_result()
+        self.check_outcome_exc_info(self.outcome)
+
+    def test_outcome_Original_pyextended(self):
+        self.make_extended_result()
+        self.check_outcome_exc_info(self.outcome)
+
+    def test_outcome_Extended_py26(self):
+        self.make_26_result()
+        self.check_outcome_details_to_exec_info(self.outcome)
+    
+    def test_outcome_Extended_py27(self):
+        self.make_27_result()
+        self.check_outcome_details_to_exec_info(self.outcome)
+
+    def test_outcome_Extended_pyextended(self):
+        self.make_extended_result()
+        self.check_outcome_details(self.outcome)
+
+    def test_outcome__no_details(self):
+        self.make_extended_result()
+        self.assertRaises(ValueError,
+            getattr(self.converter, self.outcome), self)
+
+
+class TestExtendedToOriginalAddFailure(
+    TestExtendedToOriginalAddError):
+
+    outcome = 'addFailure'
+
+
+class TestExtendedToOriginalAddExpectedFailure(
+    TestExtendedToOriginalAddError):
+
+    outcome = 'addExpectedFailure'
+
+    def test_outcome_Original_py26(self):
+        self.make_26_result()
+        self.check_outcome_exc_info(self.outcome, 'addFailure')
+    
+    def test_outcome_Extended_py26(self):
+        self.make_26_result()
+        self.check_outcome_details_to_exec_info(self.outcome, 'addFailure')
+    
+
+
+class TestExtendedToOriginalAddSkip(
+    TestExtendedToOriginalResultDecoratorBase):
+
+    outcome = 'addSkip'
+
+    def test_outcome_Original_py26(self):
+        self.make_26_result()
+        self.check_outcome_string_nothing(self.outcome, 'addSuccess')
+    
+    def test_outcome_Original_py27(self):
+        self.make_27_result()
+        self.check_outcome_string(self.outcome)
+
+    def test_outcome_Original_pyextended(self):
+        self.make_extended_result()
+        self.check_outcome_string(self.outcome)
+
+    def test_outcome_Extended_py26(self):
+        self.make_26_result()
+        self.check_outcome_string_nothing(self.outcome, 'addSuccess')
+    
+    def test_outcome_Extended_py27(self):
+        self.make_27_result()
+        self.check_outcome_details_to_string(self.outcome)
+
+    def test_outcome_Extended_pyextended(self):
+        self.make_extended_result()
+        self.check_outcome_details(self.outcome)
+
+    def test_outcome__no_details(self):
+        self.make_extended_result()
+        self.assertRaises(ValueError,
+            getattr(self.converter, self.outcome), self)
+
+
+class TestExtendedToOriginalAddSuccess(
+    TestExtendedToOriginalResultDecoratorBase):
+
+    outcome = 'addSuccess'
+    expected = 'addSuccess'
+
+    def test_outcome_Original_py26(self):
+        self.make_26_result()
+        self.check_outcome_nothing(self.outcome, self.expected)
+    
+    def test_outcome_Original_py27(self):
+        self.make_27_result()
+        self.check_outcome_nothing(self.outcome)
+
+    def test_outcome_Original_pyextended(self):
+        self.make_extended_result()
+        self.check_outcome_nothing(self.outcome)
+
+    def test_outcome_Extended_py26(self):
+        self.make_26_result()
+        self.check_outcome_details_to_nothing(self.outcome, self.expected)
+    
+    def test_outcome_Extended_py27(self):
+        self.make_27_result()
+        self.check_outcome_details_to_nothing(self.outcome)
+
+    def test_outcome_Extended_pyextended(self):
+        self.make_extended_result()
+        self.check_outcome_details(self.outcome)
+
+
+class TestExtendedToOriginalAddUnexpectedSuccess(
+    TestExtendedToOriginalAddSuccess):
+
+    outcome = 'addUnexpectedSuccess'
 
 
 class TestHookedTestResultDecorator(unittest.TestCase):
