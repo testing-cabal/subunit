@@ -247,7 +247,7 @@ class ExtendedToOriginalDecorator(object):
         self._check_args(err, details)
         addExpectedFailure = getattr(self.decorated, 'addExpectedFailure', None)
         if addExpectedFailure is None:
-            addExpectedFailure = self.decorated.addFailure
+            return self.addSuccess(test)
         if details is not None:
             try:
                 return addExpectedFailure(test, details=details)

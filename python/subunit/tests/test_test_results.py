@@ -206,6 +206,16 @@ class TestExtendedToOriginalResultDecoratorBase(unittest.TestCase):
         getattr(self.converter, outcome)(self, err)
         self.assertEqual([(expected, self, err)], self.result._calls)
 
+    def check_outcome_exc_info_to_nothing(self, outcome, expected=None):
+        """Check that calling a legacy outcome on a fallback works."""
+        # calling some outcome with the legacy exc_info style api (no keyword
+        # parameters) gets passed through.
+        if not expected:
+            expected = outcome
+        err = subunit.RemoteError("foo\nbar\n")
+        getattr(self.converter, outcome)(self, err)
+        self.assertEqual([(expected, self)], self.result._calls)
+
     def check_outcome_nothing(self, outcome, expected=None):
         """Check that calling a legacy outcome still works."""
         if not expected:
@@ -335,11 +345,11 @@ class TestExtendedToOriginalAddExpectedFailure(
 
     def test_outcome_Original_py26(self):
         self.make_26_result()
-        self.check_outcome_exc_info(self.outcome, 'addFailure')
+        self.check_outcome_exc_info_to_nothing(self.outcome, 'addSuccess')
     
     def test_outcome_Extended_py26(self):
         self.make_26_result()
-        self.check_outcome_details_to_exec_info(self.outcome, 'addFailure')
+        self.check_outcome_details_to_nothing(self.outcome, 'addSuccess')
     
 
 
