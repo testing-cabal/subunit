@@ -109,6 +109,9 @@ class TestResultDecorator(object):
     def stop(self):
         return self.decorated.stop()
 
+    def tags(self, gone_tags, new_tags):
+        return self._call_maybe("tags", None, gone_tags, new_tags)
+
     def time(self, a_datetime):
         return self._call_maybe("time", None, a_datetime)
 
@@ -352,3 +355,10 @@ class ExtendedToOriginalDecorator(object):
             return self.decorated.stopTestRun()
         except AttributeError:
             return
+
+    def tags(self, new_tags, gone_tags):
+        method = getattr(self.decorated, 'tags', None)
+        if method is None:
+            return
+        return method(new_tags, gone_tags)
+

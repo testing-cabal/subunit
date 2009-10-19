@@ -134,6 +134,9 @@ class ExtendedTestResult(Python27TestResult):
     def progress(self, offset, whence):
         self._calls.append(('progress', offset, whence))
 
+    def tags(self, new_tags, gone_tags):
+        self._calls.append(('tags', new_tags, gone_tags))
+
 
 class TestExtendedToOriginalResultDecoratorBase(unittest.TestCase):
 
@@ -312,6 +315,19 @@ class TestExtendedToOriginalResultDecorator(
         self.make_extended_result()
         self.converter.stopTestRun()
         self.assertEqual([('stopTestRun',)], self.result._calls)
+
+    def test_tags_py26(self):
+        self.make_26_result()
+        self.converter.tags(1, 2)
+
+    def test_tags_py27(self):
+        self.make_27_result()
+        self.converter.tags(1, 2)
+
+    def test_tags_pyextended(self):
+        self.make_extended_result()
+        self.converter.tags(1, 2)
+        self.assertEqual([('tags', 1, 2)], self.result._calls)
 
 
 class TestExtendedToOriginalAddError(TestExtendedToOriginalResultDecoratorBase):
