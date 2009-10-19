@@ -131,6 +131,9 @@ class ExtendedTestResult(Python27TestResult):
         else:
             self._calls.append(('addUnexpectedSuccess', test))
 
+    def progress(self, offset, whence):
+        self._calls.append(('progress', offset, whence))
+
 
 class TestExtendedToOriginalResultDecoratorBase(unittest.TestCase):
 
@@ -236,6 +239,19 @@ class TestExtendedToOriginalResultDecoratorBase(unittest.TestCase):
 
 class TestExtendedToOriginalResultDecorator(
     TestExtendedToOriginalResultDecoratorBase):
+
+    def test_progress_py26(self):
+        self.make_26_result()
+        self.converter.progress(1, 2)
+
+    def test_progress_py27(self):
+        self.make_27_result()
+        self.converter.progress(1, 2)
+
+    def test_progress_pyextended(self):
+        self.make_extended_result()
+        self.converter.progress(1, 2)
+        self.assertEqual([('progress', 1, 2)], self.result._calls)
 
     def test_startTest_py26(self):
         self.make_26_result()

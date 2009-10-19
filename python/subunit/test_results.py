@@ -329,6 +329,12 @@ class ExtendedToOriginalDecorator(object):
             lines.append('------------\n')
         return ''.join(lines)
 
+    def progress(self, offset, whence):
+        method = getattr(self.decorated, 'progress', None)
+        if method is None:
+            return
+        return method(offset, whence)
+
     def startTest(self, test):
         return self.decorated.startTest(test)
 
