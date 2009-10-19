@@ -137,6 +137,9 @@ class ExtendedTestResult(Python27TestResult):
     def tags(self, new_tags, gone_tags):
         self._calls.append(('tags', new_tags, gone_tags))
 
+    def time(self, time):
+        self._calls.append(('time', time))
+
 
 class TestExtendedToOriginalResultDecoratorBase(unittest.TestCase):
 
@@ -328,6 +331,19 @@ class TestExtendedToOriginalResultDecorator(
         self.make_extended_result()
         self.converter.tags(1, 2)
         self.assertEqual([('tags', 1, 2)], self.result._calls)
+
+    def test_time_py26(self):
+        self.make_26_result()
+        self.converter.time(1)
+
+    def test_time_py27(self):
+        self.make_27_result()
+        self.converter.time(1)
+
+    def test_time_pyextended(self):
+        self.make_extended_result()
+        self.converter.time(1)
+        self.assertEqual([('time', 1)], self.result._calls)
 
 
 class TestExtendedToOriginalAddError(TestExtendedToOriginalResultDecoratorBase):

@@ -362,3 +362,8 @@ class ExtendedToOriginalDecorator(object):
             return
         return method(new_tags, gone_tags)
 
+    def time(self, a_datetime):
+        method = getattr(self.decorated, 'time', None)
+        if method is None:
+            return
+        return method(a_datetime)
