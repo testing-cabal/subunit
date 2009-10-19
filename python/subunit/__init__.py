@@ -114,6 +114,7 @@ Utility modules
 * subunit.chunked contains HTTP chunked encoding/decoding logic.
 * subunit.content contains a minimal assumptions MIME content representation.
 * subunit.content_type contains a MIME Content-Type representation.
+* subunit.test_results contains TestResult helper classes.
 """
 
 import datetime
@@ -126,7 +127,7 @@ import unittest
 
 import iso8601
 
-import chunked, content, content_type, details
+import chunked, content, content_type, details, test_results
 
 
 PROGRESS_SET = 0
@@ -273,11 +274,8 @@ class _InTest(_ParserState):
             self.parser._reading_error_details)
 
     def _xfail(self):
-        xfail = getattr(self.parser.client, 'addExpectedFailure', None)
-        if callable(xfail):
-            xfail(self.parser._current_test, RemoteError())
-        else:
-            self.parser.client.addSuccess(self.parser._current_test)
+        self.parser.client.addExpectedFailure(self.parser._current_test,
+            RemoteError())
 
     def addExpectedFail(self, offset, line):
         """An 'xfail:' directive has been read."""
@@ -385,12 +383,8 @@ class _ReadingExpectedFailureDetails(_ReadingDetails):
     """State for the subunit parser when reading xfail details."""
 
     def _report_outcome(self):
-        xfail = getattr(self.parser.client, 'addExpectedFailure', None)
-        if callable(xfail):
-            xfail(self.parser._current_test,
-                RemoteError(self.details_parser.get_message()))
-        else:
-            self.parser.client.addSuccess(self.parser._current_test)
+        self.parser.client.addExpectedFailure(self.parser._current_test,
+            RemoteError(self.details_parser.get_message()))
 
     def _outcome_label(self):
         return "xfail"
@@ -431,7 +425,7 @@ class TestProtocolServer(object):
             of mixed protocols. By default, sys.stdout will be used for
             convenience.
         """
-        self.client = client
+        self.client = test_results.ExtendedToOriginalDecorator(client)
         if stream is None:
             stream = sys.stdout
         self._stream = stream
@@ -448,13 +442,9 @@ class TestProtocolServer(object):
 
     def _skip_or_error(self, message=None):
         """Report the current test as a skip if possible, or else an error."""
-        addSkip = getattr(self.client, 'addSkip', None)
-        if not callable(addSkip):
-            self.client.addError(self._current_test, RemoteError(message))
-        else:
-            if not message:
-                message = "No reason given"
-            addSkip(self._current_test, message)
+        if not message:
+            message = "No reason given"
+        self.client.addSkip(self._current_test, message)
 
     def _handleProgress(self, offset, line):
         """Process a progress directive."""
@@ -471,17 +461,13 @@ class TestProtocolServer(object):
         else:
             whence = PROGRESS_SET
             delta = int(line)
-        progress_method = getattr(self.client, 'progress', None)
-        if callable(progress_method):
-            progress_method(delta, whence)
+        self.client.progress(delta, whence)
 
     def _handleTags(self, offset, line):
         """Process a tags command."""
         tags = line[offset:].split()
         new_tags, gone_tags = tags_to_new_gone(tags)
-        tags_method = getattr(self.client, 'tags', None)
-        if tags_method is not None:
-            tags_method(new_tags, gone_tags)
+        self.client.tags(new_tags, gone_tags)
 
     def _handleTime(self, offset, line):
         # Accept it, but do not do anything with it yet.
@@ -489,9 +475,7 @@ class TestProtocolServer(object):
             event_time = iso8601.parse_date(line[offset:-1])
         except TypeError, e:
             raise TypeError("Failed to parse %r, got %r" % (line, e))
-        time_method = getattr(self.client, 'time', None)
-        if callable(time_method):
-            time_method(event_time)
+        self.client.time(event_time)
 
     def lineReceived(self, line):
         """Call the appropriate local method for the received line."""
