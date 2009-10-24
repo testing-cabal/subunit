@@ -19,6 +19,12 @@ subunit release notes
     * In the python API ``addExpectedFailure`` and ``addUnexpectedSuccess``
       from python 2.7/3.1 are now supported. ``addExpectedFailure`` is
       serialised as ``xfail``, and ``addUnexpectedSuccess`` as ``success``.
+      The ``ProtocolTestCase`` parser now calls outcomes using an extended
+      API that permits attaching arbitrary MIME resources such as text files
+      log entries and so on. This extended API is being developed with the
+      Python testing community, and is in flux. ``TestResult`` objects that
+      do not support the API will be detected and transparently downgraded
+      back to the regular Python unittest API.
 
     * INSTALLDIRS can be set to control the perl MakeMaker 'INSTALLDIRS'
       viarable when installing.
