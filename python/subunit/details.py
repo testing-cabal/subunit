@@ -42,14 +42,18 @@ class SimpleDetailsParser(DetailsParser):
         else:
             self._message += line
 
-    def get_details(self, for_skip=False):
+    def get_details(self, style=None):
         result = {}
-        if not for_skip:
+        if not style:
             result['traceback'] = content.Content(
                 content_type.ContentType("text", "x-traceback"),
                 lambda:[self._message])
         else:
-            result['reason'] = content.Content(
+            if style == 'skip':
+                name = 'reason'
+            else:
+                name = 'message'
+            result[name] = content.Content(
                 content_type.ContentType("text", "plain"),
                 lambda:[self._message])
         return result

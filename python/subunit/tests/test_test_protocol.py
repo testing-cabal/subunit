@@ -631,7 +631,7 @@ class TestTestProtocolServerAddSkip(unittest.TestCase):
 class TestTestProtocolServerAddSuccess(unittest.TestCase):
 
     def setUp(self):
-        self.client = Python26TestResult()
+        self.client = ExtendedTestResult()
         self.protocol = subunit.TestProtocolServer(self.client)
         self.protocol.lineReceived("test mcdonalds farm\n")
         self.test = subunit.RemotedTestCase("mcdonalds farm")
@@ -656,14 +656,20 @@ class TestTestProtocolServerAddSuccess(unittest.TestCase):
     def test_simple_success_colon(self):
         self.simple_success_keyword("successful:")
 
+    def assertSuccess(self, details):
+        self.assertEqual([
+            ('startTest', self.test),
+            ('addSuccess', self.test, details),
+            ('stopTest', self.test),
+            ], self.client._calls)
+
     def test_success_empty_message(self):
         self.protocol.lineReceived("success mcdonalds farm [\n")
         self.protocol.lineReceived("]\n")
-        self.assertEqual([
-            ('startTest', self.test),
-            ('addSuccess', self.test),
-            ('stopTest', self.test),
-            ], self.client._calls)
+        details = {}
+        details['message'] = Content(ContentType("text", "plain"),
+            lambda:[""])
+        self.assertSuccess(details)
 
     def success_quoted_bracket(self, keyword):
         # This tests it is accepted, but cannot test it is used today, because
@@ -671,11 +677,10 @@ class TestTestProtocolServerAddSuccess(unittest.TestCase):
         self.protocol.lineReceived("%s mcdonalds farm [\n" % keyword)
         self.protocol.lineReceived(" ]\n")
         self.protocol.lineReceived("]\n")
-        self.assertEqual([
-            ('startTest', self.test),
-            ('addSuccess', self.test),
-            ('stopTest', self.test),
-            ], self.client._calls)
+        details = {}
+        details['message'] = Content(ContentType("text", "plain"),
+            lambda:["]\n"])
+        self.assertSuccess(details)
 
     def test_success_quoted_bracket(self):
         self.success_quoted_bracket("success")

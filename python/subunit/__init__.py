@@ -300,7 +300,7 @@ class _InTest(_ParserState):
             self.parser._reading_skip_details)
 
     def _succeed(self):
-        self.parser.client.addSuccess(self.parser._current_test)
+        self.parser.client.addSuccess(self.parser._current_test, details={})
 
     def addSuccess(self, offset, line):
         """A 'success:' directive has been read."""
@@ -396,7 +396,7 @@ class _ReadingSkipDetails(_ReadingDetails):
 
     def _report_outcome(self):
         self.parser.client.addSkip(self.parser._current_test,
-            details=self.details_parser.get_details(True))
+            details=self.details_parser.get_details("skip"))
 
     def _outcome_label(self):
         return "skip"
@@ -406,7 +406,8 @@ class _ReadingSuccessDetails(_ReadingDetails):
     """State for the subunit parser when reading success details."""
 
     def _report_outcome(self):
-        self.parser.client.addSuccess(self.parser._current_test)
+        self.parser.client.addSuccess(self.parser._current_test,
+            details=self.details_parser.get_details("success"))
 
     def _outcome_label(self):
         return "success"

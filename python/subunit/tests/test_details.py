@@ -67,7 +67,17 @@ class TestSimpleDetails(unittest.TestCase):
         expected['reason'] = content.Content(
             content_type.ContentType("text", "plain"),
             lambda:[""])
-        found = parser.get_details(True)
+        found = parser.get_details("skip")
+        self.assertEqual(expected, found)
+
+    def test_get_details_success(self):
+        parser = details.SimpleDetailsParser(None)
+        traceback = ""
+        expected = {}
+        expected['message'] = content.Content(
+            content_type.ContentType("text", "plain"),
+            lambda:[""])
+        found = parser.get_details("success")
         self.assertEqual(expected, found)
 
 
