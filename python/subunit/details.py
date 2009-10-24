@@ -43,7 +43,11 @@ class SimpleDetailsParser(DetailsParser):
             self._message += line
 
     def get_details(self):
-        return None
+        result = {}
+        result['traceback'] = content.Content(
+            content_type.ContentType("text", "x-traceback"),
+            lambda:[self._message])
+        return result
 
     def get_message(self):
         return self._message

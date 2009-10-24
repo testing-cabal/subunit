@@ -42,6 +42,10 @@ class Content(object):
         self.content_type = content_type
         self._get_bytes = get_bytes
 
+    def __eq__(self, other):
+        return (self.content_type == other.content_type and
+            ''.join(self.iter_bytes()) == ''.join(other.iter_bytes()))
+
     def iter_bytes(self):
         """Iterate over bytestrings of the serialised content."""
         return self._get_bytes()

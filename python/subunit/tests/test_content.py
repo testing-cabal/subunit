@@ -40,6 +40,18 @@ class TestContent(unittest.TestCase):
         self.assertEqual(content_type, content.content_type)
         self.assertEqual(["bytes"], list(content.iter_bytes()))
 
+    def test___eq__(self):
+        content_type = ContentType("foo", "bar")
+        content1 = Content(content_type, lambda:["bytes"])
+        content2 = Content(content_type, lambda:["bytes"])
+        content3 = Content(content_type, lambda:["by", "tes"])
+        content4 = Content(content_type, lambda:["by", "te"])
+        content5 = Content(ContentType("f","b"), lambda:["by", "tes"])
+        self.assertEqual(content1, content2)
+        self.assertEqual(content1, content3)
+        self.assertNotEqual(content1, content4)
+        self.assertNotEqual(content1, content5)
+
 
 class TestTracebackContent(unittest.TestCase):
 

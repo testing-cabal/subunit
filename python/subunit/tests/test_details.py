@@ -46,9 +46,19 @@ class TestSimpleDetails(unittest.TestCase):
         parser = details.SimpleDetailsParser(None)
         self.assertEqual("", parser.get_message())
 
-    def test_get_details_is_None(self):
+    def test_get_details(self):
         parser = details.SimpleDetailsParser(None)
-        self.assertEqual(None, parser.get_details())
+        traceback = ""
+        expected = {}
+        expected['traceback'] = content.Content(
+            content_type.ContentType("text", "x-traceback"),
+            lambda:[""])
+        found = parser.get_details()
+        self.assertEqual(expected.keys(), found.keys())
+        self.assertEqual(expected['traceback'].content_type,
+            found['traceback'].content_type)
+        self.assertEqual(''.join(expected['traceback'].iter_bytes()),
+            ''.join(found['traceback'].iter_bytes()))
 
 
 class TestMultipartDetails(unittest.TestCase):

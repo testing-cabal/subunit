@@ -266,7 +266,8 @@ class _InTest(_ParserState):
             self.parser.stdOutLineReceived(line)
 
     def _error(self):
-        self.parser.client.addError(self.parser._current_test, RemoteError(""))
+        self.parser.client.addError(self.parser._current_test,
+            details={})
 
     def addError(self, offset, line):
         """An 'error:' directive has been read."""
@@ -373,7 +374,7 @@ class _ReadingErrorDetails(_ReadingDetails):
 
     def _report_outcome(self):
         self.parser.client.addError(self.parser._current_test,
-            RemoteError(self.details_parser.get_message()))
+            details=self.details_parser.get_details())
 
     def _outcome_label(self):
         return "error"

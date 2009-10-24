@@ -349,17 +349,17 @@ class TestInTestMultipart(unittest.TestCase):
 class TestTestProtocolServerAddError(unittest.TestCase):
 
     def setUp(self):
-        self.client = Python26TestResult()
+        self.client = ExtendedTestResult()
         self.protocol = subunit.TestProtocolServer(self.client)
         self.protocol.lineReceived("test mcdonalds farm\n")
         self.test = subunit.RemotedTestCase("mcdonalds farm")
 
     def simple_error_keyword(self, keyword):
         self.protocol.lineReceived("%s mcdonalds farm\n" % keyword)
-        failure = subunit.RemoteError("")
+        details = {}
         self.assertEqual([
             ('startTest', self.test),
-            ('addError', self.test, failure),
+            ('addError', self.test, details),
             ('stopTest', self.test),
             ], self.client._calls)
 
@@ -372,10 +372,12 @@ class TestTestProtocolServerAddError(unittest.TestCase):
     def test_error_empty_message(self):
         self.protocol.lineReceived("error mcdonalds farm [\n")
         self.protocol.lineReceived("]\n")
-        failure = subunit.RemoteError("")
+        details = {}
+        details['traceback'] = Content(ContentType("text", "x-traceback"),
+            lambda:[""])
         self.assertEqual([
             ('startTest', self.test),
-            ('addError', self.test, failure),
+            ('addError', self.test, details),
             ('stopTest', self.test),
             ], self.client._calls)
 
@@ -383,10 +385,12 @@ class TestTestProtocolServerAddError(unittest.TestCase):
         self.protocol.lineReceived("%s mcdonalds farm [\n" % keyword)
         self.protocol.lineReceived(" ]\n")
         self.protocol.lineReceived("]\n")
-        failure = subunit.RemoteError("]\n")
+        details = {}
+        details['traceback'] = Content(ContentType("text", "x-traceback"),
+            lambda:["]\n"])
         self.assertEqual([
             ('startTest', self.test),
-            ('addError', self.test, failure),
+            ('addError', self.test, details),
             ('stopTest', self.test),
             ], self.client._calls)
 
