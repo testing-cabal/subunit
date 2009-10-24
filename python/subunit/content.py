@@ -50,6 +50,10 @@ class Content(object):
         """Iterate over bytestrings of the serialised content."""
         return self._get_bytes()
 
+    def __repr__(self):
+        return "<Content type=%r, value=%r>" % (
+            self.content_type, ''.join(self.iter_bytes()))
+
 
 class TracebackContent(Content):
     """Content object for tracebacks.

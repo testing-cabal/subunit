@@ -70,7 +70,9 @@ class TestTestProtocolServerPipe(unittest.TestCase):
                          [(an_error, 'RemoteException: \n\n')])
         self.assertEqual(
             client.failures,
-            [(bing, "RemoteException: foo.c:53:ERROR invalid state\n\n")])
+            [(bing, "RemoteException: Text attachment: traceback\n"
+                "------------\nfoo.c:53:ERROR invalid state\n"
+                "------------\n\n")])
         self.assertEqual(client.testsRun, 3)
 
 
@@ -106,7 +108,7 @@ class TestTestProtocolServerPassThrough(unittest.TestCase):
     def setUp(self):
         self.stdout = StringIO()
         self.test = subunit.RemotedTestCase("old mcdonald")
-        self.client = Python26TestResult()
+        self.client = ExtendedTestResult()
         self.protocol = subunit.TestProtocolServer(self.client, self.stdout)
 
     def keywords_before_test(self):
@@ -139,7 +141,7 @@ class TestTestProtocolServerPassThrough(unittest.TestCase):
         self.keywords_before_test()
         self.assertEqual([
             ('startTest', self.test),
-            ('addError', self.test, subunit.RemoteError("")),
+            ('addError', self.test, {}),
             ('stopTest', self.test),
             ], self.client._calls)
 
@@ -149,7 +151,7 @@ class TestTestProtocolServerPassThrough(unittest.TestCase):
         self.keywords_before_test()
         self.assertEqual(self.client._calls, [
             ('startTest', self.test),
-            ('addFailure', self.test, subunit.RemoteError("")),
+            ('addFailure', self.test, {}),
             ('stopTest', self.test),
             ])
 
@@ -188,11 +190,13 @@ class TestTestProtocolServerPassThrough(unittest.TestCase):
                                                  "]\n")
         self.assertEqual(self.client._calls, [
             ('startTest', self.test),
-            ('addFailure', self.test, subunit.RemoteError("")),
+            ('addFailure', self.test, {}),
             ('stopTest', self.test),
             ])
 
     def test_keywords_during_failure(self):
+        # A smoke test to make sure that the details parsers have control
+        # appropriately.
         self.protocol.lineReceived("test old mcdonald\n")
         self.protocol.lineReceived("failure: old mcdonald [\n")
         self.protocol.lineReceived("test old mcdonald\n")
@@ -207,7 +211,10 @@ class TestTestProtocolServerPassThrough(unittest.TestCase):
         self.protocol.lineReceived(" ]\n")
         self.protocol.lineReceived("]\n")
         self.assertEqual(self.stdout.getvalue(), "")
-        failure = subunit.RemoteError("test old mcdonald\n"
+        details = {}
+        details['traceback'] = Content(ContentType("text", "x-traceback"),
+            lambda:[
+            "test old mcdonald\n"
             "failure a\n"
             "failure: a\n"
             "error a\n"
@@ -216,10 +223,10 @@ class TestTestProtocolServerPassThrough(unittest.TestCase):
             "success: a\n"
             "successful a\n"
             "successful: a\n"
-            "]\n")
+            "]\n"])
         self.assertEqual(self.client._calls, [
             ('startTest', self.test),
-            ('addFailure', self.test, failure),
+            ('addFailure', self.test, details),
             ('stopTest', self.test),
             ])
 
@@ -404,19 +411,22 @@ class TestTestProtocolServerAddError(unittest.TestCase):
 class TestTestProtocolServerAddFailure(unittest.TestCase):
 
     def setUp(self):
-        self.client = Python26TestResult()
+        self.client = ExtendedTestResult()
         self.protocol = subunit.TestProtocolServer(self.client)
         self.protocol.lineReceived("test mcdonalds farm\n")
         self.test = subunit.RemotedTestCase("mcdonalds farm")
 
-    def simple_failure_keyword(self, keyword):
-        self.protocol.lineReceived("%s mcdonalds farm\n" % keyword)
-        failure = subunit.RemoteError("")
+    def assertFailure(self, details):
         self.assertEqual([
             ('startTest', self.test),
-            ('addFailure', self.test, failure),
+            ('addFailure', self.test, details),
             ('stopTest', self.test),
             ], self.client._calls)
+
+    def simple_failure_keyword(self, keyword):
+        self.protocol.lineReceived("%s mcdonalds farm\n" % keyword)
+        details = {}
+        self.assertFailure(details)
 
     def test_simple_failure(self):
         self.simple_failure_keyword("failure")
@@ -427,23 +437,19 @@ class TestTestProtocolServerAddFailure(unittest.TestCase):
     def test_failure_empty_message(self):
         self.protocol.lineReceived("failure mcdonalds farm [\n")
         self.protocol.lineReceived("]\n")
-        failure = subunit.RemoteError("")
-        self.assertEqual([
-            ('startTest', self.test),
-            ('addFailure', self.test, failure),
-            ('stopTest', self.test),
-            ], self.client._calls)
+        details = {}
+        details['traceback'] = Content(ContentType("text", "x-traceback"),
+            lambda:[""])
+        self.assertFailure(details)
 
     def failure_quoted_bracket(self, keyword):
         self.protocol.lineReceived("%s mcdonalds farm [\n" % keyword)
         self.protocol.lineReceived(" ]\n")
         self.protocol.lineReceived("]\n")
-        failure = subunit.RemoteError("]\n")
-        self.assertEqual([
-            ('startTest', self.test),
-            ('addFailure', self.test, failure),
-            ('stopTest', self.test),
-            ], self.client._calls)
+        details = {}
+        details['traceback'] = Content(ContentType("text", "x-traceback"),
+            lambda:["]\n"])
+        self.assertFailure(details)
 
     def test_failure_quoted_bracket(self):
         self.failure_quoted_bracket("failure")
@@ -814,24 +820,25 @@ class TestExecTestCase(unittest.TestCase):
         self.assertEqual(1, result.testsRun)
 
     def test_run(self):
-        result = Python26TestResult()
+        result = ExtendedTestResult()
         test = self.SampleExecTestCase("test_sample_method")
         test.run(result)
         mcdonald = subunit.RemotedTestCase("old mcdonald")
         bing = subunit.RemotedTestCase("bing crosby")
+        bing_details = {}
+        bing_details['traceback'] = Content(ContentType("text", "x-traceback"),
+            lambda:["foo.c:53:ERROR invalid state\n"])
         an_error = subunit.RemotedTestCase("an error")
-        error_error = subunit.RemoteError()
-        bing_failure = subunit.RemoteError(
-            "foo.c:53:ERROR invalid state\n")
+        error_details = {}
         self.assertEqual([
             ('startTest', mcdonald),
             ('addSuccess', mcdonald),
             ('stopTest', mcdonald),
             ('startTest', bing),
-            ('addFailure', bing, bing_failure),
+            ('addFailure', bing, bing_details),
             ('stopTest', bing),
             ('startTest', an_error),
-            ('addError', an_error, error_error),
+            ('addError', an_error, error_details),
             ('stopTest', an_error),
             ], result._calls)
 

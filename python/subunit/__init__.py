@@ -284,7 +284,8 @@ class _InTest(_ParserState):
             self.parser._reading_xfail_details)
 
     def _failure(self):
-        self.parser.client.addFailure(self.parser._current_test, RemoteError())
+        self.parser.client.addFailure(self.parser._current_test,
+            details={})
 
     def addFailure(self, offset, line):
         """A 'failure:' directive has been read."""
@@ -363,7 +364,7 @@ class _ReadingFailureDetails(_ReadingDetails):
 
     def _report_outcome(self):
         self.parser.client.addFailure(self.parser._current_test,
-            RemoteError(self.details_parser.get_message()))
+            details=self.details_parser.get_details())
 
     def _outcome_label(self):
         return "failure"
