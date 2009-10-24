@@ -24,125 +24,11 @@ import subunit
 from subunit.content import Content, TracebackContent
 from subunit.content_type import ContentType
 import subunit.iso8601 as iso8601
-
-
-class MockTestProtocolServerClient(object):
-    """A mock protocol server client to test callbacks.
-    
-    Note that this is deliberately not Python 2.7 complete, to allow
-    testing compatibility - we need a TestResult that will not have new methods
-    like addExpectedFailure.
-    """
-
-    def __init__(self):
-        self.end_calls = []
-        self.error_calls = []
-        self.failure_calls = []
-        self.skip_calls = []
-        self.start_calls = []
-        self.success_calls = []
-        self.progress_calls = []
-        self._time = None
-        super(MockTestProtocolServerClient, self).__init__()
-
-    def addError(self, test, error):
-        self.error_calls.append((test, error))
-
-    def addFailure(self, test, error):
-        self.failure_calls.append((test, error))
-
-    def addSkip(self, test, reason):
-        self.skip_calls.append((test, reason))
-
-    def addSuccess(self, test):
-        self.success_calls.append(test)
-
-    def stopTest(self, test):
-        self.end_calls.append(test)
-
-    def startTest(self, test):
-        self.start_calls.append(test)
-
-    def progress(self, offset, whence):
-        self.progress_calls.append((offset, whence))
-
-    def time(self, time):
-        self._time = time
-
-
-class MockExtendedTestProtocolServerClient(MockTestProtocolServerClient):
-    """An extended TestResult for testing which implements tags() etc."""
-
-    def __init__(self):
-        MockTestProtocolServerClient.__init__(self)
-        self.new_tags = set()
-        self.gone_tags = set()
-
-    def tags(self, new_tags, gone_tags):
-        self.new_tags = new_tags
-        self.gone_tags = gone_tags
-
-
-class TestMockTestProtocolServer(unittest.TestCase):
-
-    def test_start_test(self):
-        protocol = MockTestProtocolServerClient()
-        protocol.startTest(subunit.RemotedTestCase("test old mcdonald"))
-        self.assertEqual(protocol.start_calls,
-                         [subunit.RemotedTestCase("test old mcdonald")])
-        self.assertEqual(protocol.end_calls, [])
-        self.assertEqual(protocol.error_calls, [])
-        self.assertEqual(protocol.failure_calls, [])
-        self.assertEqual(protocol.success_calls, [])
-
-    def test_add_error(self):
-        protocol = MockTestProtocolServerClient()
-        protocol.addError(subunit.RemotedTestCase("old mcdonald"),
-                          subunit.RemoteError("omg it works"))
-        self.assertEqual(protocol.start_calls, [])
-        self.assertEqual(protocol.end_calls, [])
-        self.assertEqual(protocol.error_calls, [(
-                            subunit.RemotedTestCase("old mcdonald"),
-                            subunit.RemoteError("omg it works"))])
-        self.assertEqual(protocol.failure_calls, [])
-        self.assertEqual(protocol.success_calls, [])
-
-    def test_add_failure(self):
-        protocol = MockTestProtocolServerClient()
-        protocol.addFailure(subunit.RemotedTestCase("old mcdonald"),
-                            subunit.RemoteError("omg it works"))
-        self.assertEqual(protocol.start_calls, [])
-        self.assertEqual(protocol.end_calls, [])
-        self.assertEqual(protocol.error_calls, [])
-        self.assertEqual(protocol.failure_calls, [
-                            (subunit.RemotedTestCase("old mcdonald"),
-                             subunit.RemoteError("omg it works"))])
-        self.assertEqual(protocol.success_calls, [])
-
-    def test_add_success(self):
-        protocol = MockTestProtocolServerClient()
-        protocol.addSuccess(subunit.RemotedTestCase("test old mcdonald"))
-        self.assertEqual(protocol.start_calls, [])
-        self.assertEqual(protocol.end_calls, [])
-        self.assertEqual(protocol.error_calls, [])
-        self.assertEqual(protocol.failure_calls, [])
-        self.assertEqual(protocol.success_calls,
-                         [subunit.RemotedTestCase("test old mcdonald")])
-
-    def test_end_test(self):
-        protocol = MockTestProtocolServerClient()
-        protocol.stopTest(subunit.RemotedTestCase("test old mcdonald"))
-        self.assertEqual(protocol.end_calls,
-                         [subunit.RemotedTestCase("test old mcdonald")])
-        self.assertEqual(protocol.error_calls, [])
-        self.assertEqual(protocol.failure_calls, [])
-        self.assertEqual(protocol.success_calls, [])
-        self.assertEqual(protocol.start_calls, [])
-
-    def test_progress(self):
-        protocol = MockTestProtocolServerClient()
-        protocol.progress(-1, subunit.PROGRESS_CUR)
-        self.assertEqual(protocol.progress_calls, [(-1, subunit.PROGRESS_CUR)])
+from subunit.tests.test_test_results import (
+    ExtendedTestResult,
+    Python26TestResult,
+    Python27TestResult,
+    )
 
 
 class TestTestImports(unittest.TestCase):
@@ -191,28 +77,28 @@ class TestTestProtocolServerPipe(unittest.TestCase):
 class TestTestProtocolServerStartTest(unittest.TestCase):
 
     def setUp(self):
-        self.client = MockTestProtocolServerClient()
+        self.client = Python26TestResult()
         self.protocol = subunit.TestProtocolServer(self.client)
 
     def test_start_test(self):
         self.protocol.lineReceived("test old mcdonald\n")
-        self.assertEqual(self.client.start_calls,
-                         [subunit.RemotedTestCase("old mcdonald")])
+        self.assertEqual(self.client._calls,
+            [('startTest', subunit.RemotedTestCase("old mcdonald"))])
 
     def test_start_testing(self):
         self.protocol.lineReceived("testing old mcdonald\n")
-        self.assertEqual(self.client.start_calls,
-                         [subunit.RemotedTestCase("old mcdonald")])
+        self.assertEqual(self.client._calls,
+            [('startTest', subunit.RemotedTestCase("old mcdonald"))])
 
     def test_start_test_colon(self):
         self.protocol.lineReceived("test: old mcdonald\n")
-        self.assertEqual(self.client.start_calls,
-                         [subunit.RemotedTestCase("old mcdonald")])
+        self.assertEqual(self.client._calls,
+            [('startTest', subunit.RemotedTestCase("old mcdonald"))])
 
     def test_start_testing_colon(self):
         self.protocol.lineReceived("testing: old mcdonald\n")
-        self.assertEqual(self.client.start_calls,
-                         [subunit.RemotedTestCase("old mcdonald")])
+        self.assertEqual(self.client._calls,
+            [('startTest', subunit.RemotedTestCase("old mcdonald"))])
 
 
 class TestTestProtocolServerPassThrough(unittest.TestCase):
@@ -220,7 +106,7 @@ class TestTestProtocolServerPassThrough(unittest.TestCase):
     def setUp(self):
         self.stdout = StringIO()
         self.test = subunit.RemotedTestCase("old mcdonald")
-        self.client = MockTestProtocolServerClient()
+        self.client = Python26TestResult()
         self.protocol = subunit.TestProtocolServer(self.client, self.stdout)
 
     def keywords_before_test(self):
@@ -245,42 +131,37 @@ class TestTestProtocolServerPassThrough(unittest.TestCase):
 
     def test_keywords_before_test(self):
         self.keywords_before_test()
-        self.assertEqual(self.client.start_calls, [])
-        self.assertEqual(self.client.error_calls, [])
-        self.assertEqual(self.client.failure_calls, [])
-        self.assertEqual(self.client.success_calls, [])
+        self.assertEqual(self.client._calls, [])
 
     def test_keywords_after_error(self):
         self.protocol.lineReceived("test old mcdonald\n")
         self.protocol.lineReceived("error old mcdonald\n")
         self.keywords_before_test()
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.error_calls,
-                         [(self.test, subunit.RemoteError(""))])
-        self.assertEqual(self.client.failure_calls, [])
-        self.assertEqual(self.client.success_calls, [])
+        self.assertEqual([
+            ('startTest', self.test),
+            ('addError', self.test, subunit.RemoteError("")),
+            ('stopTest', self.test),
+            ], self.client._calls)
 
     def test_keywords_after_failure(self):
         self.protocol.lineReceived("test old mcdonald\n")
         self.protocol.lineReceived("failure old mcdonald\n")
         self.keywords_before_test()
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.error_calls, [])
-        self.assertEqual(self.client.failure_calls,
-                         [(self.test, subunit.RemoteError())])
-        self.assertEqual(self.client.success_calls, [])
+        self.assertEqual(self.client._calls, [
+            ('startTest', self.test),
+            ('addFailure', self.test, subunit.RemoteError("")),
+            ('stopTest', self.test),
+            ])
 
     def test_keywords_after_success(self):
         self.protocol.lineReceived("test old mcdonald\n")
         self.protocol.lineReceived("success old mcdonald\n")
         self.keywords_before_test()
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.error_calls, [])
-        self.assertEqual(self.client.failure_calls, [])
-        self.assertEqual(self.client.success_calls, [self.test])
+        self.assertEqual([
+            ('startTest', self.test),
+            ('addSuccess', self.test),
+            ('stopTest', self.test),
+            ], self.client._calls)
 
     def test_keywords_after_test(self):
         self.protocol.lineReceived("test old mcdonald\n")
@@ -305,12 +186,11 @@ class TestTestProtocolServerPassThrough(unittest.TestCase):
                                                  "successful a\n"
                                                  "successful: a\n"
                                                  "]\n")
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.failure_calls,
-                         [(self.test, subunit.RemoteError())])
-        self.assertEqual(self.client.error_calls, [])
-        self.assertEqual(self.client.success_calls, [])
+        self.assertEqual(self.client._calls, [
+            ('startTest', self.test),
+            ('addFailure', self.test, subunit.RemoteError("")),
+            ('stopTest', self.test),
+            ])
 
     def test_keywords_during_failure(self):
         self.protocol.lineReceived("test old mcdonald\n")
@@ -327,21 +207,21 @@ class TestTestProtocolServerPassThrough(unittest.TestCase):
         self.protocol.lineReceived(" ]\n")
         self.protocol.lineReceived("]\n")
         self.assertEqual(self.stdout.getvalue(), "")
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.failure_calls,
-                         [(self.test, subunit.RemoteError("test old mcdonald\n"
-                                                  "failure a\n"
-                                                  "failure: a\n"
-                                                  "error a\n"
-                                                  "error: a\n"
-                                                  "success a\n"
-                                                  "success: a\n"
-                                                  "successful a\n"
-                                                  "successful: a\n"
-                                                  "]\n"))])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.error_calls, [])
-        self.assertEqual(self.client.success_calls, [])
+        failure = subunit.RemoteError("test old mcdonald\n"
+            "failure a\n"
+            "failure: a\n"
+            "error a\n"
+            "error: a\n"
+            "success a\n"
+            "success: a\n"
+            "successful a\n"
+            "successful: a\n"
+            "]\n")
+        self.assertEqual(self.client._calls, [
+            ('startTest', self.test),
+            ('addFailure', self.test, failure),
+            ('stopTest', self.test),
+            ])
 
     def test_stdout_passthrough(self):
         """Lines received which cannot be interpreted as any protocol action
@@ -355,50 +235,47 @@ class TestTestProtocolServerPassThrough(unittest.TestCase):
 class TestTestProtocolServerLostConnection(unittest.TestCase):
 
     def setUp(self):
-        self.client = MockTestProtocolServerClient()
+        self.client = Python26TestResult()
         self.protocol = subunit.TestProtocolServer(self.client)
         self.test = subunit.RemotedTestCase("old mcdonald")
 
     def test_lost_connection_no_input(self):
         self.protocol.lostConnection()
-        self.assertEqual(self.client.start_calls, [])
-        self.assertEqual(self.client.error_calls, [])
-        self.assertEqual(self.client.failure_calls, [])
-        self.assertEqual(self.client.success_calls, [])
+        self.assertEqual([], self.client._calls)
 
     def test_lost_connection_after_start(self):
         self.protocol.lineReceived("test old mcdonald\n")
         self.protocol.lostConnection()
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.error_calls, [
-            (self.test, subunit.RemoteError("lost connection during "
-                                            "test 'old mcdonald'"))])
-        self.assertEqual(self.client.failure_calls, [])
-        self.assertEqual(self.client.success_calls, [])
+        failure = subunit.RemoteError(
+            "lost connection during test 'old mcdonald'")
+        self.assertEqual([
+            ('startTest', self.test),
+            ('addError', self.test, failure),
+            ('stopTest', self.test),
+            ], self.client._calls)
 
     def test_lost_connected_after_error(self):
         self.protocol.lineReceived("test old mcdonald\n")
         self.protocol.lineReceived("error old mcdonald\n")
         self.protocol.lostConnection()
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.failure_calls, [])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.error_calls, [
-            (self.test, subunit.RemoteError(""))])
-        self.assertEqual(self.client.success_calls, [])
+        self.assertEqual([
+            ('startTest', self.test),
+            ('addError', self.test, subunit.RemoteError("")),
+            ('stopTest', self.test),
+            ], self.client._calls)
 
     def do_connection_lost(self, outcome, opening):
         self.protocol.lineReceived("test old mcdonald\n")
         self.protocol.lineReceived("%s old mcdonald %s" % (outcome, opening))
         self.protocol.lostConnection()
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.error_calls, [
-            (self.test, subunit.RemoteError("lost connection during %s "
-                "report of test 'old mcdonald'" % outcome))])
-        self.assertEqual(self.client.failure_calls, [])
-        self.assertEqual(self.client.success_calls, [])
+        failure = subunit.RemoteError(
+            "lost connection during %s report of test 'old mcdonald'" % 
+            outcome)
+        self.assertEqual([
+            ('startTest', self.test),
+            ('addError', self.test, failure),
+            ('stopTest', self.test),
+            ], self.client._calls)
 
     def test_lost_connection_during_error(self):
         self.do_connection_lost("error", "[\n")
@@ -410,13 +287,11 @@ class TestTestProtocolServerLostConnection(unittest.TestCase):
         self.protocol.lineReceived("test old mcdonald\n")
         self.protocol.lineReceived("failure old mcdonald\n")
         self.protocol.lostConnection()
-        test = subunit.RemotedTestCase("old mcdonald")
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.error_calls, [])
-        self.assertEqual(self.client.failure_calls,
-                         [(self.test, subunit.RemoteError())])
-        self.assertEqual(self.client.success_calls, [])
+        self.assertEqual([
+            ('startTest', self.test),
+            ('addFailure', self.test, subunit.RemoteError("")),
+            ('stopTest', self.test),
+            ], self.client._calls)
 
     def test_lost_connection_during_failure(self):
         self.do_connection_lost("failure", "[\n")
@@ -428,11 +303,11 @@ class TestTestProtocolServerLostConnection(unittest.TestCase):
         self.protocol.lineReceived("test old mcdonald\n")
         self.protocol.lineReceived("success old mcdonald\n")
         self.protocol.lostConnection()
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.error_calls, [])
-        self.assertEqual(self.client.failure_calls, [])
-        self.assertEqual(self.client.success_calls, [self.test])
+        self.assertEqual([
+            ('startTest', self.test),
+            ('addSuccess', self.test),
+            ('stopTest', self.test),
+            ], self.client._calls)
 
     def test_lost_connection_during_success(self):
         self.do_connection_lost("success", "[\n")
@@ -456,7 +331,7 @@ class TestTestProtocolServerLostConnection(unittest.TestCase):
 class TestInTestMultipart(unittest.TestCase):
 
     def setUp(self):
-        self.client = MockTestProtocolServerClient()
+        self.client = ExtendedTestResult()
         self.protocol = subunit.TestProtocolServer(self.client)
         self.protocol.lineReceived("test mcdonalds farm\n")
         self.test = subunit.RemotedTestCase("mcdonalds farm")
@@ -474,18 +349,19 @@ class TestInTestMultipart(unittest.TestCase):
 class TestTestProtocolServerAddError(unittest.TestCase):
 
     def setUp(self):
-        self.client = MockTestProtocolServerClient()
+        self.client = Python26TestResult()
         self.protocol = subunit.TestProtocolServer(self.client)
         self.protocol.lineReceived("test mcdonalds farm\n")
         self.test = subunit.RemotedTestCase("mcdonalds farm")
 
     def simple_error_keyword(self, keyword):
         self.protocol.lineReceived("%s mcdonalds farm\n" % keyword)
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.error_calls, [
-            (self.test, subunit.RemoteError(""))])
-        self.assertEqual(self.client.failure_calls, [])
+        failure = subunit.RemoteError("")
+        self.assertEqual([
+            ('startTest', self.test),
+            ('addError', self.test, failure),
+            ('stopTest', self.test),
+            ], self.client._calls)
 
     def test_simple_error(self):
         self.simple_error_keyword("error")
@@ -496,21 +372,23 @@ class TestTestProtocolServerAddError(unittest.TestCase):
     def test_error_empty_message(self):
         self.protocol.lineReceived("error mcdonalds farm [\n")
         self.protocol.lineReceived("]\n")
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.error_calls, [
-            (self.test, subunit.RemoteError(""))])
-        self.assertEqual(self.client.failure_calls, [])
+        failure = subunit.RemoteError("")
+        self.assertEqual([
+            ('startTest', self.test),
+            ('addError', self.test, failure),
+            ('stopTest', self.test),
+            ], self.client._calls)
 
     def error_quoted_bracket(self, keyword):
         self.protocol.lineReceived("%s mcdonalds farm [\n" % keyword)
         self.protocol.lineReceived(" ]\n")
         self.protocol.lineReceived("]\n")
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.error_calls, [
-            (self.test, subunit.RemoteError("]\n"))])
-        self.assertEqual(self.client.failure_calls, [])
+        failure = subunit.RemoteError("]\n")
+        self.assertEqual([
+            ('startTest', self.test),
+            ('addError', self.test, failure),
+            ('stopTest', self.test),
+            ], self.client._calls)
 
     def test_error_quoted_bracket(self):
         self.error_quoted_bracket("error")
@@ -522,18 +400,19 @@ class TestTestProtocolServerAddError(unittest.TestCase):
 class TestTestProtocolServerAddFailure(unittest.TestCase):
 
     def setUp(self):
-        self.client = MockTestProtocolServerClient()
+        self.client = Python26TestResult()
         self.protocol = subunit.TestProtocolServer(self.client)
         self.protocol.lineReceived("test mcdonalds farm\n")
         self.test = subunit.RemotedTestCase("mcdonalds farm")
 
     def simple_failure_keyword(self, keyword):
         self.protocol.lineReceived("%s mcdonalds farm\n" % keyword)
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.error_calls, [])
-        self.assertEqual(self.client.failure_calls,
-                         [(self.test, subunit.RemoteError())])
+        failure = subunit.RemoteError("")
+        self.assertEqual([
+            ('startTest', self.test),
+            ('addFailure', self.test, failure),
+            ('stopTest', self.test),
+            ], self.client._calls)
 
     def test_simple_failure(self):
         self.simple_failure_keyword("failure")
@@ -544,21 +423,23 @@ class TestTestProtocolServerAddFailure(unittest.TestCase):
     def test_failure_empty_message(self):
         self.protocol.lineReceived("failure mcdonalds farm [\n")
         self.protocol.lineReceived("]\n")
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.error_calls, [])
-        self.assertEqual(self.client.failure_calls,
-                         [(self.test, subunit.RemoteError())])
+        failure = subunit.RemoteError("")
+        self.assertEqual([
+            ('startTest', self.test),
+            ('addFailure', self.test, failure),
+            ('stopTest', self.test),
+            ], self.client._calls)
 
     def failure_quoted_bracket(self, keyword):
         self.protocol.lineReceived("%s mcdonalds farm [\n" % keyword)
         self.protocol.lineReceived(" ]\n")
         self.protocol.lineReceived("]\n")
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.error_calls, [])
-        self.assertEqual(self.client.failure_calls,
-                         [(self.test, subunit.RemoteError("]\n"))])
+        failure = subunit.RemoteError("]\n")
+        self.assertEqual([
+            ('startTest', self.test),
+            ('addFailure', self.test, failure),
+            ('stopTest', self.test),
+            ], self.client._calls)
 
     def test_failure_quoted_bracket(self):
         self.failure_quoted_bracket("failure")
@@ -579,36 +460,38 @@ class TestTestProtocolServerAddxFail(unittest.TestCase):
 
     def setup_python26(self):
         """Setup a test object ready to be xfailed and thunk to success."""
-        self.client = MockTestProtocolServerClient()
+        self.client = Python26TestResult()
         self.setup_protocol()
 
     def setup_python27(self):
         """Setup a test object ready to be xfailed and thunk to success."""
-        self.client = MockTestProtocolServerClient()
-        self.client.addExpectedFailure = self.capture_expected_failure
-        self._calls = []
+        self.client = Python27TestResult()
         self.setup_protocol()
 
     def setup_protocol(self):
         """Setup the protocol based on self.client."""
         self.protocol = subunit.TestProtocolServer(self.client)
         self.protocol.lineReceived("test mcdonalds farm\n")
-        self.test = self.client.start_calls[-1]
+        self.test = self.client._calls[-1][-1]
 
     def simple_xfail_keyword(self, keyword, as_success):
         self.protocol.lineReceived("%s mcdonalds farm\n" % keyword)
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.error_calls, [])
-        self.assertEqual(self.client.failure_calls, [])
         self.check_success_or_xfail(as_success)
 
-    def check_success_or_xfail(self, as_success):
+    def check_success_or_xfail(self, as_success, error_message=""):
         if as_success:
-            self.assertEqual(self.client.success_calls, [self.test])
+            self.assertEqual([
+                ('startTest', self.test),
+                ('addSuccess', self.test),
+                ('stopTest', self.test),
+                ], self.client._calls)
         else:
-            self.assertEqual(1, len(self._calls))
-            self.assertEqual(self.test, self._calls[0][0])
+            error = subunit.RemoteError(error_message)
+            self.assertEqual([
+                ('startTest', self.test),
+                ('addExpectedFailure', self.test, error),
+                ('stopTest', self.test),
+                ], self.client._calls)
 
     def test_simple_xfail(self):
         self.setup_python26()
@@ -631,10 +514,6 @@ class TestTestProtocolServerAddxFail(unittest.TestCase):
     def empty_message(self, as_success):
         self.protocol.lineReceived("xfail mcdonalds farm [\n")
         self.protocol.lineReceived("]\n")
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.error_calls, [])
-        self.assertEqual(self.client.failure_calls, [])
         self.check_success_or_xfail(as_success)
 
     def xfail_quoted_bracket(self, keyword, as_success):
@@ -643,11 +522,7 @@ class TestTestProtocolServerAddxFail(unittest.TestCase):
         self.protocol.lineReceived("%s mcdonalds farm [\n" % keyword)
         self.protocol.lineReceived(" ]\n")
         self.protocol.lineReceived("]\n")
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.error_calls, [])
-        self.assertEqual(self.client.failure_calls, [])
-        self.check_success_or_xfail(as_success)
+        self.check_success_or_xfail(as_success, "]\n")
 
     def test_xfail_quoted_bracket(self):
         self.setup_python26()
@@ -671,20 +546,18 @@ class TestTestProtocolServerAddSkip(unittest.TestCase):
 
     def setUp(self):
         """Setup a test object ready to be skipped."""
-        self.client = MockTestProtocolServerClient()
+        self.client = Python27TestResult()
         self.protocol = subunit.TestProtocolServer(self.client)
         self.protocol.lineReceived("test mcdonalds farm\n")
-        self.test = self.client.start_calls[-1]
+        self.test = self.client._calls[-1][-1]
 
     def simple_skip_keyword(self, keyword):
         self.protocol.lineReceived("%s mcdonalds farm\n" % keyword)
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.error_calls, [])
-        self.assertEqual(self.client.failure_calls, [])
-        self.assertEqual(self.client.success_calls, [])
-        self.assertEqual(self.client.skip_calls,
-            [(self.test, 'No reason given')])
+        self.assertEqual([
+            ('startTest', self.test),
+            ('addSkip', self.test, "No reason given"),
+            ('stopTest', self.test),
+            ], self.client._calls)
 
     def test_simple_skip(self):
         self.simple_skip_keyword("skip")
@@ -695,13 +568,11 @@ class TestTestProtocolServerAddSkip(unittest.TestCase):
     def test_skip_empty_message(self):
         self.protocol.lineReceived("skip mcdonalds farm [\n")
         self.protocol.lineReceived("]\n")
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.error_calls, [])
-        self.assertEqual(self.client.failure_calls, [])
-        self.assertEqual(self.client.success_calls, [])
-        self.assertEqual(self.client.skip_calls,
-            [(self.test, "No reason given")])
+        self.assertEqual([
+            ('startTest', self.test),
+            ('addSkip', self.test, "No reason given"),
+            ('stopTest', self.test),
+            ], self.client._calls)
 
     def skip_quoted_bracket(self, keyword):
         # This tests it is accepted, but cannot test it is used today, because
@@ -709,13 +580,11 @@ class TestTestProtocolServerAddSkip(unittest.TestCase):
         self.protocol.lineReceived("%s mcdonalds farm [\n" % keyword)
         self.protocol.lineReceived(" ]\n")
         self.protocol.lineReceived("]\n")
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.error_calls, [])
-        self.assertEqual(self.client.failure_calls, [])
-        self.assertEqual(self.client.success_calls, [])
-        self.assertEqual(self.client.skip_calls,
-            [(self.test, "]\n")])
+        self.assertEqual([
+            ('startTest', self.test),
+            ('addSkip', self.test, "]\n"),
+            ('stopTest', self.test),
+            ], self.client._calls)
 
     def test_skip_quoted_bracket(self):
         self.skip_quoted_bracket("skip")
@@ -727,17 +596,18 @@ class TestTestProtocolServerAddSkip(unittest.TestCase):
 class TestTestProtocolServerAddSuccess(unittest.TestCase):
 
     def setUp(self):
-        self.client = MockTestProtocolServerClient()
+        self.client = Python26TestResult()
         self.protocol = subunit.TestProtocolServer(self.client)
         self.protocol.lineReceived("test mcdonalds farm\n")
         self.test = subunit.RemotedTestCase("mcdonalds farm")
 
     def simple_success_keyword(self, keyword):
         self.protocol.lineReceived("%s mcdonalds farm\n" % keyword)
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.error_calls, [])
-        self.assertEqual(self.client.success_calls, [self.test])
+        self.assertEqual([
+            ('startTest', self.test),
+            ('addSuccess', self.test),
+            ('stopTest', self.test),
+            ], self.client._calls)
 
     def test_simple_success(self):
         self.simple_success_keyword("failure")
@@ -754,11 +624,11 @@ class TestTestProtocolServerAddSuccess(unittest.TestCase):
     def test_success_empty_message(self):
         self.protocol.lineReceived("success mcdonalds farm [\n")
         self.protocol.lineReceived("]\n")
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.error_calls, [])
-        self.assertEqual(self.client.failure_calls, [])
-        self.assertEqual(self.client.success_calls, [self.test])
+        self.assertEqual([
+            ('startTest', self.test),
+            ('addSuccess', self.test),
+            ('stopTest', self.test),
+            ], self.client._calls)
 
     def success_quoted_bracket(self, keyword):
         # This tests it is accepted, but cannot test it is used today, because
@@ -766,11 +636,11 @@ class TestTestProtocolServerAddSuccess(unittest.TestCase):
         self.protocol.lineReceived("%s mcdonalds farm [\n" % keyword)
         self.protocol.lineReceived(" ]\n")
         self.protocol.lineReceived("]\n")
-        self.assertEqual(self.client.start_calls, [self.test])
-        self.assertEqual(self.client.end_calls, [self.test])
-        self.assertEqual(self.client.error_calls, [])
-        self.assertEqual(self.client.failure_calls, [])
-        self.assertEqual(self.client.success_calls, [self.test])
+        self.assertEqual([
+            ('startTest', self.test),
+            ('addSuccess', self.test),
+            ('stopTest', self.test),
+            ], self.client._calls)
 
     def test_success_quoted_bracket(self):
         self.success_quoted_bracket("success")
@@ -783,8 +653,7 @@ class TestTestProtocolServerProgress(unittest.TestCase):
     """Test receipt of progress: directives."""
 
     def test_progress_accepted_stdlib(self):
-        # With a stdlib TestResult, progress events are swallowed.
-        self.result = unittest.TestResult()
+        self.result = Python26TestResult()
         self.stream = StringIO()
         self.protocol = subunit.TestProtocolServer(self.result,
             stream=self.stream)
@@ -795,7 +664,7 @@ class TestTestProtocolServerProgress(unittest.TestCase):
 
     def test_progress_accepted_extended(self):
         # With a progress capable TestResult, progress events are emitted.
-        self.result = MockTestProtocolServerClient()
+        self.result = ExtendedTestResult()
         self.stream = StringIO()
         self.protocol = subunit.TestProtocolServer(self.result,
             stream=self.stream)
@@ -805,49 +674,48 @@ class TestTestProtocolServerProgress(unittest.TestCase):
         self.protocol.lineReceived("progress: pop")
         self.protocol.lineReceived("progress: +4")
         self.assertEqual("", self.stream.getvalue())
-        self.assertEqual(
-            [(23, subunit.PROGRESS_SET), (None, subunit.PROGRESS_PUSH),
-             (-2, subunit.PROGRESS_CUR), (None, subunit.PROGRESS_POP),
-             (4, subunit.PROGRESS_CUR)],
-            self.result.progress_calls)
+        self.assertEqual([
+            ('progress', 23, subunit.PROGRESS_SET),
+            ('progress', None, subunit.PROGRESS_PUSH),
+            ('progress', -2, subunit.PROGRESS_CUR),
+            ('progress', None, subunit.PROGRESS_POP),
+            ('progress', 4, subunit.PROGRESS_CUR),
+            ], self.result._calls)
 
 
 class TestTestProtocolServerStreamTags(unittest.TestCase):
     """Test managing tags on the protocol level."""
 
     def setUp(self):
-        self.client = MockExtendedTestProtocolServerClient()
+        self.client = ExtendedTestResult()
         self.protocol = subunit.TestProtocolServer(self.client)
 
     def test_initial_tags(self):
         self.protocol.lineReceived("tags: foo bar:baz  quux\n")
-        self.assertEqual(set(["foo", "bar:baz", "quux"]),
-            self.client.new_tags)
-        self.assertEqual(set(), self.client.gone_tags)
+        self.assertEqual([
+            ('tags', set(["foo", "bar:baz", "quux"]), set()),
+            ], self.client._calls)
 
     def test_minus_removes_tags(self):
-        self.protocol.lineReceived("tags: foo bar\n")
-        self.assertEqual(set(["foo", "bar"]),
-            self.client.new_tags)
-        self.assertEqual(set(), self.client.gone_tags)
         self.protocol.lineReceived("tags: -bar quux\n")
-        self.assertEqual(set(["quux"]), self.client.new_tags)
-        self.assertEqual(set(["bar"]), self.client.gone_tags)
+        self.assertEqual([
+            ('tags', set(["quux"]), set(["bar"])),
+            ], self.client._calls)
 
     def test_tags_do_not_get_set_on_test(self):
         self.protocol.lineReceived("test mcdonalds farm\n")
-        test = self.client.start_calls[-1]
+        test = self.client._calls[0][-1]
         self.assertEqual(None, getattr(test, 'tags', None))
 
     def test_tags_do_not_get_set_on_global_tags(self):
         self.protocol.lineReceived("tags: foo bar\n")
         self.protocol.lineReceived("test mcdonalds farm\n")
-        test = self.client.start_calls[-1]
+        test = self.client._calls[-1][-1]
         self.assertEqual(None, getattr(test, 'tags', None))
 
     def test_tags_get_set_on_test_tags(self):
         self.protocol.lineReceived("test mcdonalds farm\n")
-        test = self.client.start_calls[-1]
+        test = self.client._calls[-1][-1]
         self.protocol.lineReceived("tags: foo bar\n")
         self.protocol.lineReceived("success mcdonalds farm\n")
         self.assertEqual(None, getattr(test, 'tags', None))
@@ -857,7 +725,7 @@ class TestTestProtocolServerStreamTime(unittest.TestCase):
     """Test managing time information at the protocol level."""
 
     def test_time_accepted_stdlib(self):
-        self.result = unittest.TestResult()
+        self.result = Python26TestResult()
         self.stream = StringIO()
         self.protocol = subunit.TestProtocolServer(self.result,
             stream=self.stream)
@@ -865,14 +733,16 @@ class TestTestProtocolServerStreamTime(unittest.TestCase):
         self.assertEqual("", self.stream.getvalue())
 
     def test_time_accepted_extended(self):
-        self.result = MockTestProtocolServerClient()
+        self.result = ExtendedTestResult()
         self.stream = StringIO()
         self.protocol = subunit.TestProtocolServer(self.result,
             stream=self.stream)
         self.protocol.lineReceived("time: 2001-12-12 12:59:59Z\n")
         self.assertEqual("", self.stream.getvalue())
-        self.assertEqual(datetime.datetime(2001, 12, 12, 12, 59, 59, 0,
-            iso8601.Utc()), self.result._time)
+        self.assertEqual([
+            ('time', datetime.datetime(2001, 12, 12, 12, 59, 59, 0,
+            iso8601.Utc()))
+            ], self.result._calls)
 
 
 class TestRemotedTestCase(unittest.TestCase):
@@ -940,20 +810,26 @@ class TestExecTestCase(unittest.TestCase):
         self.assertEqual(1, result.testsRun)
 
     def test_run(self):
-        runner = MockTestProtocolServerClient()
+        result = Python26TestResult()
         test = self.SampleExecTestCase("test_sample_method")
-        test.run(runner)
+        test.run(result)
         mcdonald = subunit.RemotedTestCase("old mcdonald")
         bing = subunit.RemotedTestCase("bing crosby")
         an_error = subunit.RemotedTestCase("an error")
-        self.assertEqual(runner.error_calls,
-                         [(an_error, subunit.RemoteError())])
-        self.assertEqual(runner.failure_calls,
-                         [(bing,
-                           subunit.RemoteError(
-                            "foo.c:53:ERROR invalid state\n"))])
-        self.assertEqual(runner.start_calls, [mcdonald, bing, an_error])
-        self.assertEqual(runner.end_calls, [mcdonald, bing, an_error])
+        error_error = subunit.RemoteError()
+        bing_failure = subunit.RemoteError(
+            "foo.c:53:ERROR invalid state\n")
+        self.assertEqual([
+            ('startTest', mcdonald),
+            ('addSuccess', mcdonald),
+            ('stopTest', mcdonald),
+            ('startTest', bing),
+            ('addFailure', bing, bing_failure),
+            ('stopTest', bing),
+            ('startTest', an_error),
+            ('addError', an_error, error_error),
+            ('stopTest', an_error),
+            ], result._calls)
 
     def test_debug(self):
         test = self.SampleExecTestCase("test_sample_method")
