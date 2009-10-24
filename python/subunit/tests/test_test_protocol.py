@@ -582,18 +582,25 @@ class TestTestProtocolServerAddSkip(unittest.TestCase):
 
     def setUp(self):
         """Setup a test object ready to be skipped."""
-        self.client = Python27TestResult()
+        self.client = ExtendedTestResult()
         self.protocol = subunit.TestProtocolServer(self.client)
         self.protocol.lineReceived("test mcdonalds farm\n")
         self.test = self.client._calls[-1][-1]
 
-    def simple_skip_keyword(self, keyword):
-        self.protocol.lineReceived("%s mcdonalds farm\n" % keyword)
+    def assertSkip(self, reason):
+        details = {}
+        if reason is not None:
+            details['reason'] = Content(
+                ContentType("text", "plain"), lambda:[reason])
         self.assertEqual([
             ('startTest', self.test),
-            ('addSkip', self.test, "No reason given"),
+            ('addSkip', self.test, details),
             ('stopTest', self.test),
             ], self.client._calls)
+
+    def simple_skip_keyword(self, keyword):
+        self.protocol.lineReceived("%s mcdonalds farm\n" % keyword)
+        self.assertSkip(None)
 
     def test_simple_skip(self):
         self.simple_skip_keyword("skip")
@@ -604,11 +611,7 @@ class TestTestProtocolServerAddSkip(unittest.TestCase):
     def test_skip_empty_message(self):
         self.protocol.lineReceived("skip mcdonalds farm [\n")
         self.protocol.lineReceived("]\n")
-        self.assertEqual([
-            ('startTest', self.test),
-            ('addSkip', self.test, "No reason given"),
-            ('stopTest', self.test),
-            ], self.client._calls)
+        self.assertSkip("")
 
     def skip_quoted_bracket(self, keyword):
         # This tests it is accepted, but cannot test it is used today, because
@@ -616,11 +619,7 @@ class TestTestProtocolServerAddSkip(unittest.TestCase):
         self.protocol.lineReceived("%s mcdonalds farm [\n" % keyword)
         self.protocol.lineReceived(" ]\n")
         self.protocol.lineReceived("]\n")
-        self.assertEqual([
-            ('startTest', self.test),
-            ('addSkip', self.test, "]\n"),
-            ('stopTest', self.test),
-            ], self.client._calls)
+        self.assertSkip("]\n")
 
     def test_skip_quoted_bracket(self):
         self.skip_quoted_bracket("skip")

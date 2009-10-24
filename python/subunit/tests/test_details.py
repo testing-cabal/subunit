@@ -60,6 +60,16 @@ class TestSimpleDetails(unittest.TestCase):
         self.assertEqual(''.join(expected['traceback'].iter_bytes()),
             ''.join(found['traceback'].iter_bytes()))
 
+    def test_get_details_skip(self):
+        parser = details.SimpleDetailsParser(None)
+        traceback = ""
+        expected = {}
+        expected['reason'] = content.Content(
+            content_type.ContentType("text", "plain"),
+            lambda:[""])
+        found = parser.get_details(True)
+        self.assertEqual(expected, found)
+
 
 class TestMultipartDetails(unittest.TestCase):
 

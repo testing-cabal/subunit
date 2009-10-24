@@ -284,8 +284,7 @@ class _InTest(_ParserState):
             self.parser._reading_xfail_details)
 
     def _failure(self):
-        self.parser.client.addFailure(self.parser._current_test,
-            details={})
+        self.parser.client.addFailure(self.parser._current_test, details={})
 
     def addFailure(self, offset, line):
         """A 'failure:' directive has been read."""
@@ -293,7 +292,7 @@ class _InTest(_ParserState):
             self.parser._reading_failure_details)
 
     def _skip(self):
-        self.parser._skip_or_error()
+        self.parser.client.addSkip(self.parser._current_test, details={})
 
     def addSkip(self, offset, line):
         """A 'skip:' directive has been read."""
@@ -396,7 +395,8 @@ class _ReadingSkipDetails(_ReadingDetails):
     """State for the subunit parser when reading skip details."""
 
     def _report_outcome(self):
-        self.parser._skip_or_error(self.details_parser.get_message())
+        self.parser.client.addSkip(self.parser._current_test,
+            details=self.details_parser.get_details(True))
 
     def _outcome_label(self):
         return "skip"
@@ -441,12 +441,6 @@ class TestProtocolServer(object):
         self._reading_xfail_details = _ReadingExpectedFailureDetails(self)
         # start with outside test.
         self._state = self._outside_test
-
-    def _skip_or_error(self, message=None):
-        """Report the current test as a skip if possible, or else an error."""
-        if not message:
-            message = "No reason given"
-        self.client.addSkip(self._current_test, message)
 
     def _handleProgress(self, offset, line):
         """Process a progress directive."""

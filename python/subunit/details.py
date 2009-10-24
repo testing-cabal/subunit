@@ -42,11 +42,16 @@ class SimpleDetailsParser(DetailsParser):
         else:
             self._message += line
 
-    def get_details(self):
+    def get_details(self, for_skip=False):
         result = {}
-        result['traceback'] = content.Content(
-            content_type.ContentType("text", "x-traceback"),
-            lambda:[self._message])
+        if not for_skip:
+            result['traceback'] = content.Content(
+                content_type.ContentType("text", "x-traceback"),
+                lambda:[self._message])
+        else:
+            result['reason'] = content.Content(
+                content_type.ContentType("text", "plain"),
+                lambda:[self._message])
         return result
 
     def get_message(self):
@@ -88,7 +93,7 @@ class MultipartDetailsParser(DetailsParser):
             self._chunk_parser.close()
             self._parse_state = self._look_for_content
 
-    def get_details(self):
+    def get_details(self, for_skip=False):
         return self._details
 
     def get_message(self):
