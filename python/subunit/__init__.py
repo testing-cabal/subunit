@@ -276,7 +276,7 @@ class _InTest(_ParserState):
 
     def _xfail(self):
         self.parser.client.addExpectedFailure(self.parser._current_test,
-            RemoteError())
+            details={})
 
     def addExpectedFail(self, offset, line):
         """An 'xfail:' directive has been read."""
@@ -386,7 +386,7 @@ class _ReadingExpectedFailureDetails(_ReadingDetails):
 
     def _report_outcome(self):
         self.parser.client.addExpectedFailure(self.parser._current_test,
-            RemoteError(self.details_parser.get_message()))
+            details=self.details_parser.get_details())
 
     def _outcome_label(self):
         return "xfail"
