@@ -1067,13 +1067,13 @@ class TestResultStats(unittest.TestResult):
     def total_tests(self):
         return self.testsRun
 
-    def addError(self, test, err):
+    def addError(self, test, err, details=None):
         self.failed_tests += 1
 
-    def addFailure(self, test, err):
+    def addFailure(self, test, err, details=None):
         self.failed_tests += 1
 
-    def addSkip(self, test, reason):
+    def addSkip(self, test, reason, details=None):
         self.skipped_tests += 1
 
     def formatStats(self):
