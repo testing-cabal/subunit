@@ -196,6 +196,124 @@ class AutoTimingTestResultDecorator(HookedTestResultDecorator):
         return self.decorated.time(a_datetime)
 
 
+class TestResultFilter(TestResultDecorator):
+    """A pyunit TestResult interface implementation which filters tests.
+
+    Tests that pass the filter are handed on to another TestResult instance
+    for further processing/reporting. To obtain the filtered results, 
+    the other instance must be interrogated.
+
+    :ivar result: The result that tests are passed to after filtering.
+    :ivar filter_predicate: The callback run to decide whether to pass 
+        a result.
+    """
+
+    def __init__(self, result, filter_error=False, filter_failure=False,
+        filter_success=True, filter_skip=False,
+        filter_predicate=None):
+        """Create a FilterResult object filtering to result.
+        
+        :param filter_error: Filter out errors.
+        :param filter_failure: Filter out failures.
+        :param filter_success: Filter out successful tests.
+        :param filter_skip: Filter out skipped tests.
+        :param filter_predicate: A callable taking (test, err) and 
+            returning True if the result should be passed through.
+            err is None for success.
+        """
+        TestResultDecorator.__init__(self, result)
+        self._filter_error = filter_error
+        self._filter_failure = filter_failure
+        self._filter_success = filter_success
+        self._filter_skip = filter_skip
+        if filter_predicate is None:
+            filter_predicate = lambda test, err: True
+        self.filter_predicate = filter_predicate
+        # The current test (for filtering tags)
+        self._current_test = None
+        # Has the current test been filtered (for outputting test tags)
+        self._current_test_filtered = None
+        # The (new, gone) tags for the current test.
+        self._current_test_tags = None
+        
+    def addError(self, test, err, details=None):
+        if not self._filter_error and self.filter_predicate(test, err):
+            self.decorated.startTest(test)
+            self.decorated.addError(test, err, details=details)
+
+    def addFailure(self, test, err, details=None):
+        if not self._filter_failure and self.filter_predicate(test, err):
+            self.decorated.startTest(test)
+            self.decorated.addFailure(test, err, details=details)
+
+    def addSkip(self, test, reason, details=None):
+        if not self._filter_skip and self.filter_predicate(test, reason):
+            self.decorated.startTest(test)
+            self.decorated.addSkip(test, reason, details=details)
+
+    def addSuccess(self, test, details=None):
+        if not self._filter_success and self.filter_predicate(test, None):
+            self.decorated.startTest(test)
+            self.decorated.addSuccess(test, details=details)
+
+    def addExpectedFailure(self, test, err, details=None):
+        if self.filter_predicate(test, err):
+            self.decorated.startTest(test)
+            return self.decorated.addExpectedFailure(test, err,
+                details=details)
+
+    def addUnexpectedSuccess(self, test, details=None):
+        self.decorated.startTest(test)
+        return self.decorated.addUnexpectedSuccess(test, details=details)
+
+    def startTest(self, test):
+        """Start a test.
+        
+        Not directly passed to the client, but used for handling of tags
+        correctly.
+        """
+        self._current_test = test
+        self._current_test_filtered = False
+        self._current_test_tags = set(), set()
+    
+    def stopTest(self, test):
+        """Stop a test.
+        
+        Not directly passed to the client, but used for handling of tags
+        correctly.
+        """
+        if not self._current_test_filtered:
+            # Tags to output for this test.
+            if self._current_test_tags[0] or self._current_test_tags[1]:
+                self.decorated.tags(*self._current_test_tags)
+            self.decorated.stopTest(test)
+        self._current_test = None
+        self._current_test_filtered = None
+        self._current_test_tags = None
+
+    def tags(self, new_tags, gone_tags):
+        """Handle tag instructions.
+
+        Adds and removes tags as appropriate. If a test is currently running,
+        tags are not affected for subsequent tests.
+        
+        :param new_tags: Tags to add,
+        :param gone_tags: Tags to remove.
+        """
+        if self._current_test is not None:
+            # gather the tags until the test stops.
+            self._current_test_tags[0].update(new_tags)
+            self._current_test_tags[0].difference_update(gone_tags)
+            self._current_test_tags[1].update(gone_tags)
+            self._current_test_tags[1].difference_update(new_tags)
+        return self.decorated.tags(new_tags, gone_tags)
+
+    def id_to_orig_id(self, id):
+        if id.startswith("subunit.RemotedTestCase."):
+            return id[len("subunit.RemotedTestCase."):]
+        return id
+
+
 class ExtendedToOriginalDecorator(object):
     """Permit new TestResult API code to degrade gracefully with old results.
 

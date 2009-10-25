@@ -35,8 +35,8 @@ from subunit import (
     DiscardStream,
     ProtocolTestCase,
     TestProtocolClient,
-    TestResultFilter,
     )
+from subunit.test_results import TestResultFilter
 
 parser = OptionParser(description=__doc__)
 parser.add_option("--error", action="store_false",
