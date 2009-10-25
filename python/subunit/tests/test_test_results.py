@@ -64,6 +64,7 @@ class LoggingResult(object):
     
     def __init__(self):
         self._calls = []
+        self.shouldStop = False
 
 
 class Python26TestResult(LoggingResult):
@@ -80,6 +81,9 @@ class Python26TestResult(LoggingResult):
 
     def startTest(self, test):
         self._calls.append(('startTest', test))
+
+    def stop(self):
+        self.shouldStop = True
 
     def stopTest(self, test):
         self._calls.append(('stopTest', test))
@@ -258,6 +262,12 @@ class TestExtendedToOriginalResultDecorator(
         self.make_extended_result()
         self.converter.progress(1, 2)
         self.assertEqual([('progress', 1, 2)], self.result._calls)
+
+    def test_shouldStop(self):
+        self.make_26_result()
+        self.assertEqual(False, self.converter.shouldStop)
+        self.converter.decorated.stop()
+        self.assertEqual(True, self.converter.shouldStop)
 
     def test_startTest_py26(self):
         self.make_26_result()
@@ -476,7 +486,7 @@ class TestExtendedToOriginalAddUnexpectedSuccess(
 class TestHookedTestResultDecorator(unittest.TestCase):
 
     def setUp(self):
-        # And end to the chain
+        # An end to the chain
         terminal = unittest.TestResult()
         # Asserts that the call was made to self.result before asserter was
         # called.
@@ -484,13 +494,14 @@ class TestHookedTestResultDecorator(unittest.TestCase):
         # The result object we call, which much increase its call count.
         self.result = LoggingDecorator(asserter)
         asserter.earlier = self.result
+        self.decorated = asserter
 
     def tearDown(self):
         # The hook in self.result must have been called
         self.assertEqual(1, self.result._calls)
         # The hook in asserter must have been called too, otherwise the
         # assertion about ordering won't have completed.
-        self.assertEqual(1, self.result.decorated._calls)
+        self.assertEqual(1, self.decorated._calls)
 
     def test_startTest(self):
         self.result.startTest(self)
@@ -546,20 +557,21 @@ class TestAutoTimingTestResultDecorator(unittest.TestCase):
         # The result object under test.
         self.result = subunit.test_results.AutoTimingTestResultDecorator(
             terminal)
+        self.decorated = terminal
 
     def test_without_time_calls_time_is_called_and_not_None(self):
         self.result.startTest(self)
-        self.assertEqual(1, len(self.result.decorated._calls))
-        self.assertNotEqual(None, self.result.decorated._calls[0])
+        self.assertEqual(1, len(self.decorated._calls))
+        self.assertNotEqual(None, self.decorated._calls[0])
 
     def test_no_time_from_progress(self):
         self.result.progress(1, subunit.PROGRESS_CUR)
-        self.assertEqual(0, len(self.result.decorated._calls))
+        self.assertEqual(0, len(self.decorated._calls))
 
     def test_no_time_from_shouldStop(self):
-        self.result.decorated.stop()
+        self.decorated.stop()
         self.result.shouldStop
-        self.assertEqual(0, len(self.result.decorated._calls))
+        self.assertEqual(0, len(self.decorated._calls))
 
     def test_calling_time_inhibits_automatic_time(self):
         # Calling time() outputs a time signal immediately and prevents
@@ -568,22 +580,22 @@ class TestAutoTimingTestResultDecorator(unittest.TestCase):
         self.result.time(time)
         self.result.startTest(self)
         self.result.stopTest(self)
-        self.assertEqual(1, len(self.result.decorated._calls))
-        self.assertEqual(time, self.result.decorated._calls[0])
+        self.assertEqual(1, len(self.decorated._calls))
+        self.assertEqual(time, self.decorated._calls[0])
 
     def test_calling_time_None_enables_automatic_time(self):
         time = datetime.datetime(2009,10,11,12,13,14,15, iso8601.Utc())
         self.result.time(time)
-        self.assertEqual(1, len(self.result.decorated._calls))
-        self.assertEqual(time, self.result.decorated._calls[0])
+        self.assertEqual(1, len(self.decorated._calls))
+        self.assertEqual(time, self.decorated._calls[0])
         # Calling None passes the None through, in case other results care.
         self.result.time(None)
-        self.assertEqual(2, len(self.result.decorated._calls))
-        self.assertEqual(None, self.result.decorated._calls[1])
+        self.assertEqual(2, len(self.decorated._calls))
+        self.assertEqual(None, self.decorated._calls[1])
         # Calling other methods doesn't generate an automatic time event.
         self.result.startTest(self)
-        self.assertEqual(3, len(self.result.decorated._calls))
-        self.assertNotEqual(None, self.result.decorated._calls[2])
+        self.assertEqual(3, len(self.decorated._calls))
+        self.assertNotEqual(None, self.decorated._calls[2])
 
 
 def test_suite():

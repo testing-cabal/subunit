@@ -36,42 +36,20 @@ class TestResultDecorator(object):
 
     def __init__(self, decorated):
         """Create a TestResultDecorator forwarding to decorated."""
-        self.decorated = decorated
-
-    def _call_maybe(self, method_name, fallback, *params):
-        """Call method_name on self.decorated, if present.
-        
-        This is used to guard newer methods which older pythons do not
-        support. While newer clients won't call these methods if they don't
-        exist, they do exist on the decorator, and thus the decorator has to be
-        the one to filter them out.
-
-        :param method_name: The name of the method to call.
-        :param fallback: If not None, the fallback to call to handle downgrading
-            this method. Otherwise when method_name is not available, no
-            exception is raised and None is returned.
-        :param *params: Parameters to pass to method_name.
-        :return: The result of self.decorated.method_name(*params), if it
-            exists, and None otherwise.
-        """
-        method = getattr(self.decorated, method_name, None)
-        if method is None:
-            if fallback is not None:
-                return fallback(*params)
-            return
-        return method(*params)
+        # Make every decorator degrade gracefully.
+        self.decorated = ExtendedToOriginalDecorator(decorated)
 
     def startTest(self, test):
         return self.decorated.startTest(test)
 
     def startTestRun(self):
-        return self._call_maybe("startTestRun", None)
+        return self.decorated.startTestRun()
 
     def stopTest(self, test):
         return self.decorated.stopTest(test)
 
     def stopTestRun(self):
-        return self._call_maybe("stopTestRun", None)
+        return self.decorated.stopTestRun()
 
     def addError(self, test, err):
         return self.decorated.addError(test, err)
@@ -83,21 +61,16 @@ class TestResultDecorator(object):
         return self.decorated.addSuccess(test)
 
     def addSkip(self, test, reason):
-        return self._call_maybe("addSkip", self._degrade_skip, test, reason)
-
-    def _degrade_skip(self, test, reason):
-        return self.decorated.addSuccess(test)
+        return self.decorated.addSkip(test, reason)
 
     def addExpectedFailure(self, test, err):
-        return self._call_maybe("addExpectedFailure",
-            self.decorated.addFailure, test, err)
+        return self.decorated.addExpectedFailure(test, err)
 
     def addUnexpectedSuccess(self, test):
-        return self._call_maybe("addUnexpectedSuccess",
-            self.decorated.addSuccess, test)
+        return self.decorated.addUnexpectedSuccess(test)
 
     def progress(self, offset, whence):
-        return self._call_maybe("progress", None, offset, whence)
+        return self.decorated.progress(offset, whence)
 
     def wasSuccessful(self):
         return self.decorated.wasSuccessful()
@@ -110,10 +83,10 @@ class TestResultDecorator(object):
         return self.decorated.stop()
 
     def tags(self, gone_tags, new_tags):
-        return self._call_maybe("tags", None, gone_tags, new_tags)
+        return self.decorated.time(gone_tags, new_tags)
 
     def time(self, a_datetime):
-        return self._call_maybe("time", None, a_datetime)
+        return self.decorated.time(a_datetime)
 
 
 class HookedTestResultDecorator(TestResultDecorator):
@@ -202,10 +175,10 @@ class AutoTimingTestResultDecorator(HookedTestResultDecorator):
         if time is not None:
             return
         time = datetime.datetime.utcnow().replace(tzinfo=iso8601.Utc())
-        self._call_maybe("time", None, time)
+        self.decorated.time(time)
 
     def progress(self, offset, whence):
-        return self._call_maybe("progress", None, offset, whence)
+        return self.decorated.progress(offset, whence)
 
     @property
     def shouldStop(self):
@@ -220,7 +193,7 @@ class AutoTimingTestResultDecorator(HookedTestResultDecorator):
             result object and disable automatic timestamps.
         """
         self._time = a_datetime
-        return self._call_maybe("time", None, a_datetime)
+        return self.decorated.time(a_datetime)
 
 
 class ExtendedToOriginalDecorator(object):
@@ -338,6 +311,10 @@ class ExtendedToOriginalDecorator(object):
             return
         return method(offset, whence)
 
+    @property
+    def shouldStop(self):
+        return self.decorated.shouldStop
+
     def startTest(self, test):
         return self.decorated.startTest(test)
 
@@ -346,6 +323,9 @@ class ExtendedToOriginalDecorator(object):
             return self.decorated.startTestRun()
         except AttributeError:
             return
+
+    def stop(self):
+        return self.decorated.stop()
 
     def stopTest(self, test):
         return self.decorated.stopTest(test)
@@ -367,3 +347,7 @@ class ExtendedToOriginalDecorator(object):
         if method is None:
             return
         return method(a_datetime)
+
+    def wasSuccessful(self):
+        return self.decorated.wasSuccessful()
+
