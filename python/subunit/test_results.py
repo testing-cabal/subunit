@@ -51,23 +51,23 @@ class TestResultDecorator(object):
     def stopTestRun(self):
         return self.decorated.stopTestRun()
 
-    def addError(self, test, err):
-        return self.decorated.addError(test, err)
+    def addError(self, test, err=None, details=None):
+        return self.decorated.addError(test, err, details=details)
 
-    def addFailure(self, test, err):
-        return self.decorated.addFailure(test, err)
+    def addFailure(self, test, err=None, details=None):
+        return self.decorated.addFailure(test, err, details=details)
 
-    def addSuccess(self, test):
-        return self.decorated.addSuccess(test)
+    def addSuccess(self, test, details=None):
+        return self.decorated.addSuccess(test, details=details)
 
-    def addSkip(self, test, reason):
-        return self.decorated.addSkip(test, reason)
+    def addSkip(self, test, reason=None, details=None):
+        return self.decorated.addSkip(test, reason, details=details)
 
-    def addExpectedFailure(self, test, err):
-        return self.decorated.addExpectedFailure(test, err)
+    def addExpectedFailure(self, test, err=None, details=None):
+        return self.decorated.addExpectedFailure(test, err, details=details)
 
-    def addUnexpectedSuccess(self, test):
-        return self.decorated.addUnexpectedSuccess(test)
+    def addUnexpectedSuccess(self, test, details=None):
+        return self.decorated.addUnexpectedSuccess(test, details=details)
 
     def progress(self, offset, whence):
         return self.decorated.progress(offset, whence)
@@ -112,29 +112,29 @@ class HookedTestResultDecorator(TestResultDecorator):
         self._before_event()
         return self.super.stopTestRun()
 
-    def addError(self, test, err):
+    def addError(self, test, err=None, details=None):
         self._before_event()
-        return self.super.addError(test, err)
+        return self.super.addError(test, err, details=details)
 
-    def addFailure(self, test, err):
+    def addFailure(self, test, err=None, details=None):
         self._before_event()
-        return self.super.addFailure(test, err)
+        return self.super.addFailure(test, err, details=details)
 
-    def addSuccess(self, test):
+    def addSuccess(self, test, details=None):
         self._before_event()
-        return self.super.addSuccess(test)
+        return self.super.addSuccess(test, details=details)
 
-    def addSkip(self, test, reason):
+    def addSkip(self, test, reason=None, details=None):
         self._before_event()
-        return self.super.addSkip(test, reason)
+        return self.super.addSkip(test, reason, details=details)
 
-    def addExpectedFailure(self, test, err):
+    def addExpectedFailure(self, test, err=None, details=None):
         self._before_event()
-        return self.super.addExpectedFailure(test, err)
+        return self.super.addExpectedFailure(test, err, details=details)
 
-    def addUnexpectedSuccess(self, test):
+    def addUnexpectedSuccess(self, test, details=None):
         self._before_event()
-        return self.super.addUnexpectedSuccess(test)
+        return self.super.addUnexpectedSuccess(test, details=details)
 
     def progress(self, offset, whence):
         self._before_event()
@@ -217,9 +217,11 @@ class TestResultFilter(TestResultDecorator):
         :param filter_failure: Filter out failures.
         :param filter_success: Filter out successful tests.
         :param filter_skip: Filter out skipped tests.
-        :param filter_predicate: A callable taking (test, err) and 
-            returning True if the result should be passed through.
-            err is None for success.
+        :param filter_predicate: A callable taking (test, outcome, err,
+            details) and returning True if the result should be passed
+            through.  err and details may be none if no error or extra
+            metadata is available. outcome is the name of the outcome such
+            as 'success' or 'failure'.
         """
         TestResultDecorator.__init__(self, result)
         self._filter_error = filter_error
@@ -227,7 +229,7 @@ class TestResultFilter(TestResultDecorator):
         self._filter_success = filter_success
         self._filter_skip = filter_skip
         if filter_predicate is None:
-            filter_predicate = lambda test, err: True
+            filter_predicate = lambda test, outcome, err, details: True
         self.filter_predicate = filter_predicate
         # The current test (for filtering tags)
         self._current_test = None
@@ -236,35 +238,52 @@ class TestResultFilter(TestResultDecorator):
         # The (new, gone) tags for the current test.
         self._current_test_tags = None
         
-    def addError(self, test, err, details=None):
-        if not self._filter_error and self.filter_predicate(test, err):
+    def addError(self, test, err=None, details=None):
+        if (not self._filter_error and 
+            self.filter_predicate(test, 'error', err, details)):
             self.decorated.startTest(test)
             self.decorated.addError(test, err, details=details)
+        else:
+            self._filtered()
 
-    def addFailure(self, test, err, details=None):
-        if not self._filter_failure and self.filter_predicate(test, err):
+    def addFailure(self, test, err=None, details=None):
+        if (not self._filter_failure and
+            self.filter_predicate(test, 'failure', err, details)):
             self.decorated.startTest(test)
             self.decorated.addFailure(test, err, details=details)
+        else:
+            self._filtered()
 
-    def addSkip(self, test, reason, details=None):
-        if not self._filter_skip and self.filter_predicate(test, reason):
+    def addSkip(self, test, reason=None, details=None):
+        if (not self._filter_skip and
+            self.filter_predicate(test, 'skip', reason, details)):
             self.decorated.startTest(test)
             self.decorated.addSkip(test, reason, details=details)
+        else:
+            self._filtered()
 
     def addSuccess(self, test, details=None):
-        if not self._filter_success and self.filter_predicate(test, None):
+        if (not self._filter_success and
+            self.filter_predicate(test, 'success', None, details)):
             self.decorated.startTest(test)
             self.decorated.addSuccess(test, details=details)
+        else:
+            self._filtered()
 
-    def addExpectedFailure(self, test, err, details=None):
-        if self.filter_predicate(test, err):
+    def addExpectedFailure(self, test, err=None, details=None):
+        if self.filter_predicate(test, 'expectedfailure', err, details):
             self.decorated.startTest(test)
             return self.decorated.addExpectedFailure(test, err,
                 details=details)
+        else:
+            self._filtered()
 
     def addUnexpectedSuccess(self, test, details=None):
         self.decorated.startTest(test)
         return self.decorated.addUnexpectedSuccess(test, details=details)
+
+    def _filtered(self):
+        self._current_test_filtered = True
 
     def startTest(self, test):
         """Start a test.

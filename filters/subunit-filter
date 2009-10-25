@@ -78,17 +78,13 @@ def _make_regexp_filter(with_regexps, without_regexps):
     with_re = with_regexps and _compile_re_from_list(with_regexps)
     without_re = without_regexps and _compile_re_from_list(without_regexps)
 
-    def check_regexps(test, err):
+    def check_regexps(test, outcome, err, details):
         """Check if this test and error match the regexp filters."""
-        test_str = str(test)
-        err_str = err and str(err) # may be None
-        if with_re:
-            if not (with_re.search(test_str)
-                or with_re.search(err_str)):
-                return False
-        if without_re:
-            if (without_re.search(test_str) or without_re.search(err_str)):
-                return False
+        test_str = str(test) + outcome + str(err) + str(details)
+        if with_re and not with_re.search(test_str):
+            return False
+        if without_re and without_re.search(test_str):
+            return False
         return True
     return check_regexps
 

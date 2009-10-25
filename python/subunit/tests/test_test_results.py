@@ -518,20 +518,38 @@ class TestHookedTestResultDecorator(unittest.TestCase):
     def test_addError(self):
         self.result.addError(self, subunit.RemoteError())
         
+    def test_addError_details(self):
+        self.result.addError(self, details={})
+        
     def test_addFailure(self):
         self.result.addFailure(self, subunit.RemoteError())
+
+    def test_addFailure_details(self):
+        self.result.addFailure(self, details={})
 
     def test_addSuccess(self):
         self.result.addSuccess(self)
 
+    def test_addSuccess_details(self):
+        self.result.addSuccess(self, details={})
+
     def test_addSkip(self):
         self.result.addSkip(self, "foo")
+
+    def test_addSkip_details(self):
+        self.result.addSkip(self, details={})
 
     def test_addExpectedFailure(self):
         self.result.addExpectedFailure(self, subunit.RemoteError())
 
+    def test_addExpectedFailure_details(self):
+        self.result.addExpectedFailure(self, details={})
+
     def test_addUnexpectedSuccess(self):
         self.result.addUnexpectedSuccess(self)
+
+    def test_addUnexpectedSuccess_details(self):
+        self.result.addUnexpectedSuccess(self, details={})
 
     def test_progress(self):
         self.result.progress(1, subunit.PROGRESS_SET)

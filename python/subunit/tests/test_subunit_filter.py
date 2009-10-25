@@ -91,11 +91,13 @@ class TestTestResultFilter(unittest.TestCase):
     def test_filter_predicate(self):
         """You can filter by predicate callbacks"""
         self.filtered_result = unittest.TestResult()
-        filter_cb = lambda test, err: str(err).find('error details') != -1
+        def filter_cb(test, outcome, err, details):
+            return outcome == 'success'
         self.filter = TestResultFilter(self.filtered_result,
             filter_predicate=filter_cb,
             filter_success=False)
         self.run_tests()
+        # Only success should pass
         self.assertEqual(1, self.filtered_result.testsRun)
 
     def run_tests(self):
