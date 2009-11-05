@@ -32,13 +32,6 @@ EXTRA_DIST =  \
 
 ACLOCAL_AMFLAGS = -I m4
 
-SUBUNIT_CFLAGS = -Wall -Werror -Wextra -Wstrict-prototypes -Wmissing-prototypes \
-	-Wwrite-strings -Wno-variadic-macros -I$(top_srcdir)/c/include
-AM_CFLAGS = $(SUBUNIT_CFLAGS)
-SUBUNIT_CXXFLAGS = -Wall -Werror -Wextra -Wwrite-strings -Wno-variadic-macros \
-	-I$(top_srcdir)/c/include
-AM_CXXFLAGS = $(SUBUNIT_CXXFLAGS)
-
 include_subunitdir = $(includedir)/subunit
 
 dist_bin_SCRIPTS = \
@@ -51,7 +44,7 @@ dist_bin_SCRIPTS = \
 	filters/subunit2pyunit \
 	filters/tap2subunit
 
-TESTS_ENVIRONMENT = SHELL_SHARE='$(top_srcdir)/shell/share/' PYTHONPATH='$(abs_top_srcdir)/python':${PYTHONPATH} 
+TESTS_ENVIRONMENT = SHELL_SHARE='$(top_srcdir)/shell/share/' PYTHONPATH='$(abs_top_srcdir)/python':${PYTHONPATH}
 TESTS = runtests.py $(check_PROGRAMS)
 
 ## install libsubunit.pc
@@ -100,7 +93,7 @@ check-local: perl/Makefile
 	$(MAKE) -C perl check
 
 clean-local:
-	find . -name "*.pyc" | xargs -r rm
+	find . -name "*.pyc" | xargs rm -f
 	rm -f perl/Makefile
 
 # Remove perl dir for VPATH builds.
