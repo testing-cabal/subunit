@@ -93,7 +93,7 @@ check-local: perl/Makefile
 	$(MAKE) -C perl check
 
 clean-local:
-	find . -name "*.pyc" | xargs rm -f
+	find . -type f -name "*.pyc" -exec rm -f {} ';'
 	rm -f perl/Makefile
 
 # Remove perl dir for VPATH builds.

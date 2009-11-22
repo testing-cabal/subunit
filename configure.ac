@@ -25,13 +25,13 @@ AC_PROG_LN_S
 AC_PROG_LIBTOOL
 AM_PATH_PYTHON
 
-if test "$GCC" = "yes"
-then
+AS_IF([test "$GCC" = "yes"],
+      [
   SUBUNIT_CFLAGS="-Wall -Werror -Wextra -Wstrict-prototypes "
   SUBUNIT_CFLAGS="$SUBUNIT_CFLAGS -Wmissing-prototypes -Wwrite-strings "
   SUBUNIT_CFLAGS="$SUBUNIT_CFLAGS -Wno-variadic-macros "
   SUBUNIT_CXXFLAGS="-Wall -Werror -Wextra -Wwrite-strings -Wno-variadic-macros"
-fi
+      ])
 
 AM_CFLAGS="$SUBUNIT_CFLAGS -I\$(top_srcdir)/c/include"
 AM_CXXFLAGS="$SUBUNIT_CXXFLAGS -I\$(top_srcdir)/c/include"
