@@ -39,6 +39,9 @@ subunit release notes
 
     * Install progress_model.py correctly.
 
+    * Non-gcc builds will no longer try to use gcc specific flags.
+      (Thanks trondn-norbye)
+
   API CHANGES:
 
   INTERNALS:
