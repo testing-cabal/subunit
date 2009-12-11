@@ -31,7 +31,10 @@ subunit release notes
 
     * Multipart test outcomes are tentatively supported; the exact protocol
       for them, both serialiser and object is not yet finalised. Testers and
-      early adopters are sought.
+      early adopters are sought. As part of this and also in an attempt to
+      provider a more precise focus on the wire protocol and toolchain, 
+      Subunit now depends on testtools (http://launchpad.net/testtools)
+      release 0.9.0 or newer.
 
     * The C library now has ``subunit_test_skip``.
 

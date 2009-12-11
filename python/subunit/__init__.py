@@ -50,7 +50,7 @@ The test outcome methods ``addSuccess``, ``addError``, ``addExpectedFailure``,
 ``addFailure``, ``addSkip`` take an optional keyword parameter ``details``
 which can be used instead of the usual python unittest parameter.
 When used the value of details should be a dict from ``string`` to 
-``subunit.content.Content`` objects. This is a draft API being worked on with
+``testtools.content.Content`` objects. This is a draft API being worked on with
 the Python Testing In Python mail list, with the goal of permitting a common
 way to provide additional data beyond a traceback, such as captured data from
 disk, logging messages etc.
@@ -112,8 +112,8 @@ Utility modules
 ---------------
 
 * subunit.chunked contains HTTP chunked encoding/decoding logic.
-* subunit.content contains a minimal assumptions MIME content representation.
-* subunit.content_type contains a MIME Content-Type representation.
+* testtools.content contains a minimal assumptions MIME content representation.
+* testtools.content_type contains a MIME Content-Type representation.
 * subunit.test_results contains TestResult helper classes.
 """
 
@@ -126,8 +126,10 @@ import sys
 import unittest
 
 import iso8601
+from testtools import content, content_type, ExtendedToOriginalDecorator
+from testtools.testresult import _StringException
 
-import chunked, content, content_type, details, test_results
+import chunked, details, test_results
 
 
 PROGRESS_SET = 0
@@ -428,7 +430,7 @@ class TestProtocolServer(object):
             of mixed protocols. By default, sys.stdout will be used for
             convenience.
         """
-        self.client = test_results.ExtendedToOriginalDecorator(client)
+        self.client = ExtendedToOriginalDecorator(client)
         if stream is None:
             stream = sys.stdout
         self._stream = stream
@@ -506,14 +508,11 @@ class TestProtocolServer(object):
         self._stream.write(line)
 
 
-class RemoteException(Exception):
-    """An exception that occured remotely to Python."""
-
-    def __eq__(self, other):
-        try:
-            return self.args == other.args
-        except AttributeError:
-            return False
+try:
+    from testtools.testresult import _StringException as RemoteException
+    _remote_exception_str = '_StringException' # For testing.
+except ImportError:
+    raise ImportError ("testtools.testresult does not contain _StringException, check your version.")
 
 
 class TestProtocolClient(unittest.TestResult):
@@ -690,9 +689,7 @@ class TestProtocolClient(unittest.TestResult):
 
 
 def RemoteError(description=""):
-    if description == "":
-        description = "\n"
-    return (RemoteException, RemoteException(description), None)
+    return (_StringException, _StringException(description), None)
 
 
 class RemotedTestCase(unittest.TestCase):

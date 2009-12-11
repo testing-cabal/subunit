@@ -18,7 +18,9 @@
 
 from cStringIO import StringIO
 
-import chunked, content, content_type
+from testtools import content, content_type
+
+import chunked
 
 
 class DetailsParser(object):

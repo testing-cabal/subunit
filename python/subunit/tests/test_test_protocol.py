@@ -20,9 +20,11 @@ from StringIO import StringIO
 import os
 import sys
 
+from testtools.content import Content, TracebackContent
+from testtools.content_type import ContentType
+
 import subunit
-from subunit.content import Content, TracebackContent
-from subunit.content_type import ContentType
+from subunit import _remote_exception_str
 import subunit.iso8601 as iso8601
 from subunit.tests.test_test_results import (
     ExtendedTestResult,
@@ -67,10 +69,10 @@ class TestTestProtocolServerPipe(unittest.TestCase):
         bing = subunit.RemotedTestCase("bing crosby")
         an_error = subunit.RemotedTestCase("an error")
         self.assertEqual(client.errors,
-                         [(an_error, 'RemoteException: \n\n')])
+                         [(an_error, _remote_exception_str + '\n')])
         self.assertEqual(
             client.failures,
-            [(bing, "RemoteException: Text attachment: traceback\n"
+            [(bing, _remote_exception_str + ": Text attachment: traceback\n"
                 "------------\nfoo.c:53:ERROR invalid state\n"
                 "------------\n\n")])
         self.assertEqual(client.testsRun, 3)
@@ -800,7 +802,7 @@ class TestRemotedTestCase(unittest.TestCase):
                          "'A test description'>", "%r" % test)
         result = unittest.TestResult()
         test.run(result)
-        self.assertEqual([(test, "RemoteException: "
+        self.assertEqual([(test, _remote_exception_str + ": "
                                  "Cannot run RemotedTestCases.\n\n")],
                          result.errors)
         self.assertEqual(1, result.testsRun)
@@ -973,7 +975,7 @@ class TestTestProtocolClient(unittest.TestCase):
             ContentType('text', 'plain'), lambda:['serialised\nform'])}
         self.sample_tb_details = dict(self.sample_details)
         self.sample_tb_details['traceback'] = TracebackContent(
-            subunit.RemoteError("boo qux"))
+            subunit.RemoteError("boo qux"), self.test)
 
     def test_start_test(self):
         """Test startTest on a TestProtocolClient."""
@@ -1006,7 +1008,8 @@ class TestTestProtocolClient(unittest.TestCase):
             self.test, subunit.RemoteError("boo qux"))
         self.assertEqual(
             self.io.getvalue(),
-            'failure: %s [\nRemoteException: boo qux\n]\n' % self.test.id())
+            ('failure: %s [\n' + _remote_exception_str + ': boo qux\n]\n')
+            % self.test.id())
 
     def test_add_failure_details(self):
         """Test addFailure on a TestProtocolClient with details."""
@@ -1014,14 +1017,14 @@ class TestTestProtocolClient(unittest.TestCase):
             self.test, details=self.sample_tb_details)
         self.assertEqual(
             self.io.getvalue(),
-            "failure: %s [ multipart\n"
+            ("failure: %s [ multipart\n"
             "Content-Type: text/plain\n"
             "something\n"
             "F\r\nserialised\nform0\r\n"
             "Content-Type: text/x-traceback;language=python\n"
             "traceback\n"
-            "19\r\nRemoteException: boo qux\n0\r\n"
-            "]\n" % self.test.id())
+            "1A\r\n" + _remote_exception_str + ": boo qux\n0\r\n"
+            "]\n") % self.test.id())
 
     def test_add_error(self):
         """Test stopTest on a TestProtocolClient."""
@@ -1029,9 +1032,9 @@ class TestTestProtocolClient(unittest.TestCase):
             self.test, subunit.RemoteError("phwoar crikey"))
         self.assertEqual(
             self.io.getvalue(),
-            'error: %s [\n'
-            "RemoteException: phwoar crikey\n"
-            "]\n" % self.test.id())
+            ('error: %s [\n' +
+            _remote_exception_str + ": phwoar crikey\n"
+            "]\n") % self.test.id())
 
     def test_add_error_details(self):
         """Test stopTest on a TestProtocolClient with details."""
@@ -1039,14 +1042,14 @@ class TestTestProtocolClient(unittest.TestCase):
             self.test, details=self.sample_tb_details)
         self.assertEqual(
             self.io.getvalue(),
-            "error: %s [ multipart\n"
+            ("error: %s [ multipart\n"
             "Content-Type: text/plain\n"
             "something\n"
             "F\r\nserialised\nform0\r\n"
             "Content-Type: text/x-traceback;language=python\n"
             "traceback\n"
-            "19\r\nRemoteException: boo qux\n0\r\n"
-            "]\n" % self.test.id())
+            "1A\r\n" + _remote_exception_str + ": boo qux\n0\r\n"
+            "]\n") % self.test.id())
 
     def test_add_expected_failure(self):
         """Test addExpectedFailure on a TestProtocolClient."""
@@ -1054,9 +1057,9 @@ class TestTestProtocolClient(unittest.TestCase):
             self.test, subunit.RemoteError("phwoar crikey"))
         self.assertEqual(
             self.io.getvalue(),
-            'xfail: %s [\n'
-            "RemoteException: phwoar crikey\n"
-            "]\n" % self.test.id())
+            ('xfail: %s [\n' +
+            _remote_exception_str + ": phwoar crikey\n"
+            "]\n") % self.test.id())
 
     def test_add_expected_failure_details(self):
         """Test addExpectedFailure on a TestProtocolClient with details."""
@@ -1064,14 +1067,14 @@ class TestTestProtocolClient(unittest.TestCase):
             self.test, details=self.sample_tb_details)
         self.assertEqual(
             self.io.getvalue(),
-            "xfail: %s [ multipart\n"
+            ("xfail: %s [ multipart\n"
             "Content-Type: text/plain\n"
             "something\n"
             "F\r\nserialised\nform0\r\n"
             "Content-Type: text/x-traceback;language=python\n"
             "traceback\n"
-            "19\r\nRemoteException: boo qux\n0\r\n"
-            "]\n" % self.test.id())
+            "1A\r\n"+ _remote_exception_str + ": boo qux\n0\r\n"
+            "]\n") % self.test.id())
 
     def test_add_skip(self):
         """Test addSkip on a TestProtocolClient."""
