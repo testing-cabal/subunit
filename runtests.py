@@ -129,7 +129,7 @@ def main(argv):
     visitor = filteringVisitor(pattern)
     test_suite().visit(visitor)
     runner = ParameterisableTextTestRunner(verbosity=2)
-    runner.resultFactory(earlyStopFactory)
+    runner.resultFactory(unittest._TextTestResult)
     if not runner.run(visitor.suite()).wasSuccessful():
         return 1
     return 0
