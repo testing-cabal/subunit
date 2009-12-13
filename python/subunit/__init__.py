@@ -130,7 +130,8 @@ try:
     RemoteException = _StringException
     _remote_exception_str = '_StringException' # For testing.
 except ImportError:
-    raise ImportError ("testtools.testresult does not contain _StringException, check your version.")
+    raise ImportError ("testtools.testresult.real does not contain "
+        "_StringException, check your version.")
 
 
 from testtools.testresult.real import _StringException
