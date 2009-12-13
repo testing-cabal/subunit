@@ -112,8 +112,6 @@ Utility modules
 ---------------
 
 * subunit.chunked contains HTTP chunked encoding/decoding logic.
-* testtools.content contains a minimal assumptions MIME content representation.
-* testtools.content_type contains a MIME Content-Type representation.
 * subunit.test_results contains TestResult helper classes.
 """
 
