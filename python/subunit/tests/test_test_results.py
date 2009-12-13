@@ -60,14 +60,6 @@ class TimeCapturingResult(unittest.TestResult):
         self._calls.append(a_datetime)
 
 
-class LoggingResult(object):
-    """Basic support for logging of results."""
-    
-    def __init__(self):
-        self._calls = []
-        self.shouldStop = False
-
-
 class TestHookedTestResultDecorator(unittest.TestCase):
 
     def setUp(self):
