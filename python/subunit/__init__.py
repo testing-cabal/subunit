@@ -127,7 +127,15 @@ import unittest
 
 import iso8601
 from testtools import content, content_type, ExtendedToOriginalDecorator
-from testtools.testresult import _StringException
+try:
+    from testtools.testresult.real import _StringException
+    RemoteException = _StringException
+    _remote_exception_str = '_StringException' # For testing.
+except ImportError:
+    raise ImportError ("testtools.testresult does not contain _StringException, check your version.")
+
+
+from testtools.testresult.real import _StringException
 
 import chunked, details, test_results
 
@@ -506,13 +514,6 @@ class TestProtocolServer(object):
 
     def stdOutLineReceived(self, line):
         self._stream.write(line)
-
-
-try:
-    from testtools.testresult import _StringException as RemoteException
-    _remote_exception_str = '_StringException' # For testing.
-except ImportError:
-    raise ImportError ("testtools.testresult does not contain _StringException, check your version.")
 
 
 class TestProtocolClient(unittest.TestResult):
