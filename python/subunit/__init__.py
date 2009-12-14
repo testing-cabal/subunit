@@ -169,7 +169,7 @@ class TestProtocolServer(object):
     READING_XFAIL = 5
     READING_SUCCESS = 6
 
-    def __init__(self, client, stream=None):
+    def __init__(self, client, stream=None, forward_stream=None):
         """Create a TestProtocolServer instance.
 
         :param client: An object meeting the unittest.TestResult protocol.
@@ -177,12 +177,17 @@ class TestProtocolServer(object):
             subunit protocol should be written to. This allows custom handling
             of mixed protocols. By default, sys.stdout will be used for
             convenience.
+        :param forward_stream: A stream to forward subunit lines to. This 
+            allows a filter to forward the entire stream while still parsing
+            and acting on it. By default forward_stream is set to
+            DiscardStream() and no forwarding happens.
         """
         self.state = TestProtocolServer.OUTSIDE_TEST
         self.client = client
         if stream is None:
             stream = sys.stdout
         self._stream = stream
+        self._forward_stream = forward_stream or DiscardStream()
 
     def _addError(self, offset, line):
         if (self.state == TestProtocolServer.TEST_STARTED and
@@ -192,10 +197,12 @@ class TestProtocolServer(object):
             self.client.addError(self._current_test, RemoteError(""))
             self.client.stopTest(self._current_test)
             self._current_test = None
+            self.subunitLineReceived(line)
         elif (self.state == TestProtocolServer.TEST_STARTED and
             self.current_test_description + " [" == line[offset:-1]):
             self.state = TestProtocolServer.READING_ERROR
             self._message = ""
+            self.subunitLineReceived(line)
         else:
             self.stdOutLineReceived(line)
 
@@ -210,10 +217,12 @@ class TestProtocolServer(object):
             else:
                 self.client.addSuccess(self._current_test)
             self.client.stopTest(self._current_test)
+            self.subunitLineReceived(line)
         elif (self.state == TestProtocolServer.TEST_STARTED and
             self.current_test_description + " [" == line[offset:-1]):
             self.state = TestProtocolServer.READING_XFAIL
             self._message = ""
+            self.subunitLineReceived(line)
         else:
             self.stdOutLineReceived(line)
 
@@ -224,10 +233,12 @@ class TestProtocolServer(object):
             self.current_test_description = None
             self.client.addFailure(self._current_test, RemoteError())
             self.client.stopTest(self._current_test)
+            self.subunitLineReceived(line)
         elif (self.state == TestProtocolServer.TEST_STARTED and
             self.current_test_description + " [" == line[offset:-1]):
             self.state = TestProtocolServer.READING_FAILURE
             self._message = ""
+            self.subunitLineReceived(line)
         else:
             self.stdOutLineReceived(line)
 
@@ -238,10 +249,12 @@ class TestProtocolServer(object):
             self.current_test_description = None
             self._skip_or_error()
             self.client.stopTest(self._current_test)
+            self.subunitLineReceived(line)
         elif (self.state == TestProtocolServer.TEST_STARTED and
             self.current_test_description + " [" == line[offset:-1]):
             self.state = TestProtocolServer.READING_SKIP
             self._message = ""
+            self.subunitLineReceived(line)
         else:
             self.stdOutLineReceived(line)
 
@@ -259,10 +272,12 @@ class TestProtocolServer(object):
         if (self.state == TestProtocolServer.TEST_STARTED and
             self.current_test_description == line[offset:-1]):
             self._succeedTest()
+            self.subunitLineReceived(line)
         elif (self.state == TestProtocolServer.TEST_STARTED and
             self.current_test_description + " [" == line[offset:-1]):
             self.state = TestProtocolServer.READING_SUCCESS
             self._message = ""
+            self.subunitLineReceived(line)
         else:
             self.stdOutLineReceived(line)
 
@@ -274,6 +289,7 @@ class TestProtocolServer(object):
             self._message += line
 
     def endQuote(self, line):
+        stdout = False
         if self.state == TestProtocolServer.READING_FAILURE:
             self.state = TestProtocolServer.OUTSIDE_TEST
             self.current_test_description = None
@@ -304,6 +320,9 @@ class TestProtocolServer(object):
             self._succeedTest()
         else:
             self.stdOutLineReceived(line)
+            stdout = True
+        if not stdout:
+            self.subunitLineReceived(line)
 
     def _handleProgress(self, offset, line):
         """Process a progress directive."""
@@ -352,8 +371,10 @@ class TestProtocolServer(object):
             TestProtocolServer.READING_XFAIL
             ):
             self._appendMessage(line)
+            self.subunitLineReceived(line)
         else:
             parts = line.split(None, 1)
+            stdout = False
             if len(parts) == 2:
                 cmd, rest = parts
                 offset = len(cmd) + 1
@@ -366,14 +387,17 @@ class TestProtocolServer(object):
                     self._addFailure(offset, line)
                 elif cmd == 'progress':
                     self._handleProgress(offset, line)
+                    self.subunitLineReceived(line)
                 elif cmd == 'skip':
                     self._addSkip(offset, line)
                 elif cmd in ('success', 'successful'):
                     self._addSuccess(offset, line)
                 elif cmd in ('tags',):
                     self._handleTags(offset, line)
+                    self.subunitLineReceived(line)
                 elif cmd in ('time',):
                     self._handleTime(offset, line)
+                    self.subunitLineReceived(line)
                 elif cmd == 'xfail':
                     self._addExpectedFail(offset, line)
                 else:
@@ -418,8 +442,12 @@ class TestProtocolServer(object):
             self._current_test = RemotedTestCase(line[offset:-1])
             self.current_test_description = line[offset:-1]
             self.client.startTest(self._current_test)
+            self.subunitLineReceived(line)
         else:
             self.stdOutLineReceived(line)
+
+    def subunitLineReceived(self, line):
+        self._forward_stream.write(line)
 
     def stdOutLineReceived(self, line):
         self._stream.write(line)
@@ -860,16 +888,19 @@ class ProtocolTestCase(object):
     :seealso: TestProtocolServer (the subunit wire protocol parser).
     """
 
-    def __init__(self, stream, passthrough=None):
+    def __init__(self, stream, passthrough=None, forward=False):
         """Create a ProtocolTestCase reading from stream.
 
         :param stream: A filelike object which a subunit stream can be read
             from.
         :param passthrough: A stream pass non subunit input on to. If not
             supplied, the TestProtocolServer default is used.
+        :param forward: A stream to pass subunit input on to. If not supplied
+            subunit input is not forwarded.
         """
         self._stream = stream
         self._passthrough = passthrough
+        self._forward = forward
 
     def __call__(self, result=None):
         return self.run(result)
@@ -877,7 +908,7 @@ class ProtocolTestCase(object):
     def run(self, result=None):
         if result is None:
             result = self.defaultTestResult()
-        protocol = TestProtocolServer(result, self._passthrough)
+        protocol = TestProtocolServer(result, self._passthrough, self._forward)
         line = self._stream.readline()
         while line:
             protocol.lineReceived(line)

@@ -19,6 +19,11 @@ subunit release notes
     * INSTALLDIRS can be set to control the perl MakeMaker 'INSTALLDIRS'
       viarable when installing.
 
+    * subunit2junitxml supports a new option, --forward which causes it
+      to forward the raw subunit stream in a similar manner to tee. This
+      is used with the -o option to both write a xml report and get some
+      other subunit filter to process the stream.
+
     * The C library now has ``subunit_test_skip``.
 
   BUG FIXES:
