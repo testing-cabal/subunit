@@ -33,6 +33,7 @@ parser.add_option("--no-passthrough", action="store_true",
     help="Hide all non subunit input.", default=False, dest="no_passthrough")
 parser.add_option("-o", "--output-to",
     help="Output the XML to this path rather than stdout.")
+parser.add_option("-f", "--forward", help="Forward subunit stream on stdout.")
 (options, args) = parser.parse_args()
 if options.output_to is None:
     output_to = sys.stdout
@@ -44,7 +45,12 @@ try:
         passthrough_stream = DiscardStream()
     else:
         passthrough_stream = None
-    test = ProtocolTestCase(sys.stdin, passthrough=passthrough_stream)
+    if options.forward:
+        forward_stream = sys.stdout
+    else:
+        forward_stream = None
+    test = ProtocolTestCase(sys.stdin, passthrough=passthrough_stream,
+       forward=forward_stream)
     result.startTestRun()
     test.run(result)
     result.stopTestRun()

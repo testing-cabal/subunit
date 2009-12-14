@@ -43,6 +43,7 @@ class TestTestImports(unittest.TestCase):
         from subunit import ExecTestCase
         from subunit import IsolatedTestCase
         from subunit import TestProtocolClient
+        from subunit import ProtocolTestCase
 
 
 class TestDiscardStream(unittest.TestCase):
@@ -50,6 +51,30 @@ class TestDiscardStream(unittest.TestCase):
     def test_write(self):
         subunit.DiscardStream().write("content")
 
+
+class TestProtocolServerForward(unittest.TestCase):
+
+    def test_story(self):
+        client = unittest.TestResult()
+        out = StringIO()
+        protocol = subunit.TestProtocolServer(client, forward_stream=out)
+        pipe = StringIO("test old mcdonald\n"
+                        "success old mcdonald\n")
+        protocol.readFrom(pipe)
+        mcdonald = subunit.RemotedTestCase("old mcdonald")
+        self.assertEqual(client.testsRun, 1)
+        self.assertEqual(pipe.getvalue(), out.getvalue())
+
+    def test_not_command(self):
+        client = unittest.TestResult()
+        out = StringIO()
+        protocol = subunit.TestProtocolServer(client,
+            stream=subunit.DiscardStream(), forward_stream=out)
+        pipe = StringIO("success old mcdonald\n")
+        protocol.readFrom(pipe)
+        self.assertEqual(client.testsRun, 0)
+        self.assertEqual("", out.getvalue())
+        
 
 class TestTestProtocolServerPipe(unittest.TestCase):
 

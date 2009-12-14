@@ -17,7 +17,7 @@
 """Subunit - a streaming test protocol
 
 Overview
-========
+++++++++
 
 The ``subunit`` Python package provides a number of ``unittest`` extensions
 which can be used to cause tests to output Subunit, to parse Subunit streams
@@ -230,8 +230,10 @@ class _ParserState(object):
                 self.addSuccess(offset, line)
             elif cmd in ('tags',):
                 self.parser._handleTags(offset, line)
+                self.parser.subunitLineReceived(line)
             elif cmd in ('time',):
                 self.parser._handleTime(offset, line)
+                self.parser.subunitLineReceived(line)
             elif cmd == 'xfail':
                 self.addExpectedFail(offset, line)
             else:
@@ -264,13 +266,16 @@ class _InTest(_ParserState):
             no_details()
             self.parser.client.stopTest(self.parser._current_test)
             self.parser._current_test = None
+            self.parser.subunitLineReceived(line)
         elif self.parser.current_test_description + " [" == line[offset:-1]:
             self.parser._state = details_state
             details_state.set_simple()
+            self.parser.subunitLineReceived(line)
         elif self.parser.current_test_description + " [ multipart" == \
             line[offset:-1]:
             self.parser._state = details_state
             details_state.set_multipart()
+            self.parser.subunitLineReceived(line)
         else:
             self.parser.stdOutLineReceived(line)
 
@@ -333,6 +338,7 @@ class _OutSideTest(_ParserState):
         self.parser._current_test = RemotedTestCase(line[offset:-1])
         self.parser.current_test_description = line[offset:-1]
         self.parser.client.startTest(self.parser._current_test)
+        self.parser.subunitLineReceived(line)
 
 
 class _ReadingDetails(_ParserState):
@@ -348,6 +354,7 @@ class _ReadingDetails(_ParserState):
     def lineReceived(self, line):
         """a line has been received."""
         self.details_parser.lineReceived(line)
+        self.parser.subunitLineReceived(line)
 
     def lostConnection(self):
         """Connection lost."""
@@ -428,7 +435,7 @@ class TestProtocolServer(object):
     :ivar tags: The current tags associated with the protocol stream.
     """
 
-    def __init__(self, client, stream=None):
+    def __init__(self, client, stream=None, forward_stream=None):
         """Create a TestProtocolServer instance.
 
         :param client: An object meeting the unittest.TestResult protocol.
@@ -436,11 +443,16 @@ class TestProtocolServer(object):
             subunit protocol should be written to. This allows custom handling
             of mixed protocols. By default, sys.stdout will be used for
             convenience.
+        :param forward_stream: A stream to forward subunit lines to. This 
+            allows a filter to forward the entire stream while still parsing
+            and acting on it. By default forward_stream is set to
+            DiscardStream() and no forwarding happens.
         """
         self.client = ExtendedToOriginalDecorator(client)
         if stream is None:
             stream = sys.stdout
         self._stream = stream
+        self._forward_stream = forward_stream or DiscardStream()
         # state objects we can switch too
         self._in_test = _InTest(self)
         self._outside_test = _OutSideTest(self)
@@ -510,6 +522,9 @@ class TestProtocolServer(object):
     def _startTest(self, offset, line):
         """Internal call to change state machine. Override startTest()."""
         self._state.startTest(offset, line)
+
+    def subunitLineReceived(self, line):
+        self._forward_stream.write(line)
 
     def stdOutLineReceived(self, line):
         self._stream.write(line)
@@ -1018,16 +1033,19 @@ class ProtocolTestCase(object):
     :seealso: TestProtocolServer (the subunit wire protocol parser).
     """
 
-    def __init__(self, stream, passthrough=None):
+    def __init__(self, stream, passthrough=None, forward=False):
         """Create a ProtocolTestCase reading from stream.
 
         :param stream: A filelike object which a subunit stream can be read
             from.
         :param passthrough: A stream pass non subunit input on to. If not
             supplied, the TestProtocolServer default is used.
+        :param forward: A stream to pass subunit input on to. If not supplied
+            subunit input is not forwarded.
         """
         self._stream = stream
         self._passthrough = passthrough
+        self._forward = forward
 
     def __call__(self, result=None):
         return self.run(result)
@@ -1035,7 +1053,7 @@ class ProtocolTestCase(object):
     def run(self, result=None):
         if result is None:
             result = self.defaultTestResult()
-        protocol = TestProtocolServer(result, self._passthrough)
+        protocol = TestProtocolServer(result, self._passthrough, self._forward)
         line = self._stream.readline()
         while line:
             protocol.lineReceived(line)
