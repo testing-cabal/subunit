@@ -20,3 +20,4 @@ Dependencies
 * Check to run the subunit test suite.
 * python-gtk2 if you wish to use subunit2gtk
 * python-junitxml if you wish to use subunit2junitxml
+* pkg-config for configure detection of supporting libraries.
