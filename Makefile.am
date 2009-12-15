@@ -1,28 +1,37 @@
 EXTRA_DIST =  \
+	.bzrignore \
+	Apache-2.0 \
+	BSD \
 	INSTALL \
 	Makefile.am \
-	README \
 	NEWS \
+	README \
+	c++/README \
 	c/README \
 	c/check-subunit-0.9.3.patch \
 	c/check-subunit-0.9.5.patch \
 	c/check-subunit-0.9.6.patch \
-	c++/README \
-	perl/subunit-diff \
 	perl/Makefile.PL.in \
-	perl/lib/Subunit/Diff.pm \
 	perl/lib/Subunit.pm \
+	perl/lib/Subunit/Diff.pm \
+	perl/subunit-diff \
+	python/iso8601/ \
+	python/iso8601/LICENSE \
+	python/iso8601/README \
+	python/iso8601/README.subunit \
+	python/iso8601/setup.py \
+	python/iso8601/test_iso8601.py \
 	python/subunit/tests/TestUtil.py \
 	python/subunit/tests/__init__.py \
 	python/subunit/tests/sample-script.py \
 	python/subunit/tests/sample-two-script.py \
 	python/subunit/tests/test_chunked.py \
 	python/subunit/tests/test_details.py \
+	python/subunit/tests/test_progress_model.py \
 	python/subunit/tests/test_subunit_filter.py \
 	python/subunit/tests/test_subunit_stats.py \
 	python/subunit/tests/test_subunit_tags.py \
 	python/subunit/tests/test_tap2subunit.py \
-	python/subunit/tests/test_progress_model.py \
 	python/subunit/tests/test_test_protocol.py \
 	python/subunit/tests/test_test_results.py \
 	runtests.py \
