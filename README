@@ -134,33 +134,38 @@ When run through subunit2pyunit::
 
 Subunit protocol description
 ============================
+
+This description is being ported to an EBNF style. Currently its only partly in
+that style, but should be fairly clear all the same. When in doubt, refer the
+source (and ideally help fix up the description!). Generally the protocol is
+line orientated and consists of either directives and their parameters, or
+when outside a DETAILS region unexpected lines which are not interpreted by
+the parser - they should be forwarded unaltered.
+
 test|testing|test:|testing: test label
 success|success:|successful|successful: test label
-success|success:|successful|successful: test label [
-...
-]
-failure test label
+success|success:|successful|successful: test label DETAILS
 failure: test label
-failure test label [
-...
-]
-failure: test label [
-...
-]
+failure: test label DETAILS
 error: test label
-error: test label [
-]
+error: test label DETAILS
 skip[:] test label
-skip[:] test label [
-]
+skip[:] test label DETAILS
 xfail[:] test label
-xfail[:] test label [
-]
+xfail[:] test label DETAILS
 progress: [+|-]X
 progress: push
 progress: pop
 tags: [-]TAG ...
 time: YYYY-MM-DD HH:MM:SSZ
+
+DETAILS ::= BRACKETED | MULTIPART
+BRACKETED ::= '[' CR lines ']' CR
+MULTIPART ::= '[ multipart' CR PART* ']' CR
+PART ::= PART_TYPE CR NAME CR PART_BYTES CR
+PART_TYPE ::= Content-Type: type/sub-type(;parameter=value,parameter=value)
+PART_BYTES ::= (DIGITS CR LF BYTE{DIGITS})* '0' CR LF
+
 unexpected output on stdout -> stdout.
 exit w/0 or last test completing -> error
 
@@ -186,7 +191,11 @@ for progress reporting. This fits with hierarchically operating test
 environments - such as those that organise tests into suites - the top-most
 runner can report on the number of suites, and each suite surround its output
 with a (push, pop) pair. Interpreters should interpret a pop as also advancing
-the progress of the restored level by one step.
+the progress of the restored level by one step. Encountering progress
+directives between the start and end of a test pair indicates that a previous
+test was interrupted and did not cleanly terminate: it should be implicitly
+closed with an error (the same as when a stream ends with no closing test
+directive for the most recently started test).
 
 The time directive acts as a clock event - it sets the time for all future
 events. The value should be a valid ISO8601 time.

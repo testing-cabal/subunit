@@ -17,7 +17,7 @@
 """Subunit - a streaming test protocol
 
 Overview
-========
+++++++++
 
 The ``subunit`` Python package provides a number of ``unittest`` extensions
 which can be used to cause tests to output Subunit, to parse Subunit streams
@@ -41,10 +41,20 @@ Twisted. See the ``TestProtocolServer`` parser class for more details.
 
 Subunit includes extensions to the Python ``TestResult`` protocol. These are
 all done in a compatible manner: ``TestResult`` objects that do not implement
-the extension methods will not cause errors to be raised, instead the extesion
+the extension methods will not cause errors to be raised, instead the extension
 will either lose fidelity (for instance, folding expected failures to success
-in Python versions < 2.7 or 3.1), or discard the extended data (for tags,
-timestamping and progress markers).
+in Python versions < 2.7 or 3.1), or discard the extended data (for extra
+details, tags, timestamping and progress markers).
+
+The test outcome methods ``addSuccess``, ``addError``, ``addExpectedFailure``,
+``addFailure``, ``addSkip`` take an optional keyword parameter ``details``
+which can be used instead of the usual python unittest parameter.
+When used the value of details should be a dict from ``string`` to 
+``testtools.content.Content`` objects. This is a draft API being worked on with
+the Python Testing In Python mail list, with the goal of permitting a common
+way to provide additional data beyond a traceback, such as captured data from
+disk, logging messages etc. The reference for this API is in testtools (0.9.0
+and newer).
 
 The ``tags(new_tags, gone_tags)`` method is called (if present) to add or
 remove tags in the test run that is currently executing. If called when no
@@ -98,6 +108,12 @@ result object::
  # And run your suite as normal, Subunit will exec each external script as
  # needed and report to your result object.
  suite.run(result)
+
+Utility modules
+---------------
+
+* subunit.chunked contains HTTP chunked encoding/decoding logic.
+* subunit.test_results contains TestResult helper classes.
 """
 
 import datetime
@@ -109,6 +125,19 @@ import sys
 import unittest
 
 import iso8601
+from testtools import content, content_type, ExtendedToOriginalDecorator
+try:
+    from testtools.testresult.real import _StringException
+    RemoteException = _StringException
+    _remote_exception_str = '_StringException' # For testing.
+except ImportError:
+    raise ImportError ("testtools.testresult.real does not contain "
+        "_StringException, check your version.")
+
+
+from testtools.testresult.real import _StringException
+
+import chunked, details, test_results
 
 
 PROGRESS_SET = 0
@@ -155,19 +184,257 @@ class DiscardStream(object):
         pass
 
 
+class _ParserState(object):
+    """State for the subunit parser."""
+
+    def __init__(self, parser):
+        self.parser = parser
+
+    def addError(self, offset, line):
+        """An 'error:' directive has been read."""
+        self.parser.stdOutLineReceived(line)
+
+    def addExpectedFail(self, offset, line):
+        """An 'xfail:' directive has been read."""
+        self.parser.stdOutLineReceived(line)
+
+    def addFailure(self, offset, line):
+        """A 'failure:' directive has been read."""
+        self.parser.stdOutLineReceived(line)
+
+    def addSkip(self, offset, line):
+        """A 'skip:' directive has been read."""
+        self.parser.stdOutLineReceived(line)
+
+    def addSuccess(self, offset, line):
+        """A 'success:' directive has been read."""
+        self.parser.stdOutLineReceived(line)
+
+    def lineReceived(self, line):
+        """a line has been received."""
+        parts = line.split(None, 1)
+        if len(parts) == 2:
+            cmd, rest = parts
+            offset = len(cmd) + 1
+            cmd = cmd.strip(':')
+            if cmd in ('test', 'testing'):
+                self.startTest(offset, line)
+            elif cmd == 'error':
+                self.addError(offset, line)
+            elif cmd == 'failure':
+                self.addFailure(offset, line)
+            elif cmd == 'progress':
+                self.parser._handleProgress(offset, line)
+            elif cmd == 'skip':
+                self.addSkip(offset, line)
+            elif cmd in ('success', 'successful'):
+                self.addSuccess(offset, line)
+            elif cmd in ('tags',):
+                self.parser._handleTags(offset, line)
+                self.parser.subunitLineReceived(line)
+            elif cmd in ('time',):
+                self.parser._handleTime(offset, line)
+                self.parser.subunitLineReceived(line)
+            elif cmd == 'xfail':
+                self.addExpectedFail(offset, line)
+            else:
+                self.parser.stdOutLineReceived(line)
+        else:
+            self.parser.stdOutLineReceived(line)
+
+    def lostConnection(self):
+        """Connection lost."""
+        self.parser._lostConnectionInTest('unknown state of ')
+
+    def startTest(self, offset, line):
+        """A test start command received."""
+        self.parser.stdOutLineReceived(line)
+
+
+class _InTest(_ParserState):
+    """State for the subunit parser after reading a test: directive."""
+
+    def _outcome(self, offset, line, no_details, details_state):
+        """An outcome directive has been read.
+        
+        :param no_details: Callable to call when no details are presented.
+        :param details_state: The state to switch to for details
+            processing of this outcome.
+        """
+        if self.parser.current_test_description == line[offset:-1]:
+            self.parser._state = self.parser._outside_test
+            self.parser.current_test_description = None
+            no_details()
+            self.parser.client.stopTest(self.parser._current_test)
+            self.parser._current_test = None
+            self.parser.subunitLineReceived(line)
+        elif self.parser.current_test_description + " [" == line[offset:-1]:
+            self.parser._state = details_state
+            details_state.set_simple()
+            self.parser.subunitLineReceived(line)
+        elif self.parser.current_test_description + " [ multipart" == \
+            line[offset:-1]:
+            self.parser._state = details_state
+            details_state.set_multipart()
+            self.parser.subunitLineReceived(line)
+        else:
+            self.parser.stdOutLineReceived(line)
+
+    def _error(self):
+        self.parser.client.addError(self.parser._current_test,
+            details={})
+
+    def addError(self, offset, line):
+        """An 'error:' directive has been read."""
+        self._outcome(offset, line, self._error,
+            self.parser._reading_error_details)
+
+    def _xfail(self):
+        self.parser.client.addExpectedFailure(self.parser._current_test,
+            details={})
+
+    def addExpectedFail(self, offset, line):
+        """An 'xfail:' directive has been read."""
+        self._outcome(offset, line, self._xfail,
+            self.parser._reading_xfail_details)
+
+    def _failure(self):
+        self.parser.client.addFailure(self.parser._current_test, details={})
+
+    def addFailure(self, offset, line):
+        """A 'failure:' directive has been read."""
+        self._outcome(offset, line, self._failure,
+            self.parser._reading_failure_details)
+
+    def _skip(self):
+        self.parser.client.addSkip(self.parser._current_test, details={})
+
+    def addSkip(self, offset, line):
+        """A 'skip:' directive has been read."""
+        self._outcome(offset, line, self._skip,
+            self.parser._reading_skip_details)
+
+    def _succeed(self):
+        self.parser.client.addSuccess(self.parser._current_test, details={})
+
+    def addSuccess(self, offset, line):
+        """A 'success:' directive has been read."""
+        self._outcome(offset, line, self._succeed,
+            self.parser._reading_success_details)
+
+    def lostConnection(self):
+        """Connection lost."""
+        self.parser._lostConnectionInTest('')
+
+
+class _OutSideTest(_ParserState):
+    """State for the subunit parser outside of a test context."""
+
+    def lostConnection(self):
+        """Connection lost."""
+
+    def startTest(self, offset, line):
+        """A test start command received."""
+        self.parser._state = self.parser._in_test
+        self.parser._current_test = RemotedTestCase(line[offset:-1])
+        self.parser.current_test_description = line[offset:-1]
+        self.parser.client.startTest(self.parser._current_test)
+        self.parser.subunitLineReceived(line)
+
+
+class _ReadingDetails(_ParserState):
+    """Common logic for readin state details."""
+
+    def endDetails(self):
+        """The end of a details section has been reached."""
+        self.parser._state = self.parser._outside_test
+        self.parser.current_test_description = None
+        self._report_outcome()
+        self.parser.client.stopTest(self.parser._current_test)
+
+    def lineReceived(self, line):
+        """a line has been received."""
+        self.details_parser.lineReceived(line)
+        self.parser.subunitLineReceived(line)
+
+    def lostConnection(self):
+        """Connection lost."""
+        self.parser._lostConnectionInTest('%s report of ' %
+            self._outcome_label())
+
+    def _outcome_label(self):
+        """The label to describe this outcome."""
+        raise NotImplementedError(self._outcome_label)
+
+    def set_simple(self):
+        """Start a simple details parser."""
+        self.details_parser = details.SimpleDetailsParser(self)
+
+    def set_multipart(self):
+        """Start a multipart details parser."""
+        self.details_parser = details.MultipartDetailsParser(self)
+
+
+class _ReadingFailureDetails(_ReadingDetails):
+    """State for the subunit parser when reading failure details."""
+
+    def _report_outcome(self):
+        self.parser.client.addFailure(self.parser._current_test,
+            details=self.details_parser.get_details())
+
+    def _outcome_label(self):
+        return "failure"
+ 
+
+class _ReadingErrorDetails(_ReadingDetails):
+    """State for the subunit parser when reading error details."""
+
+    def _report_outcome(self):
+        self.parser.client.addError(self.parser._current_test,
+            details=self.details_parser.get_details())
+
+    def _outcome_label(self):
+        return "error"
+
+
+class _ReadingExpectedFailureDetails(_ReadingDetails):
+    """State for the subunit parser when reading xfail details."""
+
+    def _report_outcome(self):
+        self.parser.client.addExpectedFailure(self.parser._current_test,
+            details=self.details_parser.get_details())
+
+    def _outcome_label(self):
+        return "xfail"
+
+
+class _ReadingSkipDetails(_ReadingDetails):
+    """State for the subunit parser when reading skip details."""
+
+    def _report_outcome(self):
+        self.parser.client.addSkip(self.parser._current_test,
+            details=self.details_parser.get_details("skip"))
+
+    def _outcome_label(self):
+        return "skip"
+
+
+class _ReadingSuccessDetails(_ReadingDetails):
+    """State for the subunit parser when reading success details."""
+
+    def _report_outcome(self):
+        self.parser.client.addSuccess(self.parser._current_test,
+            details=self.details_parser.get_details("success"))
+
+    def _outcome_label(self):
+        return "success"
+
+
 class TestProtocolServer(object):
     """A parser for subunit.
     
     :ivar tags: The current tags associated with the protocol stream.
     """
-
-    OUTSIDE_TEST = 0
-    TEST_STARTED = 1
-    READING_FAILURE = 2
-    READING_ERROR = 3
-    READING_SKIP = 4
-    READING_XFAIL = 5
-    READING_SUCCESS = 6
 
     def __init__(self, client, stream=None, forward_stream=None):
         """Create a TestProtocolServer instance.
@@ -182,147 +449,21 @@ class TestProtocolServer(object):
             and acting on it. By default forward_stream is set to
             DiscardStream() and no forwarding happens.
         """
-        self.state = TestProtocolServer.OUTSIDE_TEST
-        self.client = client
+        self.client = ExtendedToOriginalDecorator(client)
         if stream is None:
             stream = sys.stdout
         self._stream = stream
         self._forward_stream = forward_stream or DiscardStream()
-
-    def _addError(self, offset, line):
-        if (self.state == TestProtocolServer.TEST_STARTED and
-            self.current_test_description == line[offset:-1]):
-            self.state = TestProtocolServer.OUTSIDE_TEST
-            self.current_test_description = None
-            self.client.addError(self._current_test, RemoteError(""))
-            self.client.stopTest(self._current_test)
-            self._current_test = None
-            self.subunitLineReceived(line)
-        elif (self.state == TestProtocolServer.TEST_STARTED and
-            self.current_test_description + " [" == line[offset:-1]):
-            self.state = TestProtocolServer.READING_ERROR
-            self._message = ""
-            self.subunitLineReceived(line)
-        else:
-            self.stdOutLineReceived(line)
-
-    def _addExpectedFail(self, offset, line):
-        if (self.state == TestProtocolServer.TEST_STARTED and
-            self.current_test_description == line[offset:-1]):
-            self.state = TestProtocolServer.OUTSIDE_TEST
-            self.current_test_description = None
-            xfail = getattr(self.client, 'addExpectedFailure', None)
-            if callable(xfail):
-                xfail(self._current_test, RemoteError())
-            else:
-                self.client.addSuccess(self._current_test)
-            self.client.stopTest(self._current_test)
-            self.subunitLineReceived(line)
-        elif (self.state == TestProtocolServer.TEST_STARTED and
-            self.current_test_description + " [" == line[offset:-1]):
-            self.state = TestProtocolServer.READING_XFAIL
-            self._message = ""
-            self.subunitLineReceived(line)
-        else:
-            self.stdOutLineReceived(line)
-
-    def _addFailure(self, offset, line):
-        if (self.state == TestProtocolServer.TEST_STARTED and
-            self.current_test_description == line[offset:-1]):
-            self.state = TestProtocolServer.OUTSIDE_TEST
-            self.current_test_description = None
-            self.client.addFailure(self._current_test, RemoteError())
-            self.client.stopTest(self._current_test)
-            self.subunitLineReceived(line)
-        elif (self.state == TestProtocolServer.TEST_STARTED and
-            self.current_test_description + " [" == line[offset:-1]):
-            self.state = TestProtocolServer.READING_FAILURE
-            self._message = ""
-            self.subunitLineReceived(line)
-        else:
-            self.stdOutLineReceived(line)
-
-    def _addSkip(self, offset, line):
-        if (self.state == TestProtocolServer.TEST_STARTED and
-            self.current_test_description == line[offset:-1]):
-            self.state = TestProtocolServer.OUTSIDE_TEST
-            self.current_test_description = None
-            self._skip_or_error()
-            self.client.stopTest(self._current_test)
-            self.subunitLineReceived(line)
-        elif (self.state == TestProtocolServer.TEST_STARTED and
-            self.current_test_description + " [" == line[offset:-1]):
-            self.state = TestProtocolServer.READING_SKIP
-            self._message = ""
-            self.subunitLineReceived(line)
-        else:
-            self.stdOutLineReceived(line)
-
-    def _skip_or_error(self, message=None):
-        """Report the current test as a skip if possible, or else an error."""
-        addSkip = getattr(self.client, 'addSkip', None)
-        if not callable(addSkip):
-            self.client.addError(self._current_test, RemoteError(message))
-        else:
-            if not message:
-                message = "No reason given"
-            addSkip(self._current_test, message)
-
-    def _addSuccess(self, offset, line):
-        if (self.state == TestProtocolServer.TEST_STARTED and
-            self.current_test_description == line[offset:-1]):
-            self._succeedTest()
-            self.subunitLineReceived(line)
-        elif (self.state == TestProtocolServer.TEST_STARTED and
-            self.current_test_description + " [" == line[offset:-1]):
-            self.state = TestProtocolServer.READING_SUCCESS
-            self._message = ""
-            self.subunitLineReceived(line)
-        else:
-            self.stdOutLineReceived(line)
-
-    def _appendMessage(self, line):
-        if line[0:2] == " ]":
-            # quoted ] start
-            self._message += line[1:]
-        else:
-            self._message += line
-
-    def endQuote(self, line):
-        stdout = False
-        if self.state == TestProtocolServer.READING_FAILURE:
-            self.state = TestProtocolServer.OUTSIDE_TEST
-            self.current_test_description = None
-            self.client.addFailure(self._current_test,
-                                   RemoteError(self._message))
-            self.client.stopTest(self._current_test)
-        elif self.state == TestProtocolServer.READING_ERROR:
-            self.state = TestProtocolServer.OUTSIDE_TEST
-            self.current_test_description = None
-            self.client.addError(self._current_test,
-                                 RemoteError(self._message))
-            self.client.stopTest(self._current_test)
-        elif self.state == TestProtocolServer.READING_SKIP:
-            self.state = TestProtocolServer.OUTSIDE_TEST
-            self.current_test_description = None
-            self._skip_or_error(self._message)
-            self.client.stopTest(self._current_test)
-        elif self.state == TestProtocolServer.READING_XFAIL:
-            self.state = TestProtocolServer.OUTSIDE_TEST
-            self.current_test_description = None
-            xfail = getattr(self.client, 'addExpectedFailure', None)
-            if callable(xfail):
-                xfail(self._current_test, RemoteError(self._message))
-            else:
-                self.client.addSuccess(self._current_test)
-            self.client.stopTest(self._current_test)
-        elif self.state == TestProtocolServer.READING_SUCCESS:
-            self._succeedTest()
-        else:
-            self.stdOutLineReceived(line)
-            stdout = True
-        if not stdout:
-            self.subunitLineReceived(line)
+        # state objects we can switch too
+        self._in_test = _InTest(self)
+        self._outside_test = _OutSideTest(self)
+        self._reading_error_details = _ReadingErrorDetails(self)
+        self._reading_failure_details = _ReadingFailureDetails(self)
+        self._reading_skip_details = _ReadingSkipDetails(self)
+        self._reading_success_details = _ReadingSuccessDetails(self)
+        self._reading_xfail_details = _ReadingExpectedFailureDetails(self)
+        # start with outside test.
+        self._state = self._outside_test
 
     def _handleProgress(self, offset, line):
         """Process a progress directive."""
@@ -339,17 +480,13 @@ class TestProtocolServer(object):
         else:
             whence = PROGRESS_SET
             delta = int(line)
-        progress_method = getattr(self.client, 'progress', None)
-        if callable(progress_method):
-            progress_method(delta, whence)
+        self.client.progress(delta, whence)
 
     def _handleTags(self, offset, line):
         """Process a tags command."""
         tags = line[offset:].split()
         new_tags, gone_tags = tags_to_new_gone(tags)
-        tags_method = getattr(self.client, 'tags', None)
-        if tags_method is not None:
-            tags_method(new_tags, gone_tags)
+        self.client.tags(new_tags, gone_tags)
 
     def _handleTime(self, offset, line):
         # Accept it, but do not do anything with it yet.
@@ -357,53 +494,11 @@ class TestProtocolServer(object):
             event_time = iso8601.parse_date(line[offset:-1])
         except TypeError, e:
             raise TypeError("Failed to parse %r, got %r" % (line, e))
-        time_method = getattr(self.client, 'time', None)
-        if callable(time_method):
-            time_method(event_time)
+        self.client.time(event_time)
 
     def lineReceived(self, line):
         """Call the appropriate local method for the received line."""
-        if line == "]\n":
-            self.endQuote(line)
-        elif self.state in (TestProtocolServer.READING_FAILURE,
-            TestProtocolServer.READING_ERROR, TestProtocolServer.READING_SKIP,
-            TestProtocolServer.READING_SUCCESS,
-            TestProtocolServer.READING_XFAIL
-            ):
-            self._appendMessage(line)
-            self.subunitLineReceived(line)
-        else:
-            parts = line.split(None, 1)
-            stdout = False
-            if len(parts) == 2:
-                cmd, rest = parts
-                offset = len(cmd) + 1
-                cmd = cmd.strip(':')
-                if cmd in ('test', 'testing'):
-                    self._startTest(offset, line)
-                elif cmd == 'error':
-                    self._addError(offset, line)
-                elif cmd == 'failure':
-                    self._addFailure(offset, line)
-                elif cmd == 'progress':
-                    self._handleProgress(offset, line)
-                    self.subunitLineReceived(line)
-                elif cmd == 'skip':
-                    self._addSkip(offset, line)
-                elif cmd in ('success', 'successful'):
-                    self._addSuccess(offset, line)
-                elif cmd in ('tags',):
-                    self._handleTags(offset, line)
-                    self.subunitLineReceived(line)
-                elif cmd in ('time',):
-                    self._handleTime(offset, line)
-                    self.subunitLineReceived(line)
-                elif cmd == 'xfail':
-                    self._addExpectedFail(offset, line)
-                else:
-                    self.stdOutLineReceived(line)
-            else:
-                self.stdOutLineReceived(line)
+        self._state.lineReceived(line)
 
     def _lostConnectionInTest(self, state_string):
         error_string = "lost connection during %stest '%s'" % (
@@ -413,61 +508,27 @@ class TestProtocolServer(object):
 
     def lostConnection(self):
         """The input connection has finished."""
-        if self.state == TestProtocolServer.OUTSIDE_TEST:
-            return
-        if self.state == TestProtocolServer.TEST_STARTED:
-            self._lostConnectionInTest('')
-        elif self.state == TestProtocolServer.READING_ERROR:
-            self._lostConnectionInTest('error report of ')
-        elif self.state == TestProtocolServer.READING_FAILURE:
-            self._lostConnectionInTest('failure report of ')
-        elif self.state == TestProtocolServer.READING_SUCCESS:
-            self._lostConnectionInTest('success report of ')
-        elif self.state == TestProtocolServer.READING_SKIP:
-            self._lostConnectionInTest('skip report of ')
-        elif self.state == TestProtocolServer.READING_XFAIL:
-            self._lostConnectionInTest('xfail report of ')
-        else:
-            self._lostConnectionInTest('unknown state of ')
+        self._state.lostConnection()
 
     def readFrom(self, pipe):
+        """Blocking convenience API to parse an entire stream.
+        
+        :param pipe: A file-like object supporting readlines().
+        :return: None.
+        """
         for line in pipe.readlines():
             self.lineReceived(line)
         self.lostConnection()
 
     def _startTest(self, offset, line):
         """Internal call to change state machine. Override startTest()."""
-        if self.state == TestProtocolServer.OUTSIDE_TEST:
-            self.state = TestProtocolServer.TEST_STARTED
-            self._current_test = RemotedTestCase(line[offset:-1])
-            self.current_test_description = line[offset:-1]
-            self.client.startTest(self._current_test)
-            self.subunitLineReceived(line)
-        else:
-            self.stdOutLineReceived(line)
+        self._state.startTest(offset, line)
 
     def subunitLineReceived(self, line):
         self._forward_stream.write(line)
 
     def stdOutLineReceived(self, line):
         self._stream.write(line)
-
-    def _succeedTest(self):
-        self.client.addSuccess(self._current_test)
-        self.client.stopTest(self._current_test)
-        self.current_test_description = None
-        self._current_test = None
-        self.state = TestProtocolServer.OUTSIDE_TEST
-
-
-class RemoteException(Exception):
-    """An exception that occured remotely to Python."""
-
-    def __eq__(self, other):
-        try:
-            return self.args == other.args
-        except AttributeError:
-            return False
 
 
 class TestProtocolClient(unittest.TestResult):
@@ -492,29 +553,95 @@ class TestProtocolClient(unittest.TestResult):
         unittest.TestResult.__init__(self)
         self._stream = stream
 
-    def addError(self, test, error):
-        """Report an error in test test."""
-        self._stream.write("error: %s [\n" % test.id())
-        for line in self._exc_info_to_string(error, test).splitlines():
-            self._stream.write("%s\n" % line)
+    def addError(self, test, error=None, details=None):
+        """Report an error in test test.
+        
+        Only one of error and details should be provided: conceptually there
+        are two separate methods:
+            addError(self, test, error)
+            addError(self, test, details)
+
+        :param error: Standard unittest positional argument form - an
+            exc_info tuple.
+        :param details: New Testing-in-python drafted API; a dict from string
+            to subunit.Content objects.
+        """
+        self._addOutcome("error", test, error=error, details=details)
+
+    def addExpectedFailure(self, test, error=None, details=None):
+        """Report an expected failure in test test.
+        
+        Only one of error and details should be provided: conceptually there
+        are two separate methods:
+            addError(self, test, error)
+            addError(self, test, details)
+
+        :param error: Standard unittest positional argument form - an
+            exc_info tuple.
+        :param details: New Testing-in-python drafted API; a dict from string
+            to subunit.Content objects.
+        """
+        self._addOutcome("xfail", test, error=error, details=details)
+
+    def addFailure(self, test, error=None, details=None):
+        """Report a failure in test test.
+        
+        Only one of error and details should be provided: conceptually there
+        are two separate methods:
+            addFailure(self, test, error)
+            addFailure(self, test, details)
+
+        :param error: Standard unittest positional argument form - an
+            exc_info tuple.
+        :param details: New Testing-in-python drafted API; a dict from string
+            to subunit.Content objects.
+        """
+        self._addOutcome("failure", test, error=error, details=details)
+
+    def _addOutcome(self, outcome, test, error=None, details=None):
+        """Report a failure in test test.
+        
+        Only one of error and details should be provided: conceptually there
+        are two separate methods:
+            addOutcome(self, test, error)
+            addOutcome(self, test, details)
+
+        :param outcome: A string describing the outcome - used as the
+            event name in the subunit stream.
+        :param error: Standard unittest positional argument form - an
+            exc_info tuple.
+        :param details: New Testing-in-python drafted API; a dict from string
+            to subunit.Content objects.
+        """
+        self._stream.write("%s: %s" % (outcome, test.id()))
+        if error is None and details is None:
+            raise ValueError
+        if error is not None:
+            self._stream.write(" [\n")
+            for line in self._exc_info_to_string(error, test).splitlines():
+                self._stream.write("%s\n" % line)
+        else:
+            self._write_details(details)
         self._stream.write("]\n")
 
-    def addFailure(self, test, error):
-        """Report a failure in test test."""
-        self._stream.write("failure: %s [\n" % test.id())
-        for line in self._exc_info_to_string(error, test).splitlines():
-            self._stream.write("%s\n" % line)
-        self._stream.write("]\n")
-
-    def addSkip(self, test, reason):
+    def addSkip(self, test, reason=None, details=None):
         """Report a skipped test."""
-        self._stream.write("skip: %s [\n" % test.id())
-        self._stream.write("%s\n" % reason)
-        self._stream.write("]\n")
+        if reason is None:
+            self._addOutcome("skip", test, error=None, details=details)
+        else:
+            self._stream.write("skip: %s [\n" % test.id())
+            self._stream.write("%s\n" % reason)
+            self._stream.write("]\n")
 
-    def addSuccess(self, test):
+    def addSuccess(self, test, details=None):
         """Report a success in a test."""
-        self._stream.write("successful: %s\n" % test.id())
+        self._stream.write("successful: %s" % test.id())
+        if not details:
+            self._stream.write("\n")
+        else:
+            self._write_details(details)
+            self._stream.write("]\n")
+    addUnexpectedSuccess = addSuccess
 
     def startTest(self, test):
         """Mark a test as starting its test run."""
@@ -552,14 +679,33 @@ class TestProtocolClient(unittest.TestResult):
             time.year, time.month, time.day, time.hour, time.minute,
             time.second, time.microsecond))
 
+    def _write_details(self, details):
+        """Output details to the stream.
+
+        :param details: An extended details dict for a test outcome.
+        """
+        self._stream.write(" [ multipart\n")
+        for name, content in sorted(details.iteritems()):
+            self._stream.write("Content-Type: %s/%s" %
+                (content.content_type.type, content.content_type.subtype))
+            parameters = content.content_type.parameters
+            if parameters:
+                self._stream.write(";")
+                param_strs = []
+                for param, value in parameters.iteritems():
+                    param_strs.append("%s=%s" % (param, value))
+                self._stream.write(",".join(param_strs))
+            self._stream.write("\n%s\n" % name)
+            encoder = chunked.Encoder(self._stream)
+            map(encoder.write, content.iter_bytes())
+            encoder.close()
+
     def done(self):
         """Obey the testtools result.done() interface."""
 
 
 def RemoteError(description=""):
-    if description == "":
-        description = "\n"
-    return (RemoteException, RemoteException(description), None)
+    return (_StringException, _StringException(description), None)
 
 
 class RemotedTestCase(unittest.TestCase):
@@ -937,13 +1083,13 @@ class TestResultStats(unittest.TestResult):
     def total_tests(self):
         return self.testsRun
 
-    def addError(self, test, err):
+    def addError(self, test, err, details=None):
         self.failed_tests += 1
 
-    def addFailure(self, test, err):
+    def addFailure(self, test, err, details=None):
         self.failed_tests += 1
 
-    def addSkip(self, test, reason):
+    def addSkip(self, test, reason, details=None):
         self.skipped_tests += 1
 
     def formatStats(self):
@@ -965,123 +1111,3 @@ class TestResultStats(unittest.TestResult):
     def wasSuccessful(self):
         """Tells whether or not this result was a success"""
         return self.failed_tests == 0
-
-
-class TestResultFilter(unittest.TestResult):
-    """A pyunit TestResult interface implementation which filters tests.
-
-    Tests that pass the filter are handed on to another TestResult instance
-    for further processing/reporting. To obtain the filtered results, 
-    the other instance must be interrogated.
-
-    :ivar result: The result that tests are passed to after filtering.
-    :ivar filter_predicate: The callback run to decide whether to pass 
-        a result.
-    """
-
-    def __init__(self, result, filter_error=False, filter_failure=False,
-        filter_success=True, filter_skip=False,
-        filter_predicate=None):
-        """Create a FilterResult object filtering to result.
-        
-        :param filter_error: Filter out errors.
-        :param filter_failure: Filter out failures.
-        :param filter_success: Filter out successful tests.
-        :param filter_skip: Filter out skipped tests.
-        :param filter_predicate: A callable taking (test, err) and 
-            returning True if the result should be passed through.
-            err is None for success.
-        """
-        unittest.TestResult.__init__(self)
-        self.result = result
-        self._filter_error = filter_error
-        self._filter_failure = filter_failure
-        self._filter_success = filter_success
-        self._filter_skip = filter_skip
-        if filter_predicate is None:
-            filter_predicate = lambda test, err: True
-        self.filter_predicate = filter_predicate
-        # The current test (for filtering tags)
-        self._current_test = None
-        # Has the current test been filtered (for outputting test tags)
-        self._current_test_filtered = None
-        # The (new, gone) tags for the current test.
-        self._current_test_tags = None
-        
-    def addError(self, test, err):
-        if not self._filter_error and self.filter_predicate(test, err):
-            self.result.startTest(test)
-            self.result.addError(test, err)
-
-    def addFailure(self, test, err):
-        if not self._filter_failure and self.filter_predicate(test, err):
-            self.result.startTest(test)
-            self.result.addFailure(test, err)
-
-    def addSkip(self, test, reason):
-        if not self._filter_skip and self.filter_predicate(test, reason):
-            self.result.startTest(test)
-            # This is duplicated, it would be nice to have on a 'calls
-            # TestResults' mixin perhaps.
-            addSkip = getattr(self.result, 'addSkip', None)
-            if not callable(addSkip):
-                self.result.addError(test, RemoteError(reason))
-            else:
-                self.result.addSkip(test, reason)
-
-    def addSuccess(self, test):
-        if not self._filter_success and self.filter_predicate(test, None):
-            self.result.startTest(test)
-            self.result.addSuccess(test)
-
-    def startTest(self, test):
-        """Start a test.
-        
-        Not directly passed to the client, but used for handling of tags
-        correctly.
-        """
-        self._current_test = test
-        self._current_test_filtered = False
-        self._current_test_tags = set(), set()
-    
-    def stopTest(self, test):
-        """Stop a test.
-        
-        Not directly passed to the client, but used for handling of tags
-        correctly.
-        """
-        if not self._current_test_filtered:
-            # Tags to output for this test.
-            if self._current_test_tags[0] or self._current_test_tags[1]:
-                tags_method = getattr(self.result, 'tags', None)
-                if callable(tags_method):
-                    self.result.tags(*self._current_test_tags)
-            self.result.stopTest(test)
-        self._current_test = None
-        self._current_test_filtered = None
-        self._current_test_tags = None
-
-    def tags(self, new_tags, gone_tags):
-        """Handle tag instructions.
-
-        Adds and removes tags as appropriate. If a test is currently running,
-        tags are not affected for subsequent tests.
-        
-        :param new_tags: Tags to add,
-        :param gone_tags: Tags to remove.
-        """
-        if self._current_test is not None:
-            # gather the tags until the test stops.
-            self._current_test_tags[0].update(new_tags)
-            self._current_test_tags[0].difference_update(gone_tags)
-            self._current_test_tags[1].update(gone_tags)
-            self._current_test_tags[1].difference_update(new_tags)
-        tags_method = getattr(self.result, 'tags', None)
-        if tags_method is None:
-            return
-        return tags_method(new_tags, gone_tags)
-
-    def id_to_orig_id(self, id):
-        if id.startswith("subunit.RemotedTestCase."):
-            return id[len("subunit.RemotedTestCase."):]
-        return id

@@ -16,8 +16,25 @@ subunit release notes
     * CPPUnit is now directly supported: subunit builds a cppunit listener
       ``libcppunit-subunit``. 
 
+    * In the python API ``addExpectedFailure`` and ``addUnexpectedSuccess``
+      from python 2.7/3.1 are now supported. ``addExpectedFailure`` is
+      serialised as ``xfail``, and ``addUnexpectedSuccess`` as ``success``.
+      The ``ProtocolTestCase`` parser now calls outcomes using an extended
+      API that permits attaching arbitrary MIME resources such as text files
+      log entries and so on. This extended API is being developed with the
+      Python testing community, and is in flux. ``TestResult`` objects that
+      do not support the API will be detected and transparently downgraded
+      back to the regular Python unittest API.
+
     * INSTALLDIRS can be set to control the perl MakeMaker 'INSTALLDIRS'
       viarable when installing.
+
+    * Multipart test outcomes are tentatively supported; the exact protocol
+      for them, both serialiser and object is not yet finalised. Testers and
+      early adopters are sought. As part of this and also in an attempt to
+      provider a more precise focus on the wire protocol and toolchain, 
+      Subunit now depends on testtools (http://launchpad.net/testtools)
+      release 0.9.0 or newer.
 
     * subunit2junitxml supports a new option, --forward which causes it
       to forward the raw subunit stream in a similar manner to tee. This

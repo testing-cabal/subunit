@@ -19,6 +19,9 @@
 import datetime
 
 import iso8601
+import testtools
+
+import subunit
 
 
 # NOT a TestResult, because we are implementing the interface, not inheriting
@@ -34,68 +37,41 @@ class TestResultDecorator(object):
 
     def __init__(self, decorated):
         """Create a TestResultDecorator forwarding to decorated."""
-        self.decorated = decorated
-
-    def _call_maybe(self, method_name, fallback, *params):
-        """Call method_name on self.decorated, if present.
-        
-        This is used to guard newer methods which older pythons do not
-        support. While newer clients won't call these methods if they don't
-        exist, they do exist on the decorator, and thus the decorator has to be
-        the one to filter them out.
-
-        :param method_name: The name of the method to call.
-        :param fallback: If not None, the fallback to call to handle downgrading
-            this method. Otherwise when method_name is not available, no
-            exception is raised and None is returned.
-        :param *params: Parameters to pass to method_name.
-        :return: The result of self.decorated.method_name(*params), if it
-            exists, and None otherwise.
-        """
-        method = getattr(self.decorated, method_name, None)
-        if method is None:
-            if fallback is not None:
-                return fallback(*params)
-            return
-        return method(*params)
+        # Make every decorator degrade gracefully.
+        self.decorated = testtools.ExtendedToOriginalDecorator(decorated)
 
     def startTest(self, test):
         return self.decorated.startTest(test)
 
     def startTestRun(self):
-        return self._call_maybe("startTestRun", None)
+        return self.decorated.startTestRun()
 
     def stopTest(self, test):
         return self.decorated.stopTest(test)
 
     def stopTestRun(self):
-        return self._call_maybe("stopTestRun", None)
+        return self.decorated.stopTestRun()
 
-    def addError(self, test, err):
-        return self.decorated.addError(test, err)
+    def addError(self, test, err=None, details=None):
+        return self.decorated.addError(test, err, details=details)
 
-    def addFailure(self, test, err):
-        return self.decorated.addFailure(test, err)
+    def addFailure(self, test, err=None, details=None):
+        return self.decorated.addFailure(test, err, details=details)
 
-    def addSuccess(self, test):
-        return self.decorated.addSuccess(test)
+    def addSuccess(self, test, details=None):
+        return self.decorated.addSuccess(test, details=details)
 
-    def addSkip(self, test, reason):
-        return self._call_maybe("addSkip", self._degrade_skip, test, reason)
+    def addSkip(self, test, reason=None, details=None):
+        return self.decorated.addSkip(test, reason, details=details)
 
-    def _degrade_skip(self, test, reason):
-        return self.decorated.addSuccess(test)
+    def addExpectedFailure(self, test, err=None, details=None):
+        return self.decorated.addExpectedFailure(test, err, details=details)
 
-    def addExpectedFailure(self, test, err):
-        return self._call_maybe("addExpectedFailure",
-            self.decorated.addFailure, test, err)
-
-    def addUnexpectedSuccess(self, test):
-        return self._call_maybe("addUnexpectedSuccess",
-            self.decorated.addSuccess, test)
+    def addUnexpectedSuccess(self, test, details=None):
+        return self.decorated.addUnexpectedSuccess(test, details=details)
 
     def progress(self, offset, whence):
-        return self._call_maybe("progress", None, offset, whence)
+        return self.decorated.progress(offset, whence)
 
     def wasSuccessful(self):
         return self.decorated.wasSuccessful()
@@ -107,8 +83,11 @@ class TestResultDecorator(object):
     def stop(self):
         return self.decorated.stop()
 
+    def tags(self, gone_tags, new_tags):
+        return self.decorated.time(gone_tags, new_tags)
+
     def time(self, a_datetime):
-        return self._call_maybe("time", None, a_datetime)
+        return self.decorated.time(a_datetime)
 
 
 class HookedTestResultDecorator(TestResultDecorator):
@@ -134,29 +113,29 @@ class HookedTestResultDecorator(TestResultDecorator):
         self._before_event()
         return self.super.stopTestRun()
 
-    def addError(self, test, err):
+    def addError(self, test, err=None, details=None):
         self._before_event()
-        return self.super.addError(test, err)
+        return self.super.addError(test, err, details=details)
 
-    def addFailure(self, test, err):
+    def addFailure(self, test, err=None, details=None):
         self._before_event()
-        return self.super.addFailure(test, err)
+        return self.super.addFailure(test, err, details=details)
 
-    def addSuccess(self, test):
+    def addSuccess(self, test, details=None):
         self._before_event()
-        return self.super.addSuccess(test)
+        return self.super.addSuccess(test, details=details)
 
-    def addSkip(self, test, reason):
+    def addSkip(self, test, reason=None, details=None):
         self._before_event()
-        return self.super.addSkip(test, reason)
+        return self.super.addSkip(test, reason, details=details)
 
-    def addExpectedFailure(self, test, err):
+    def addExpectedFailure(self, test, err=None, details=None):
         self._before_event()
-        return self.super.addExpectedFailure(test, err)
+        return self.super.addExpectedFailure(test, err, details=details)
 
-    def addUnexpectedSuccess(self, test):
+    def addUnexpectedSuccess(self, test, details=None):
         self._before_event()
-        return self.super.addUnexpectedSuccess(test)
+        return self.super.addUnexpectedSuccess(test, details=details)
 
     def progress(self, offset, whence):
         self._before_event()
@@ -197,10 +176,10 @@ class AutoTimingTestResultDecorator(HookedTestResultDecorator):
         if time is not None:
             return
         time = datetime.datetime.utcnow().replace(tzinfo=iso8601.Utc())
-        self._call_maybe("time", None, time)
+        self.decorated.time(time)
 
     def progress(self, offset, whence):
-        return self._call_maybe("progress", None, offset, whence)
+        return self.decorated.progress(offset, whence)
 
     @property
     def shouldStop(self):
@@ -215,4 +194,141 @@ class AutoTimingTestResultDecorator(HookedTestResultDecorator):
             result object and disable automatic timestamps.
         """
         self._time = a_datetime
-        return self._call_maybe("time", None, a_datetime)
+        return self.decorated.time(a_datetime)
+
+
+class TestResultFilter(TestResultDecorator):
+    """A pyunit TestResult interface implementation which filters tests.
+
+    Tests that pass the filter are handed on to another TestResult instance
+    for further processing/reporting. To obtain the filtered results, 
+    the other instance must be interrogated.
+
+    :ivar result: The result that tests are passed to after filtering.
+    :ivar filter_predicate: The callback run to decide whether to pass 
+        a result.
+    """
+
+    def __init__(self, result, filter_error=False, filter_failure=False,
+        filter_success=True, filter_skip=False,
+        filter_predicate=None):
+        """Create a FilterResult object filtering to result.
+        
+        :param filter_error: Filter out errors.
+        :param filter_failure: Filter out failures.
+        :param filter_success: Filter out successful tests.
+        :param filter_skip: Filter out skipped tests.
+        :param filter_predicate: A callable taking (test, outcome, err,
+            details) and returning True if the result should be passed
+            through.  err and details may be none if no error or extra
+            metadata is available. outcome is the name of the outcome such
+            as 'success' or 'failure'.
+        """
+        TestResultDecorator.__init__(self, result)
+        self._filter_error = filter_error
+        self._filter_failure = filter_failure
+        self._filter_success = filter_success
+        self._filter_skip = filter_skip
+        if filter_predicate is None:
+            filter_predicate = lambda test, outcome, err, details: True
+        self.filter_predicate = filter_predicate
+        # The current test (for filtering tags)
+        self._current_test = None
+        # Has the current test been filtered (for outputting test tags)
+        self._current_test_filtered = None
+        # The (new, gone) tags for the current test.
+        self._current_test_tags = None
+        
+    def addError(self, test, err=None, details=None):
+        if (not self._filter_error and 
+            self.filter_predicate(test, 'error', err, details)):
+            self.decorated.startTest(test)
+            self.decorated.addError(test, err, details=details)
+        else:
+            self._filtered()
+
+    def addFailure(self, test, err=None, details=None):
+        if (not self._filter_failure and
+            self.filter_predicate(test, 'failure', err, details)):
+            self.decorated.startTest(test)
+            self.decorated.addFailure(test, err, details=details)
+        else:
+            self._filtered()
+
+    def addSkip(self, test, reason=None, details=None):
+        if (not self._filter_skip and
+            self.filter_predicate(test, 'skip', reason, details)):
+            self.decorated.startTest(test)
+            self.decorated.addSkip(test, reason, details=details)
+        else:
+            self._filtered()
+
+    def addSuccess(self, test, details=None):
+        if (not self._filter_success and
+            self.filter_predicate(test, 'success', None, details)):
+            self.decorated.startTest(test)
+            self.decorated.addSuccess(test, details=details)
+        else:
+            self._filtered()
+
+    def addExpectedFailure(self, test, err=None, details=None):
+        if self.filter_predicate(test, 'expectedfailure', err, details):
+            self.decorated.startTest(test)
+            return self.decorated.addExpectedFailure(test, err,
+                details=details)
+        else:
+            self._filtered()
+
+    def addUnexpectedSuccess(self, test, details=None):
+        self.decorated.startTest(test)
+        return self.decorated.addUnexpectedSuccess(test, details=details)
+
+    def _filtered(self):
+        self._current_test_filtered = True
+
+    def startTest(self, test):
+        """Start a test.
+        
+        Not directly passed to the client, but used for handling of tags
+        correctly.
+        """
+        self._current_test = test
+        self._current_test_filtered = False
+        self._current_test_tags = set(), set()
+    
+    def stopTest(self, test):
+        """Stop a test.
+        
+        Not directly passed to the client, but used for handling of tags
+        correctly.
+        """
+        if not self._current_test_filtered:
+            # Tags to output for this test.
+            if self._current_test_tags[0] or self._current_test_tags[1]:
+                self.decorated.tags(*self._current_test_tags)
+            self.decorated.stopTest(test)
+        self._current_test = None
+        self._current_test_filtered = None
+        self._current_test_tags = None
+
+    def tags(self, new_tags, gone_tags):
+        """Handle tag instructions.
+
+        Adds and removes tags as appropriate. If a test is currently running,
+        tags are not affected for subsequent tests.
+        
+        :param new_tags: Tags to add,
+        :param gone_tags: Tags to remove.
+        """
+        if self._current_test is not None:
+            # gather the tags until the test stops.
+            self._current_test_tags[0].update(new_tags)
+            self._current_test_tags[0].difference_update(gone_tags)
+            self._current_test_tags[1].update(gone_tags)
+            self._current_test_tags[1].difference_update(new_tags)
+        return self.decorated.tags(new_tags, gone_tags)
+
+    def id_to_orig_id(self, id):
+        if id.startswith("subunit.RemotedTestCase."):
+            return id[len("subunit.RemotedTestCase."):]
+        return id
