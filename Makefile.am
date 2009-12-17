@@ -15,7 +15,6 @@ EXTRA_DIST =  \
 	perl/lib/Subunit.pm \
 	perl/lib/Subunit/Diff.pm \
 	perl/subunit-diff \
-	python/iso8601/ \
 	python/iso8601/LICENSE \
 	python/iso8601/README \
 	python/iso8601/README.subunit \
