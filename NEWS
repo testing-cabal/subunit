@@ -5,6 +5,15 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+BUG FIXES
+~~~~~~~~~
+
+* subunit2junitxml -f required a value, this is now fixed and -f acts as a
+  boolean switch with no parameter.
+
+* Building with autoconf 2.65 is now supported.
+
+
 0.0.3
 -----
 

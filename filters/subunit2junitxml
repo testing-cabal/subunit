@@ -33,7 +33,8 @@ parser.add_option("--no-passthrough", action="store_true",
     help="Hide all non subunit input.", default=False, dest="no_passthrough")
 parser.add_option("-o", "--output-to",
     help="Output the XML to this path rather than stdout.")
-parser.add_option("-f", "--forward", help="Forward subunit stream on stdout.")
+parser.add_option("-f", "--forward", action="store_true", default=False,
+    help="Forward subunit stream on stdout.")
 (options, args) = parser.parse_args()
 if options.output_to is None:
     output_to = sys.stdout
