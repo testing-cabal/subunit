@@ -1,8 +1,8 @@
 m4_define([SUBUNIT_MAJOR_VERSION], [0])
 m4_define([SUBUNIT_MINOR_VERSION], [0])
-m4_define([SUBUNIT_MICRO_VERSION], [3])
+m4_define([SUBUNIT_MICRO_VERSION], [4])
 m4_define([SUBUNIT_VERSION],
-m4_defn([SUBUNIT_MAJOR_VERSION]).m4_defn([SUBUNIT_MINOR_VERSION]).m4_defn([SUBUNIT_MICRO_VERSION]).next)
+m4_defn([SUBUNIT_MAJOR_VERSION]).m4_defn([SUBUNIT_MINOR_VERSION]).m4_defn([SUBUNIT_MICRO_VERSION]))
 AC_PREREQ([2.59])
 AC_INIT([subunit], [SUBUNIT_VERSION], [subunit-dev@lists.launchpad.net])
 AC_CONFIG_SRCDIR([c/lib/child.c])
