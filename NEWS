@@ -5,6 +5,12 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+BUG FIXES
+~~~~~~~~~
+
+* make check was failing if subunit wasn't installed due to a missing include
+  path for the test program test_child.
+
 0.0.4
 -----
 

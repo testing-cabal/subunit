@@ -94,7 +94,7 @@ libcppunit_subunit_la_SOURCES = \
 	c++/SubunitTestProgressListener.h
 
 tests_LDADD = @CHECK_LIBS@ $(top_builddir)/libsubunit.la
-c_tests_test_child_CFLAGS = $(SUBUNIT_CFLAGS) @CHECK_CFLAGS@
+c_tests_test_child_CFLAGS = -Ic/include $(SUBUNIT_CFLAGS) @CHECK_CFLAGS@
 c_tests_test_child_LDADD = $(tests_LDADD)
 
 
