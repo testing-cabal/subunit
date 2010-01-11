@@ -45,7 +45,6 @@
 
 """Display a subunit stream in a gtk progress window."""
 
-import os
 import sys
 import unittest
 
@@ -57,7 +56,6 @@ from subunit import (
     PROGRESS_POP,
     PROGRESS_PUSH,
     PROGRESS_SET,
-    ProtocolTestCase,
     TestProtocolServer,
     )
 from subunit.progress_model import  ProgressModel
@@ -179,7 +177,7 @@ class GTKTestResult(unittest.TestResult):
         addExpectedFailure = getattr(super(GTKTestResult, self),
             'addExpectedFailure', None)
         if callable(addExpectedFailure):
-            addExpectedFailure(test, reason)
+            addExpectedFailure(test, err)
         self.update_counts()
 
     def addUnexpectedSuccess(self, test):
@@ -187,7 +185,7 @@ class GTKTestResult(unittest.TestResult):
         addUnexpectedSuccess = getattr(super(GTKTestResult, self),
             'addUnexpectedSuccess', None)
         if callable(addUnexpectedSuccess):
-            addUnexpectedSuccess(test, reason)
+            addUnexpectedSuccess(test)
         self.update_counts()
 
     def progress(self, offset, whence):
