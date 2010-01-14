@@ -83,7 +83,7 @@ class GTKTestResult(unittest.TestResult):
         vbox.set_border_width(10)
         self.window.add(vbox)
         vbox.show()
-  
+
         # Create a centering alignment object
         align = gtk.Alignment(0.5, 0.5, 0, 0)
         vbox.pack_start(align, False, False, 5)
@@ -94,7 +94,7 @@ class GTKTestResult(unittest.TestResult):
         align.add(self.pbar)
         self.pbar.set_text("Running")
         self.pbar.show()
-        self.progress = ProgressModel()
+        self.progress_model = ProgressModel()
 
         separator = gtk.HSeparator()
         vbox.pack_start(separator, False, False, 0)
@@ -139,12 +139,14 @@ class GTKTestResult(unittest.TestResult):
 
     def stopTest(self, test):
         super(GTKTestResult, self).stopTest(test)
-        self.progress.advance()
-        if self.progress.width() == 0:
+        self.progress_model.advance()
+        if self.progress_model.width() == 0:
             self.pbar.pulse()
         else:
-            self.pbar.set_fraction(
-                self.progress.pos() / float(self.progress.width()))
+            pos = self.progress_model.pos()
+            width = self.progress_model.width()
+            percentage = (pos / float(width))
+            self.pbar.set_fraction(percentage)
 
     def stopTestRun(self):
         try:
@@ -190,15 +192,15 @@ class GTKTestResult(unittest.TestResult):
 
     def progress(self, offset, whence):
         if whence == PROGRESS_PUSH:
-            self.progress.push()
+            self.progress_model.push()
         elif whence == PROGRESS_POP:
-            self.progress.pop()
+            self.progress_model.pop()
         elif whence == PROGRESS_SET:
             self.total_tests = offset
-            self.progress.set_width(offset)
+            self.progress_model.set_width(offset)
         else:
             self.total_tests += offset
-            self.progress.adjust_width(offset)
+            self.progress_model.adjust_width(offset)
 
     def time(self, a_datetime):
         # We don't try to estimate completion yet.
