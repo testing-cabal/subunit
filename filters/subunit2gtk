@@ -242,6 +242,7 @@ class GIOProtocolTestCase(object):
         self.protocol.lostConnection()
         gobject.source_remove(self.read_id)
         self.on_finish()
+	return False
 
 
 result = GTKTestResult()
