@@ -22,6 +22,12 @@ BUG FIXES
 
 * Building with autoconf 2.65 is now supported.
 
+IMPROVEMENTS
+~~~~~~~~~~~~
+
+* New filter `subunit-notify` that will show a notification window with test 
+  statistics when the test run finishes.
+
 
 0.0.3
 -----
