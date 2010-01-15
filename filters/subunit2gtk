@@ -222,7 +222,7 @@ class GIOProtocolTestCase(object):
         self.protocol = TestProtocolServer(result)
         self.on_finish = on_finish
 
-    def read(self, source, condition):
+    def read(self, source, condition, all=True):
         #NB: \o/ actually blocks
         line = source.readline()
         if not line:
@@ -232,13 +232,17 @@ class GIOProtocolTestCase(object):
         self.protocol.lineReceived(line)
         # schedule more IO shortly - if we say we're willing to do it
         # immediately we starve things.
-        source_id = gobject.timeout_add(1, self.schedule_read)
-        return False
+	if not all:
+            source_id = gobject.timeout_add(1, self.schedule_read)
+            return False
+        else:
+            return True
 
     def schedule_read(self):
         self.read_id = gobject.io_add_watch(self.stream, gobject.IO_IN, self.read)
 
     def hup(self, source, condition):
+        while self.read(source, condition, all=True): pass
         self.protocol.lostConnection()
         gobject.source_remove(self.read_id)
         self.on_finish()
