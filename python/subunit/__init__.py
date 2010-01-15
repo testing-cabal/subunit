@@ -213,10 +213,10 @@ class _ParserState(object):
     def lineReceived(self, line):
         """a line has been received."""
         parts = line.split(None, 1)
-        if len(parts) == 2:
+        if len(parts) == 2 and line.startswith(parts[0]):
             cmd, rest = parts
             offset = len(cmd) + 1
-            cmd = cmd.strip(':')
+            cmd = cmd.rstrip(':')
             if cmd in ('test', 'testing'):
                 self.startTest(offset, line)
             elif cmd == 'error':
