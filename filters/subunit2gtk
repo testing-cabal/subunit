@@ -222,7 +222,7 @@ class GIOProtocolTestCase(object):
         self.protocol = TestProtocolServer(result)
         self.on_finish = on_finish
 
-    def read(self, source, condition, all=True):
+    def read(self, source, condition, all=False):
         #NB: \o/ actually blocks
         line = source.readline()
         if not line:
