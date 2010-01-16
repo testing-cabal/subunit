@@ -1111,3 +1111,16 @@ class TestResultStats(unittest.TestResult):
     def wasSuccessful(self):
         """Tells whether or not this result was a success"""
         return self.failed_tests == 0
+
+
+def get_default_formatter():
+    """Obtain the default formatter to write to.
+    
+    :return: A file-like object.
+    """
+    formatter = os.getenv("SUBUNIT_FORMATTER")
+    if formatter:
+        return os.popen(formatter, "w")
+    else:
+        return sys.stdout
+

@@ -11,6 +11,15 @@ BUG FIXES
 * make check was failing if subunit wasn't installed due to a missing include
   path for the test program test_child.
 
+IMPROVEMENTS
+~~~~~~~~~~~~
+
+* New filter `subunit-notify` that will show a notification window with test 
+  statistics when the test run finishes.
+
+* subunit.run will now pipe its output to the command in the 
+  SUBUNIT_FORMATTER environment variable, if set.
+
 0.0.4
 -----
 
@@ -21,12 +30,6 @@ BUG FIXES
   boolean switch with no parameter.
 
 * Building with autoconf 2.65 is now supported.
-
-IMPROVEMENTS
-~~~~~~~~~~~~
-
-* New filter `subunit-notify` that will show a notification window with test 
-  statistics when the test run finishes.
 
 
 0.0.3
