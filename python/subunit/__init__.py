@@ -1119,7 +1119,7 @@ def get_default_formatter():
     :return: A file-like object.
     """
     formatter = os.getenv("SUBUNIT_FORMATTER")
-    if formatter is not None:
+    if formatter is not None and formatter != "":
         return os.popen(formatter, "w")
     else:
         return sys.stdout
