@@ -5,11 +5,16 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+0.0.5
+-----
+
 BUG FIXES
 ~~~~~~~~~
 
 * make check was failing if subunit wasn't installed due to a missing include
   path for the test program test_child.
+
+* make distcheck was failing due to a missing $(top_srcdir) rune.
 
 IMPROVEMENTS
 ~~~~~~~~~~~~
