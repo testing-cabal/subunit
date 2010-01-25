@@ -232,7 +232,7 @@ class GIOProtocolTestCase(object):
         self.protocol.lineReceived(line)
         # schedule more IO shortly - if we say we're willing to do it
         # immediately we starve things.
-	if not all:
+        if not all:
             source_id = gobject.timeout_add(1, self.schedule_read)
             return False
         else:
@@ -246,7 +246,7 @@ class GIOProtocolTestCase(object):
         self.protocol.lostConnection()
         gobject.source_remove(self.read_id)
         self.on_finish()
-	return False
+        return False
 
 
 result = GTKTestResult()
