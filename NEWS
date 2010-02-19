@@ -5,6 +5,12 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+BUG FIXES
+~~~~~~~~~
+
+* Fix incorrect reference to subunit_test_failf in c/README.
+  (Brad Hards, #524341)
+
 0.0.5
 -----
 

@@ -47,7 +47,7 @@ a_test(void) {
   if (!result) {
     subunit_test_pass("test name");
   } else {
-    subunit_test_failf("test name",
+    subunit_test_fail("test name",
       "Something went wrong running something:\n"
       "exited with result: '%s'", result);
   }
