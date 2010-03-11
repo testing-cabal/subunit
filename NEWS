@@ -11,6 +11,10 @@ BUG FIXES
 * Fix incorrect reference to subunit_test_failf in c/README.
   (Brad Hards, #524341)
 
+* Fix incorrect ordering of tags method parameters in TestResultDecorator. This
+  is purely cosmetic as the parameters are passed down with no interpretation.
+  (Robert Collins, #537611)
+
 0.0.5
 -----
 
