@@ -92,7 +92,7 @@ class MultipartDetailsParser(DetailsParser):
         residue = self._chunk_parser.write(line)
         if residue is not None:
             # Line based use always ends on no residue.
-            assert residue == ''
+            assert residue == '', 'residue: %r' % (residue,)
             body = self._body
             self._details[self._name] = content.Content(
                 self._content_type, lambda:[body.getvalue()])
