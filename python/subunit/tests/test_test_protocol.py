@@ -102,6 +102,9 @@ class TestTestProtocolServerPipe(unittest.TestCase):
                 "------------\n\n")])
         self.assertEqual(client.testsRun, 3)
 
+    def test_non_test_characters_forwarded_immediately(self):
+        pass
+
 
 class TestTestProtocolServerStartTest(unittest.TestCase):
 

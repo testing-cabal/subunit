@@ -552,6 +552,7 @@ class TestProtocolClient(unittest.TestResult):
     def __init__(self, stream):
         unittest.TestResult.__init__(self)
         self._stream = stream
+        _make_stream_binary(stream)
 
     def addError(self, test, error=None, details=None):
         """Report an error in test test.
@@ -1045,8 +1046,10 @@ class ProtocolTestCase(object):
             subunit input is not forwarded.
         """
         self._stream = stream
+        _make_stream_binary(stream)
         self._passthrough = passthrough
         self._forward = forward
+        _make_stream_binary(forward)
 
     def __call__(self, result=None):
         return self.run(result)
@@ -1124,3 +1127,14 @@ def get_default_formatter():
     else:
         return sys.stdout
 
+
+def _make_stream_binary(stream):
+    """Ensure that a stream will be binary safe. See _make_binary_on_windows."""
+    if getattr(stream, 'fileno', None) is not None:
+        _make_binary_on_windows(stream.fileno())
+
+def _make_binary_on_windows(fileno):
+    """Win32 mangles \r\n to \n and that breaks streams. See bug lp:505078."""
+    if sys.platform == "win32":
+        import msvcrt
+        msvcrt.setmode(fileno, os.O_BINARY)

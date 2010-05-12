@@ -15,6 +15,11 @@ BUG FIXES
   is purely cosmetic as the parameters are passed down with no interpretation.
   (Robert Collins, #537611)
 
+* On windows, ProtocolTestCase and TestProtocolClient will set their streams to
+  binary mode by calling into msvcrt; this avoids having their input or output
+  mangled by the default line ending translation on that platform.
+  (Robert Collins, Martin [gz], #579296)
+
 0.0.5
 -----
 
