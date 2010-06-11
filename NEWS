@@ -15,6 +15,9 @@ BUG FIXES
   is purely cosmetic as the parameters are passed down with no interpretation.
   (Robert Collins, #537611)
 
+* Old style tracebacks with no encoding info are now treated as UTF8 rather
+  than some-random-codec-like-ascii. (Robert Collins)
+
 * On windows, ProtocolTestCase and TestProtocolClient will set their streams to
   binary mode by calling into msvcrt; this avoids having their input or output
   mangled by the default line ending translation on that platform.

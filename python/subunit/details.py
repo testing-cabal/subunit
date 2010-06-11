@@ -47,8 +47,12 @@ class SimpleDetailsParser(DetailsParser):
     def get_details(self, style=None):
         result = {}
         if not style:
+            # We know that subunit/testtools serialise [] formatted
+            # tracebacks as utf8, but perhaps we need a ReplacingContent
+            # or something like that.
             result['traceback'] = content.Content(
-                content_type.ContentType("text", "x-traceback"),
+                content_type.ContentType("text", "x-traceback",
+                {"charset": "utf8"}),
                 lambda:[self._message])
         else:
             if style == 'skip':

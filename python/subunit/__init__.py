@@ -619,6 +619,8 @@ class TestProtocolClient(unittest.TestResult):
             raise ValueError
         if error is not None:
             self._stream.write(" [\n")
+            # XXX: this needs to be made much stricter, along the lines of
+            # Martin[gz]'s work in testtools. Perhaps subunit can use that?
             for line in self._exc_info_to_string(error, test).splitlines():
                 self._stream.write("%s\n" % line)
         else:
