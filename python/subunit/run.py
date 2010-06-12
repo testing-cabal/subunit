@@ -23,12 +23,7 @@
 import sys
 
 from subunit import TestProtocolClient, get_default_formatter
-
-try:
-    import discover
-    has_discover = True
-except ImportError:
-    has_discover = False
+from testtools.run import TestProgram
 
 
 class SubunitTestRunner(object):
@@ -43,25 +38,6 @@ class SubunitTestRunner(object):
 
 
 if __name__ == '__main__':
-    import optparse
-    from unittest import TestProgram, TestSuite
-    parser = optparse.OptionParser(__doc__)
-    if has_discover:
-        parser.add_option("--discover", dest="discover", action="store_true",
-                help="Use test discovery on the given testspec.")
-        parser.add_option("--discover-pattern", dest="discover_pattern",
-                help="The pattern that discovery should match. Default "
-                "'test*.py'", default="test*.py")
-    options, args = parser.parse_args()
     stream = get_default_formatter()
     runner = SubunitTestRunner(stream)
-    if has_discover and options.discover:
-        loader = discover.DiscoveringTestLoader()
-        test = TestSuite()
-        for arg in args:
-            test.addTest(loader.discover(
-                    arg, pattern=options.discover_pattern))
-        result = runner.run(test)
-        sys.exit(not result.wasSuccessful())
-    program = TestProgram(module=None, argv=[sys.argv[0]] + args,
-                          testRunner=runner)
+    TestProgram(module=None, argv=sys.argv, testRunner=runner)
