@@ -20,6 +20,13 @@ BUG FIXES
   mangled by the default line ending translation on that platform.
   (Robert Collins, Martin [gz], #579296)
 
+IMPROVEMENTS
+~~~~~~~~~~~~
+
+* subunit now supports test discovery by building on the testtools support for
+  it. You can take advantage of it with "python -m subunit.run discover [path]"
+  and see "python -m subunit.run discover --help" for more options.
+
 0.0.5
 -----
 
