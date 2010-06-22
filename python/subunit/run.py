@@ -23,7 +23,13 @@
 import sys
 
 from subunit import TestProtocolClient, get_default_formatter
-from testtools.run import TestProgram
+from testtools.run import (
+    BUFFEROUTPUT,
+    CATCHBREAK,
+    FAILFAST,
+    TestProgram,
+    USAGE_AS_MAIN,
+    )
 
 
 class SubunitTestRunner(object):
@@ -37,7 +43,27 @@ class SubunitTestRunner(object):
         return result
 
 
+class SubunitTestProgram(TestProgram):
+
+    USAGE = USAGE_AS_MAIN
+
+    def usageExit(self, msg=None):
+        if msg:
+            print msg
+        usage = {'progName': self.progName, 'catchbreak': '', 'failfast': '',
+                 'buffer': ''}
+        if self.failfast != False:
+            usage['failfast'] = FAILFAST
+        if self.catchbreak != False:
+            usage['catchbreak'] = CATCHBREAK
+        if self.buffer != False:
+            usage['buffer'] = BUFFEROUTPUT
+        print self.USAGE % usage
+        print "The output will be in subunit format.\n"
+        sys.exit(2)
+
+
 if __name__ == '__main__':
     stream = get_default_formatter()
     runner = SubunitTestRunner(stream)
-    TestProgram(module=None, argv=sys.argv, testRunner=runner)
+    SubunitTestProgram(module=None, argv=sys.argv, testRunner=runner)
