@@ -8,6 +8,9 @@ NEXT (In development)
 BUG FIXES
 ~~~~~~~~~
 
+* Be consistent about delivering unicode content to testtools StringException
+  class which has become (appropriately) conservative. (Robert Collins)
+
 * Fix incorrect reference to subunit_test_failf in c/README.
   (Brad Hards, #524341)
 

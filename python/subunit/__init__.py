@@ -244,7 +244,7 @@ class _ParserState(object):
 
     def lostConnection(self):
         """Connection lost."""
-        self.parser._lostConnectionInTest('unknown state of ')
+        self.parser._lostConnectionInTest(u'unknown state of ')
 
     def startTest(self, offset, line):
         """A test start command received."""
@@ -324,7 +324,7 @@ class _InTest(_ParserState):
 
     def lostConnection(self):
         """Connection lost."""
-        self.parser._lostConnectionInTest('')
+        self.parser._lostConnectionInTest(u'')
 
 
 class _OutSideTest(_ParserState):
@@ -359,7 +359,7 @@ class _ReadingDetails(_ParserState):
 
     def lostConnection(self):
         """Connection lost."""
-        self.parser._lostConnectionInTest('%s report of ' %
+        self.parser._lostConnectionInTest(u'%s report of ' %
             self._outcome_label())
 
     def _outcome_label(self):
@@ -501,7 +501,7 @@ class TestProtocolServer(object):
         self._state.lineReceived(line)
 
     def _lostConnectionInTest(self, state_string):
-        error_string = "lost connection during %stest '%s'" % (
+        error_string = u"lost connection during %stest '%s'" % (
             state_string, self.current_test_description)
         self.client.addError(self._current_test, RemoteError(error_string))
         self.client.stopTest(self._current_test)
@@ -707,7 +707,7 @@ class TestProtocolClient(unittest.TestResult):
         """Obey the testtools result.done() interface."""
 
 
-def RemoteError(description=""):
+def RemoteError(description=u""):
     return (_StringException, _StringException(description), None)
 
 
@@ -757,7 +757,7 @@ class RemotedTestCase(unittest.TestCase):
     def run(self, result=None):
         if result is None: result = self.defaultTestResult()
         result.startTest(self)
-        result.addError(self, RemoteError("Cannot run RemotedTestCases.\n"))
+        result.addError(self, RemoteError(u"Cannot run RemotedTestCases.\n"))
         result.stopTest(self)
 
     def _strclass(self):
