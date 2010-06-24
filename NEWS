@@ -26,6 +26,11 @@ BUG FIXES
   mangled by the default line ending translation on that platform.
   (Robert Collins, Martin [gz], #579296)
 
+IMPROVEMENTS
+~~~~~~~~~~~~
+* Subunit now has a setup.py for python deployments that are not using
+  distribution packages. (Tres Seaver, #538181)
+
 0.0.5
 -----
 
