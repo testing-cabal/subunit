@@ -58,8 +58,11 @@ class SubunitTestProgram(TestProgram):
             usage['catchbreak'] = CATCHBREAK
         if self.buffer != False:
             usage['buffer'] = BUFFEROUTPUT
-        print self.USAGE % usage
-        print "The output will be in subunit format.\n"
+        usage_text = self.USAGE % usage
+        usage_lines = usage_text.split('\n')
+        usage_lines.insert(2, "Run a test suite with a subunit reporter.")
+        usage_lines.insert(3, "")
+        print('\n'.join(usage_lines))
         sys.exit(2)
 
 
