@@ -28,8 +28,13 @@ BUG FIXES
 
 IMPROVEMENTS
 ~~~~~~~~~~~~
+
 * Subunit now has a setup.py for python deployments that are not using
   distribution packages. (Tres Seaver, #538181)
+
+* Subunit now supports test discovery by building on the testtools support for
+  it. You can take advantage of it with "python -m subunit.run discover [path]"
+  and see "python -m subunit.run discover --help" for more options.
 
 0.0.5
 -----
