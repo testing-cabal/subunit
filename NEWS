@@ -5,6 +5,14 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+0.0.6
+-----
+
+This release of subunit fixes a number of unicode related bugs. This depends on
+testtools 0.9.4 and will not function without it. Thanks to Tres Seaver there
+is also an optional native setup.py file for use with easy_install and the
+like.
+
 BUG FIXES
 ~~~~~~~~~
 
