@@ -133,9 +133,7 @@ try:
 except ImportError:
     raise ImportError ("testtools.testresult.real does not contain "
         "_StringException, check your version.")
-
-
-from testtools.testresult.real import _StringException
+from testtools import testresult
 
 import chunked, details, test_results
 
@@ -531,7 +529,7 @@ class TestProtocolServer(object):
         self._stream.write(line)
 
 
-class TestProtocolClient(unittest.TestResult):
+class TestProtocolClient(testresult.TestResult):
     """A TestResult which generates a subunit stream for a test run.
     
     # Get a TestSuite or TestCase to run
@@ -550,7 +548,7 @@ class TestProtocolClient(unittest.TestResult):
     """
 
     def __init__(self, stream):
-        unittest.TestResult.__init__(self)
+        testresult.TestResult.__init__(self)
         self._stream = stream
         _make_stream_binary(stream)
 
@@ -621,8 +619,8 @@ class TestProtocolClient(unittest.TestResult):
             self._stream.write(" [\n")
             # XXX: this needs to be made much stricter, along the lines of
             # Martin[gz]'s work in testtools. Perhaps subunit can use that?
-            for line in self._exc_info_to_string(error, test).splitlines():
-                self._stream.write("%s\n" % line)
+            for line in self._exc_info_to_unicode(error, test).splitlines():
+                self._stream.write(("%s\n" % line).encode('utf8'))
         else:
             self._write_details(details)
         self._stream.write("]\n")
@@ -787,7 +785,7 @@ class ExecTestCase(unittest.TestCase):
 
     def debug(self):
         """Run the test without collecting errors in a TestResult"""
-        self._run(unittest.TestResult())
+        self._run(testresult.TestResult())
 
     def _run(self, result):
         protocol = TestProtocolServer(result)
@@ -819,7 +817,7 @@ class IsolatedTestSuite(unittest.TestSuite):
     """
 
     def run(self, result=None):
-        if result is None: result = unittest.TestResult()
+        if result is None: result = testresult.TestResult()
         run_isolated(unittest.TestSuite, self, result)
 
 
@@ -1067,7 +1065,7 @@ class ProtocolTestCase(object):
         protocol.lostConnection()
 
 
-class TestResultStats(unittest.TestResult):
+class TestResultStats(testresult.TestResult):
     """A pyunit TestResult interface implementation for making statistics.
     
     :ivar total_tests: The total tests seen.
@@ -1078,7 +1076,7 @@ class TestResultStats(unittest.TestResult):
 
     def __init__(self, stream):
         """Create a TestResultStats which outputs to stream."""
-        unittest.TestResult.__init__(self)
+        testresult.TestResult.__init__(self)
         self._stream = stream
         self.failed_tests = 0
         self.skipped_tests = 0

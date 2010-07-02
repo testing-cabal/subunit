@@ -36,6 +36,10 @@ IMPROVEMENTS
   it. You can take advantage of it with "python -m subunit.run discover [path]"
   and see "python -m subunit.run discover --help" for more options.
 
+* Subunit now uses the improved unicode support in testtools when outputting
+  non-details based test information; this should consistently UTF8 encode such
+  strings.
+
 0.0.5
 -----
 
