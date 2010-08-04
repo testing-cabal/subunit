@@ -6,7 +6,7 @@
 #  license at the users choice. A copy of both licenses are available in the
 #  project source as Apache-2.0 and BSD. You may not use this file except in
 #  compliance with one of these two licences.
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 #  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -27,8 +27,8 @@ import testtools
 class TestResultDecorator(object):
     """General pass-through decorator.
 
-    This provides a base that other TestResults can inherit from to 
-    gain basic forwarding functionality. It also takes care of 
+    This provides a base that other TestResults can inherit from to
+    gain basic forwarding functionality. It also takes care of
     handling the case where the target doesn't support newer methods
     or features by degrading them.
     """
@@ -199,11 +199,11 @@ class TestResultFilter(TestResultDecorator):
     """A pyunit TestResult interface implementation which filters tests.
 
     Tests that pass the filter are handed on to another TestResult instance
-    for further processing/reporting. To obtain the filtered results, 
+    for further processing/reporting. To obtain the filtered results,
     the other instance must be interrogated.
 
     :ivar result: The result that tests are passed to after filtering.
-    :ivar filter_predicate: The callback run to decide whether to pass 
+    :ivar filter_predicate: The callback run to decide whether to pass
         a result.
     """
 
@@ -211,7 +211,7 @@ class TestResultFilter(TestResultDecorator):
         filter_success=True, filter_skip=False,
         filter_predicate=None):
         """Create a FilterResult object filtering to result.
-        
+
         :param filter_error: Filter out errors.
         :param filter_failure: Filter out failures.
         :param filter_success: Filter out successful tests.
@@ -236,9 +236,9 @@ class TestResultFilter(TestResultDecorator):
         self._current_test_filtered = None
         # The (new, gone) tags for the current test.
         self._current_test_tags = None
-        
+
     def addError(self, test, err=None, details=None):
-        if (not self._filter_error and 
+        if (not self._filter_error and
             self.filter_predicate(test, 'error', err, details)):
             self.decorated.startTest(test)
             self.decorated.addError(test, err, details=details)
@@ -286,17 +286,17 @@ class TestResultFilter(TestResultDecorator):
 
     def startTest(self, test):
         """Start a test.
-        
+
         Not directly passed to the client, but used for handling of tags
         correctly.
         """
         self._current_test = test
         self._current_test_filtered = False
         self._current_test_tags = set(), set()
-    
+
     def stopTest(self, test):
         """Stop a test.
-        
+
         Not directly passed to the client, but used for handling of tags
         correctly.
         """
@@ -314,7 +314,7 @@ class TestResultFilter(TestResultDecorator):
 
         Adds and removes tags as appropriate. If a test is currently running,
         tags are not affected for subsequent tests.
-        
+
         :param new_tags: Tags to add,
         :param gone_tags: Tags to remove.
         """
@@ -343,7 +343,7 @@ class TestIdPrintingResult(testtools.TestResult):
         self.show_times = show_times
         self._test = None
         self._test_duration = 0
-        
+
     def addError(self, test, err):
         self.failed_tests += 1
         self._test = test
