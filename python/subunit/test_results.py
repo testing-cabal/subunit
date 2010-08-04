@@ -21,8 +21,6 @@ import datetime
 import iso8601
 import testtools
 
-import subunit
-
 
 # NOT a TestResult, because we are implementing the interface, not inheriting
 # it.
@@ -332,3 +330,53 @@ class TestResultFilter(TestResultDecorator):
         if id.startswith("subunit.RemotedTestCase."):
             return id[len("subunit.RemotedTestCase."):]
         return id
+
+
+class TestIdPrintingResult(testtools.TestResult):
+
+    def __init__(self, stream, show_times=False):
+        """Create a FilterResult object outputting to stream."""
+        testtools.TestResult.__init__(self)
+        self._stream = stream
+        self.failed_tests = 0
+        self.__time = 0
+        self.show_times = show_times
+        self._test = None
+        self._test_duration = 0
+        
+    def addError(self, test, err):
+        self.failed_tests += 1
+        self._test = test
+
+    def addFailure(self, test, err):
+        self.failed_tests += 1
+        self._test = test
+
+    def addSuccess(self, test):
+        self._test = test
+
+    def reportTest(self, test, duration):
+        if self.show_times:
+            seconds = duration.seconds
+            seconds += duration.days * 3600 * 24
+            seconds += duration.microseconds / 1000000.0
+            self._stream.write(test.id() + ' %0.3f\n' % seconds)
+        else:
+            self._stream.write(test.id() + '\n')
+
+    def startTest(self, test):
+        self._start_time = self._time()
+
+    def stopTest(self, test):
+        test_duration = self._time() - self._start_time
+        self.reportTest(self._test, test_duration)
+
+    def time(self, time):
+        self.__time = time
+
+    def _time(self):
+        return self.__time
+
+    def wasSuccessful(self):
+        "Tells whether or not this result was a success"
+        return self.failed_tests == 0
