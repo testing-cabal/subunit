@@ -18,7 +18,6 @@
 
 from optparse import OptionParser
 import sys
-import unittest
 
 from subunit import DiscardStream, ProtocolTestCase
 from subunit.test_results import TestIdPrintingResult
