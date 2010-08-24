@@ -208,7 +208,7 @@ class TestResultFilter(TestResultDecorator):
     """
 
     def __init__(self, result, filter_error=False, filter_failure=False,
-        filter_success=True, filter_skip=False,
+        filter_success=True, filter_skip=False, filter_xfail=False,
         filter_predicate=None):
         """Create a FilterResult object filtering to result.
 
@@ -216,6 +216,7 @@ class TestResultFilter(TestResultDecorator):
         :param filter_failure: Filter out failures.
         :param filter_success: Filter out successful tests.
         :param filter_skip: Filter out skipped tests.
+        :param filter_xfail: Filter out expected failure tests.
         :param filter_predicate: A callable taking (test, outcome, err,
             details) and returning True if the result should be passed
             through.  err and details may be none if no error or extra
@@ -227,6 +228,7 @@ class TestResultFilter(TestResultDecorator):
         self._filter_failure = filter_failure
         self._filter_success = filter_success
         self._filter_skip = filter_skip
+        self._filter_xfail = filter_xfail
         if filter_predicate is None:
             filter_predicate = lambda test, outcome, err, details: True
         self.filter_predicate = filter_predicate
@@ -270,7 +272,8 @@ class TestResultFilter(TestResultDecorator):
             self._filtered()
 
     def addExpectedFailure(self, test, err=None, details=None):
-        if self.filter_predicate(test, 'expectedfailure', err, details):
+        if (not self._filter_xfail and
+            self.filter_predicate(test, 'expectedfailure', err, details)):
             self.decorated.startTest(test)
             return self.decorated.addExpectedFailure(test, err,
                 details=details)
