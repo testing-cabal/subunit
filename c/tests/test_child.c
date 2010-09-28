@@ -166,20 +166,39 @@ END_TEST
 
 
 static void
-call_test_progress(void)
+call_test_progress_pop(void)
 {
 	subunit_progress(SUBUNIT_PROGRESS_POP, 0);
+}
+
+static void
+call_test_progress_set(void)
+{
 	subunit_progress(SUBUNIT_PROGRESS_SET, 5);
+}
+
+static void
+call_test_progress_push(void)
+{
 	subunit_progress(SUBUNIT_PROGRESS_PUSH, 0);
 }
 
+static void
+call_test_progress_cur(void)
+{
+	subunit_progress(SUBUNIT_PROGRESS_CUR, -6);
+}
 
 START_TEST (test_progress)
 {
-	test_stdout_function("progress: pop\n"
-						 "progress: 5\n"
-						 "progress: push\n",
-			 call_test_progress);
+	test_stdout_function("progress: pop\n",
+			 call_test_progress_pop);
+	test_stdout_function("progress: push\n",
+			 call_test_progress_push);
+	test_stdout_function("progress: 5\n",
+			 call_test_progress_set);
+	test_stdout_function("progress: -6\n",
+			 call_test_progress_cur);
 }
 END_TEST
 
