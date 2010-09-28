@@ -164,6 +164,25 @@ START_TEST (test_skip)
 }
 END_TEST
 
+
+static void
+call_test_progress(void)
+{
+	subunit_progress(SUBUNIT_PROGRESS_POP, 0);
+	subunit_progress(SUBUNIT_PROGRESS_SET, 5);
+	subunit_progress(SUBUNIT_PROGRESS_PUSH, 0);
+}
+
+
+START_TEST (test_progress)
+{
+	test_stdout_function("progress: pop\n"
+						 "progress: 5\n"
+						 "progress: push\n",
+			 call_test_progress);
+}
+END_TEST
+
 static Suite *
 child_suite(void)
 {
@@ -175,6 +194,7 @@ child_suite(void)
     tcase_add_test (tc_core, test_fail);
     tcase_add_test (tc_core, test_error);
     tcase_add_test (tc_core, test_skip);
+    tcase_add_test (tc_core, test_progress);
     return s;
 }
 
