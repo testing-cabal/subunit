@@ -48,6 +48,10 @@ IMPROVEMENTS
   non-details based test information; this should consistently UTF8 encode such
   strings.
 
+* The Python TestProtocolClient now flushes output on startTest and stopTest.
+  (Martin [gz]).
+
+
 0.0.5
 -----
 
