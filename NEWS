@@ -17,6 +17,7 @@ IMPROVEMENTS
   per ``testtools.run``. This required a dependency bump due to a small
   API change in ``testtools``. (Robert Collins)
 
+* Force flush of writes to stdout in c/tests/test_child. (Jelmer Vernooij, #687611)
 
 0.0.6
 -----
