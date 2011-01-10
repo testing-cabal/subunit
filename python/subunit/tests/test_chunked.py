@@ -1,6 +1,7 @@
 #
 #  subunit: extensions to python unittest to get test results from subprocesses.
 #  Copyright (C) 2005  Robert Collins <robertc@robertcollins.net>
+#  Copyright (C) 2011  Martin Pool <mbp@sourcefrog.net>
 #
 #  Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 #  license at the users choice. A copy of both licenses are available in the
@@ -85,6 +86,13 @@ class TestDecode(unittest.TestCase):
         self.assertEqual(None, self.decoder.write('2' * 65536))
         self.assertEqual('', self.decoder.write('0\r\n'))
         self.assertEqual('1' * 65536 + '2' * 65536, self.output.getvalue())
+
+    def test_decode_newline(self):
+        """Tolerate chunk markers with no cr character."""
+        self.assertEqual(None, self.decoder.write('a\n'))
+        self.assertEqual(None, self.decoder.write('abcdeabcde'))
+        self.assertEqual(None, self.decoder.write('0\n'))
+        self.assertEqual('abcdeabcde', self.output.getvalue())
 
 
 class TestEncode(unittest.TestCase):

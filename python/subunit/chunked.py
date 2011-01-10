@@ -87,7 +87,7 @@ class Decoder(object):
         if count_chars[-1][-1] != '\n':
             return
         count_str = ''.join(count_chars)
-        self.body_length = int(count_str[:-2], 16)
+        self.body_length = int(count_str.rstrip('\n\r'), 16)
         excess_bytes = len(count_str)
         while excess_bytes:
             if excess_bytes >= len(self.buffered_bytes[0]):
