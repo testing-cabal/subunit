@@ -1,6 +1,7 @@
 #
 #  subunit: extensions to python unittest to get test results from subprocesses.
 #  Copyright (C) 2005  Robert Collins <robertc@robertcollins.net>
+#  Copyright (C) 2011  Martin Pool <mbp@sourcefrog.net>
 #
 #  Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 #  license at the users choice. A copy of both licenses are available in the
@@ -19,7 +20,7 @@
 class Decoder(object):
     """Decode chunked content to a byte stream."""
 
-    def __init__(self, output):
+    def __init__(self, output, strict=True):
         """Create a decoder decoding to output.
 
         :param output: A file-like object. Bytes written to the Decoder are
@@ -29,11 +30,18 @@ class Decoder(object):
             when no more data is available, to detect short streams; the
             write method will return none-None when the end of a stream is
             detected.
+
+        :param strict: If True (the default), the decoder will not knowingly
+            accept input that is not conformant to the HTTP specification.
+            (This does not imply that it will catch every nonconformance.)
+            If False, it will accept incorrect input that is still 
+            unambiguous.
         """
         self.output = output
         self.buffered_bytes = []
         self.state = self._read_length
         self.body_length = 0
+        self.strict = strict
 
     def close(self):
         """Close the decoder.
@@ -87,6 +95,11 @@ class Decoder(object):
         if count_chars[-1][-1] != '\n':
             return
         count_str = ''.join(count_chars)
+        if self.strict:
+            if count_str[-2:] != '\r\n':
+                raise ValueError("chunk header invalid: %r" % count_str)
+            if '\r' in count_str[:-2]:
+                raise ValueError("too many crs in chunk header %r" % count_str)
         self.body_length = int(count_str.rstrip('\n\r'), 16)
         excess_bytes = len(count_str)
         while excess_bytes:
