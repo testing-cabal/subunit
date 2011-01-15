@@ -19,6 +19,9 @@ IMPROVEMENTS
 
 * Force flush of writes to stdout in c/tests/test_child. (Jelmer Vernooij, #687611)
 
+* The help for subunit-filter was confusing about the behaviour of ``-f`` /
+  ``--no-failure``. (Robert Collins, #703392)
+
 0.0.6
 -----
 
