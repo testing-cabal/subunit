@@ -18,6 +18,11 @@ IMPROVEMENTS
   API change in ``testtools``. (Robert Collins)
 
 
+* ``subunit.chunked.Decoder`` Python class takes a new ``strict`` option,
+  which defaults to ``True``. When ``False``, the ``Decoder`` will accept
+  incorrect input that is still unambiguous. i.e. subunit will not barf if
+  a \r is missing from the input. (Martin Pool)
+
 0.0.6
 -----
 
