@@ -88,7 +88,7 @@ class TestDecode(unittest.TestCase):
         self.assertEqual('1' * 65536 + '2' * 65536, self.output.getvalue())
 
     def test_decode_newline_nonstrict(self):
-        """Tolerate chunk markers with no cr character."""
+        """Tolerate chunk markers with no CR character."""
         # From <http://pad.lv/505078>
         self.decoder = subunit.chunked.Decoder(self.output, strict=False)
         self.assertEqual(None, self.decoder.write('a\n'))
@@ -97,7 +97,7 @@ class TestDecode(unittest.TestCase):
         self.assertEqual('abcdeabcde', self.output.getvalue())
 
     def test_decode_strict_newline_only(self):
-        """Reject chunk markers with no cr character in strict mode."""
+        """Reject chunk markers with no CR character in strict mode."""
         # From <http://pad.lv/505078>
         self.assertRaises(ValueError,
             self.decoder.write, 'a\n')

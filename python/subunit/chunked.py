@@ -7,7 +7,7 @@
 #  license at the users choice. A copy of both licenses are available in the
 #  project source as Apache-2.0 and BSD. You may not use this file except in
 #  compliance with one of these two licences.
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 #  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -34,7 +34,7 @@ class Decoder(object):
         :param strict: If True (the default), the decoder will not knowingly
             accept input that is not conformant to the HTTP specification.
             (This does not imply that it will catch every nonconformance.)
-            If False, it will accept incorrect input that is still 
+            If False, it will accept incorrect input that is still
             unambiguous.
         """
         self.output = output
@@ -80,7 +80,6 @@ class Decoder(object):
 
     def _read_length(self):
         """Try to decode a length from the bytes."""
-        count = -1
         match_chars = "0123456789abcdefABCDEF\r\n"
         count_chars = []
         for bytes in self.buffered_bytes:
@@ -99,7 +98,7 @@ class Decoder(object):
             if count_str[-2:] != '\r\n':
                 raise ValueError("chunk header invalid: %r" % count_str)
             if '\r' in count_str[:-2]:
-                raise ValueError("too many crs in chunk header %r" % count_str)
+                raise ValueError("too many CRs in chunk header %r" % count_str)
         self.body_length = int(count_str.rstrip('\n\r'), 16)
         excess_bytes = len(count_str)
         while excess_bytes:
@@ -120,7 +119,7 @@ class Decoder(object):
 
     def write(self, bytes):
         """Decode bytes to the output stream.
-        
+
         :raises ValueError: If the stream has already seen the end of file
             marker.
         :returns: None, or the excess bytes beyond the end of file marker.
@@ -146,7 +145,7 @@ class Encoder(object):
 
     def flush(self, extra_len=0):
         """Flush the encoder to the output stream.
-        
+
         :param extra_len: Increase the size of the chunk by this many bytes
             to allow for a subsequent write.
         """
