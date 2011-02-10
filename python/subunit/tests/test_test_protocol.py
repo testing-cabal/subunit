@@ -6,7 +6,7 @@
 #  license at the users choice. A copy of both licenses are available in the
 #  project source as Apache-2.0 and BSD. You may not use this file except in
 #  compliance with one of these two licences.
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 #  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -18,7 +18,6 @@ import datetime
 import unittest
 from StringIO import StringIO
 import os
-import sys
 
 from testtools.content import Content, TracebackContent
 from testtools.content_type import ContentType
@@ -61,7 +60,6 @@ class TestProtocolServerForward(unittest.TestCase):
         pipe = StringIO("test old mcdonald\n"
                         "success old mcdonald\n")
         protocol.readFrom(pipe)
-        mcdonald = subunit.RemotedTestCase("old mcdonald")
         self.assertEqual(client.testsRun, 1)
         self.assertEqual(pipe.getvalue(), out.getvalue())
 
@@ -74,7 +72,7 @@ class TestProtocolServerForward(unittest.TestCase):
         protocol.readFrom(pipe)
         self.assertEqual(client.testsRun, 0)
         self.assertEqual("", out.getvalue())
-        
+
 
 class TestTestProtocolServerPipe(unittest.TestCase):
 
@@ -90,7 +88,6 @@ class TestTestProtocolServerPipe(unittest.TestCase):
                         "test an error\n"
                         "error an error\n")
         protocol.readFrom(pipe)
-        mcdonald = subunit.RemotedTestCase("old mcdonald")
         bing = subunit.RemotedTestCase("bing crosby")
         an_error = subunit.RemotedTestCase("an error")
         self.assertEqual(client.errors,
@@ -311,7 +308,7 @@ class TestTestProtocolServerLostConnection(unittest.TestCase):
         self.protocol.lineReceived("%s old mcdonald %s" % (outcome, opening))
         self.protocol.lostConnection()
         failure = subunit.RemoteError(
-            u"lost connection during %s report of test 'old mcdonald'" % 
+            u"lost connection during %s report of test 'old mcdonald'" %
             outcome)
         self.assertEqual([
             ('startTest', self.test),
@@ -686,10 +683,10 @@ class TestTestProtocolServerAddSuccess(unittest.TestCase):
     def test_simple_success_colon(self):
         self.simple_success_keyword("failure:")
 
-    def test_simple_success(self):
+    def test_simple_failure(self):
         self.simple_success_keyword("successful")
 
-    def test_simple_success_colon(self):
+    def test_simple_failure_colon(self):
         self.simple_success_keyword("successful:")
 
     def assertSuccess(self, details):
@@ -946,7 +943,7 @@ class TestIsolatedTestCase(unittest.TestCase):
 
 
     def test_construct(self):
-        test = self.SampleIsolatedTestCase("test_sets_global_state")
+        self.SampleIsolatedTestCase("test_sets_global_state")
 
     def test_run(self):
         result = unittest.TestResult()
@@ -982,7 +979,7 @@ class TestIsolatedTestSuite(unittest.TestCase):
 
 
     def test_construct(self):
-        suite = subunit.IsolatedTestSuite()
+        subunit.IsolatedTestSuite()
 
     def test_run(self):
         result = unittest.TestResult()
@@ -1117,7 +1114,7 @@ class TestTestProtocolClient(unittest.TestCase):
         self.assertEqual(
             self.io.getvalue(),
             'skip: %s [\nHas it really?\n]\n' % self.test.id())
-    
+
     def test_add_skip_details(self):
         """Test addSkip on a TestProtocolClient with details."""
         details = {'reason':Content(
