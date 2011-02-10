@@ -101,18 +101,18 @@ class TestTestResultFilter(unittest.TestCase):
         self.assertEqual(1, self.filtered_result.testsRun)
 
     def run_tests(self):
-        self.setUpTestStream()
-        self.test = subunit.ProtocolTestCase(self.input_stream)
+        input_stream = self.getTestStream()
+        self.test = subunit.ProtocolTestCase(input_stream)
         self.test.run(self.filter)
 
-    def setUpTestStream(self):
+    def getTestStream(self):
         # While TestResultFilter works on python objects, using a subunit
         # stream is an easy pithy way of getting a series of test objects to
         # call into the TestResult, and as TestResultFilter is intended for
         # use with subunit also has the benefit of detecting any interface
         # skew issues.
-        self.input_stream = StringIO()
-        self.input_stream.write("""tags: global
+        input_stream = StringIO()
+        input_stream.write("""tags: global
 test passed
 success passed
 test failed
@@ -127,7 +127,8 @@ skip skipped
 test todo
 xfail todo
 """)
-        self.input_stream.seek(0)
+        input_stream.seek(0)
+        return input_stream
 
 
 def test_suite():
