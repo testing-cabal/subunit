@@ -99,8 +99,8 @@ class TestTestResultFilter(unittest.TestCase):
 
     def run_tests(self, result_filter):
         input_stream = self.getTestStream()
-        self.test = subunit.ProtocolTestCase(input_stream)
-        self.test.run(result_filter)
+        test = subunit.ProtocolTestCase(input_stream)
+        test.run(result_filter)
 
     def getTestStream(self):
         # While TestResultFilter works on python objects, using a subunit
