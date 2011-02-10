@@ -26,9 +26,6 @@ from subunit.test_results import TestResultFilter
 class TestTestResultFilter(unittest.TestCase):
     """Test for TestResultFilter, a TestResult object which filters tests."""
 
-    def _setUp(self):
-        self.output = StringIO()
-
     def test_default(self):
         """The default is to exclude success and include everything else."""
         self.filtered_result = unittest.TestResult()
