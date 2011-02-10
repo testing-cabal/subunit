@@ -678,15 +678,9 @@ class TestTestProtocolServerAddSuccess(unittest.TestCase):
             ], self.client._events)
 
     def test_simple_success(self):
-        self.simple_success_keyword("failure")
-
-    def test_simple_success_colon(self):
-        self.simple_success_keyword("failure:")
-
-    def test_simple_failure(self):
         self.simple_success_keyword("successful")
 
-    def test_simple_failure_colon(self):
+    def test_simple_success_colon(self):
         self.simple_success_keyword("successful:")
 
     def assertSuccess(self, details):
