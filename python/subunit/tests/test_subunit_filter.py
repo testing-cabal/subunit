@@ -28,74 +28,74 @@ class TestTestResultFilter(unittest.TestCase):
 
     def test_default(self):
         """The default is to exclude success and include everything else."""
-        self.filtered_result = unittest.TestResult()
-        result_filter = TestResultFilter(self.filtered_result)
+        filtered_result = unittest.TestResult()
+        result_filter = TestResultFilter(filtered_result)
         self.run_tests(result_filter)
         # skips are seen as success by default python TestResult.
         self.assertEqual(['error'],
-            [error[0].id() for error in self.filtered_result.errors])
+            [error[0].id() for error in filtered_result.errors])
         self.assertEqual(['failed'],
             [failure[0].id() for failure in
-            self.filtered_result.failures])
-        self.assertEqual(4, self.filtered_result.testsRun)
+            filtered_result.failures])
+        self.assertEqual(4, filtered_result.testsRun)
 
     def test_exclude_errors(self):
-        self.filtered_result = unittest.TestResult()
-        result_filter = TestResultFilter(self.filtered_result,
+        filtered_result = unittest.TestResult()
+        result_filter = TestResultFilter(filtered_result,
             filter_error=True)
         self.run_tests(result_filter)
         # skips are seen as errors by default python TestResult.
-        self.assertEqual([], self.filtered_result.errors)
+        self.assertEqual([], filtered_result.errors)
         self.assertEqual(['failed'],
             [failure[0].id() for failure in
-            self.filtered_result.failures])
-        self.assertEqual(3, self.filtered_result.testsRun)
+            filtered_result.failures])
+        self.assertEqual(3, filtered_result.testsRun)
 
     def test_exclude_failure(self):
-        self.filtered_result = unittest.TestResult()
-        result_filter = TestResultFilter(self.filtered_result,
+        filtered_result = unittest.TestResult()
+        result_filter = TestResultFilter(filtered_result,
             filter_failure=True)
         self.run_tests(result_filter)
         self.assertEqual(['error'],
-            [error[0].id() for error in self.filtered_result.errors])
+            [error[0].id() for error in filtered_result.errors])
         self.assertEqual([],
             [failure[0].id() for failure in
-            self.filtered_result.failures])
-        self.assertEqual(3, self.filtered_result.testsRun)
+            filtered_result.failures])
+        self.assertEqual(3, filtered_result.testsRun)
 
     def test_exclude_skips(self):
-        self.filtered_result = subunit.TestResultStats(None)
-        result_filter = TestResultFilter(self.filtered_result,
+        filtered_result = subunit.TestResultStats(None)
+        result_filter = TestResultFilter(filtered_result,
             filter_skip=True)
         self.run_tests(result_filter)
-        self.assertEqual(0, self.filtered_result.skipped_tests)
-        self.assertEqual(2, self.filtered_result.failed_tests)
-        self.assertEqual(3, self.filtered_result.testsRun)
+        self.assertEqual(0, filtered_result.skipped_tests)
+        self.assertEqual(2, filtered_result.failed_tests)
+        self.assertEqual(3, filtered_result.testsRun)
 
     def test_include_success(self):
         """Successes can be included if requested."""
-        self.filtered_result = unittest.TestResult()
-        result_filter = TestResultFilter(self.filtered_result,
+        filtered_result = unittest.TestResult()
+        result_filter = TestResultFilter(filtered_result,
             filter_success=False)
         self.run_tests(result_filter)
         self.assertEqual(['error'],
-            [error[0].id() for error in self.filtered_result.errors])
+            [error[0].id() for error in filtered_result.errors])
         self.assertEqual(['failed'],
             [failure[0].id() for failure in
-            self.filtered_result.failures])
-        self.assertEqual(5, self.filtered_result.testsRun)
+            filtered_result.failures])
+        self.assertEqual(5, filtered_result.testsRun)
 
     def test_filter_predicate(self):
         """You can filter by predicate callbacks"""
-        self.filtered_result = unittest.TestResult()
+        filtered_result = unittest.TestResult()
         def filter_cb(test, outcome, err, details):
             return outcome == 'success'
-        result_filter = TestResultFilter(self.filtered_result,
+        result_filter = TestResultFilter(filtered_result,
             filter_predicate=filter_cb,
             filter_success=False)
         self.run_tests(result_filter)
         # Only success should pass
-        self.assertEqual(1, self.filtered_result.testsRun)
+        self.assertEqual(1, filtered_result.testsRun)
 
     def run_tests(self, result_filter):
         input_stream = self.getTestStream()
