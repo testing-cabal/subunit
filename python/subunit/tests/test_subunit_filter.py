@@ -32,8 +32,8 @@ class TestTestResultFilter(unittest.TestCase):
     def test_default(self):
         """The default is to exclude success and include everything else."""
         self.filtered_result = unittest.TestResult()
-        self.filter = TestResultFilter(self.filtered_result)
-        self.run_tests()
+        result_filter = TestResultFilter(self.filtered_result)
+        self.run_tests(result_filter)
         # skips are seen as success by default python TestResult.
         self.assertEqual(['error'],
             [error[0].id() for error in self.filtered_result.errors])
@@ -44,9 +44,9 @@ class TestTestResultFilter(unittest.TestCase):
 
     def test_exclude_errors(self):
         self.filtered_result = unittest.TestResult()
-        self.filter = TestResultFilter(self.filtered_result,
+        result_filter = TestResultFilter(self.filtered_result,
             filter_error=True)
-        self.run_tests()
+        self.run_tests(result_filter)
         # skips are seen as errors by default python TestResult.
         self.assertEqual([], self.filtered_result.errors)
         self.assertEqual(['failed'],
@@ -56,9 +56,9 @@ class TestTestResultFilter(unittest.TestCase):
 
     def test_exclude_failure(self):
         self.filtered_result = unittest.TestResult()
-        self.filter = TestResultFilter(self.filtered_result,
+        result_filter = TestResultFilter(self.filtered_result,
             filter_failure=True)
-        self.run_tests()
+        self.run_tests(result_filter)
         self.assertEqual(['error'],
             [error[0].id() for error in self.filtered_result.errors])
         self.assertEqual([],
@@ -68,9 +68,9 @@ class TestTestResultFilter(unittest.TestCase):
 
     def test_exclude_skips(self):
         self.filtered_result = subunit.TestResultStats(None)
-        self.filter = TestResultFilter(self.filtered_result,
+        result_filter = TestResultFilter(self.filtered_result,
             filter_skip=True)
-        self.run_tests()
+        self.run_tests(result_filter)
         self.assertEqual(0, self.filtered_result.skipped_tests)
         self.assertEqual(2, self.filtered_result.failed_tests)
         self.assertEqual(3, self.filtered_result.testsRun)
@@ -78,9 +78,9 @@ class TestTestResultFilter(unittest.TestCase):
     def test_include_success(self):
         """Successes can be included if requested."""
         self.filtered_result = unittest.TestResult()
-        self.filter = TestResultFilter(self.filtered_result,
+        result_filter = TestResultFilter(self.filtered_result,
             filter_success=False)
-        self.run_tests()
+        self.run_tests(result_filter)
         self.assertEqual(['error'],
             [error[0].id() for error in self.filtered_result.errors])
         self.assertEqual(['failed'],
@@ -93,17 +93,17 @@ class TestTestResultFilter(unittest.TestCase):
         self.filtered_result = unittest.TestResult()
         def filter_cb(test, outcome, err, details):
             return outcome == 'success'
-        self.filter = TestResultFilter(self.filtered_result,
+        result_filter = TestResultFilter(self.filtered_result,
             filter_predicate=filter_cb,
             filter_success=False)
-        self.run_tests()
+        self.run_tests(result_filter)
         # Only success should pass
         self.assertEqual(1, self.filtered_result.testsRun)
 
-    def run_tests(self):
+    def run_tests(self, result_filter):
         input_stream = self.getTestStream()
         self.test = subunit.ProtocolTestCase(input_stream)
-        self.test.run(self.filter)
+        self.test.run(result_filter)
 
     def getTestStream(self):
         # While TestResultFilter works on python objects, using a subunit
