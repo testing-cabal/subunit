@@ -6,7 +6,7 @@
 #  license at the users choice. A copy of both licenses are available in the
 #  project source as Apache-2.0 and BSD. You may not use this file except in
 #  compliance with one of these two licences.
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 #  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -76,7 +76,7 @@ class TestTestResultFilter(unittest.TestCase):
         self.assertEqual(3, self.filtered_result.testsRun)
 
     def test_include_success(self):
-        """Success's can be included if requested."""
+        """Successes can be included if requested."""
         self.filtered_result = unittest.TestResult()
         self.filter = TestResultFilter(self.filtered_result,
             filter_success=False)
@@ -128,7 +128,7 @@ test todo
 xfail todo
 """)
         self.input_stream.seek(0)
-    
+
 
 def test_suite():
     loader = subunit.tests.TestUtil.TestLoader()
