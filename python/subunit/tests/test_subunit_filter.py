@@ -16,8 +16,13 @@
 
 """Tests for subunit.TestResultFilter."""
 
+from datetime import datetime
+from subunit import iso8601
 import unittest
 from StringIO import StringIO
+
+from testtools import TestCase
+from testtools.testresult.doubles import ExtendedTestResult
 
 import subunit
 from subunit.test_results import TestResultFilter
@@ -31,7 +36,7 @@ def make_stream(bytes):
     return stream
 
 
-class TestTestResultFilter(unittest.TestCase):
+class TestTestResultFilter(TestCase):
     """Test for TestResultFilter, a TestResult object which filters tests."""
 
     # While TestResultFilter works on python objects, using a subunit stream
@@ -134,6 +139,29 @@ xfail todo
         self.run_tests(result_filter)
         # Only success should pass
         self.assertEqual(1, filtered_result.testsRun)
+
+    def test_time_ordering_preserved(self):
+        # Passing a subunit stream through TestResultFilter preserves the
+        # relative ordering of 'time' directives and any other subunit
+        # directives that are still included.
+        dates = [
+            datetime(year=2000, month=1, day=i, tzinfo=iso8601.Utc())
+            for i in range(1, 4)]
+        subunit_stream = '\n'.join([
+            "time: %s",
+            "test: foo",
+            "time: %s",
+            "error: foo",
+            "time: %s"]) % tuple(dates)
+        result = ExtendedTestResult()
+        result_filter = TestResultFilter(result)
+        self.run_tests(result_filter, subunit_stream)
+        self.assertEquals(
+            [('time', dates[0]),
+             ('startTest', 'foo'),
+             ('time', dates[1]),
+             ('addError', 'foo'),
+             ('time', dates[2])], result._events)
 
 
 def test_suite():
