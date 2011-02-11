@@ -41,8 +41,7 @@ class TestTestResultFilter(unittest.TestCase):
 
     def test_exclude_errors(self):
         filtered_result = unittest.TestResult()
-        result_filter = TestResultFilter(filtered_result,
-            filter_error=True)
+        result_filter = TestResultFilter(filtered_result, filter_error=True)
         self.run_tests(result_filter)
         # skips are seen as errors by default python TestResult.
         self.assertEqual([], filtered_result.errors)
@@ -53,8 +52,7 @@ class TestTestResultFilter(unittest.TestCase):
 
     def test_exclude_failure(self):
         filtered_result = unittest.TestResult()
-        result_filter = TestResultFilter(filtered_result,
-            filter_failure=True)
+        result_filter = TestResultFilter(filtered_result, filter_failure=True)
         self.run_tests(result_filter)
         self.assertEqual(['error'],
             [error[0].id() for error in filtered_result.errors])
@@ -65,8 +63,7 @@ class TestTestResultFilter(unittest.TestCase):
 
     def test_exclude_skips(self):
         filtered_result = subunit.TestResultStats(None)
-        result_filter = TestResultFilter(filtered_result,
-            filter_skip=True)
+        result_filter = TestResultFilter(filtered_result, filter_skip=True)
         self.run_tests(result_filter)
         self.assertEqual(0, filtered_result.skipped_tests)
         self.assertEqual(2, filtered_result.failed_tests)
