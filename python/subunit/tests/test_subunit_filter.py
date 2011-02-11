@@ -119,9 +119,10 @@ xfail todo
         # Only success should pass
         self.assertEqual(1, filtered_result.testsRun)
 
-    def run_tests(self, result_filter):
-        input_stream = make_stream(self.example_subunit_stream)
-        test = subunit.ProtocolTestCase(input_stream)
+    def run_tests(self, result_filter, input_stream=None):
+        if input_stream is None:
+            input_stream = self.example_subunit_stream
+        test = subunit.ProtocolTestCase(make_stream(input_stream))
         test.run(result_filter)
 
 
