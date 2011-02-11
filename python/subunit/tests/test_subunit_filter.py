@@ -146,12 +146,14 @@ xfail todo
         # directives that are still included.
         date_a = datetime(year=2000, month=1, day=1, tzinfo=iso8601.UTC)
         date_b = datetime(year=2000, month=1, day=2, tzinfo=iso8601.UTC)
+        date_c = datetime(year=2000, month=1, day=3, tzinfo=iso8601.UTC)
         subunit_stream = '\n'.join([
             "time: %s",
             "test: foo",
             "time: %s",
             "error: foo",
-            ""]) % (date_a, date_b)
+            "time: %s",
+            ""]) % (date_a, date_b, date_c)
         result = ExtendedTestResult()
         result_filter = TestResultFilter(result)
         self.run_tests(result_filter, subunit_stream)
@@ -161,7 +163,8 @@ xfail todo
              ('startTest', foo),
              ('time', date_b),
              ('addError', foo, {}),
-             ('stopTest', foo)], result._events)
+             ('stopTest', foo),
+             ('time', date_c)], result._events)
 
 
 def test_suite():
