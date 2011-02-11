@@ -144,24 +144,24 @@ xfail todo
         # Passing a subunit stream through TestResultFilter preserves the
         # relative ordering of 'time' directives and any other subunit
         # directives that are still included.
-        dates = [
-            datetime(year=2000, month=1, day=i, tzinfo=iso8601.Utc())
-            for i in range(1, 4)]
+        date_a = datetime(year=2000, month=1, day=1, tzinfo=iso8601.UTC)
+        date_b = datetime(year=2000, month=1, day=2, tzinfo=iso8601.UTC)
         subunit_stream = '\n'.join([
             "time: %s",
             "test: foo",
             "time: %s",
             "error: foo",
-            "time: %s"]) % tuple(dates)
+            ""]) % (date_a, date_b)
         result = ExtendedTestResult()
         result_filter = TestResultFilter(result)
         self.run_tests(result_filter, subunit_stream)
+        foo = subunit.RemotedTestCase('foo')
         self.assertEquals(
-            [('time', dates[0]),
-             ('startTest', 'foo'),
-             ('time', dates[1]),
-             ('addError', 'foo'),
-             ('time', dates[2])], result._events)
+            [('time', date_a),
+             ('startTest', foo),
+             ('time', date_b),
+             ('addError', foo, {}),
+             ('stopTest', foo)], result._events)
 
 
 def test_suite():
