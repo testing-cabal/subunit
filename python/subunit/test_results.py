@@ -236,7 +236,6 @@ class TestResultFilter(TestResultDecorator):
         self._current_test_filtered = None
         # The (new, gone) tags for the current test.
         self._current_test_tags = None
-
         # Calls to this result that we don't know whether to forward on yet.
         self._buffered_calls = []
 
