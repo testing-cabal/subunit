@@ -23,8 +23,33 @@ import subunit
 from subunit.test_results import TestResultFilter
 
 
+def make_stream(bytes):
+    """Take a string and return a stream from which that string can be read."""
+    stream = StringIO()
+    stream.write(bytes)
+    stream.seek(0)
+    return stream
+
+
 class TestTestResultFilter(unittest.TestCase):
     """Test for TestResultFilter, a TestResult object which filters tests."""
+
+    example_subunit_stream = """\
+tags: global
+test passed
+success passed
+test failed
+tags: local
+failure failed
+test error
+error error [
+error details
+]
+test skipped
+skip skipped
+test todo
+xfail todo
+"""
 
     def test_default(self):
         """The default is to exclude success and include everything else."""
@@ -95,34 +120,9 @@ class TestTestResultFilter(unittest.TestCase):
         self.assertEqual(1, filtered_result.testsRun)
 
     def run_tests(self, result_filter):
-        input_stream = self.getTestStream()
+        input_stream = make_stream(self.example_subunit_stream)
         test = subunit.ProtocolTestCase(input_stream)
         test.run(result_filter)
-
-    def getTestStream(self):
-        # While TestResultFilter works on python objects, using a subunit
-        # stream is an easy pithy way of getting a series of test objects to
-        # call into the TestResult, and as TestResultFilter is intended for
-        # use with subunit also has the benefit of detecting any interface
-        # skew issues.
-        input_stream = StringIO()
-        input_stream.write("""tags: global
-test passed
-success passed
-test failed
-tags: local
-failure failed
-test error
-error error [
-error details
-]
-test skipped
-skip skipped
-test todo
-xfail todo
-""")
-        input_stream.seek(0)
-        return input_stream
 
 
 def test_suite():
