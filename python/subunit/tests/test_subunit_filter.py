@@ -34,6 +34,10 @@ def make_stream(bytes):
 class TestTestResultFilter(unittest.TestCase):
     """Test for TestResultFilter, a TestResult object which filters tests."""
 
+    # While TestResultFilter works on python objects, using a subunit stream
+    # is an easy pithy way of getting a series of test objects to call into
+    # the TestResult, and as TestResultFilter is intended for use with subunit
+    # also has the benefit of detecting any interface skew issues.
     example_subunit_stream = """\
 tags: global
 test passed
@@ -50,6 +54,18 @@ skip skipped
 test todo
 xfail todo
 """
+
+    def run_tests(self, result_filter, input_stream=None):
+        """Run tests through the given filter.
+
+        :param result_filter: A filtering TestResult object.
+        :param input_stream: Bytes of subunit stream data. If not provided,
+            uses TestTestResultFilter.example_subunit_stream.
+        """
+        if input_stream is None:
+            input_stream = self.example_subunit_stream
+        test = subunit.ProtocolTestCase(make_stream(input_stream))
+        test.run(result_filter)
 
     def test_default(self):
         """The default is to exclude success and include everything else."""
@@ -118,12 +134,6 @@ xfail todo
         self.run_tests(result_filter)
         # Only success should pass
         self.assertEqual(1, filtered_result.testsRun)
-
-    def run_tests(self, result_filter, input_stream=None):
-        if input_stream is None:
-            input_stream = self.example_subunit_stream
-        test = subunit.ProtocolTestCase(make_stream(input_stream))
-        test.run(result_filter)
 
 
 def test_suite():
