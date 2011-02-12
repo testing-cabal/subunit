@@ -247,6 +247,14 @@ class TagCollapsingDecorator(TestResultDecorator):
             return self.decorated.tags(new_tags, gone_tags)
 
 
+def all_true(bools):
+    """Return True if all of 'bools' are True. False otherwise."""
+    for b in bools:
+        if not b:
+            return False
+    return True
+
+
 class TestResultFilter(TestResultDecorator):
     """A pyunit TestResult interface implementation which filters tests.
 
@@ -276,13 +284,20 @@ class TestResultFilter(TestResultDecorator):
         """
         TestResultDecorator.__init__(self, result)
         self.decorated = TagCollapsingDecorator(self.decorated)
-        self._filter_error = filter_error
-        self._filter_failure = filter_failure
-        self._filter_success = filter_success
-        self._filter_skip = filter_skip
-        if filter_predicate is None:
-            filter_predicate = lambda test, outcome, err, details: True
-        self.filter_predicate = filter_predicate
+        predicates = []
+        if filter_error:
+            predicates.append(lambda t, outcome, e, d: outcome != 'error')
+        if filter_failure:
+            predicates.append(lambda t, outcome, e, d: outcome != 'failure')
+        if filter_success:
+            predicates.append(lambda t, outcome, e, d: outcome != 'success')
+        if filter_skip:
+            predicates.append(lambda t, outcome, e, d: outcome != 'skip')
+        if filter_predicate is not None:
+            predicates.append(filter_predicate)
+        self.filter_predicate = (
+            lambda test, outcome, err, details:
+                all_true(p(test, outcome, err, details) for p in predicates))
         # The current test (for filtering tags)
         self._current_test = None
         # Has the current test been filtered (for outputting test tags)
@@ -291,32 +306,28 @@ class TestResultFilter(TestResultDecorator):
         self._buffered_calls = []
 
     def addError(self, test, err=None, details=None):
-        if (not self._filter_error and
-            self.filter_predicate(test, 'error', err, details)):
+        if (self.filter_predicate(test, 'error', err, details)):
             self._buffered_calls.append(
                 ('addError', [test, err], {'details': details}))
         else:
             self._filtered()
 
     def addFailure(self, test, err=None, details=None):
-        if (not self._filter_failure and
-            self.filter_predicate(test, 'failure', err, details)):
+        if (self.filter_predicate(test, 'failure', err, details)):
             self._buffered_calls.append(
                 ('addFailure', [test, err], {'details': details}))
         else:
             self._filtered()
 
     def addSkip(self, test, reason=None, details=None):
-        if (not self._filter_skip and
-            self.filter_predicate(test, 'skip', reason, details)):
+        if (self.filter_predicate(test, 'skip', reason, details)):
             self._buffered_calls.append(
                 ('addSkip', [reason], {'details': details}))
         else:
             self._filtered()
 
     def addSuccess(self, test, details=None):
-        if (not self._filter_success and
-            self.filter_predicate(test, 'success', None, details)):
+        if (self.filter_predicate(test, 'success', None, details)):
             self._buffered_calls.append(
                 ('addSuccess', [test], {'details': details}))
         else:
@@ -362,6 +373,7 @@ class TestResultFilter(TestResultDecorator):
         self._buffered_calls = []
 
     def time(self, a_time):
+        # XXX: Make a TimeCollapsingDecorator.
         if self._current_test is not None:
             self._buffered_calls.append(('time', [a_time], {}))
         else:
