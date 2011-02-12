@@ -275,6 +275,7 @@ class TestResultFilter(TestResultDecorator):
             as 'success' or 'failure'.
         """
         TestResultDecorator.__init__(self, result)
+        self.decorated = TagCollapsingDecorator(self.decorated)
         self._filter_error = filter_error
         self._filter_failure = filter_failure
         self._filter_success = filter_success
@@ -286,8 +287,6 @@ class TestResultFilter(TestResultDecorator):
         self._current_test = None
         # Has the current test been filtered (for outputting test tags)
         self._current_test_filtered = None
-        # The (new, gone) tags for the current test.
-        self._current_test_tags = None
         # Calls to this result that we don't know whether to forward on yet.
         self._buffered_calls = []
 
@@ -345,7 +344,6 @@ class TestResultFilter(TestResultDecorator):
         """
         self._current_test = test
         self._current_test_filtered = False
-        self._current_test_tags = set(), set()
         self._buffered_calls.append(('startTest', [test], {}))
 
     def stopTest(self, test):
@@ -358,30 +356,10 @@ class TestResultFilter(TestResultDecorator):
             # Tags to output for this test.
             for method, args, kwargs in self._buffered_calls:
                 getattr(self.decorated, method)(*args, **kwargs)
-            if self._current_test_tags[0] or self._current_test_tags[1]:
-                self.decorated.tags(*self._current_test_tags)
             self.decorated.stopTest(test)
         self._current_test = None
         self._current_test_filtered = None
-        self._current_test_tags = None
         self._buffered_calls = []
-
-    def tags(self, new_tags, gone_tags):
-        """Handle tag instructions.
-
-        Adds and removes tags as appropriate. If a test is currently running,
-        tags are not affected for subsequent tests.
-
-        :param new_tags: Tags to add,
-        :param gone_tags: Tags to remove.
-        """
-        if self._current_test is not None:
-            # gather the tags until the test stops.
-            self._current_test_tags[0].update(new_tags)
-            self._current_test_tags[0].difference_update(gone_tags)
-            self._current_test_tags[1].update(gone_tags)
-            self._current_test_tags[1].difference_update(new_tags)
-        return self.decorated.tags(new_tags, gone_tags)
 
     def time(self, a_time):
         if self._current_test is not None:
