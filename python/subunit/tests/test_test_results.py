@@ -6,7 +6,7 @@
 #  license at the users choice. A copy of both licenses are available in the
 #  project source as Apache-2.0 and BSD. You may not use this file except in
 #  compliance with one of these two licences.
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 #  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -16,12 +16,6 @@
 
 import datetime
 import unittest
-from StringIO import StringIO
-import os
-import sys
-
-from testtools.content_type import ContentType
-from testtools.content import Content
 
 import subunit
 import subunit.iso8601 as iso8601
@@ -82,22 +76,22 @@ class TestHookedTestResultDecorator(unittest.TestCase):
 
     def test_startTest(self):
         self.result.startTest(self)
-        
+
     def test_startTestRun(self):
         self.result.startTestRun()
-        
+
     def test_stopTest(self):
         self.result.stopTest(self)
-        
+
     def test_stopTestRun(self):
         self.result.stopTestRun()
 
     def test_addError(self):
         self.result.addError(self, subunit.RemoteError())
-        
+
     def test_addError_details(self):
         self.result.addError(self, details={})
-        
+
     def test_addFailure(self):
         self.result.addFailure(self, subunit.RemoteError())
 
@@ -142,7 +136,7 @@ class TestHookedTestResultDecorator(unittest.TestCase):
 
     def test_time(self):
         self.result.time(None)
- 
+
 
 class TestAutoTimingTestResultDecorator(unittest.TestCase):
 

@@ -13,6 +13,10 @@ user of such functionality.
 IMPROVEMENTS
 ~~~~~~~~~~~~
 
+* ``subunit-filter`` preserves the relative ordering of ``time:`` statements,
+  so you can now use filtered streams to gather data about how long it takes
+  to run a test. (Jonathan Lange, #716554)
+
 * The ``subunit.run`` Python module supports ``-l`` and ``--load-list`` as
   per ``testtools.run``. This required a dependency bump due to a small
   API change in ``testtools``. (Robert Collins)

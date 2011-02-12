@@ -236,50 +236,51 @@ class TestResultFilter(TestResultDecorator):
         self._current_test_filtered = None
         # The (new, gone) tags for the current test.
         self._current_test_tags = None
+        # Calls to this result that we don't know whether to forward on yet.
+        self._buffered_calls = []
 
     def addError(self, test, err=None, details=None):
         if (not self._filter_error and
             self.filter_predicate(test, 'error', err, details)):
-            self.decorated.startTest(test)
-            self.decorated.addError(test, err, details=details)
+            self._buffered_calls.append(
+                ('addError', [test, err], {'details': details}))
         else:
             self._filtered()
 
     def addFailure(self, test, err=None, details=None):
         if (not self._filter_failure and
             self.filter_predicate(test, 'failure', err, details)):
-            self.decorated.startTest(test)
-            self.decorated.addFailure(test, err, details=details)
+            self._buffered_calls.append(
+                ('addFailure', [test, err], {'details': details}))
         else:
             self._filtered()
 
     def addSkip(self, test, reason=None, details=None):
         if (not self._filter_skip and
             self.filter_predicate(test, 'skip', reason, details)):
-            self.decorated.startTest(test)
-            self.decorated.addSkip(test, reason, details=details)
+            self._buffered_calls.append(
+                ('addSkip', [reason], {'details': details}))
         else:
             self._filtered()
 
     def addSuccess(self, test, details=None):
         if (not self._filter_success and
             self.filter_predicate(test, 'success', None, details)):
-            self.decorated.startTest(test)
-            self.decorated.addSuccess(test, details=details)
+            self._buffered_calls.append(
+                ('addSuccess', [test], {'details': details}))
         else:
             self._filtered()
 
     def addExpectedFailure(self, test, err=None, details=None):
         if self.filter_predicate(test, 'expectedfailure', err, details):
-            self.decorated.startTest(test)
-            return self.decorated.addExpectedFailure(test, err,
-                details=details)
+            self._buffered_calls.append(
+                ('addExpectedFailure', [test, err], {'details': details}))
         else:
             self._filtered()
 
     def addUnexpectedSuccess(self, test, details=None):
-        self.decorated.startTest(test)
-        return self.decorated.addUnexpectedSuccess(test, details=details)
+        self._buffered_calls.append(
+            ('addUnexpectedSuccess', [test], {'details': details}))
 
     def _filtered(self):
         self._current_test_filtered = True
@@ -293,6 +294,7 @@ class TestResultFilter(TestResultDecorator):
         self._current_test = test
         self._current_test_filtered = False
         self._current_test_tags = set(), set()
+        self._buffered_calls.append(('startTest', [test], {}))
 
     def stopTest(self, test):
         """Stop a test.
@@ -302,12 +304,15 @@ class TestResultFilter(TestResultDecorator):
         """
         if not self._current_test_filtered:
             # Tags to output for this test.
+            for method, args, kwargs in self._buffered_calls:
+                getattr(self.decorated, method)(*args, **kwargs)
             if self._current_test_tags[0] or self._current_test_tags[1]:
                 self.decorated.tags(*self._current_test_tags)
             self.decorated.stopTest(test)
         self._current_test = None
         self._current_test_filtered = None
         self._current_test_tags = None
+        self._buffered_calls = []
 
     def tags(self, new_tags, gone_tags):
         """Handle tag instructions.
@@ -325,6 +330,12 @@ class TestResultFilter(TestResultDecorator):
             self._current_test_tags[1].update(gone_tags)
             self._current_test_tags[1].difference_update(new_tags)
         return self.decorated.tags(new_tags, gone_tags)
+
+    def time(self, a_time):
+        if self._current_test is not None:
+            self._buffered_calls.append(('time', [a_time], {}))
+        else:
+            return self.decorated.time(a_time)
 
     def id_to_orig_id(self, id):
         if id.startswith("subunit.RemotedTestCase."):
