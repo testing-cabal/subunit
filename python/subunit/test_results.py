@@ -198,6 +198,54 @@ class AutoTimingTestResultDecorator(HookedTestResultDecorator):
 class TagCollapsingDecorator(TestResultDecorator):
     """Collapses many 'tags' calls into one where possible."""
 
+    def __init__(self, result):
+        TestResultDecorator.__init__(self, result)
+        # The current test (for filtering tags)
+        self._current_test = None
+        # The (new, gone) tags for the current test.
+        self._current_test_tags = None
+
+    def startTest(self, test):
+        """Start a test.
+
+        Not directly passed to the client, but used for handling of tags
+        correctly.
+        """
+        self.decorated.startTest(test)
+        self._current_test = test
+        self._current_test_tags = set(), set()
+
+    def stopTest(self, test):
+        """Stop a test.
+
+        Not directly passed to the client, but used for handling of tags
+        correctly.
+        """
+        # Tags to output for this test.
+        if self._current_test_tags[0] or self._current_test_tags[1]:
+            self.decorated.tags(*self._current_test_tags)
+        self.decorated.stopTest(test)
+        self._current_test = None
+        self._current_test_tags = None
+
+    def tags(self, new_tags, gone_tags):
+        """Handle tag instructions.
+
+        Adds and removes tags as appropriate. If a test is currently running,
+        tags are not affected for subsequent tests.
+
+        :param new_tags: Tags to add,
+        :param gone_tags: Tags to remove.
+        """
+        if self._current_test is not None:
+            # gather the tags until the test stops.
+            self._current_test_tags[0].update(new_tags)
+            self._current_test_tags[0].difference_update(gone_tags)
+            self._current_test_tags[1].update(gone_tags)
+            self._current_test_tags[1].difference_update(new_tags)
+        else:
+            return self.decorated.tags(new_tags, gone_tags)
+
 
 class TestResultFilter(TestResultDecorator):
     """A pyunit TestResult interface implementation which filters tests.
