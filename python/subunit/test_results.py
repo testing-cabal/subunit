@@ -82,7 +82,7 @@ class TestResultDecorator(object):
         return self.decorated.stop()
 
     def tags(self, new_tags, gone_tags):
-        return self.decorated.time(new_tags, gone_tags)
+        return self.decorated.tags(new_tags, gone_tags)
 
     def time(self, a_datetime):
         return self.decorated.time(a_datetime)
@@ -193,6 +193,10 @@ class AutoTimingTestResultDecorator(HookedTestResultDecorator):
         """
         self._time = a_datetime
         return self.decorated.time(a_datetime)
+
+
+class TagCollapsingDecorator(TestResultDecorator):
+    """Collapses many 'tags' calls into one where possible."""
 
 
 class TestResultFilter(TestResultDecorator):

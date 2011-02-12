@@ -17,6 +17,9 @@
 import datetime
 import unittest
 
+from testtools import TestCase
+from testtools.testresult.doubles import ExtendedTestResult
+
 import subunit
 import subunit.iso8601 as iso8601
 import subunit.test_results
@@ -185,6 +188,16 @@ class TestAutoTimingTestResultDecorator(unittest.TestCase):
         self.result.startTest(self)
         self.assertEqual(3, len(self.decorated._calls))
         self.assertNotEqual(None, self.decorated._calls[2])
+
+
+class TestTagCollapsingDecorator(TestCase):
+
+    def test_tags_forwarded_outside_of_tests(self):
+        result = ExtendedTestResult()
+        tag_collapser = subunit.test_results.TagCollapsingDecorator(result)
+        tag_collapser.tags(set(['a', 'b']), set())
+        self.assertEquals(
+            [('tags', set(['a', 'b']), set([]))], result._events)
 
 
 def test_suite():
