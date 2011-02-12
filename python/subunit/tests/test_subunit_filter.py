@@ -28,14 +28,6 @@ import subunit
 from subunit.test_results import TestResultFilter
 
 
-def make_stream(bytes):
-    """Take a string and return a stream from which that string can be read."""
-    stream = StringIO()
-    stream.write(bytes)
-    stream.seek(0)
-    return stream
-
-
 class TestTestResultFilter(TestCase):
     """Test for TestResultFilter, a TestResult object which filters tests."""
 
@@ -69,7 +61,7 @@ xfail todo
         """
         if input_stream is None:
             input_stream = self.example_subunit_stream
-        test = subunit.ProtocolTestCase(make_stream(input_stream))
+        test = subunit.ProtocolTestCase(StringIO(input_stream))
         test.run(result_filter)
 
     def test_default(self):
