@@ -256,6 +256,8 @@ class TimeCollapsingDecorator(HookedTestResultDecorator):
         self._last_sent_time = None
 
     def _before_event(self):
+        if self._last_received_time is None:
+            return
         if self._last_received_time != self._last_sent_time:
             self.decorated.time(self._last_received_time)
             self._last_sent_time = self._last_received_time
