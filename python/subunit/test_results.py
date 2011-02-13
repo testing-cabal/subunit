@@ -247,6 +247,25 @@ class TagCollapsingDecorator(TestResultDecorator):
             return self.decorated.tags(new_tags, gone_tags)
 
 
+class TimeCollapsingDecorator(HookedTestResultDecorator):
+    """Only pass on the first and last of a consecutive sequence of times."""
+
+    def __init__(self, decorated):
+        HookedTestResultDecorator.__init__(self, decorated)
+        self._last_time = None
+
+    def _before_event(self):
+        self.decorated.time(self._last_time)
+        self._last_time = None
+
+    def time(self, a_time):
+        # Don't upcall, because we don't want to call _before_event, it's only
+        # for non-time events.
+        if self._last_time is None:
+            self.decorated.time(a_time)
+        self._last_time = a_time
+
+
 def all_true(bools):
     """Return True if all of 'bools' are True. False otherwise."""
     for b in bools:

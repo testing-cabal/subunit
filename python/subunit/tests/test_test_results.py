@@ -215,6 +215,31 @@ class TestTagCollapsingDecorator(TestCase):
             result._events)
 
 
+class TestTimeCollapsingDecorator(TestCase):
+
+    def make_time(self):
+        # Heh heh.
+        return datetime.datetime(
+            2000, 1, self.getUniqueInteger(), tzinfo=iso8601.UTC)
+
+    def test_initial_time_forwarded(self):
+        result = ExtendedTestResult()
+        tag_collapser = subunit.test_results.TimeCollapsingDecorator(result)
+        a_time = self.make_time()
+        tag_collapser.time(a_time)
+        self.assertEquals([('time', a_time)], result._events)
+
+    def test_time_collapsed(self):
+        result = ExtendedTestResult()
+        tag_collapser = subunit.test_results.TimeCollapsingDecorator(result)
+        times = [self.make_time() for i in range(5)]
+        for a_time in times:
+            tag_collapser.time(a_time)
+        tag_collapser.startTest(subunit.RemotedTestCase('foo'))
+        self.assertEquals(
+            [('time', times[0]), ('time', times[-1])], result._events[:-1])
+
+
 def test_suite():
     loader = subunit.tests.TestUtil.TestLoader()
     result = loader.loadTestsFromName(__name__)
