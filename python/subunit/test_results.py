@@ -252,18 +252,22 @@ class TimeCollapsingDecorator(HookedTestResultDecorator):
 
     def __init__(self, decorated):
         HookedTestResultDecorator.__init__(self, decorated)
-        self._last_time = None
+        self._last_received_time = None
+        self._last_sent_time = None
 
     def _before_event(self):
-        self.decorated.time(self._last_time)
-        self._last_time = None
+        if self._last_received_time != self._last_sent_time:
+            self.decorated.time(self._last_received_time)
+            self._last_sent_time = self._last_received_time
+        self._last_received_time = None
 
     def time(self, a_time):
         # Don't upcall, because we don't want to call _before_event, it's only
         # for non-time events.
-        if self._last_time is None:
+        if self._last_received_time is None:
             self.decorated.time(a_time)
-        self._last_time = a_time
+            self._last_sent_time = a_time
+        self._last_received_time = a_time
 
 
 def all_true(bools):

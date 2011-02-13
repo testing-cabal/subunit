@@ -223,13 +223,16 @@ class TestTimeCollapsingDecorator(TestCase):
             2000, 1, self.getUniqueInteger(), tzinfo=iso8601.UTC)
 
     def test_initial_time_forwarded(self):
+        # We always forward the first time event we see.
         result = ExtendedTestResult()
         tag_collapser = subunit.test_results.TimeCollapsingDecorator(result)
         a_time = self.make_time()
         tag_collapser.time(a_time)
         self.assertEquals([('time', a_time)], result._events)
 
-    def test_time_collapsed(self):
+    def test_time_collapsed_to_first_and_last(self):
+        # If there are many consecutive time events, only the first and last
+        # are sent through.
         result = ExtendedTestResult()
         tag_collapser = subunit.test_results.TimeCollapsingDecorator(result)
         times = [self.make_time() for i in range(5)]
@@ -238,6 +241,27 @@ class TestTimeCollapsingDecorator(TestCase):
         tag_collapser.startTest(subunit.RemotedTestCase('foo'))
         self.assertEquals(
             [('time', times[0]), ('time', times[-1])], result._events[:-1])
+
+    def test_only_one_time_sent(self):
+        # If we receive a single time event followed by a non-time event, we
+        # send exactly one time event.
+        result = ExtendedTestResult()
+        tag_collapser = subunit.test_results.TimeCollapsingDecorator(result)
+        a_time = self.make_time()
+        tag_collapser.time(a_time)
+        tag_collapser.startTest(subunit.RemotedTestCase('foo'))
+        self.assertEquals([('time', a_time)], result._events[:-1])
+
+    def test_duplicate_times_not_sent(self):
+        # Many time events with the exact same time are collapsed into one
+        # time event.
+        result = ExtendedTestResult()
+        tag_collapser = subunit.test_results.TimeCollapsingDecorator(result)
+        a_time = self.make_time()
+        for i in range(5):
+            tag_collapser.time(a_time)
+        tag_collapser.startTest(subunit.RemotedTestCase('foo'))
+        self.assertEquals([('time', a_time)], result._events[:-1])
 
 
 def test_suite():
