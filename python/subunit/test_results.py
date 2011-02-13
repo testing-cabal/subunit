@@ -199,7 +199,7 @@ class TagCollapsingDecorator(TestResultDecorator):
     """Collapses many 'tags' calls into one where possible."""
 
     def __init__(self, result):
-        TestResultDecorator.__init__(self, result)
+        super(TagCollapsingDecorator, self).__init__(result)
         # The current test (for filtering tags)
         self._current_test = None
         # The (new, gone) tags for the current test.
@@ -251,7 +251,7 @@ class TimeCollapsingDecorator(HookedTestResultDecorator):
     """Only pass on the first and last of a consecutive sequence of times."""
 
     def __init__(self, decorated):
-        HookedTestResultDecorator.__init__(self, decorated)
+        super(TimeCollapsingDecorator, self).__init__(decorated)
         self._last_received_time = None
         self._last_sent_time = None
 
@@ -307,7 +307,7 @@ class TestResultFilter(TestResultDecorator):
             metadata is available. outcome is the name of the outcome such
             as 'success' or 'failure'.
         """
-        TestResultDecorator.__init__(self, result)
+        super(TestResultFilter, self).__init__(result)
         self.decorated = TimeCollapsingDecorator(
             TagCollapsingDecorator(self.decorated))
         predicates = []
@@ -414,7 +414,7 @@ class TestIdPrintingResult(testtools.TestResult):
 
     def __init__(self, stream, show_times=False):
         """Create a FilterResult object outputting to stream."""
-        testtools.TestResult.__init__(self)
+        super(TestIdPrintingResult, self).__init__()
         self._stream = stream
         self.failed_tests = 0
         self.__time = 0
