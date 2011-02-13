@@ -308,7 +308,8 @@ class TestResultFilter(TestResultDecorator):
             as 'success' or 'failure'.
         """
         TestResultDecorator.__init__(self, result)
-        self.decorated = TagCollapsingDecorator(self.decorated)
+        self.decorated = TimeCollapsingDecorator(
+            TagCollapsingDecorator(self.decorated))
         predicates = []
         if filter_error:
             predicates.append(lambda t, outcome, e, d: outcome != 'error')
@@ -398,7 +399,6 @@ class TestResultFilter(TestResultDecorator):
         self._buffered_calls = []
 
     def time(self, a_time):
-        # XXX: Make a TimeCollapsingDecorator.
         if self._current_test is not None:
             self._buffered_calls.append(('time', [a_time], {}))
         else:
