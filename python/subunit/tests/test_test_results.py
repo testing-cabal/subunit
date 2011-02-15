@@ -214,6 +214,21 @@ class TestTagCollapsingDecorator(TestCase):
              ('stopTest', test)],
             result._events)
 
+    def test_tags_collapsed_inside_of_tests_different_ordering(self):
+        result = ExtendedTestResult()
+        tag_collapser = subunit.test_results.TagCollapsingDecorator(result)
+        test = subunit.RemotedTestCase('foo')
+        tag_collapser.startTest(test)
+        tag_collapser.tags(set(), set(['a']))
+        tag_collapser.tags(set(['a', 'b']), set())
+        tag_collapser.tags(set(['c']), set())
+        tag_collapser.stopTest(test)
+        self.assertEquals(
+            [('startTest', test),
+             ('tags', set(['a', 'b', 'c']), set()),
+             ('stopTest', test)],
+            result._events)
+
 
 class TestTimeCollapsingDecorator(TestCase):
 
