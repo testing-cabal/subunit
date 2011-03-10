@@ -118,12 +118,11 @@ Utility modules
 
 import os
 import re
-from StringIO import StringIO
 import subprocess
 import sys
 import unittest
 
-import iso8601
+import subunit.iso8601
 from testtools import content, content_type, ExtendedToOriginalDecorator
 try:
     from testtools.testresult.real import _StringException
@@ -141,6 +140,22 @@ PROGRESS_SET = 0
 PROGRESS_CUR = 1
 PROGRESS_PUSH = 2
 PROGRESS_POP = 3
+
+if sys.version_info >= (3, 0):
+    def b(s):
+        return s.encode("latin-1")
+    def u(s):
+        return s
+    import io
+    StringIO = io.StringIO
+    BytesIO = io.BytesIO
+else:
+    def b(s):
+        return s
+    def u(s):
+        return unicode(s)
+    import StringIO
+    StringIO = BytesIO = StringIO.StringIO
 
 
 def test_suite():
@@ -241,7 +256,7 @@ class _ParserState(object):
 
     def lostConnection(self):
         """Connection lost."""
-        self.parser._lostConnectionInTest(u'unknown state of ')
+        self.parser._lostConnectionInTest(u('unknown state of '))
 
     def startTest(self, offset, line):
         """A test start command received."""
@@ -321,7 +336,7 @@ class _InTest(_ParserState):
 
     def lostConnection(self):
         """Connection lost."""
-        self.parser._lostConnectionInTest(u'')
+        self.parser._lostConnectionInTest(u(''))
 
 
 class _OutSideTest(_ParserState):
@@ -356,8 +371,8 @@ class _ReadingDetails(_ParserState):
 
     def lostConnection(self):
         """Connection lost."""
-        self.parser._lostConnectionInTest(u'%s report of ' %
-            self._outcome_label())
+        self.parser._lostConnectionInTest(u('%s report of ' %
+            self._outcome_label()))
 
     def _outcome_label(self):
         """The label to describe this outcome."""
@@ -488,9 +503,10 @@ class TestProtocolServer(object):
     def _handleTime(self, offset, line):
         # Accept it, but do not do anything with it yet.
         try:
-            event_time = iso8601.parse_date(line[offset:-1])
-        except TypeError, e:
-            raise TypeError("Failed to parse %r, got %r" % (line, e))
+            event_time = subunit.iso8601.parse_date(line[offset:-1])
+        except TypeError:
+            raise TypeError("Failed to parse %r, got %r"
+                                % (line, sys.exec_info[1]))
         self.client.time(event_time)
 
     def lineReceived(self, line):
@@ -498,8 +514,8 @@ class TestProtocolServer(object):
         self._state.lineReceived(line)
 
     def _lostConnectionInTest(self, state_string):
-        error_string = u"lost connection during %stest '%s'" % (
-            state_string, self.current_test_description)
+        error_string = u("lost connection during %stest '%s'" % (
+            state_string, self.current_test_description))
         self.client.addError(self._current_test, RemoteError(error_string))
         self.client.stopTest(self._current_test)
 
@@ -680,7 +696,7 @@ class TestProtocolClient(testresult.TestResult):
 
         ":param datetime: A datetime.datetime object.
         """
-        time = a_datetime.astimezone(iso8601.Utc())
+        time = a_datetime.astimezone(subunit.iso8601.Utc())
         self._stream.write("time: %04d-%02d-%02d %02d:%02d:%02d.%06dZ\n" % (
             time.year, time.month, time.day, time.hour, time.minute,
             time.second, time.microsecond))
@@ -710,7 +726,7 @@ class TestProtocolClient(testresult.TestResult):
         """Obey the testtools result.done() interface."""
 
 
-def RemoteError(description=u""):
+def RemoteError(description=u("")):
     return (_StringException, _StringException(description), None)
 
 
@@ -760,7 +776,7 @@ class RemotedTestCase(unittest.TestCase):
     def run(self, result=None):
         if result is None: result = self.defaultTestResult()
         result.startTest(self)
-        result.addError(self, RemoteError(u"Cannot run RemotedTestCases.\n"))
+        result.addError(self, RemoteError(u("Cannot run RemotedTestCases.\n")))
         result.stopTest(self)
 
     def _strclass(self):
