@@ -31,6 +31,18 @@ IMPROVEMENTS
   incorrect input that is still unambiguous. i.e. subunit will not barf if
   a \r is missing from the input. (Martin Pool)
 
+* ``TestResultFilter`` now collapses sequential calls to time().
+  (Jonathan Lange, #567150)
+
+* ``TestResultDecorator.tags()`` now actually works, and is no longer a buggy
+  copy/paste of ``TestResultDecorator.time()``. (Jonathan Lange, #681828)
+
+* Add ``TimeCollapsingDecorator`` which collapses multiple sequential time()
+  calls into just the first and last. (Jonathan Lange)
+
+* Add ``TagCollapsingDecorator`` which collapses many tags() calls into one
+  where possible. (Jonathan Lange)
+
 0.0.6
 -----
 
