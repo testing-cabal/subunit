@@ -94,10 +94,18 @@ xfail todo
             fixup_expected_failures=set(["failed"]))
         self.run_tests(result_filter)
         self.assertEqual(['failed', 'todo'],
-            [error[0].id() for error in filtered_result.expectedFailures])
-        self.assertEqual([],
-            [failure[0].id() for failure in
-            filtered_result.failures])
+            [failure[0].id() for failure in filtered_result.expectedFailures])
+        self.assertEqual([], filtered_result.failures)
+        self.assertEqual(4, filtered_result.testsRun)
+
+    def test_fixup_expected_errors(self):
+        filtered_result = unittest.TestResult()
+        result_filter = TestResultFilter(filtered_result,
+            fixup_expected_failures=set(["error"]))
+        self.run_tests(result_filter)
+        self.assertEqual(['error', 'todo'],
+            [failure[0].id() for failure in filtered_result.expectedFailures])
+        self.assertEqual([], filtered_result.errors)
         self.assertEqual(4, filtered_result.testsRun)
 
     def test_exclude_failure(self):

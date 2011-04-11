@@ -109,7 +109,7 @@ result = TestResultFilter(result, filter_error=options.error,
     filter_failure=options.failure, filter_success=options.success,
     filter_skip=options.skip,
     filter_predicate=regexp_filter,
-    filter_expected_failures=fixup_expected_failures)
+    fixup_expected_failures=fixup_expected_failures)
 if options.no_passthrough:
     passthrough_stream = DiscardStream()
 else:

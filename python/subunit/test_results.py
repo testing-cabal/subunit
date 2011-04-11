@@ -339,8 +339,12 @@ class TestResultFilter(TestResultDecorator):
 
     def addError(self, test, err=None, details=None):
         if (self.filter_predicate(test, 'error', err, details)):
-            self._buffered_calls.append(
-                ('addError', [test, err], {'details': details}))
+            if test.id() in self._fixup_expected_failures:
+                self._buffered_calls.append(
+                    ('addExpectedFailure', [test, err], {'details': details}))
+            else:
+                self._buffered_calls.append(
+                    ('addError', [test, err], {'details': details}))
         else:
             self._filtered()
 
