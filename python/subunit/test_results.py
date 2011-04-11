@@ -368,8 +368,12 @@ class TestResultFilter(TestResultDecorator):
 
     def addSuccess(self, test, details=None):
         if (self.filter_predicate(test, 'success', None, details)):
-            self._buffered_calls.append(
-                ('addSuccess', [test], {'details': details}))
+            if test.id() in self._fixup_expected_failures:
+                self._buffered_calls.append(
+                    ('addUnexpectedSuccess', [test], {'details': details}))
+            else:
+                self._buffered_calls.append(
+                    ('addSuccess', [test], {'details': details}))
         else:
             self._filtered()
 

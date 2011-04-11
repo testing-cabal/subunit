@@ -108,6 +108,15 @@ xfail todo
         self.assertEqual([], filtered_result.errors)
         self.assertEqual(4, filtered_result.testsRun)
 
+    def test_fixup_unexpected_success(self):
+        filtered_result = unittest.TestResult()
+        result_filter = TestResultFilter(filtered_result, filter_success=False,
+            fixup_expected_failures=set(["passed"]))
+        self.run_tests(result_filter)
+        self.assertEqual(['passed'],
+            [passed.id() for passed in filtered_result.unexpectedSuccesses])
+        self.assertEqual(5, filtered_result.testsRun)
+
     def test_exclude_failure(self):
         filtered_result = unittest.TestResult()
         result_filter = TestResultFilter(filtered_result, filter_failure=True)
