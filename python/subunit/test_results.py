@@ -294,7 +294,7 @@ class TestResultFilter(TestResultDecorator):
 
     def __init__(self, result, filter_error=False, filter_failure=False,
         filter_success=True, filter_skip=False,
-        filter_predicate=None):
+        filter_predicate=None, fixup_expected_failures=None):
         """Create a FilterResult object filtering to result.
 
         :param filter_error: Filter out errors.
@@ -306,6 +306,8 @@ class TestResultFilter(TestResultDecorator):
             through.  err and details may be none if no error or extra
             metadata is available. outcome is the name of the outcome such
             as 'success' or 'failure'.
+        :param fixup_expected_failures: Set of test ids to consider known
+            failing.
         """
         super(TestResultFilter, self).__init__(result)
         self.decorated = TimeCollapsingDecorator(
@@ -330,6 +332,10 @@ class TestResultFilter(TestResultDecorator):
         self._current_test_filtered = None
         # Calls to this result that we don't know whether to forward on yet.
         self._buffered_calls = []
+        if fixup_expected_failures is None:
+            self._fixup_expected_failures = frozenset()
+        else:
+            self._fixup_expected_failures = fixup_expected_failures
 
     def addError(self, test, err=None, details=None):
         if (self.filter_predicate(test, 'error', err, details)):
@@ -340,8 +346,12 @@ class TestResultFilter(TestResultDecorator):
 
     def addFailure(self, test, err=None, details=None):
         if (self.filter_predicate(test, 'failure', err, details)):
-            self._buffered_calls.append(
-                ('addFailure', [test, err], {'details': details}))
+            if test.id() in self._fixup_expected_failures:
+                self._buffered_calls.append(
+                    ('addExpectedFailure', [test, err], {'details': details}))
+            else:
+                self._buffered_calls.append(
+                    ('addFailure', [test, err], {'details': details}))
         else:
             self._filtered()
 
