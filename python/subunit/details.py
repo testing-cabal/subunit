@@ -16,9 +16,8 @@
 
 """Handlers for outcome details."""
 
-from cStringIO import StringIO
-
 from testtools import content, content_type
+from testtools.compat import StringIO
 
 import chunked
 

@@ -118,13 +118,12 @@ Utility modules
 
 import os
 import re
-from StringIO import StringIO
 import subprocess
 import sys
 import unittest
 
-import iso8601
 from testtools import content, content_type, ExtendedToOriginalDecorator
+from testtools.compat import _b, _u, StringIO
 try:
     from testtools.testresult.real import _StringException
     RemoteException = _StringException
@@ -134,7 +133,7 @@ except ImportError:
         "_StringException, check your version.")
 from testtools import testresult
 
-import chunked, details, test_results
+from subunit import chunked, details, iso8601, test_results
 
 
 PROGRESS_SET = 0
@@ -241,7 +240,7 @@ class _ParserState(object):
 
     def lostConnection(self):
         """Connection lost."""
-        self.parser._lostConnectionInTest(u'unknown state of ')
+        self.parser._lostConnectionInTest(_u('unknown state of '))
 
     def startTest(self, offset, line):
         """A test start command received."""
@@ -321,7 +320,7 @@ class _InTest(_ParserState):
 
     def lostConnection(self):
         """Connection lost."""
-        self.parser._lostConnectionInTest(u'')
+        self.parser._lostConnectionInTest(_u(''))
 
 
 class _OutSideTest(_ParserState):
@@ -356,7 +355,7 @@ class _ReadingDetails(_ParserState):
 
     def lostConnection(self):
         """Connection lost."""
-        self.parser._lostConnectionInTest(u'%s report of ' %
+        self.parser._lostConnectionInTest(_u('%s report of ') %
             self._outcome_label())
 
     def _outcome_label(self):
@@ -489,8 +488,9 @@ class TestProtocolServer(object):
         # Accept it, but do not do anything with it yet.
         try:
             event_time = iso8601.parse_date(line[offset:-1])
-        except TypeError, e:
-            raise TypeError("Failed to parse %r, got %r" % (line, e))
+        except TypeError:
+            raise TypeError(_u("Failed to parse %r, got %r")
+                % (line, sys.exec_info[1]))
         self.client.time(event_time)
 
     def lineReceived(self, line):
@@ -498,7 +498,7 @@ class TestProtocolServer(object):
         self._state.lineReceived(line)
 
     def _lostConnectionInTest(self, state_string):
-        error_string = u"lost connection during %stest '%s'" % (
+        error_string = _u("lost connection during %stest '%s'") % (
             state_string, self.current_test_description)
         self.client.addError(self._current_test, RemoteError(error_string))
         self.client.stopTest(self._current_test)
@@ -710,7 +710,7 @@ class TestProtocolClient(testresult.TestResult):
         """Obey the testtools result.done() interface."""
 
 
-def RemoteError(description=u""):
+def RemoteError(description=_u("")):
     return (_StringException, _StringException(description), None)
 
 
@@ -760,7 +760,7 @@ class RemotedTestCase(unittest.TestCase):
     def run(self, result=None):
         if result is None: result = self.defaultTestResult()
         result.startTest(self)
-        result.addError(self, RemoteError(u"Cannot run RemotedTestCases.\n"))
+        result.addError(self, RemoteError(_u("Cannot run RemotedTestCases.\n")))
         result.stopTest(self)
 
     def _strclass(self):
