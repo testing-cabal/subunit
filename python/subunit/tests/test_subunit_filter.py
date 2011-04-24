@@ -19,9 +19,9 @@
 from datetime import datetime
 from subunit import iso8601
 import unittest
-from StringIO import StringIO
 
 from testtools import TestCase
+from testtools.compat import StringIO
 from testtools.testresult.doubles import ExtendedTestResult
 
 import subunit

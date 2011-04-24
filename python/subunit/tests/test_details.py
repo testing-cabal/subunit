@@ -14,8 +14,9 @@
 #  limitations under that license.
 #
 
-from cStringIO import StringIO
 import unittest
+
+from testtools.compat import StringIO
 
 import subunit.tests
 from subunit import content, content_type, details
