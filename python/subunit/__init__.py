@@ -1139,9 +1139,11 @@ def get_default_formatter():
 
 def _make_stream_binary(stream):
     """Ensure that a stream will be binary safe. See _make_binary_on_windows."""
-    if getattr(stream, 'fileno', None) is not None:
-        print (stream, type(stream))
-        _make_binary_on_windows(stream.fileno())
+    try:
+        fileno = stream.fileno()
+    except AttributeError:
+        return
+    _make_binary_on_windows(fileno)
 
 def _make_binary_on_windows(fileno):
     """Win32 mangles \r\n to \n and that breaks streams. See bug lp:505078."""
