@@ -1137,11 +1137,16 @@ def get_default_formatter():
         return sys.stdout
 
 
+if sys.version_info > (3, 0):
+    from io import UnsupportedOperation as _NoFilenoError
+else:
+    _NoFilenoError = AttributeError
+
 def _make_stream_binary(stream):
     """Ensure that a stream will be binary safe. See _make_binary_on_windows."""
     try:
         fileno = stream.fileno()
-    except AttributeError:
+    except _NoFilenoError:
         return
     _make_binary_on_windows(fileno)
 
