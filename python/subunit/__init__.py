@@ -696,14 +696,14 @@ class TestProtocolClient(testresult.TestResult):
         :param details: An extended details dict for a test outcome.
         """
         self._stream.write(" [ multipart\n")
-        for name, content in sorted(details.iteritems()):
+        for name, content in sorted(details.items()):
             self._stream.write("Content-Type: %s/%s" %
                 (content.content_type.type, content.content_type.subtype))
             parameters = content.content_type.parameters
             if parameters:
                 self._stream.write(";")
                 param_strs = []
-                for param, value in parameters.iteritems():
+                for param, value in parameters.items():
                     param_strs.append("%s=%s" % (param, value))
                 self._stream.write(",".join(param_strs))
             self._stream.write("\n%s\n" % name)

@@ -18,7 +18,7 @@ import datetime
 import unittest
 import os
 
-from testtools.compat import _b, _u, StringIO
+from testtools.compat import _b, _u, BytesIO, StringIO
 from testtools.content import Content, TracebackContent
 from testtools.content_type import ContentType
 from testtools.tests.helpers import (
@@ -55,23 +55,23 @@ class TestProtocolServerForward(unittest.TestCase):
 
     def test_story(self):
         client = unittest.TestResult()
-        out = StringIO()
+        out = BytesIO()
         protocol = subunit.TestProtocolServer(client, forward_stream=out)
-        pipe = StringIO("test old mcdonald\n"
-                        "success old mcdonald\n")
+        pipe = BytesIO(_b("test old mcdonald\n"
+                        "success old mcdonald\n"))
         protocol.readFrom(pipe)
         self.assertEqual(client.testsRun, 1)
         self.assertEqual(pipe.getvalue(), out.getvalue())
 
     def test_not_command(self):
         client = unittest.TestResult()
-        out = StringIO()
+        out = BytesIO()
         protocol = subunit.TestProtocolServer(client,
             stream=subunit.DiscardStream(), forward_stream=out)
-        pipe = StringIO("success old mcdonald\n")
+        pipe = BytesIO(_b("success old mcdonald\n"))
         protocol.readFrom(pipe)
         self.assertEqual(client.testsRun, 0)
-        self.assertEqual("", out.getvalue())
+        self.assertEqual(_b(""), out.getvalue())
 
 
 class TestTestProtocolServerPipe(unittest.TestCase):
