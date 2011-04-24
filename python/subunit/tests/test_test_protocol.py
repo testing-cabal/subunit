@@ -18,7 +18,7 @@ import datetime
 import unittest
 import os
 
-from testtools.compat import _u, StringIO
+from testtools.compat import _b, _u, StringIO
 from testtools.content import Content, TracebackContent
 from testtools.content_type import ContentType
 from testtools.tests.helpers import (
@@ -372,8 +372,8 @@ class TestInTestMultipart(unittest.TestCase):
     def setUp(self):
         self.client = ExtendedTestResult()
         self.protocol = subunit.TestProtocolServer(self.client)
-        self.protocol.lineReceived("test mcdonalds farm\n")
-        self.test = subunit.RemotedTestCase("mcdonalds farm")
+        self.protocol.lineReceived(_b("test mcdonalds farm\n"))
+        self.test = subunit.RemotedTestCase(_u("mcdonalds farm"))
 
     def test__outcome_sets_details_parser(self):
         self.protocol._reading_success_details.details_parser = None
@@ -770,13 +770,13 @@ class TestTestProtocolServerStreamTags(unittest.TestCase):
             ], self.client._events)
 
     def test_tags_do_not_get_set_on_test(self):
-        self.protocol.lineReceived("test mcdonalds farm\n")
+        self.protocol.lineReceived(_b("test mcdonalds farm\n"))
         test = self.client._events[0][-1]
         self.assertEqual(None, getattr(test, 'tags', None))
 
     def test_tags_do_not_get_set_on_global_tags(self):
-        self.protocol.lineReceived("tags: foo bar\n")
-        self.protocol.lineReceived("test mcdonalds farm\n")
+        self.protocol.lineReceived(_b("tags: foo bar\n"))
+        self.protocol.lineReceived(_b("test mcdonalds farm\n"))
         test = self.client._events[-1][-1]
         self.assertEqual(None, getattr(test, 'tags', None))
 
@@ -884,7 +884,7 @@ class TestExecTestCase(unittest.TestCase):
         bing = subunit.RemotedTestCase("bing crosby")
         bing_details = {}
         bing_details['traceback'] = Content(ContentType("text", "x-traceback",
-            {'charset': 'utf8'}), lambda:["foo.c:53:ERROR invalid state\n"])
+            {'charset': 'utf8'}), lambda:[_b("foo.c:53:ERROR invalid state\n")])
         an_error = subunit.RemotedTestCase("an error")
         error_details = {}
         self.assertEqual([

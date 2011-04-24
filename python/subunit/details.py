@@ -17,9 +17,12 @@
 """Handlers for outcome details."""
 
 from testtools import content, content_type
-from testtools.compat import StringIO
+from testtools.compat import _b, StringIO
 
 from subunit import chunked
+
+end_marker = _b("]\n")
+quoted_marker = _b(" ]")
 
 
 class DetailsParser(object):
@@ -30,14 +33,14 @@ class SimpleDetailsParser(DetailsParser):
     """Parser for single-part [] delimited details."""
 
     def __init__(self, state):
-        self._message = ""
+        self._message = _b("")
         self._state = state
 
     def lineReceived(self, line):
-        if line == "]\n":
+        if line == end_marker:
             self._state.endDetails()
             return
-        if line[0:2] == " ]":
+        if line[0:2] == quoted_marker:
             # quoted ] start
             self._message += line[1:]
         else:

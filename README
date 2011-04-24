@@ -142,23 +142,24 @@ line orientated and consists of either directives and their parameters, or
 when outside a DETAILS region unexpected lines which are not interpreted by
 the parser - they should be forwarded unaltered.
 
-test|testing|test:|testing: test label
-success|success:|successful|successful: test label
-success|success:|successful|successful: test label DETAILS
-failure: test label
-failure: test label DETAILS
-error: test label
-error: test label DETAILS
-skip[:] test label
-skip[:] test label DETAILS
-xfail[:] test label
-xfail[:] test label DETAILS
+test|testing|test:|testing: test LABEL
+success|success:|successful|successful: test LABEL
+success|success:|successful|successful: test LABEL DETAILS
+failure: test LABEL
+failure: test LABEL DETAILS
+error: test LABEL
+error: test LABEL DETAILS
+skip[:] test LABEL
+skip[:] test LABEL DETAILS
+xfail[:] test LABEL
+xfail[:] test LABEL DETAILS
 progress: [+|-]X
 progress: push
 progress: pop
 tags: [-]TAG ...
 time: YYYY-MM-DD HH:MM:SSZ
 
+LABEL: UTF8*
 DETAILS ::= BRACKETED | MULTIPART
 BRACKETED ::= '[' CR UTF8-lines ']' CR
 MULTIPART ::= '[ multipart' CR PART* ']' CR

@@ -185,6 +185,7 @@ class _ParserState(object):
 
     def __init__(self, parser):
         self.parser = parser
+        self._test_sym = (_b('test'), _b('testing'))
 
     def addError(self, offset, line):
         """An 'error:' directive has been read."""
@@ -213,7 +214,7 @@ class _ParserState(object):
             cmd, rest = parts
             offset = len(cmd) + 1
             cmd = cmd.rstrip(_b(':'))
-            if cmd in ('test', 'testing'):
+            if cmd in self._test_sym:
                 self.startTest(offset, line)
             elif cmd == 'error':
                 self.addError(offset, line)
@@ -332,8 +333,9 @@ class _OutSideTest(_ParserState):
     def startTest(self, offset, line):
         """A test start command received."""
         self.parser._state = self.parser._in_test
-        self.parser._current_test = RemotedTestCase(line[offset:-1])
-        self.parser.current_test_description = line[offset:-1]
+        test_name = line[offset:-1].decode('utf8')
+        self.parser._current_test = RemotedTestCase(test_name)
+        self.parser.current_test_description = test_name
         self.parser.client.startTest(self.parser._current_test)
         self.parser.subunitLineReceived(line)
 
@@ -1138,6 +1140,7 @@ def get_default_formatter():
 def _make_stream_binary(stream):
     """Ensure that a stream will be binary safe. See _make_binary_on_windows."""
     if getattr(stream, 'fileno', None) is not None:
+        print (stream, type(stream))
         _make_binary_on_windows(stream.fileno())
 
 def _make_binary_on_windows(fileno):
