@@ -123,7 +123,7 @@ import sys
 import unittest
 
 from testtools import content, content_type, ExtendedToOriginalDecorator
-from testtools.compat import _b, _u, StringIO
+from testtools.compat import _b, _u, BytesIO, StringIO
 try:
     from testtools.testresult.real import _StringException
     RemoteException = _StringException
@@ -212,7 +212,7 @@ class _ParserState(object):
         if len(parts) == 2 and line.startswith(parts[0]):
             cmd, rest = parts
             offset = len(cmd) + 1
-            cmd = cmd.rstrip(':')
+            cmd = cmd.rstrip(_b(':'))
             if cmd in ('test', 'testing'):
                 self.startTest(offset, line)
             elif cmd == 'error':
@@ -439,7 +439,7 @@ class TestProtocolServer(object):
         :param stream: The stream that lines received which are not part of the
             subunit protocol should be written to. This allows custom handling
             of mixed protocols. By default, sys.stdout will be used for
-            convenience.
+            convenience. It should accept bytes to its write() method.
         :param forward_stream: A stream to forward subunit lines to. This
             allows a filter to forward the entire stream while still parsing
             and acting on it. By default forward_stream is set to
@@ -447,7 +447,10 @@ class TestProtocolServer(object):
         """
         self.client = ExtendedToOriginalDecorator(client)
         if stream is None:
-            stream = sys.stdout
+            if sys.version_info > (3, 0):
+                stream = sys.stdout.buffer
+            else:
+                stream = sys.stdout
         self._stream = stream
         self._forward_stream = forward_stream or DiscardStream()
         # state objects we can switch too
@@ -796,7 +799,7 @@ class ExecTestCase(unittest.TestCase):
         protocol = TestProtocolServer(result)
         output = subprocess.Popen(self.script, shell=True,
             stdout=subprocess.PIPE).communicate()[0]
-        protocol.readFrom(StringIO(output))
+        protocol.readFrom(BytesIO(output))
 
 
 class IsolatedTestCase(unittest.TestCase):
