@@ -19,7 +19,7 @@
 from testtools import content, content_type
 from testtools.compat import StringIO
 
-import chunked
+from subunit import chunked
 
 
 class DetailsParser(object):
