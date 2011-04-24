@@ -1058,7 +1058,6 @@ class ProtocolTestCase(object):
         _make_stream_binary(stream)
         self._passthrough = passthrough
         self._forward = forward
-        _make_stream_binary(forward)
 
     def __call__(self, result=None):
         return self.run(result)
