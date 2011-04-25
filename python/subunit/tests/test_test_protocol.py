@@ -79,14 +79,14 @@ class TestTestProtocolServerPipe(unittest.TestCase):
     def test_story(self):
         client = unittest.TestResult()
         protocol = subunit.TestProtocolServer(client)
-        pipe = StringIO("test old mcdonald\n"
+        pipe = BytesIO(_b("test old mcdonald\n"
                         "success old mcdonald\n"
                         "test bing crosby\n"
                         "failure bing crosby [\n"
                         "foo.c:53:ERROR invalid state\n"
                         "]\n"
                         "test an error\n"
-                        "error an error\n")
+                        "error an error\n"))
         protocol.readFrom(pipe)
         bing = subunit.RemotedTestCase("bing crosby")
         an_error = subunit.RemotedTestCase("an error")
@@ -110,26 +110,26 @@ class TestTestProtocolServerStartTest(unittest.TestCase):
         self.protocol = subunit.TestProtocolServer(self.client)
 
     def test_start_test(self):
-        self.protocol.lineReceived("test old mcdonald\n")
+        self.protocol.lineReceived(_b("test old mcdonald\n"))
         self.assertEqual(self.client._events,
             [('startTest', subunit.RemotedTestCase("old mcdonald"))])
 
     def test_start_testing(self):
-        self.protocol.lineReceived("testing old mcdonald\n")
+        self.protocol.lineReceived(_b("testing old mcdonald\n"))
         self.assertEqual(self.client._events,
             [('startTest', subunit.RemotedTestCase("old mcdonald"))])
 
     def test_start_test_colon(self):
-        self.protocol.lineReceived("test: old mcdonald\n")
+        self.protocol.lineReceived(_b("test: old mcdonald\n"))
         self.assertEqual(self.client._events,
             [('startTest', subunit.RemotedTestCase("old mcdonald"))])
 
     def test_indented_test_colon_ignored(self):
-        self.protocol.lineReceived(" test: old mcdonald\n")
+        self.protocol.lineReceived(_b(" test: old mcdonald\n"))
         self.assertEqual([], self.client._events)
 
     def test_start_testing_colon(self):
-        self.protocol.lineReceived("testing: old mcdonald\n")
+        self.protocol.lineReceived(_b("testing: old mcdonald\n"))
         self.assertEqual(self.client._events,
             [('startTest', subunit.RemotedTestCase("old mcdonald"))])
 
@@ -137,22 +137,22 @@ class TestTestProtocolServerStartTest(unittest.TestCase):
 class TestTestProtocolServerPassThrough(unittest.TestCase):
 
     def setUp(self):
-        self.stdout = StringIO()
+        self.stdout = BytesIO()
         self.test = subunit.RemotedTestCase("old mcdonald")
         self.client = ExtendedTestResult()
         self.protocol = subunit.TestProtocolServer(self.client, self.stdout)
 
     def keywords_before_test(self):
-        self.protocol.lineReceived("failure a\n")
-        self.protocol.lineReceived("failure: a\n")
-        self.protocol.lineReceived("error a\n")
-        self.protocol.lineReceived("error: a\n")
-        self.protocol.lineReceived("success a\n")
-        self.protocol.lineReceived("success: a\n")
-        self.protocol.lineReceived("successful a\n")
-        self.protocol.lineReceived("successful: a\n")
-        self.protocol.lineReceived("]\n")
-        self.assertEqual(self.stdout.getvalue(), "failure a\n"
+        self.protocol.lineReceived(_b("failure a\n"))
+        self.protocol.lineReceived(_b("failure: a\n"))
+        self.protocol.lineReceived(_b("error a\n"))
+        self.protocol.lineReceived(_b("error: a\n"))
+        self.protocol.lineReceived(_b("success a\n"))
+        self.protocol.lineReceived(_b("success: a\n"))
+        self.protocol.lineReceived(_b("successful a\n"))
+        self.protocol.lineReceived(_b("successful: a\n"))
+        self.protocol.lineReceived(_b("]\n"))
+        self.assertEqual(self.stdout.getvalue(), _b("failure a\n"
                                                  "failure: a\n"
                                                  "error a\n"
                                                  "error: a\n"
@@ -160,15 +160,15 @@ class TestTestProtocolServerPassThrough(unittest.TestCase):
                                                  "success: a\n"
                                                  "successful a\n"
                                                  "successful: a\n"
-                                                 "]\n")
+                                                 "]\n"))
 
     def test_keywords_before_test(self):
         self.keywords_before_test()
         self.assertEqual(self.client._events, [])
 
     def test_keywords_after_error(self):
-        self.protocol.lineReceived("test old mcdonald\n")
-        self.protocol.lineReceived("error old mcdonald\n")
+        self.protocol.lineReceived(_b("test old mcdonald\n"))
+        self.protocol.lineReceived(_b("error old mcdonald\n"))
         self.keywords_before_test()
         self.assertEqual([
             ('startTest', self.test),
@@ -177,8 +177,8 @@ class TestTestProtocolServerPassThrough(unittest.TestCase):
             ], self.client._events)
 
     def test_keywords_after_failure(self):
-        self.protocol.lineReceived("test old mcdonald\n")
-        self.protocol.lineReceived("failure old mcdonald\n")
+        self.protocol.lineReceived(_b("test old mcdonald\n"))
+        self.protocol.lineReceived(_b("failure old mcdonald\n"))
         self.keywords_before_test()
         self.assertEqual(self.client._events, [
             ('startTest', self.test),
@@ -187,8 +187,8 @@ class TestTestProtocolServerPassThrough(unittest.TestCase):
             ])
 
     def test_keywords_after_success(self):
-        self.protocol.lineReceived("test old mcdonald\n")
-        self.protocol.lineReceived("success old mcdonald\n")
+        self.protocol.lineReceived(_b("test old mcdonald\n"))
+        self.protocol.lineReceived(_b("success old mcdonald\n"))
         self.keywords_before_test()
         self.assertEqual([
             ('startTest', self.test),
@@ -197,19 +197,19 @@ class TestTestProtocolServerPassThrough(unittest.TestCase):
             ], self.client._events)
 
     def test_keywords_after_test(self):
-        self.protocol.lineReceived("test old mcdonald\n")
-        self.protocol.lineReceived("test old mcdonald\n")
-        self.protocol.lineReceived("failure a\n")
-        self.protocol.lineReceived("failure: a\n")
-        self.protocol.lineReceived("error a\n")
-        self.protocol.lineReceived("error: a\n")
-        self.protocol.lineReceived("success a\n")
-        self.protocol.lineReceived("success: a\n")
-        self.protocol.lineReceived("successful a\n")
-        self.protocol.lineReceived("successful: a\n")
-        self.protocol.lineReceived("]\n")
-        self.protocol.lineReceived("failure old mcdonald\n")
-        self.assertEqual(self.stdout.getvalue(), "test old mcdonald\n"
+        self.protocol.lineReceived(_b("test old mcdonald\n"))
+        self.protocol.lineReceived(_b("test old mcdonald\n"))
+        self.protocol.lineReceived(_b("failure a\n"))
+        self.protocol.lineReceived(_b("failure: a\n"))
+        self.protocol.lineReceived(_b("error a\n"))
+        self.protocol.lineReceived(_b("error: a\n"))
+        self.protocol.lineReceived(_b("success a\n"))
+        self.protocol.lineReceived(_b("success: a\n"))
+        self.protocol.lineReceived(_b("successful a\n"))
+        self.protocol.lineReceived(_b("successful: a\n"))
+        self.protocol.lineReceived(_b("]\n"))
+        self.protocol.lineReceived(_b("failure old mcdonald\n"))
+        self.assertEqual(self.stdout.getvalue(), _b("test old mcdonald\n"
                                                  "failure a\n"
                                                  "failure: a\n"
                                                  "error a\n"
@@ -218,7 +218,7 @@ class TestTestProtocolServerPassThrough(unittest.TestCase):
                                                  "success: a\n"
                                                  "successful a\n"
                                                  "successful: a\n"
-                                                 "]\n")
+                                                 "]\n"))
         self.assertEqual(self.client._events, [
             ('startTest', self.test),
             ('addFailure', self.test, {}),
@@ -228,24 +228,24 @@ class TestTestProtocolServerPassThrough(unittest.TestCase):
     def test_keywords_during_failure(self):
         # A smoke test to make sure that the details parsers have control
         # appropriately.
-        self.protocol.lineReceived("test old mcdonald\n")
-        self.protocol.lineReceived("failure: old mcdonald [\n")
-        self.protocol.lineReceived("test old mcdonald\n")
-        self.protocol.lineReceived("failure a\n")
-        self.protocol.lineReceived("failure: a\n")
-        self.protocol.lineReceived("error a\n")
-        self.protocol.lineReceived("error: a\n")
-        self.protocol.lineReceived("success a\n")
-        self.protocol.lineReceived("success: a\n")
-        self.protocol.lineReceived("successful a\n")
-        self.protocol.lineReceived("successful: a\n")
-        self.protocol.lineReceived(" ]\n")
-        self.protocol.lineReceived("]\n")
-        self.assertEqual(self.stdout.getvalue(), "")
+        self.protocol.lineReceived(_b("test old mcdonald\n"))
+        self.protocol.lineReceived(_b("failure: old mcdonald [\n"))
+        self.protocol.lineReceived(_b("test old mcdonald\n"))
+        self.protocol.lineReceived(_b("failure a\n"))
+        self.protocol.lineReceived(_b("failure: a\n"))
+        self.protocol.lineReceived(_b("error a\n"))
+        self.protocol.lineReceived(_b("error: a\n"))
+        self.protocol.lineReceived(_b("success a\n"))
+        self.protocol.lineReceived(_b("success: a\n"))
+        self.protocol.lineReceived(_b("successful a\n"))
+        self.protocol.lineReceived(_b("successful: a\n"))
+        self.protocol.lineReceived(_b(" ]\n"))
+        self.protocol.lineReceived(_b("]\n"))
+        self.assertEqual(self.stdout.getvalue(), _b(""))
         details = {}
         details['traceback'] = Content(ContentType("text", "x-traceback",
             {'charset': 'utf8'}),
-            lambda:[
+            lambda:[_b(
             "test old mcdonald\n"
             "failure a\n"
             "failure: a\n"
@@ -255,7 +255,7 @@ class TestTestProtocolServerPassThrough(unittest.TestCase):
             "success: a\n"
             "successful a\n"
             "successful: a\n"
-            "]\n"])
+            "]\n")])
         self.assertEqual(self.client._events, [
             ('startTest', self.test),
             ('addFailure', self.test, details),
@@ -266,7 +266,7 @@ class TestTestProtocolServerPassThrough(unittest.TestCase):
         """Lines received which cannot be interpreted as any protocol action
         should be passed through to sys.stdout.
         """
-        bytes = "randombytes\n"
+        bytes = _b("randombytes\n")
         self.protocol.lineReceived(bytes)
         self.assertEqual(self.stdout.getvalue(), bytes)
 
@@ -283,7 +283,7 @@ class TestTestProtocolServerLostConnection(unittest.TestCase):
         self.assertEqual([], self.client._events)
 
     def test_lost_connection_after_start(self):
-        self.protocol.lineReceived("test old mcdonald\n")
+        self.protocol.lineReceived(_b("test old mcdonald\n"))
         self.protocol.lostConnection()
         failure = subunit.RemoteError(
             _u("lost connection during test 'old mcdonald'"))
@@ -294,8 +294,8 @@ class TestTestProtocolServerLostConnection(unittest.TestCase):
             ], self.client._events)
 
     def test_lost_connected_after_error(self):
-        self.protocol.lineReceived("test old mcdonald\n")
-        self.protocol.lineReceived("error old mcdonald\n")
+        self.protocol.lineReceived(_b("test old mcdonald\n"))
+        self.protocol.lineReceived(_b("error old mcdonald\n"))
         self.protocol.lostConnection()
         self.assertEqual([
             ('startTest', self.test),
@@ -304,8 +304,8 @@ class TestTestProtocolServerLostConnection(unittest.TestCase):
             ], self.client._events)
 
     def do_connection_lost(self, outcome, opening):
-        self.protocol.lineReceived("test old mcdonald\n")
-        self.protocol.lineReceived("%s old mcdonald %s" % (outcome, opening))
+        self.protocol.lineReceived(_b("test old mcdonald\n"))
+        self.protocol.lineReceived(_b("%s old mcdonald %s" % (outcome, opening)))
         self.protocol.lostConnection()
         failure = subunit.RemoteError(
             _u("lost connection during %s report of test 'old mcdonald'") %
@@ -323,8 +323,8 @@ class TestTestProtocolServerLostConnection(unittest.TestCase):
         self.do_connection_lost("error", "[ multipart\n")
 
     def test_lost_connected_after_failure(self):
-        self.protocol.lineReceived("test old mcdonald\n")
-        self.protocol.lineReceived("failure old mcdonald\n")
+        self.protocol.lineReceived(_b("test old mcdonald\n"))
+        self.protocol.lineReceived(_b("failure old mcdonald\n"))
         self.protocol.lostConnection()
         self.assertEqual([
             ('startTest', self.test),
@@ -339,8 +339,8 @@ class TestTestProtocolServerLostConnection(unittest.TestCase):
         self.do_connection_lost("failure", "[ multipart\n")
 
     def test_lost_connection_after_success(self):
-        self.protocol.lineReceived("test old mcdonald\n")
-        self.protocol.lineReceived("success old mcdonald\n")
+        self.protocol.lineReceived(_b("test old mcdonald\n"))
+        self.protocol.lineReceived(_b("success old mcdonald\n"))
         self.protocol.lostConnection()
         self.assertEqual([
             ('startTest', self.test),
@@ -377,7 +377,7 @@ class TestInTestMultipart(unittest.TestCase):
 
     def test__outcome_sets_details_parser(self):
         self.protocol._reading_success_details.details_parser = None
-        self.protocol._state._outcome(0, "mcdonalds farm [ multipart\n",
+        self.protocol._state._outcome(0, _b("mcdonalds farm [ multipart\n"),
             None, self.protocol._reading_success_details)
         parser = self.protocol._reading_success_details.details_parser
         self.assertNotEqual(None, parser)
@@ -390,11 +390,11 @@ class TestTestProtocolServerAddError(unittest.TestCase):
     def setUp(self):
         self.client = ExtendedTestResult()
         self.protocol = subunit.TestProtocolServer(self.client)
-        self.protocol.lineReceived("test mcdonalds farm\n")
+        self.protocol.lineReceived(_b("test mcdonalds farm\n"))
         self.test = subunit.RemotedTestCase("mcdonalds farm")
 
     def simple_error_keyword(self, keyword):
-        self.protocol.lineReceived("%s mcdonalds farm\n" % keyword)
+        self.protocol.lineReceived(_b("%s mcdonalds farm\n" % keyword))
         details = {}
         self.assertEqual([
             ('startTest', self.test),
@@ -409,11 +409,11 @@ class TestTestProtocolServerAddError(unittest.TestCase):
         self.simple_error_keyword("error:")
 
     def test_error_empty_message(self):
-        self.protocol.lineReceived("error mcdonalds farm [\n")
-        self.protocol.lineReceived("]\n")
+        self.protocol.lineReceived(_b("error mcdonalds farm [\n"))
+        self.protocol.lineReceived(_b("]\n"))
         details = {}
         details['traceback'] = Content(ContentType("text", "x-traceback",
-            {'charset': 'utf8'}), lambda:[""])
+            {'charset': 'utf8'}), lambda:[_b("")])
         self.assertEqual([
             ('startTest', self.test),
             ('addError', self.test, details),
@@ -421,12 +421,12 @@ class TestTestProtocolServerAddError(unittest.TestCase):
             ], self.client._events)
 
     def error_quoted_bracket(self, keyword):
-        self.protocol.lineReceived("%s mcdonalds farm [\n" % keyword)
-        self.protocol.lineReceived(" ]\n")
-        self.protocol.lineReceived("]\n")
+        self.protocol.lineReceived(_b("%s mcdonalds farm [\n" % keyword))
+        self.protocol.lineReceived(_b(" ]\n"))
+        self.protocol.lineReceived(_b("]\n"))
         details = {}
         details['traceback'] = Content(ContentType("text", "x-traceback",
-            {'charset': 'utf8'}), lambda:["]\n"])
+            {'charset': 'utf8'}), lambda:[_b("]\n")])
         self.assertEqual([
             ('startTest', self.test),
             ('addError', self.test, details),
@@ -445,7 +445,7 @@ class TestTestProtocolServerAddFailure(unittest.TestCase):
     def setUp(self):
         self.client = ExtendedTestResult()
         self.protocol = subunit.TestProtocolServer(self.client)
-        self.protocol.lineReceived("test mcdonalds farm\n")
+        self.protocol.lineReceived(_b("test mcdonalds farm\n"))
         self.test = subunit.RemotedTestCase("mcdonalds farm")
 
     def assertFailure(self, details):
@@ -456,7 +456,7 @@ class TestTestProtocolServerAddFailure(unittest.TestCase):
             ], self.client._events)
 
     def simple_failure_keyword(self, keyword):
-        self.protocol.lineReceived("%s mcdonalds farm\n" % keyword)
+        self.protocol.lineReceived(_b("%s mcdonalds farm\n" % keyword))
         details = {}
         self.assertFailure(details)
 
@@ -467,20 +467,20 @@ class TestTestProtocolServerAddFailure(unittest.TestCase):
         self.simple_failure_keyword("failure:")
 
     def test_failure_empty_message(self):
-        self.protocol.lineReceived("failure mcdonalds farm [\n")
-        self.protocol.lineReceived("]\n")
+        self.protocol.lineReceived(_b("failure mcdonalds farm [\n"))
+        self.protocol.lineReceived(_b("]\n"))
         details = {}
         details['traceback'] = Content(ContentType("text", "x-traceback",
-            {'charset': 'utf8'}), lambda:[""])
+            {'charset': 'utf8'}), lambda:[_b("")])
         self.assertFailure(details)
 
     def failure_quoted_bracket(self, keyword):
-        self.protocol.lineReceived("%s mcdonalds farm [\n" % keyword)
-        self.protocol.lineReceived(" ]\n")
-        self.protocol.lineReceived("]\n")
+        self.protocol.lineReceived(_b("%s mcdonalds farm [\n" % keyword))
+        self.protocol.lineReceived(_b(" ]\n"))
+        self.protocol.lineReceived(_b("]\n"))
         details = {}
         details['traceback'] = Content(ContentType("text", "x-traceback",
-            {'charset': 'utf8'}), lambda:["]\n"])
+            {'charset': 'utf8'}), lambda:[_b("]\n")])
         self.assertFailure(details)
 
     def test_failure_quoted_bracket(self):
@@ -518,11 +518,11 @@ class TestTestProtocolServerAddxFail(unittest.TestCase):
     def setup_protocol(self):
         """Setup the protocol based on self.client."""
         self.protocol = subunit.TestProtocolServer(self.client)
-        self.protocol.lineReceived("test mcdonalds farm\n")
+        self.protocol.lineReceived(_b("test mcdonalds farm\n"))
         self.test = self.client._events[-1][-1]
 
     def simple_xfail_keyword(self, keyword, as_success):
-        self.protocol.lineReceived("%s mcdonalds farm\n" % keyword)
+        self.protocol.lineReceived(_b("%s mcdonalds farm\n" % keyword))
         self.check_success_or_xfail(as_success)
 
     def check_success_or_xfail(self, as_success, error_message=None):
@@ -537,13 +537,14 @@ class TestTestProtocolServerAddxFail(unittest.TestCase):
             if error_message is not None:
                 details['traceback'] = Content(
                     ContentType("text", "x-traceback", {'charset': 'utf8'}),
-                    lambda:[error_message])
+                    lambda:[_b(error_message)])
             if isinstance(self.client, ExtendedTestResult):
                 value = details
             else:
                 if error_message is not None:
                     value = subunit.RemoteError(_u("Text attachment: traceback\n"
-                        "------------\n") + error_message + _u("------------\n"))
+                        "------------\n") + _u(error_message) +
+                        _u("------------\n"))
                 else:
                     value = subunit.RemoteError()
             self.assertEqual([
@@ -577,16 +578,16 @@ class TestTestProtocolServerAddxFail(unittest.TestCase):
         self.empty_message(False, error_message="")
 
     def empty_message(self, as_success, error_message="\n"):
-        self.protocol.lineReceived("xfail mcdonalds farm [\n")
-        self.protocol.lineReceived("]\n")
+        self.protocol.lineReceived(_b("xfail mcdonalds farm [\n"))
+        self.protocol.lineReceived(_b("]\n"))
         self.check_success_or_xfail(as_success, error_message)
 
     def xfail_quoted_bracket(self, keyword, as_success):
         # This tests it is accepted, but cannot test it is used today, because
         # of not having a way to expose it in Python so far.
-        self.protocol.lineReceived("%s mcdonalds farm [\n" % keyword)
-        self.protocol.lineReceived(" ]\n")
-        self.protocol.lineReceived("]\n")
+        self.protocol.lineReceived(_b("%s mcdonalds farm [\n" % keyword))
+        self.protocol.lineReceived(_b(" ]\n"))
+        self.protocol.lineReceived(_b("]\n"))
         self.check_success_or_xfail(as_success, "]\n")
 
     def test_xfail_quoted_bracket(self):
@@ -617,7 +618,7 @@ class TestTestProtocolServerAddSkip(unittest.TestCase):
         """Setup a test object ready to be skipped."""
         self.client = ExtendedTestResult()
         self.protocol = subunit.TestProtocolServer(self.client)
-        self.protocol.lineReceived("test mcdonalds farm\n")
+        self.protocol.lineReceived(_b("test mcdonalds farm\n"))
         self.test = self.client._events[-1][-1]
 
     def assertSkip(self, reason):
@@ -632,7 +633,7 @@ class TestTestProtocolServerAddSkip(unittest.TestCase):
             ], self.client._events)
 
     def simple_skip_keyword(self, keyword):
-        self.protocol.lineReceived("%s mcdonalds farm\n" % keyword)
+        self.protocol.lineReceived(_b("%s mcdonalds farm\n" % keyword))
         self.assertSkip(None)
 
     def test_simple_skip(self):
@@ -642,17 +643,17 @@ class TestTestProtocolServerAddSkip(unittest.TestCase):
         self.simple_skip_keyword("skip:")
 
     def test_skip_empty_message(self):
-        self.protocol.lineReceived("skip mcdonalds farm [\n")
-        self.protocol.lineReceived("]\n")
-        self.assertSkip("")
+        self.protocol.lineReceived(_b("skip mcdonalds farm [\n"))
+        self.protocol.lineReceived(_b("]\n"))
+        self.assertSkip(_b(""))
 
     def skip_quoted_bracket(self, keyword):
         # This tests it is accepted, but cannot test it is used today, because
         # of not having a way to expose it in Python so far.
-        self.protocol.lineReceived("%s mcdonalds farm [\n" % keyword)
-        self.protocol.lineReceived(" ]\n")
-        self.protocol.lineReceived("]\n")
-        self.assertSkip("]\n")
+        self.protocol.lineReceived(_b("%s mcdonalds farm [\n" % keyword))
+        self.protocol.lineReceived(_b(" ]\n"))
+        self.protocol.lineReceived(_b("]\n"))
+        self.assertSkip(_b("]\n"))
 
     def test_skip_quoted_bracket(self):
         self.skip_quoted_bracket("skip")
@@ -666,11 +667,11 @@ class TestTestProtocolServerAddSuccess(unittest.TestCase):
     def setUp(self):
         self.client = ExtendedTestResult()
         self.protocol = subunit.TestProtocolServer(self.client)
-        self.protocol.lineReceived("test mcdonalds farm\n")
+        self.protocol.lineReceived(_b("test mcdonalds farm\n"))
         self.test = subunit.RemotedTestCase("mcdonalds farm")
 
     def simple_success_keyword(self, keyword):
-        self.protocol.lineReceived("%s mcdonalds farm\n" % keyword)
+        self.protocol.lineReceived(_b("%s mcdonalds farm\n" % keyword))
         self.assertEqual([
             ('startTest', self.test),
             ('addSuccess', self.test),
@@ -691,22 +692,22 @@ class TestTestProtocolServerAddSuccess(unittest.TestCase):
             ], self.client._events)
 
     def test_success_empty_message(self):
-        self.protocol.lineReceived("success mcdonalds farm [\n")
-        self.protocol.lineReceived("]\n")
+        self.protocol.lineReceived(_b("success mcdonalds farm [\n"))
+        self.protocol.lineReceived(_b("]\n"))
         details = {}
         details['message'] = Content(ContentType("text", "plain"),
-            lambda:[""])
+            lambda:[_b("")])
         self.assertSuccess(details)
 
     def success_quoted_bracket(self, keyword):
         # This tests it is accepted, but cannot test it is used today, because
         # of not having a way to expose it in Python so far.
-        self.protocol.lineReceived("%s mcdonalds farm [\n" % keyword)
-        self.protocol.lineReceived(" ]\n")
-        self.protocol.lineReceived("]\n")
+        self.protocol.lineReceived(_b("%s mcdonalds farm [\n" % keyword))
+        self.protocol.lineReceived(_b(" ]\n"))
+        self.protocol.lineReceived(_b("]\n"))
         details = {}
         details['message'] = Content(ContentType("text", "plain"),
-            lambda:["]\n"])
+            lambda:[_b("]\n")])
         self.assertSuccess(details)
 
     def test_success_quoted_bracket(self):
@@ -721,26 +722,26 @@ class TestTestProtocolServerProgress(unittest.TestCase):
 
     def test_progress_accepted_stdlib(self):
         self.result = Python26TestResult()
-        self.stream = StringIO()
+        self.stream = BytesIO()
         self.protocol = subunit.TestProtocolServer(self.result,
             stream=self.stream)
-        self.protocol.lineReceived("progress: 23")
-        self.protocol.lineReceived("progress: -2")
-        self.protocol.lineReceived("progress: +4")
-        self.assertEqual("", self.stream.getvalue())
+        self.protocol.lineReceived(_b("progress: 23"))
+        self.protocol.lineReceived(_b("progress: -2"))
+        self.protocol.lineReceived(_b("progress: +4"))
+        self.assertEqual(_b(""), self.stream.getvalue())
 
     def test_progress_accepted_extended(self):
         # With a progress capable TestResult, progress events are emitted.
         self.result = ExtendedTestResult()
-        self.stream = StringIO()
+        self.stream = BytesIO()
         self.protocol = subunit.TestProtocolServer(self.result,
             stream=self.stream)
-        self.protocol.lineReceived("progress: 23")
-        self.protocol.lineReceived("progress: push")
-        self.protocol.lineReceived("progress: -2")
-        self.protocol.lineReceived("progress: pop")
-        self.protocol.lineReceived("progress: +4")
-        self.assertEqual("", self.stream.getvalue())
+        self.protocol.lineReceived(_b("progress: 23"))
+        self.protocol.lineReceived(_b("progress: push"))
+        self.protocol.lineReceived(_b("progress: -2"))
+        self.protocol.lineReceived(_b("progress: pop"))
+        self.protocol.lineReceived(_b("progress: +4"))
+        self.assertEqual(_b(""), self.stream.getvalue())
         self.assertEqual([
             ('progress', 23, subunit.PROGRESS_SET),
             ('progress', None, subunit.PROGRESS_PUSH),
@@ -758,13 +759,13 @@ class TestTestProtocolServerStreamTags(unittest.TestCase):
         self.protocol = subunit.TestProtocolServer(self.client)
 
     def test_initial_tags(self):
-        self.protocol.lineReceived("tags: foo bar:baz  quux\n")
+        self.protocol.lineReceived(_b("tags: foo bar:baz  quux\n"))
         self.assertEqual([
             ('tags', set(["foo", "bar:baz", "quux"]), set()),
             ], self.client._events)
 
     def test_minus_removes_tags(self):
-        self.protocol.lineReceived("tags: -bar quux\n")
+        self.protocol.lineReceived(_b("tags: -bar quux\n"))
         self.assertEqual([
             ('tags', set(["quux"]), set(["bar"])),
             ], self.client._events)
@@ -781,10 +782,10 @@ class TestTestProtocolServerStreamTags(unittest.TestCase):
         self.assertEqual(None, getattr(test, 'tags', None))
 
     def test_tags_get_set_on_test_tags(self):
-        self.protocol.lineReceived("test mcdonalds farm\n")
+        self.protocol.lineReceived(_b("test mcdonalds farm\n"))
         test = self.client._events[-1][-1]
-        self.protocol.lineReceived("tags: foo bar\n")
-        self.protocol.lineReceived("success mcdonalds farm\n")
+        self.protocol.lineReceived(_b("tags: foo bar\n"))
+        self.protocol.lineReceived(_b("success mcdonalds farm\n"))
         self.assertEqual(None, getattr(test, 'tags', None))
 
 
@@ -793,19 +794,19 @@ class TestTestProtocolServerStreamTime(unittest.TestCase):
 
     def test_time_accepted_stdlib(self):
         self.result = Python26TestResult()
-        self.stream = StringIO()
+        self.stream = BytesIO()
         self.protocol = subunit.TestProtocolServer(self.result,
             stream=self.stream)
-        self.protocol.lineReceived("time: 2001-12-12 12:59:59Z\n")
-        self.assertEqual("", self.stream.getvalue())
+        self.protocol.lineReceived(_b("time: 2001-12-12 12:59:59Z\n"))
+        self.assertEqual(_b(""), self.stream.getvalue())
 
     def test_time_accepted_extended(self):
         self.result = ExtendedTestResult()
-        self.stream = StringIO()
+        self.stream = BytesIO()
         self.protocol = subunit.TestProtocolServer(self.result,
             stream=self.stream)
-        self.protocol.lineReceived("time: 2001-12-12 12:59:59Z\n")
-        self.assertEqual("", self.stream.getvalue())
+        self.protocol.lineReceived(_b("time: 2001-12-12 12:59:59Z\n"))
+        self.assertEqual(_b(""), self.stream.getvalue())
         self.assertEqual([
             ('time', datetime.datetime(2001, 12, 12, 12, 59, 59, 0,
             iso8601.Utc()))

@@ -186,6 +186,17 @@ class _ParserState(object):
     def __init__(self, parser):
         self.parser = parser
         self._test_sym = (_b('test'), _b('testing'))
+        self._colon_sym = _b(':')
+        self._error_sym = (_b('error'),)
+        self._failure_sym = (_b('failure'),)
+        self._progress_sym = (_b('progress'),)
+        self._skip_sym = _b('skip')
+        self._success_sym = (_b('success'), _b('successful'))
+        self._tags_sym = (_b('tags'),)
+        self._time_sym = (_b('time'),)
+        self._xfail_sym = (_b('xfail'),)
+        self._start_simple = _u(" [")
+        self._start_multipart = _u(" [ multipart")
 
     def addError(self, offset, line):
         """An 'error:' directive has been read."""
@@ -213,26 +224,26 @@ class _ParserState(object):
         if len(parts) == 2 and line.startswith(parts[0]):
             cmd, rest = parts
             offset = len(cmd) + 1
-            cmd = cmd.rstrip(_b(':'))
+            cmd = cmd.rstrip(self._colon_sym)
             if cmd in self._test_sym:
                 self.startTest(offset, line)
-            elif cmd == 'error':
+            elif cmd in self._error_sym:
                 self.addError(offset, line)
-            elif cmd == 'failure':
+            elif cmd in self._failure_sym:
                 self.addFailure(offset, line)
-            elif cmd == 'progress':
+            elif cmd in self._progress_sym:
                 self.parser._handleProgress(offset, line)
-            elif cmd == 'skip':
+            elif cmd in self._skip_sym:
                 self.addSkip(offset, line)
-            elif cmd in ('success', 'successful'):
+            elif cmd in self._success_sym:
                 self.addSuccess(offset, line)
-            elif cmd in ('tags',):
+            elif cmd in self._tags_sym:
                 self.parser._handleTags(offset, line)
                 self.parser.subunitLineReceived(line)
-            elif cmd in ('time',):
+            elif cmd in self._time_sym:
                 self.parser._handleTime(offset, line)
                 self.parser.subunitLineReceived(line)
-            elif cmd == 'xfail':
+            elif cmd in self._xfail_sym:
                 self.addExpectedFail(offset, line)
             else:
                 self.parser.stdOutLineReceived(line)
@@ -258,19 +269,21 @@ class _InTest(_ParserState):
         :param details_state: The state to switch to for details
             processing of this outcome.
         """
-        if self.parser.current_test_description == line[offset:-1]:
+        test_name = line[offset:-1].decode('utf8')
+        if self.parser.current_test_description == test_name:
             self.parser._state = self.parser._outside_test
             self.parser.current_test_description = None
             no_details()
             self.parser.client.stopTest(self.parser._current_test)
             self.parser._current_test = None
             self.parser.subunitLineReceived(line)
-        elif self.parser.current_test_description + " [" == line[offset:-1]:
+        elif self.parser.current_test_description + self._start_simple == \
+            test_name:
             self.parser._state = details_state
             details_state.set_simple()
             self.parser.subunitLineReceived(line)
-        elif self.parser.current_test_description + " [ multipart" == \
-            line[offset:-1]:
+        elif self.parser.current_test_description + self._start_multipart == \
+            test_name:
             self.parser._state = details_state
             details_state.set_multipart()
             self.parser.subunitLineReceived(line)
@@ -465,17 +478,21 @@ class TestProtocolServer(object):
         self._reading_xfail_details = _ReadingExpectedFailureDetails(self)
         # start with outside test.
         self._state = self._outside_test
+        # Avoid casts on every call
+        self._plusminus = _b('+-')
+        self._push_sym = _b('push')
+        self._pop_sym = _b('pop')
 
     def _handleProgress(self, offset, line):
         """Process a progress directive."""
         line = line[offset:].strip()
-        if line[0] in '+-':
+        if line[0] in self._plusminus:
             whence = PROGRESS_CUR
             delta = int(line)
-        elif line == "push":
+        elif line == self._push_sym:
             whence = PROGRESS_PUSH
             delta = None
-        elif line == "pop":
+        elif line == self._pop_sym:
             whence = PROGRESS_POP
             delta = None
         else:
