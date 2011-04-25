@@ -229,11 +229,6 @@ class TestTagCollapsingDecorator(TestCase):
              ('stopTest', test)],
             result._events)
 
-    def test_tags_collapsed_tests_run(self):
-        result = ExtendedTestResult()
-        tag_collapser = subunit.test_results.TagCollapsingDecorator(result)
-        tag_collapser.testsRun += 1
-
 
 class TestTimeCollapsingDecorator(TestCase):
 
