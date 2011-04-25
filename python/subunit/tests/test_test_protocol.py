@@ -107,7 +107,8 @@ class TestTestProtocolServerStartTest(unittest.TestCase):
 
     def setUp(self):
         self.client = Python26TestResult()
-        self.protocol = subunit.TestProtocolServer(self.client)
+        self.stream = BytesIO()
+        self.protocol = subunit.TestProtocolServer(self.client, self.stream)
 
     def test_start_test(self):
         self.protocol.lineReceived(_b("test old mcdonald\n"))
@@ -125,8 +126,10 @@ class TestTestProtocolServerStartTest(unittest.TestCase):
             [('startTest', subunit.RemotedTestCase("old mcdonald"))])
 
     def test_indented_test_colon_ignored(self):
-        self.protocol.lineReceived(_b(" test: old mcdonald\n"))
+        ignored_line = _b(" test: old mcdonald\n")
+        self.protocol.lineReceived(ignored_line)
         self.assertEqual([], self.client._events)
+        self.assertEqual(self.stream.getvalue(), ignored_line)
 
     def test_start_testing_colon(self):
         self.protocol.lineReceived(_b("testing: old mcdonald\n"))
