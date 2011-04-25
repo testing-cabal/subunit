@@ -21,7 +21,7 @@ from subunit import iso8601
 import unittest
 
 from testtools import TestCase
-from testtools.compat import StringIO
+from testtools.compat import _b, BytesIO, StringIO
 from testtools.testresult.doubles import ExtendedTestResult
 
 import subunit
@@ -35,7 +35,7 @@ class TestTestResultFilter(TestCase):
     # is an easy pithy way of getting a series of test objects to call into
     # the TestResult, and as TestResultFilter is intended for use with subunit
     # also has the benefit of detecting any interface skew issues.
-    example_subunit_stream = """\
+    example_subunit_stream = _b("""\
 tags: global
 test passed
 success passed
@@ -50,7 +50,7 @@ test skipped
 skip skipped
 test todo
 xfail todo
-"""
+""")
 
     def run_tests(self, result_filter, input_stream=None):
         """Run tests through the given filter.
@@ -61,7 +61,7 @@ xfail todo
         """
         if input_stream is None:
             input_stream = self.example_subunit_stream
-        test = subunit.ProtocolTestCase(StringIO(input_stream))
+        test = subunit.ProtocolTestCase(BytesIO(input_stream))
         test.run(result_filter)
 
     def test_default(self):
@@ -139,13 +139,13 @@ xfail todo
         date_a = datetime(year=2000, month=1, day=1, tzinfo=iso8601.UTC)
         date_b = datetime(year=2000, month=1, day=2, tzinfo=iso8601.UTC)
         date_c = datetime(year=2000, month=1, day=3, tzinfo=iso8601.UTC)
-        subunit_stream = '\n'.join([
+        subunit_stream = _b('\n'.join([
             "time: %s",
             "test: foo",
             "time: %s",
             "error: foo",
             "time: %s",
-            ""]) % (date_a, date_b, date_c)
+            ""]) % (date_a, date_b, date_c))
         result = ExtendedTestResult()
         result_filter = TestResultFilter(result)
         self.run_tests(result_filter, subunit_stream)
