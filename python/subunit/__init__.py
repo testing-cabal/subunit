@@ -468,10 +468,9 @@ class TestProtocolServer(object):
         """
         self.client = ExtendedToOriginalDecorator(client)
         if stream is None:
+            stream = sys.stdout
             if sys.version_info > (3, 0):
-                stream = sys.stdout.buffer
-            else:
-                stream = sys.stdout
+                stream = stream.buffer
         self._stream = stream
         self._forward_stream = forward_stream or DiscardStream()
         # state objects we can switch too
@@ -885,10 +884,10 @@ def run_isolated(klass, self, result):
         # at this point, sys.stdin is redirected, now we want
         # to filter it to escape ]'s.
         ### XXX: test and write that bit.
-
-        result = TestProtocolClient(sys.stdout)
+        stream = os.fdopen(1, 'wb')
+        result = TestProtocolClient(stream)
         klass.run(self, result)
-        sys.stdout.flush()
+        stream.flush()
         sys.stderr.flush()
         # exit HARD, exit NOW.
         os._exit(0)
@@ -898,7 +897,8 @@ def run_isolated(klass, self, result):
         os.close(c2pwrite)
         # hookup a protocol engine
         protocol = TestProtocolServer(result)
-        protocol.readFrom(os.fdopen(c2pread, 'rU'))
+        fileobj = os.fdopen(c2pread, 'rb')
+        protocol.readFrom(fileobj)
         os.waitpid(pid, 0)
         # TODO return code evaluation.
     return result
@@ -1168,7 +1168,10 @@ def get_default_formatter():
     if formatter:
         return os.popen(formatter, "w")
     else:
-        return sys.stdout
+        stream = sys.stdout
+        if sys.version_info > (3, 0):
+            stream = stream.buffer
+        return stream
 
 
 if sys.version_info > (3, 0):
