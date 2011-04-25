@@ -339,7 +339,7 @@ class TestResultFilter(TestResultDecorator):
 
     def addError(self, test, err=None, details=None):
         if (self.filter_predicate(test, 'error', err, details)):
-            if test.id() in self._fixup_expected_failures:
+            if self._failure_expected(test):
                 self._buffered_calls.append(
                     ('addExpectedFailure', [test, err], {'details': details}))
             else:
@@ -350,7 +350,7 @@ class TestResultFilter(TestResultDecorator):
 
     def addFailure(self, test, err=None, details=None):
         if (self.filter_predicate(test, 'failure', err, details)):
-            if test.id() in self._fixup_expected_failures:
+            if self._failure_expected(test):
                 self._buffered_calls.append(
                     ('addExpectedFailure', [test, err], {'details': details}))
             else:
@@ -368,7 +368,7 @@ class TestResultFilter(TestResultDecorator):
 
     def addSuccess(self, test, details=None):
         if (self.filter_predicate(test, 'success', None, details)):
-            if test.id() in self._fixup_expected_failures:
+            if self._failure_expected(test):
                 self._buffered_calls.append(
                     ('addUnexpectedSuccess', [test], {'details': details}))
             else:
@@ -390,6 +390,9 @@ class TestResultFilter(TestResultDecorator):
 
     def _filtered(self):
         self._current_test_filtered = True
+
+    def _failure_expected(self, test):
+        return (test.id() in self._fixup_expected_failures)
 
     def startTest(self, test):
         """Start a test.
