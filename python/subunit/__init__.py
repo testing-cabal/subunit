@@ -127,7 +127,11 @@ from testtools.compat import _b, _u, BytesIO, StringIO
 try:
     from testtools.testresult.real import _StringException
     RemoteException = _StringException
-    _remote_exception_str = '_StringException' # For testing.
+    # For testing: different pythons have different str() implementations.
+    if sys.version_info > (3, 0):
+        _remote_exception_str = 'testtools.testresult.real._StringException'
+    else:
+        _remote_exception_str = '_StringException' 
 except ImportError:
     raise ImportError ("testtools.testresult.real does not contain "
         "_StringException, check your version.")
@@ -502,7 +506,7 @@ class TestProtocolServer(object):
 
     def _handleTags(self, offset, line):
         """Process a tags command."""
-        tags = line[offset:].split()
+        tags = line[offset:].decode('utf8').split()
         new_tags, gone_tags = tags_to_new_gone(tags)
         self.client.tags(new_tags, gone_tags)
 
