@@ -34,6 +34,7 @@ from subunit import (
     DiscardStream,
     ProtocolTestCase,
     TestProtocolClient,
+    read_test_list,
     )
 from subunit.test_results import TestResultFilter
 
@@ -91,13 +92,6 @@ def _make_regexp_filter(with_regexps, without_regexps):
         return True
     return check_regexps
 
-
-def read_test_list(path):
-    f = open(path, 'rb')
-    try:
-        return [l.rstrip("\n") for l in f.readlines()]
-    finally:
-        f.close()
 
 regexp_filter = _make_regexp_filter(options.with_regexps,
         options.without_regexps)
