@@ -43,6 +43,9 @@ IMPROVEMENTS
 * Add ``TagCollapsingDecorator`` which collapses many tags() calls into one
   where possible. (Jonathan Lange)
 
+* ``TestResultFilter`` now supports a ``fixup_expected_failures``
+  argument. (Jelmer Vernooij, #755241)
+
 0.0.6
 -----
 

@@ -1132,6 +1132,19 @@ def get_default_formatter():
         return sys.stdout
 
 
+def read_test_list(path):
+    """Read a list of test ids from a file on disk.
+
+    :param path: Path to the file
+    :return: Sequence of test ids
+    """
+    f = open(path, 'rb')
+    try:
+        return [l.rstrip("\n") for l in f.readlines()]
+    finally:
+        f.close()
+
+
 def _make_stream_binary(stream):
     """Ensure that a stream will be binary safe. See _make_binary_on_windows."""
     if getattr(stream, 'fileno', None) is not None:

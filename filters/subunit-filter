@@ -28,13 +28,13 @@ Remember to quote shell metacharacters.
 
 from optparse import OptionParser
 import sys
-import unittest
 import re
 
 from subunit import (
     DiscardStream,
     ProtocolTestCase,
     TestProtocolClient,
+    read_test_list,
     )
 from subunit.test_results import TestResultFilter
 
@@ -58,6 +58,10 @@ parser.add_option("--no-success", action="store_true",
 parser.add_option("-m", "--with", type=str,
     help="regexp to include (case-sensitive by default)",
     action="append", dest="with_regexps")
+parser.add_option("--fixup-expected-failures", type=str,
+    help="File with list of test ids that are expected to fail; on failure "
+         "their result will be changed to xfail; on success they will be "
+         "changed to error.", dest="fixup_expected_failures", action="append")
 parser.add_option("--without", type=str,
     help="regexp to exclude (case-sensitive by default)",
     action="append", dest="without_regexps")
@@ -91,11 +95,15 @@ def _make_regexp_filter(with_regexps, without_regexps):
 
 regexp_filter = _make_regexp_filter(options.with_regexps,
         options.without_regexps)
+fixup_expected_failures = set()
+for path in options.fixup_expected_failures:
+    fixup_expected_failures.update(read_test_list(path))
 result = TestProtocolClient(sys.stdout)
 result = TestResultFilter(result, filter_error=options.error,
     filter_failure=options.failure, filter_success=options.success,
     filter_skip=options.skip,
-    filter_predicate=regexp_filter)
+    filter_predicate=regexp_filter,
+    fixup_expected_failures=fixup_expected_failures)
 if options.no_passthrough:
     passthrough_stream = DiscardStream()
 else:
