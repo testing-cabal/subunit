@@ -817,6 +817,8 @@ class ExecTestCase(unittest.TestCase):
         """
         unittest.TestCase.__init__(self, methodName)
         testMethod = getattr(self, methodName)
+        # GZ 2011-04-25: Embedding shell commands in docstrings is fragile and
+        #                and may break if the module directory contains spaces
         self.script = join_dir(sys.modules[self.__class__.__module__].__file__,
                                testMethod.__doc__)
 
@@ -833,8 +835,10 @@ class ExecTestCase(unittest.TestCase):
 
     def _run(self, result):
         protocol = TestProtocolServer(result)
-        output = subprocess.Popen(self.script, shell=True,
-            stdout=subprocess.PIPE).communicate()[0]
+        process = subprocess.Popen(self.script, shell=True,
+            stdout=subprocess.PIPE)
+        _make_stream_binary(process.stdout)
+        output = process.communicate()[0]
         protocol.readFrom(BytesIO(output))
 
 
