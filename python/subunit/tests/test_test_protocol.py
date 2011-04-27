@@ -21,6 +21,7 @@ import os
 from testtools.compat import _b, _u, BytesIO, StringIO
 from testtools.content import Content, TracebackContent
 from testtools.content_type import ContentType
+from testtools.testcase import skipIf, TestCase
 from testtools.tests.helpers import (
     Python26TestResult,
     Python27TestResult,
@@ -922,7 +923,7 @@ class DoExecTestCase(subunit.ExecTestCase):
         """sample-two-script.py"""
 
 
-class TestIsolatedTestCase(unittest.TestCase):
+class TestIsolatedTestCase(TestCase):
 
     class SampleIsolatedTestCase(subunit.IsolatedTestCase):
 
@@ -943,6 +944,7 @@ class TestIsolatedTestCase(unittest.TestCase):
     def test_construct(self):
         self.SampleIsolatedTestCase("test_sets_global_state")
 
+    @skipIf(os.name != "posix", "Need a posix system for forking tests")
     def test_run(self):
         result = unittest.TestResult()
         test = self.SampleIsolatedTestCase("test_sets_global_state")
@@ -958,7 +960,7 @@ class TestIsolatedTestCase(unittest.TestCase):
         #test.debug()
 
 
-class TestIsolatedTestSuite(unittest.TestCase):
+class TestIsolatedTestSuite(TestCase):
 
     class SampleTestToIsolate(unittest.TestCase):
 
@@ -979,6 +981,7 @@ class TestIsolatedTestSuite(unittest.TestCase):
     def test_construct(self):
         subunit.IsolatedTestSuite()
 
+    @skipIf(os.name != "posix", "Need a posix system for forking tests")
     def test_run(self):
         result = unittest.TestResult()
         suite = subunit.IsolatedTestSuite()
