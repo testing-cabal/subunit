@@ -18,8 +18,9 @@
 
 import datetime
 
-import iso8601
 import testtools
+
+from subunit import iso8601
 
 
 # NOT a TestResult, because we are implementing the interface, not inheriting

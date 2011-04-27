@@ -21,7 +21,11 @@ IMPROVEMENTS
   per ``testtools.run``. This required a dependency bump due to a small
   API change in ``testtools``. (Robert Collins)
 
-* Force flush of writes to stdout in c/tests/test_child. (Jelmer Vernooij, #687611)
+* Force flush of writes to stdout in c/tests/test_child.
+  (Jelmer Vernooij, #687611)
+
+* Provisional Python 3.x support.
+  (Robert Collins, Tres Seaver, Martin[gz], #666819)
 
 * The help for subunit-filter was confusing about the behaviour of ``-f`` /
   ``--no-failure``. (Robert Collins, #703392)
@@ -45,6 +49,12 @@ IMPROVEMENTS
 
 * ``TestResultFilter`` now supports a ``fixup_expected_failures``
   argument. (Jelmer Vernooij, #755241)
+
+=======
+CHANGES
+~~~~~~~
+
+* Newer testtools is needed as part of the Python 3 support. (Robert Collins)
 
 0.0.6
 -----
