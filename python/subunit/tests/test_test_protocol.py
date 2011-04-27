@@ -913,7 +913,8 @@ class TestExecTestCase(unittest.TestCase):
 
     def test_join_dir(self):
         sibling = subunit.join_dir(__file__, 'foo')
-        expected = '%s/foo' % (os.path.split(__file__)[0],)
+        filedir = os.path.abspath(os.path.dirname(__file__))
+        expected = os.path.join(filedir, 'foo')
         self.assertEqual(sibling, expected)
 
 
