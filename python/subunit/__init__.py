@@ -833,8 +833,10 @@ class ExecTestCase(unittest.TestCase):
 
     def _run(self, result):
         protocol = TestProtocolServer(result)
-        output = subprocess.Popen(self.script, shell=True,
-            stdout=subprocess.PIPE).communicate()[0]
+        process = subprocess.Popen(self.script, shell=True,
+            stdout=subprocess.PIPE)
+        _make_stream_binary(process.stdout)
+        output = process.communicate()[0]
         protocol.readFrom(BytesIO(output))
 
 

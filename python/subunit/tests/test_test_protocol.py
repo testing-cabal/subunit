@@ -18,6 +18,7 @@ import datetime
 import unittest
 import os
 
+from testtools import skipIf, TestCase
 from testtools.compat import _b, _u, BytesIO, StringIO
 from testtools.content import Content, TracebackContent
 from testtools.content_type import ContentType
@@ -107,7 +108,8 @@ class TestTestProtocolServerStartTest(unittest.TestCase):
 
     def setUp(self):
         self.client = Python26TestResult()
-        self.protocol = subunit.TestProtocolServer(self.client)
+        self.stream = BytesIO()
+        self.protocol = subunit.TestProtocolServer(self.client, self.stream)
 
     def test_start_test(self):
         self.protocol.lineReceived(_b("test old mcdonald\n"))
@@ -125,8 +127,10 @@ class TestTestProtocolServerStartTest(unittest.TestCase):
             [('startTest', subunit.RemotedTestCase("old mcdonald"))])
 
     def test_indented_test_colon_ignored(self):
-        self.protocol.lineReceived(_b(" test: old mcdonald\n"))
+        ignored_line = _b(" test: old mcdonald\n")
+        self.protocol.lineReceived(ignored_line)
         self.assertEqual([], self.client._events)
+        self.assertEqual(self.stream.getvalue(), ignored_line)
 
     def test_start_testing_colon(self):
         self.protocol.lineReceived(_b("testing: old mcdonald\n"))
@@ -909,7 +913,8 @@ class TestExecTestCase(unittest.TestCase):
 
     def test_join_dir(self):
         sibling = subunit.join_dir(__file__, 'foo')
-        expected = '%s/foo' % (os.path.split(__file__)[0],)
+        filedir = os.path.abspath(os.path.dirname(__file__))
+        expected = os.path.join(filedir, 'foo')
         self.assertEqual(sibling, expected)
 
 
@@ -919,7 +924,7 @@ class DoExecTestCase(subunit.ExecTestCase):
         """sample-two-script.py"""
 
 
-class TestIsolatedTestCase(unittest.TestCase):
+class TestIsolatedTestCase(TestCase):
 
     class SampleIsolatedTestCase(subunit.IsolatedTestCase):
 
@@ -940,6 +945,7 @@ class TestIsolatedTestCase(unittest.TestCase):
     def test_construct(self):
         self.SampleIsolatedTestCase("test_sets_global_state")
 
+    @skipIf(os.name != "posix", "Need a posix system for forking tests")
     def test_run(self):
         result = unittest.TestResult()
         test = self.SampleIsolatedTestCase("test_sets_global_state")
@@ -955,7 +961,7 @@ class TestIsolatedTestCase(unittest.TestCase):
         #test.debug()
 
 
-class TestIsolatedTestSuite(unittest.TestCase):
+class TestIsolatedTestSuite(TestCase):
 
     class SampleTestToIsolate(unittest.TestCase):
 
@@ -976,6 +982,7 @@ class TestIsolatedTestSuite(unittest.TestCase):
     def test_construct(self):
         subunit.IsolatedTestSuite()
 
+    @skipIf(os.name != "posix", "Need a posix system for forking tests")
     def test_run(self):
         result = unittest.TestResult()
         suite = subunit.IsolatedTestSuite()
