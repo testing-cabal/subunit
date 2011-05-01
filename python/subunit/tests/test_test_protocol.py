@@ -370,6 +370,12 @@ class TestTestProtocolServerLostConnection(unittest.TestCase):
     def test_lost_connection_during_xfail_details(self):
         self.do_connection_lost("xfail", "[ multipart\n")
 
+    def test_lost_connection_during_uxsuccess(self):
+        self.do_connection_lost("uxsuccess", "[\n")
+
+    def test_lost_connection_during_uxsuccess_details(self):
+        self.do_connection_lost("uxsuccess", "[ multipart\n")
+
 
 class TestInTestMultipart(unittest.TestCase):
 
@@ -609,6 +615,121 @@ class TestTestProtocolServerAddxFail(unittest.TestCase):
         self.xfail_quoted_bracket("xfail:", False)
         self.setup_python_ex()
         self.xfail_quoted_bracket("xfail:", False)
+
+
+class TestTestProtocolServerAddunexpectedSuccess(TestCase):
+    """Tests for the uxsuccess keyword."""
+
+    def capture_expected_failure(self, test, err):
+        self._events.append((test, err))
+
+    def setup_python26(self):
+        """Setup a test object ready to be xfailed and thunk to success."""
+        self.client = Python26TestResult()
+        self.setup_protocol()
+
+    def setup_python27(self):
+        """Setup a test object ready to be xfailed."""
+        self.client = Python27TestResult()
+        self.setup_protocol()
+
+    def setup_python_ex(self):
+        """Setup a test object ready to be xfailed with details."""
+        self.client = ExtendedTestResult()
+        self.setup_protocol()
+
+    def setup_protocol(self):
+        """Setup the protocol based on self.client."""
+        self.protocol = subunit.TestProtocolServer(self.client)
+        self.protocol.lineReceived(_b("test mcdonalds farm\n"))
+        self.test = self.client._events[-1][-1]
+
+    def simple_uxsuccess_keyword(self, keyword, as_fail):
+        self.protocol.lineReceived(_b("%s mcdonalds farm\n" % keyword))
+        self.check_fail_or_uxsuccess(as_fail)
+
+    def check_fail_or_uxsuccess(self, as_fail, error_message=None):
+        details = {}
+        if error_message is not None:
+            details['traceback'] = Content(
+                ContentType("text", "x-traceback", {'charset': 'utf8'}),
+                lambda:[_b(error_message)])
+        if isinstance(self.client, ExtendedTestResult):
+            value = details
+        else:
+            value = None
+        if as_fail:
+            self.client._events[1] = self.client._events[1][:2]
+            # The value is generated within the extended to original decorator:
+            # todo use the testtools matcher to check on this.
+            self.assertEqual([
+                ('startTest', self.test),
+                ('addFailure', self.test),
+                ('stopTest', self.test),
+                ], self.client._events)
+        elif value:
+            self.assertEqual([
+                ('startTest', self.test),
+                ('addUnexpectedSuccess', self.test, value),
+                ('stopTest', self.test),
+                ], self.client._events)
+        else:
+            self.assertEqual([
+                ('startTest', self.test),
+                ('addUnexpectedSuccess', self.test),
+                ('stopTest', self.test),
+                ], self.client._events)
+
+    def test_simple_uxsuccess(self):
+        self.setup_python26()
+        self.simple_uxsuccess_keyword("uxsuccess", True)
+        self.setup_python27()
+        self.simple_uxsuccess_keyword("uxsuccess",  False)
+        self.setup_python_ex()
+        self.simple_uxsuccess_keyword("uxsuccess",  False)
+
+    def test_simple_uxsuccess_colon(self):
+        self.setup_python26()
+        self.simple_uxsuccess_keyword("uxsuccess:", True)
+        self.setup_python27()
+        self.simple_uxsuccess_keyword("uxsuccess:", False)
+        self.setup_python_ex()
+        self.simple_uxsuccess_keyword("uxsuccess:", False)
+
+    def test_uxsuccess_empty_message(self):
+        self.setup_python26()
+        self.empty_message(True)
+        self.setup_python27()
+        self.empty_message(False)
+        self.setup_python_ex()
+        self.empty_message(False, error_message="")
+
+    def empty_message(self, as_fail, error_message="\n"):
+        self.protocol.lineReceived(_b("uxsuccess mcdonalds farm [\n"))
+        self.protocol.lineReceived(_b("]\n"))
+        self.check_fail_or_uxsuccess(as_fail, error_message)
+
+    def uxsuccess_quoted_bracket(self, keyword, as_fail):
+        self.protocol.lineReceived(_b("%s mcdonalds farm [\n" % keyword))
+        self.protocol.lineReceived(_b(" ]\n"))
+        self.protocol.lineReceived(_b("]\n"))
+        self.check_fail_or_uxsuccess(as_fail, "]\n")
+
+    def test_uxsuccess_quoted_bracket(self):
+        self.setup_python26()
+        self.uxsuccess_quoted_bracket("uxsuccess", True)
+        self.setup_python27()
+        self.uxsuccess_quoted_bracket("uxsuccess", False)
+        self.setup_python_ex()
+        self.uxsuccess_quoted_bracket("uxsuccess", False)
+
+    def test_uxsuccess_colon_quoted_bracket(self):
+        self.setup_python26()
+        self.uxsuccess_quoted_bracket("uxsuccess:", True)
+        self.setup_python27()
+        self.uxsuccess_quoted_bracket("uxsuccess:", False)
+        self.setup_python_ex()
+        self.uxsuccess_quoted_bracket("uxsuccess:", False)
 
 
 class TestTestProtocolServerAddSkip(unittest.TestCase):
@@ -1160,13 +1281,13 @@ class TestTestProtocolClient(unittest.TestCase):
         """Test addUnexpectedSuccess on a TestProtocolClient."""
         self.protocol.addUnexpectedSuccess(self.test)
         self.assertEqual(
-            self.io.getvalue(), _b("successful: %s\n" % self.test.id()))
+            self.io.getvalue(), _b("uxsuccess: %s\n" % self.test.id()))
 
     def test_add_unexpected_success_details(self):
         """Test addUnexpectedSuccess on a TestProtocolClient with details."""
         self.protocol.addUnexpectedSuccess(self.test, details=self.sample_details)
         self.assertEqual(
-            self.io.getvalue(), _b("successful: %s [ multipart\n"
+            self.io.getvalue(), _b("uxsuccess: %s [ multipart\n"
                 "Content-Type: text/plain\n"
                 "something\n"
                 "F\r\nserialised\nform0\r\n]\n" % self.test.id()))

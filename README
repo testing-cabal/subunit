@@ -153,6 +153,8 @@ skip[:] test LABEL
 skip[:] test LABEL DETAILS
 xfail[:] test LABEL
 xfail[:] test LABEL DETAILS
+uxsuccess[:] test LABEL
+uxsuccess[:] test LABEL DETAILS
 progress: [+|-]X
 progress: push
 progress: pop
@@ -201,13 +203,14 @@ directive for the most recently started test).
 The time directive acts as a clock event - it sets the time for all future
 events. The value should be a valid ISO8601 time.
 
-The skip result is used to indicate a test that was found by the runner but not
-fully executed due to some policy or dependency issue. This is represented in
-python using the addSkip interface that testtools
-(https://edge.launchpad.net/testtools) defines. When communicating with a non
-skip aware test result, the test is reported as an error.
-The xfail result is used to indicate a test that was expected to fail failing
-in the expected manner. As this is a normal condition for such tests it is
-represented as a successful test in Python.
-In future, skip and xfail results will be represented semantically in Python,
-but some discussion is underway on the right way to do this.
+The skip, xfail and uxsuccess outcomes are not supported by all testing
+environments. In Python the testttools (https://launchpad.net/testtools)
+library is used to translate these automatically if an older Python version
+that does not support them is in use. See the testtools documentation for the
+translation policy.
+
+skip is used to indicate a test was discovered but not executed. xfail is used
+to indicate a test that errored in some expected fashion (also know as "TODO"
+tests in some frameworks). uxsuccess is used to indicate and unexpected success
+where a test though to be failing actually passes. It is complementary to
+xfail.
