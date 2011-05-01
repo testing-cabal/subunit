@@ -82,6 +82,10 @@ class TestResultDecorator(object):
     def stop(self):
         return self.decorated.stop()
 
+    @property
+    def testsRun(self):
+        return self.decorated.testsRun
+
     def tags(self, new_tags, gone_tags):
         return self.decorated.tags(new_tags, gone_tags)
 
@@ -201,8 +205,6 @@ class TagCollapsingDecorator(TestResultDecorator):
 
     def __init__(self, result):
         super(TagCollapsingDecorator, self).__init__(result)
-        # The current test (for filtering tags)
-        self._current_test = None
         # The (new, gone) tags for the current test.
         self._current_test_tags = None
 
@@ -213,7 +215,6 @@ class TagCollapsingDecorator(TestResultDecorator):
         correctly.
         """
         self.decorated.startTest(test)
-        self._current_test = test
         self._current_test_tags = set(), set()
 
     def stopTest(self, test):
@@ -226,7 +227,6 @@ class TagCollapsingDecorator(TestResultDecorator):
         if self._current_test_tags[0] or self._current_test_tags[1]:
             self.decorated.tags(*self._current_test_tags)
         self.decorated.stopTest(test)
-        self._current_test = None
         self._current_test_tags = None
 
     def tags(self, new_tags, gone_tags):
@@ -238,7 +238,7 @@ class TagCollapsingDecorator(TestResultDecorator):
         :param new_tags: Tags to add,
         :param gone_tags: Tags to remove.
         """
-        if self._current_test is not None:
+        if self._current_test_tags is not None:
             # gather the tags until the test stops.
             self._current_test_tags[0].update(new_tags)
             self._current_test_tags[0].difference_update(gone_tags)

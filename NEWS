@@ -21,7 +21,7 @@ IMPROVEMENTS
   calls into just the first and last. (Jonathan Lange)
 
 * Add ``TagCollapsingDecorator`` which collapses many tags() calls into one
-  where possible. (Jonathan Lange)
+  where possible. (Jonathan Lange, Robert Collins)
 
 * Force flush of writes to stdout in c/tests/test_child.
   (Jelmer Vernooij, #687611)
