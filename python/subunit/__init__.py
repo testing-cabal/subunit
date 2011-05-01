@@ -201,6 +201,7 @@ class _ParserState(object):
         self._tags_sym = (_b('tags'),)
         self._time_sym = (_b('time'),)
         self._xfail_sym = (_b('xfail'),)
+        self._uxsuccess_sym = (_b('uxsuccess'),)
         self._start_simple = _u(" [")
         self._start_multipart = _u(" [ multipart")
 
@@ -251,6 +252,8 @@ class _ParserState(object):
                 self.parser.subunitLineReceived(line)
             elif cmd in self._xfail_sym:
                 self.addExpectedFail(offset, line)
+            elif cmd in self._uxsuccess_sym:
+                self.addUnexpectedSuccess(offset, line)
             else:
                 self.parser.stdOutLineReceived(line)
         else:
@@ -313,6 +316,14 @@ class _InTest(_ParserState):
         """An 'xfail:' directive has been read."""
         self._outcome(offset, line, self._xfail,
             self.parser._reading_xfail_details)
+
+    def _uxsuccess(self):
+        self.parser.client.addUnexpectedSuccess(self.parser._current_test)
+
+    def addUnexpectedSuccess(self, offset, line):
+        """A 'uxsuccess:' directive has been read."""
+        self._outcome(offset, line, self._uxsuccess,
+            self.parser._reading_uxsuccess_details)
 
     def _failure(self):
         self.parser.client.addFailure(self.parser._current_test, details={})
@@ -425,6 +436,17 @@ class _ReadingExpectedFailureDetails(_ReadingDetails):
         return "xfail"
 
 
+class _ReadingUnexpectedSuccessDetails(_ReadingDetails):
+    """State for the subunit parser when reading uxsuccess details."""
+
+    def _report_outcome(self):
+        self.parser.client.addUnexpectedSuccess(self.parser._current_test,
+            details=self.details_parser.get_details())
+
+    def _outcome_label(self):
+        return "uxsuccess"
+
+
 class _ReadingSkipDetails(_ReadingDetails):
     """State for the subunit parser when reading skip details."""
 
@@ -481,6 +503,7 @@ class TestProtocolServer(object):
         self._reading_skip_details = _ReadingSkipDetails(self)
         self._reading_success_details = _ReadingSuccessDetails(self)
         self._reading_xfail_details = _ReadingExpectedFailureDetails(self)
+        self._reading_uxsuccess_details = _ReadingUnexpectedSuccessDetails(self)
         # start with outside test.
         self._state = self._outside_test
         # Avoid casts on every call
@@ -632,7 +655,8 @@ class TestProtocolClient(testresult.TestResult):
         """
         self._addOutcome("failure", test, error=error, details=details)
 
-    def _addOutcome(self, outcome, test, error=None, details=None):
+    def _addOutcome(self, outcome, test, error=None, details=None,
+        error_permitted=True):
         """Report a failure in test test.
 
         Only one of error and details should be provided: conceptually there
@@ -646,19 +670,28 @@ class TestProtocolClient(testresult.TestResult):
             exc_info tuple.
         :param details: New Testing-in-python drafted API; a dict from string
             to subunit.Content objects.
-        """
+        :param error_permitted: If True then one and only one of error or
+            details must be supplied. If False then error must not be supplied
+            and details is still optional.  """
         self._stream.write(_b("%s: %s" % (outcome, test.id())))
-        if error is None and details is None:
-            raise ValueError
+        if error_permitted:
+            if error is None and details is None:
+                raise ValueError
+        else:
+            if error is not None:
+                raise ValueError
         if error is not None:
             self._stream.write(self._start_simple)
             # XXX: this needs to be made much stricter, along the lines of
             # Martin[gz]'s work in testtools. Perhaps subunit can use that?
             for line in self._exc_info_to_unicode(error, test).splitlines():
                 self._stream.write(("%s\n" % line).encode('utf8'))
-        else:
+        elif details is not None:
             self._write_details(details)
-        self._stream.write(self._end_simple)
+        else:
+            self._stream.write(_b("\n"))
+        if details or error:
+            self._stream.write(self._end_simple)
 
     def addSkip(self, test, reason=None, details=None):
         """Report a skipped test."""
@@ -671,13 +704,21 @@ class TestProtocolClient(testresult.TestResult):
 
     def addSuccess(self, test, details=None):
         """Report a success in a test."""
-        self._stream.write(_b("successful: %s" % test.id()))
-        if not details:
-            self._stream.write(_b("\n"))
-        else:
-            self._write_details(details)
-            self._stream.write(self._end_simple)
-    addUnexpectedSuccess = addSuccess
+        self._addOutcome("successful", test, details=details, error_permitted=False)
+
+    def addUnexpectedSuccess(self, test, details=None):
+        """Report an unexpected success in test test.
+
+        Details can optionally be provided: conceptually there
+        are two separate methods:
+            addError(self, test)
+            addError(self, test, details)
+
+        :param details: New Testing-in-python drafted API; a dict from string
+            to subunit.Content objects.
+        """
+        self._addOutcome("uxsuccess", test, details=details,
+            error_permitted=False)
 
     def startTest(self, test):
         """Mark a test as starting its test run."""
