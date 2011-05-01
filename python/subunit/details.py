@@ -85,7 +85,10 @@ class MultipartDetailsParser(DetailsParser):
             return
         # TODO error handling
         field, value = line[:-1].decode('utf8').split(' ', 1)
-        main, sub = value.split('/')
+        try:
+            main, sub = value.split('/')
+        except ValueError:
+            raise ValueError("Invalid MIME type %r" % value)
         self._content_type = content_type.ContentType(main, sub)
         self._parse_state = self._get_name
 

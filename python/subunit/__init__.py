@@ -690,7 +690,7 @@ class TestProtocolClient(testresult.TestResult):
             self._write_details(details)
         else:
             self._stream.write(_b("\n"))
-        if details or error:
+        if details is not None or error is not None:
             self._stream.write(self._end_simple)
 
     def addSkip(self, test, reason=None, details=None):
