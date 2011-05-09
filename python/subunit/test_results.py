@@ -363,7 +363,7 @@ class TestResultFilter(TestResultDecorator):
     def addSkip(self, test, reason=None, details=None):
         if (self.filter_predicate(test, 'skip', reason, details)):
             self._buffered_calls.append(
-                ('addSkip', [reason], {'details': details}))
+                ('addSkip', [test, reason], {'details': details}))
         else:
             self._filtered()
 
