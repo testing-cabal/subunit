@@ -187,6 +187,20 @@ xfail todo
              ('stopTest', foo),
              ('time', date_c)], result._events)
 
+    def test_skip_preserved(self):
+        subunit_stream = _b('\n'.join([
+            "test: foo",
+            "skip: foo",
+            ""]))
+        result = ExtendedTestResult()
+        result_filter = TestResultFilter(result)
+        self.run_tests(result_filter, subunit_stream)
+        foo = subunit.RemotedTestCase('foo')
+        self.assertEquals(
+            [('startTest', foo),
+             ('addSkip', foo, {}),
+             ('stopTest', foo), ], result._events)
+
 
 def test_suite():
     loader = subunit.tests.TestUtil.TestLoader()
