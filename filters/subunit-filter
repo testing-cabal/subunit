@@ -96,7 +96,7 @@ def _make_regexp_filter(with_regexps, without_regexps):
 regexp_filter = _make_regexp_filter(options.with_regexps,
         options.without_regexps)
 fixup_expected_failures = set()
-for path in options.fixup_expected_failures:
+for path in options.fixup_expected_failures or ():
     fixup_expected_failures.update(read_test_list(path))
 result = TestProtocolClient(sys.stdout)
 result = TestResultFilter(result, filter_error=options.error,
