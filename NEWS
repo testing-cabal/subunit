@@ -42,6 +42,9 @@ IMPROVEMENTS
   partway through the stream (which may lead to strange times) more gracefully.
   (Robert Collins, #785954)
 
+* ``subunit-ls`` should handle the new test outcomes in Python2.7 better.
+  (Robert Collins, #785953)
+
 * ``TestResultFilter`` now collapses sequential calls to time().
   (Jonathan Lange, #567150)
 

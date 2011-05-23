@@ -455,6 +455,16 @@ class TestIdPrintingResult(testtools.TestResult):
     def addSuccess(self, test):
         self._test = test
 
+    def addSkip(self, test, reason=None, details=None):
+        self._test = test
+
+    def addUnexpectedSuccess(self, test, details=None):
+        self.failed_tests += 1
+        self._test = test
+
+    def addExpectedFailure(self, test, err=None, details=None):
+        self._test = test
+
     def reportTest(self, test, duration):
         if self.show_times:
             seconds = duration.seconds
