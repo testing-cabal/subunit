@@ -439,7 +439,7 @@ class TestIdPrintingResult(testtools.TestResult):
         super(TestIdPrintingResult, self).__init__()
         self._stream = stream
         self.failed_tests = 0
-        self.__time = 0
+        self.__time = None
         self.show_times = show_times
         self._test = None
         self._test_duration = 0

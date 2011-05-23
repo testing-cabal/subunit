@@ -38,6 +38,10 @@ IMPROVEMENTS
   so you can now use filtered streams to gather data about how long it takes
   to run a test. (Jonathan Lange, #716554)
 
+* ``subunit-ls`` now handles a stream with time: instructions that start
+  partway through the stream (which may lead to strange times) more gracefully.
+  (Robert Collins, #785954)
+
 * ``TestResultFilter`` now collapses sequential calls to time().
   (Jonathan Lange, #567150)
 
