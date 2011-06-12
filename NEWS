@@ -5,6 +5,9 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+0.0.7
+-----
+
 The Subunit Python test runner ``python -m subunit.run`` can now report the
 test ids and also filter via a test id list file thanks to improvements in
 ``testtools.run``. See the testtools manual, or testrepository - a major
@@ -68,7 +71,8 @@ IMPROVEMENTS
 CHANGES
 ~~~~~~~
 
-* Newer testtools is needed as part of the Python 3 support. (Robert Collins)
+* testtools 0.9.11 or newer is new needed (due to the Python 3 support).
+  (Robert Collins)
 
 0.0.6
 -----
