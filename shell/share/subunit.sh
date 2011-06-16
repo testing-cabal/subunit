@@ -16,14 +16,14 @@
 
 subunit_start_test () {
   # emit the current protocol start-marker for test $1
-  echo "time: `date -u '+%Y-%m-%d %H:%M:%S'`"
+  echo "time: `date -u '+%Y-%m-%d %H:%M:%SZ'`"
   echo "test: $1"
 }
 
 
 subunit_pass_test () {
   # emit the current protocol test passed marker for test $1
-  echo "time: `date -u '+%Y-%m-%d %H:%M:%S'`"
+  echo "time: `date -u '+%Y-%m-%d %H:%M:%SZ'`"
   echo "success: $1"
 }
 
@@ -33,7 +33,7 @@ subunit_fail_test () {
   # the error text.
   # we use stdin because the failure message can be arbitrarily long, and this
   # makes it convenient to write in scripts (using <<END syntax.
-  echo "time: `date -u '+%Y-%m-%d %H:%M:%S'`"
+  echo "time: `date -u '+%Y-%m-%d %H:%M:%SZ'`"
   echo "failure: $1 ["
   cat -
   echo "]"
@@ -45,7 +45,7 @@ subunit_error_test () {
   # the error text.
   # we use stdin because the failure message can be arbitrarily long, and this
   # makes it convenient to write in scripts (using <<END syntax.
-  echo "time: `date -u '+%Y-%m-%d %H:%M:%S'`"
+  echo "time: `date -u '+%Y-%m-%d %H:%M:%SZ'`"
   echo "error: $1 ["
   cat -
   echo "]"
@@ -54,7 +54,7 @@ subunit_error_test () {
 
 subunit_skip_test () {
   # emit the current protocol test skipped marker for test $1
-  echo "time: `date -u '+%Y-%m-%d %H:%M:%S'`"
+  echo "time: `date -u '+%Y-%m-%d %H:%M:%SZ'`"
   echo "skip: $1"
 }
 
