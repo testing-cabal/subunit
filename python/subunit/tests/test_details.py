@@ -14,7 +14,6 @@
 #  limitations under that license.
 #
 
-from cStringIO import StringIO
 import unittest
 
 import subunit.tests

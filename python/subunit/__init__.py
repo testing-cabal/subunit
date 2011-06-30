@@ -6,7 +6,7 @@
 #  license at the users choice. A copy of both licenses are available in the
 #  project source as Apache-2.0 and BSD. You may not use this file except in
 #  compliance with one of these two licences.
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 #  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -49,7 +49,7 @@ details, tags, timestamping and progress markers).
 The test outcome methods ``addSuccess``, ``addError``, ``addExpectedFailure``,
 ``addFailure``, ``addSkip`` take an optional keyword parameter ``details``
 which can be used instead of the usual python unittest parameter.
-When used the value of details should be a dict from ``string`` to 
+When used the value of details should be a dict from ``string`` to
 ``testtools.content.Content`` objects. This is a draft API being worked on with
 the Python Testing In Python mail list, with the goal of permitting a common
 way to provide additional data beyond a traceback, such as captured data from
@@ -58,7 +58,7 @@ and newer).
 
 The ``tags(new_tags, gone_tags)`` method is called (if present) to add or
 remove tags in the test run that is currently executing. If called when no
-test is in progress (that is, if called outside of the ``startTest``, 
+test is in progress (that is, if called outside of the ``startTest``,
 ``stopTest`` pair), the the tags apply to all sebsequent tests. If called
 when a test is in progress, then the tags only apply to that test.
 
@@ -87,7 +87,7 @@ tests, allowing isolation between the test runner and some tests.
 Similarly, ``IsolatedTestCase`` is a base class which can be subclassed to get
 tests that will fork() before that individual test is run.
 
-`ExecTestCase`` is a convenience wrapper for running an external 
+`ExecTestCase`` is a convenience wrapper for running an external
 program to get a Subunit stream and then report that back to an arbitrary
 result object::
 
@@ -98,7 +98,7 @@ result object::
 
      def test_script_two(self):
          './bin/script_two'
- 
+
  # Normally your normal test loading would take of this automatically,
  # It is only spelt out in detail here for clarity.
  suite = unittest.TestSuite([AggregateTests("test_script_one"),
@@ -116,7 +116,6 @@ Utility modules
 * subunit.test_results contains TestResult helper classes.
 """
 
-import datetime
 import os
 import re
 from StringIO import StringIO
@@ -254,7 +253,7 @@ class _InTest(_ParserState):
 
     def _outcome(self, offset, line, no_details, details_state):
         """An outcome directive has been read.
-        
+
         :param no_details: Callable to call when no details are presented.
         :param details_state: The state to switch to for details
             processing of this outcome.
@@ -382,7 +381,7 @@ class _ReadingFailureDetails(_ReadingDetails):
 
     def _outcome_label(self):
         return "failure"
- 
+
 
 class _ReadingErrorDetails(_ReadingDetails):
     """State for the subunit parser when reading error details."""
@@ -430,7 +429,7 @@ class _ReadingSuccessDetails(_ReadingDetails):
 
 class TestProtocolServer(object):
     """A parser for subunit.
-    
+
     :ivar tags: The current tags associated with the protocol stream.
     """
 
@@ -442,7 +441,7 @@ class TestProtocolServer(object):
             subunit protocol should be written to. This allows custom handling
             of mixed protocols. By default, sys.stdout will be used for
             convenience.
-        :param forward_stream: A stream to forward subunit lines to. This 
+        :param forward_stream: A stream to forward subunit lines to. This
             allows a filter to forward the entire stream while still parsing
             and acting on it. By default forward_stream is set to
             DiscardStream() and no forwarding happens.
@@ -510,7 +509,7 @@ class TestProtocolServer(object):
 
     def readFrom(self, pipe):
         """Blocking convenience API to parse an entire stream.
-        
+
         :param pipe: A file-like object supporting readlines().
         :return: None.
         """
@@ -531,7 +530,7 @@ class TestProtocolServer(object):
 
 class TestProtocolClient(testresult.TestResult):
     """A TestResult which generates a subunit stream for a test run.
-    
+
     # Get a TestSuite or TestCase to run
     suite = make_suite()
     # Create a stream (any object with a 'write' method)
@@ -554,7 +553,7 @@ class TestProtocolClient(testresult.TestResult):
 
     def addError(self, test, error=None, details=None):
         """Report an error in test test.
-        
+
         Only one of error and details should be provided: conceptually there
         are two separate methods:
             addError(self, test, error)
@@ -569,7 +568,7 @@ class TestProtocolClient(testresult.TestResult):
 
     def addExpectedFailure(self, test, error=None, details=None):
         """Report an expected failure in test test.
-        
+
         Only one of error and details should be provided: conceptually there
         are two separate methods:
             addError(self, test, error)
@@ -584,7 +583,7 @@ class TestProtocolClient(testresult.TestResult):
 
     def addFailure(self, test, error=None, details=None):
         """Report a failure in test test.
-        
+
         Only one of error and details should be provided: conceptually there
         are two separate methods:
             addFailure(self, test, error)
@@ -599,7 +598,7 @@ class TestProtocolClient(testresult.TestResult):
 
     def _addOutcome(self, outcome, test, error=None, details=None):
         """Report a failure in test test.
-        
+
         Only one of error and details should be provided: conceptually there
         are two separate methods:
             addOutcome(self, test, error)
@@ -646,7 +645,13 @@ class TestProtocolClient(testresult.TestResult):
 
     def startTest(self, test):
         """Mark a test as starting its test run."""
+        super(TestProtocolClient, self).startTest(test)
         self._stream.write("test: %s\n" % test.id())
+        self._stream.flush()
+
+    def stopTest(self, test):
+        super(TestProtocolClient, self).stopTest(test)
+        self._stream.flush()
 
     def progress(self, offset, whence):
         """Provide indication about the progress/length of the test run.
@@ -711,7 +716,7 @@ def RemoteError(description=u""):
 
 class RemotedTestCase(unittest.TestCase):
     """A class to represent test cases run in child processes.
-    
+
     Instances of this class are used to provide the Python test API a TestCase
     that can be printed to the screen, introspected for metadata and so on.
     However, as they are a simply a memoisation of a test that was actually
@@ -796,7 +801,7 @@ class ExecTestCase(unittest.TestCase):
 
 class IsolatedTestCase(unittest.TestCase):
     """A TestCase which executes in a forked process.
-    
+
     Each test gets its own process, which has a performance overhead but will
     provide excellent isolation from global state (such as django configs,
     zope utilities and so on).
@@ -809,7 +814,7 @@ class IsolatedTestCase(unittest.TestCase):
 
 class IsolatedTestSuite(unittest.TestSuite):
     """A TestSuite which runs its tests in a forked process.
-    
+
     This decorator that will fork() before running the tests and report the
     results from the child process using a Subunit stream.  This is useful for
     handling tests that mutate global state, or are testing C extensions that
@@ -861,7 +866,7 @@ def run_isolated(klass, self, result):
 
 def TAP2SubUnit(tap, subunit):
     """Filter a TAP pipe into a subunit pipe.
-    
+
     :param tap: A tap pipe/stream/file object.
     :param subunit: A pipe/stream/file object to write subunit results to.
     :return: The exit code to exit with.
@@ -869,7 +874,6 @@ def TAP2SubUnit(tap, subunit):
     BEFORE_PLAN = 0
     AFTER_PLAN = 1
     SKIP_STREAM = 2
-    client = TestProtocolClient(subunit)
     state = BEFORE_PLAN
     plan_start = 1
     plan_stop = 0
@@ -1019,11 +1023,11 @@ class ProtocolTestCase(object):
     that has been encoded into the stream. The ``unittest.TestCase`` ``debug``
     and ``countTestCases`` methods are not supported because there isn't a
     sensible mapping for those methods.
-    
+
     # Get a stream (any object with a readline() method), in this case the
     # stream output by the example from ``subunit.TestProtocolClient``.
     stream = file('tests.log', 'rb')
-    # Create a parser which will read from the stream and emit 
+    # Create a parser which will read from the stream and emit
     # activity to a unittest.TestResult when run() is called.
     suite = subunit.ProtocolTestCase(stream)
     # Create a result object to accept the contents of that stream.
@@ -1067,7 +1071,7 @@ class ProtocolTestCase(object):
 
 class TestResultStats(testresult.TestResult):
     """A pyunit TestResult interface implementation for making statistics.
-    
+
     :ivar total_tests: The total tests seen.
     :ivar passed_tests: The tests that passed.
     :ivar failed_tests: The tests that failed.
@@ -1118,7 +1122,7 @@ class TestResultStats(testresult.TestResult):
 
 def get_default_formatter():
     """Obtain the default formatter to write to.
-    
+
     :return: A file-like object.
     """
     formatter = os.getenv("SUBUNIT_FORMATTER")
@@ -1126,6 +1130,19 @@ def get_default_formatter():
         return os.popen(formatter, "w")
     else:
         return sys.stdout
+
+
+def read_test_list(path):
+    """Read a list of test ids from a file on disk.
+
+    :param path: Path to the file
+    :return: Sequence of test ids
+    """
+    f = open(path, 'rb')
+    try:
+        return [l.rstrip("\n") for l in f.readlines()]
+    finally:
+        f.close()
 
 
 def _make_stream_binary(stream):

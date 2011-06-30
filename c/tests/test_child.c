@@ -16,6 +16,7 @@
  **/
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <check.h>
@@ -57,6 +58,8 @@ test_stdout_function(char const * expected,
      * DEAL.
      */
     function();
+    /* flush writes on FILE object to file descriptor */
+    fflush(stdout);
     /* restore stdout now */
     if (dup2(old_stdout, 1) != 1) {
       close(old_stdout);
@@ -164,6 +167,44 @@ START_TEST (test_skip)
 }
 END_TEST
 
+
+static void
+call_test_progress_pop(void)
+{
+	subunit_progress(SUBUNIT_PROGRESS_POP, 0);
+}
+
+static void
+call_test_progress_set(void)
+{
+	subunit_progress(SUBUNIT_PROGRESS_SET, 5);
+}
+
+static void
+call_test_progress_push(void)
+{
+	subunit_progress(SUBUNIT_PROGRESS_PUSH, 0);
+}
+
+static void
+call_test_progress_cur(void)
+{
+	subunit_progress(SUBUNIT_PROGRESS_CUR, -6);
+}
+
+START_TEST (test_progress)
+{
+	test_stdout_function("progress: pop\n",
+			 call_test_progress_pop);
+	test_stdout_function("progress: push\n",
+			 call_test_progress_push);
+	test_stdout_function("progress: 5\n",
+			 call_test_progress_set);
+	test_stdout_function("progress: -6\n",
+			 call_test_progress_cur);
+}
+END_TEST
+
 static Suite *
 child_suite(void)
 {
@@ -175,6 +216,7 @@ child_suite(void)
     tcase_add_test (tc_core, test_fail);
     tcase_add_test (tc_core, test_error);
     tcase_add_test (tc_core, test_skip);
+    tcase_add_test (tc_core, test_progress);
     return s;
 }
 
