@@ -64,7 +64,16 @@ IMPROVEMENTS
 * The Python2.7 / testtools addUnexpectedSuccess API is now supported. This
   required adding a new status code to the protocol. (Robert Collins, #654474)
 
-=======
+BUG FIXES
+~~~~~~~~~
+
+* Add 'subunit --no-xfail', which will omit expected failures from the subunit
+  stream. (John Arbash Meinel, #623642)
+
+* Add 'subunit -F/--only-genuine-failures' which sets all of '--no-skips',
+  '--no-xfail', '--no-passthrough, '--no-success', and gives you just the
+  failure stream. (John Arbash Meinel)
+
 CHANGES
 ~~~~~~~
 
