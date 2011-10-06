@@ -29,6 +29,8 @@ IMPROVEMENTS
 * Provisional Python 3.x support.
   (Robert Collins, Tres Seaver, Martin[gz], #666819)
 
+* Shell functions now output timestamps. (Stewart Smith)
+
 * ``subunit.chunked.Decoder`` Python class takes a new ``strict`` option,
   which defaults to ``True``. When ``False``, the ``Decoder`` will accept
   incorrect input that is still unambiguous. i.e. subunit will not barf if
