@@ -294,7 +294,7 @@ class TestResultFilter(TestResultDecorator):
     """
 
     def __init__(self, result, filter_error=False, filter_failure=False,
-        filter_success=True, filter_skip=False,
+        filter_success=True, filter_skip=False, filter_xfail=False,
         filter_predicate=None, fixup_expected_failures=None):
         """Create a FilterResult object filtering to result.
 
@@ -302,6 +302,7 @@ class TestResultFilter(TestResultDecorator):
         :param filter_failure: Filter out failures.
         :param filter_success: Filter out successful tests.
         :param filter_skip: Filter out skipped tests.
+        :param filter_xfail: Filter out expected failure tests.
         :param filter_predicate: A callable taking (test, outcome, err,
             details) and returning True if the result should be passed
             through.  err and details may be none if no error or extra
@@ -322,6 +323,8 @@ class TestResultFilter(TestResultDecorator):
             predicates.append(lambda t, outcome, e, d: outcome != 'success')
         if filter_skip:
             predicates.append(lambda t, outcome, e, d: outcome != 'skip')
+        if filter_xfail:
+            predicates.append(lambda t, outcome, e, d: outcome != 'expectedfailure')
         if filter_predicate is not None:
             predicates.append(filter_predicate)
         self.filter_predicate = (

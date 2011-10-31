@@ -59,12 +59,12 @@ and newer).
 The ``tags(new_tags, gone_tags)`` method is called (if present) to add or
 remove tags in the test run that is currently executing. If called when no
 test is in progress (that is, if called outside of the ``startTest``,
-``stopTest`` pair), the the tags apply to all sebsequent tests. If called
+``stopTest`` pair), the the tags apply to all subsequent tests. If called
 when a test is in progress, then the tags only apply to that test.
 
 The ``time(a_datetime)`` method is called (if present) when a ``time:``
 directive is encountered in a Subunit stream. This is used to tell a TestResult
-about the time that events in the stream occured at, to allow reconstructing
+about the time that events in the stream occurred at, to allow reconstructing
 test timing from a stream.
 
 The ``progress(offset, whence)`` method controls progress data for a stream.
