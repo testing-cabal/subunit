@@ -1,7 +1,6 @@
 #
 #  subunit: extensions to python unittest to get test results from subprocesses.
-#  Copyright (C) 2005  Robert Collins <robertc@robertcollins.net>
-#  Copyright (C) 2011  Martin Pool <mbp@sourcefrog.net>
+#  Copyright (C) 2011  Robert Collins <robertc@robertcollins.net>
 #
 #  Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 #  license at the users choice. A copy of both licenses are available in the
