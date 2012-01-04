@@ -1122,7 +1122,7 @@ class ProtocolTestCase(object):
     :seealso: TestProtocolServer (the subunit wire protocol parser).
     """
 
-    def __init__(self, stream, passthrough=None, forward=False):
+    def __init__(self, stream, passthrough=None, forward=None):
         """Create a ProtocolTestCase reading from stream.
 
         :param stream: A filelike object which a subunit stream can be read
@@ -1135,6 +1135,8 @@ class ProtocolTestCase(object):
         self._stream = stream
         _make_stream_binary(stream)
         self._passthrough = passthrough
+        if forward is not None:
+            _make_stream_binary(forward)
         self._forward = forward
 
     def __call__(self, result=None):
