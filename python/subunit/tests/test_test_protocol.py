@@ -1299,6 +1299,22 @@ class TestTestProtocolClient(unittest.TestCase):
                 "something\n"
                 "F\r\nserialised\nform0\r\n]\n" % self.test.id()))
 
+    def test_tags_empty(self):
+        self.protocol.tags(set(), set())
+        self.assertEqual(_b(""), self.io.getvalue())
+
+    def test_tags_add(self):
+        self.protocol.tags(set(['foo']), set())
+        self.assertEqual(_b("tags: foo\n"), self.io.getvalue())
+
+    def test_tags_both(self):
+        self.protocol.tags(set(['quux']), set(['bar']))
+        self.assertEqual(_b("tags: quux -bar\n"), self.io.getvalue())
+
+    def test_tags_gone(self):
+        self.protocol.tags(set(), set(['bar']))
+        self.assertEqual(_b("tags: -bar\n"), self.io.getvalue())
+
 
 def test_suite():
     loader = subunit.tests.TestUtil.TestLoader()

@@ -755,6 +755,15 @@ class TestProtocolClient(testresult.TestResult):
         self._stream.write(self._progress_fmt + prefix + offset +
             self._bytes_eol)
 
+    def tags(self, new_tags, gone_tags):
+        """Inform the client about tags added/removed from the stream."""
+        if not new_tags and not gone_tags:
+            return
+        tags = set([tag.encode('utf8') for tag in new_tags])
+        tags.update([_b("-") + tag.encode('utf8') for tag in gone_tags])
+        tag_line = _b("tags: ") + _b(" ").join(tags) + _b("\n")
+        self._stream.write(tag_line)
+
     def time(self, a_datetime):
         """Inform the client of the time.
 

@@ -22,6 +22,9 @@ BUG FIXES
   '--no-xfail', '--no-passthrough, '--no-success', and gives you just the
   failure stream. (John Arbash Meinel)
 
+* Tag support has been implemented for TestProtocolClient.
+  (Robert Collins, #518016)
+
 * Test suite works with latest testtools (but not older ones - formatting
   changes only). (Robert Collins)
 
