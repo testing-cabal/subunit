@@ -44,3 +44,4 @@ debian/*.substvars
 ./perl/pm_to_blib
 subunit-*.tar.gz
 perl/Makefile.PL
+./.testrepository
