@@ -10,7 +10,7 @@ IMPROVEMENTS
 
 * Perl module now correctly outputs "failure" instead of "fail".  (Stewart Smith)
 
-* Shell functions now output timestamps. (Stewart Smith)
+* Shell functions now output timestamps. (Stewart Smith, Robert Collins)
 
 BUG FIXES
 ~~~~~~~~~
