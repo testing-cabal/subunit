@@ -16,12 +16,6 @@
 
 import datetime
 import unittest
-from StringIO import StringIO
-import os
-import sys
-
-from testtools.content_type import ContentType
-from testtools.content import Content
 
 import subunit
 import subunit.iso8601 as iso8601
