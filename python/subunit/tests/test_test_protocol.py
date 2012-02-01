@@ -18,7 +18,6 @@ import datetime
 import unittest
 from StringIO import StringIO
 import os
-import sys
 
 from testtools.content import Content, TracebackContent
 from testtools.content_type import ContentType
@@ -61,7 +60,6 @@ class TestProtocolServerForward(unittest.TestCase):
         pipe = StringIO("test old mcdonald\n"
                         "success old mcdonald\n")
         protocol.readFrom(pipe)
-        mcdonald = subunit.RemotedTestCase("old mcdonald")
         self.assertEqual(client.testsRun, 1)
         self.assertEqual(pipe.getvalue(), out.getvalue())
 
@@ -74,7 +72,7 @@ class TestProtocolServerForward(unittest.TestCase):
         protocol.readFrom(pipe)
         self.assertEqual(client.testsRun, 0)
         self.assertEqual("", out.getvalue())
-        
+
 
 class TestTestProtocolServerPipe(unittest.TestCase):
 
@@ -90,7 +88,6 @@ class TestTestProtocolServerPipe(unittest.TestCase):
                         "test an error\n"
                         "error an error\n")
         protocol.readFrom(pipe)
-        mcdonald = subunit.RemotedTestCase("old mcdonald")
         bing = subunit.RemotedTestCase("bing crosby")
         an_error = subunit.RemotedTestCase("an error")
         self.assertEqual(client.errors,
@@ -681,12 +678,6 @@ class TestTestProtocolServerAddSuccess(unittest.TestCase):
             ], self.client._events)
 
     def test_simple_success(self):
-        self.simple_success_keyword("failure")
-
-    def test_simple_success_colon(self):
-        self.simple_success_keyword("failure:")
-
-    def test_simple_success(self):
         self.simple_success_keyword("successful")
 
     def test_simple_success_colon(self):
@@ -946,7 +937,7 @@ class TestIsolatedTestCase(unittest.TestCase):
 
 
     def test_construct(self):
-        test = self.SampleIsolatedTestCase("test_sets_global_state")
+        self.SampleIsolatedTestCase("test_sets_global_state")
 
     def test_run(self):
         result = unittest.TestResult()
@@ -982,7 +973,7 @@ class TestIsolatedTestSuite(unittest.TestCase):
 
 
     def test_construct(self):
-        suite = subunit.IsolatedTestSuite()
+        subunit.IsolatedTestSuite()
 
     def test_run(self):
         result = unittest.TestResult()
