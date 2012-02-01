@@ -21,11 +21,16 @@ import os
 
 from testtools.content import Content, TracebackContent
 from testtools.content_type import ContentType
-from testtools.tests.helpers import (
-    Python26TestResult,
-    Python27TestResult,
-    ExtendedTestResult,
-    )
+from testtools import try_imports
+Python26TestResult = try_imports(
+    ['testtools.testresult.doubles.Python26TestResult',
+     'testtools.tests.helpers.Python26TestResult'])
+Python27TestResult = try_imports(
+    ['testtools.testresult.doubles.Python27TestResult',
+     'testtools.tests.helpers.Python27TestResult'])
+ExtendedTestResult = try_imports(
+    ['testtools.testresult.doubles.ExtendedTestResult',
+     'testtools.tests.helpers.ExtendedTestResult'])
 
 import subunit
 from subunit import _remote_exception_str
