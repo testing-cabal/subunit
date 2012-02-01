@@ -503,8 +503,6 @@ class TestIdPrintingResult(testtools.TestResult):
 class TestByTestResult(testtools.TestResult):
     """Call something every time a test completes."""
 
-    # XXX: No tests. Naughty, naughty.
-
     # XXX: Arguably belongs in testtools.
 
     def __init__(self, on_test):
@@ -521,10 +519,11 @@ class TestByTestResult(testtools.TestResult):
 
     def startTest(self, test):
         super(TestByTestResult, self).startTest(test)
-        self._current_test = test
+        self._start_time = self._now()
+        # There's no supported (i.e. tested) behaviour that relies on these
+        # being set, but it makes me more comfortable all the same. -- jml
         self._status = None
         self._details = None
-        self._start_time = self._now()
         self._stop_time = None
 
     def stopTest(self, test):
