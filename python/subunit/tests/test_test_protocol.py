@@ -107,8 +107,9 @@ class TestTestProtocolServerPipe(unittest.TestCase):
                          [(an_error, _remote_exception_str + '\n')])
         self.assertEqual(
             client.failures,
-            [(bing, _remote_exception_str + ": "
-              + details_to_str({'traceback': text_content(traceback)}) + "\n")])
+            [(bing, _remote_exception_str +
+                ": foo.c:53:ERROR invalid state\n"
+                "\n")])
         self.assertEqual(client.testsRun, 3)
 
     def test_non_test_characters_forwarded_immediately(self):
@@ -563,7 +564,9 @@ class TestTestProtocolServerAddxFail(unittest.TestCase):
                 value = details
             else:
                 if error_message is not None:
-                    value = subunit.RemoteError(details_to_str(details))
+                    if not len(error_message.strip()):
+                        error_message = _u("Empty attachments:\n  traceback\n")
+                    value = subunit.RemoteError(_u(error_message))
                 else:
                     value = subunit.RemoteError()
             self.assertEqual([
@@ -1300,6 +1303,22 @@ class TestTestProtocolClient(unittest.TestCase):
                 "Content-Type: text/plain\n"
                 "something\n"
                 "F\r\nserialised\nform0\r\n]\n" % self.test.id()))
+
+    def test_tags_empty(self):
+        self.protocol.tags(set(), set())
+        self.assertEqual(_b(""), self.io.getvalue())
+
+    def test_tags_add(self):
+        self.protocol.tags(set(['foo']), set())
+        self.assertEqual(_b("tags: foo\n"), self.io.getvalue())
+
+    def test_tags_both(self):
+        self.protocol.tags(set(['quux']), set(['bar']))
+        self.assertEqual(_b("tags: quux -bar\n"), self.io.getvalue())
+
+    def test_tags_gone(self):
+        self.protocol.tags(set(), set(['bar']))
+        self.assertEqual(_b("tags: -bar\n"), self.io.getvalue())
 
 
 def test_suite():
