@@ -683,8 +683,8 @@ class TestProtocolClient(testresult.TestResult):
                 raise ValueError
         if error is not None:
             self._stream.write(self._start_simple)
-            content = TracebackContent(error, test)
-            for bytes in content.iter_bytes():
+            tb_content = TracebackContent(error, test)
+            for bytes in tb_content.iter_bytes():
                 self._stream.write(bytes)
         elif details is not None:
             self._write_details(details)
