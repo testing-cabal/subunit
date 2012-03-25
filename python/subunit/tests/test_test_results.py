@@ -475,8 +475,6 @@ class TestCsvResult(testtools.TestCase):
              ],
             output)
 
-# XXX: Tests for subunit2csv
-
 
 def test_suite():
     loader = subunit.tests.TestUtil.TestLoader()
