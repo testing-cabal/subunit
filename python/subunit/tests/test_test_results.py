@@ -14,11 +14,13 @@
 #  limitations under that license.
 #
 
+import csv
 import datetime
 import sys
 import unittest
 
 from testtools import TestCase
+from testtools.compat import StringIO
 from testtools.content import (
     text_content,
     TracebackContent,
@@ -452,7 +454,26 @@ class TestByTestResultTests(testtools.TestCase):
              ],
             self.log)
 
-# XXX: Tests for csv_result
+
+class TestCsvResult(testtools.TestCase):
+
+    def test_csv_output(self):
+        stream = StringIO()
+        result = subunit.test_results.csv_result(stream)
+        result._now = iter(range(5)).next
+        result.startTestRun()
+        result.startTest(self)
+        result.addSuccess(self)
+        result.stopTest(self)
+        result.stopTestRun()
+        stream.seek(0)
+        reader = csv.reader(stream)
+        output = list(reader)
+        self.assertEqual(
+            [['test', 'status', 'start_time', 'stop_time'],
+             [self.id(), 'success', '0', '1'],
+             ],
+            output)
 
 # XXX: Tests for subunit2csv
 
