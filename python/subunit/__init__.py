@@ -123,6 +123,7 @@ import sys
 import unittest
 
 from testtools import content, content_type, ExtendedToOriginalDecorator
+from testtools.content import TracebackContent
 from testtools.compat import _b, _u, BytesIO, StringIO
 try:
     from testtools.testresult.real import _StringException
@@ -682,10 +683,9 @@ class TestProtocolClient(testresult.TestResult):
                 raise ValueError
         if error is not None:
             self._stream.write(self._start_simple)
-            # XXX: this needs to be made much stricter, along the lines of
-            # Martin[gz]'s work in testtools. Perhaps subunit can use that?
-            for line in self._exc_info_to_unicode(error, test).splitlines():
-                self._stream.write(("%s\n" % line).encode('utf8'))
+            tb_content = TracebackContent(error, test)
+            for bytes in tb_content.iter_bytes():
+                self._stream.write(bytes)
         elif details is not None:
             self._write_details(details)
         else:
@@ -1131,7 +1131,7 @@ class ProtocolTestCase(object):
     :seealso: TestProtocolServer (the subunit wire protocol parser).
     """
 
-    def __init__(self, stream, passthrough=None, forward=False):
+    def __init__(self, stream, passthrough=None, forward=None):
         """Create a ProtocolTestCase reading from stream.
 
         :param stream: A filelike object which a subunit stream can be read
@@ -1144,6 +1144,8 @@ class ProtocolTestCase(object):
         self._stream = stream
         _make_stream_binary(stream)
         self._passthrough = passthrough
+        if forward is not None:
+            _make_stream_binary(forward)
         self._forward = forward
 
     def __call__(self, result=None):
