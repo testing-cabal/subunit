@@ -534,8 +534,7 @@ class TestByTestResult(testtools.TestResult):
             status=self._status,
             start_time=self._start_time,
             stop_time=self._stop_time,
-            # XXX: This is unset when I run it.  Is current_tags a new part of
-            # the testtools API?
+            # current_tags is new in testtools 0.9.13.
             tags=getattr(self, 'current_tags', None),
             details=self._details)
 
