@@ -457,6 +457,11 @@ class TestByTestResultTests(testtools.TestCase):
 
 class TestCsvResult(testtools.TestCase):
 
+    def parse_stream(self, stream):
+        stream.seek(0)
+        reader = csv.reader(stream)
+        return list(reader)
+
     def test_csv_output(self):
         stream = StringIO()
         result = subunit.test_results.csv_result(stream)
@@ -466,14 +471,20 @@ class TestCsvResult(testtools.TestCase):
         result.addSuccess(self)
         result.stopTest(self)
         result.stopTestRun()
-        stream.seek(0)
-        reader = csv.reader(stream)
-        output = list(reader)
         self.assertEqual(
             [['test', 'status', 'start_time', 'stop_time'],
              [self.id(), 'success', '0', '1'],
              ],
-            output)
+            self.parse_stream(stream))
+
+    def test_just_header_when_no_tests(self):
+        stream = StringIO()
+        result = subunit.test_results.csv_result(stream)
+        result.startTestRun()
+        result.stopTestRun()
+        self.assertEqual(
+            [['test', 'status', 'start_time', 'stop_time']],
+            self.parse_stream(stream))
 
 
 def test_suite():
