@@ -579,15 +579,15 @@ class TestByTestResult(testtools.TestResult):
         self._details = details
 
 
-class csv_result(TestByTestResult):
+class CsvResult(TestByTestResult):
 
     def __init__(self, stream):
-        super(csv_result, self).__init__(self._on_test)
+        super(CsvResult, self).__init__(self._on_test)
         self._write_row = csv.writer(stream).writerow
 
     def _on_test(self, test, status, start_time, stop_time, tags, details):
         self._write_row([test.id(), status, start_time, stop_time])
 
     def startTestRun(self):
-        super(csv_result, self).startTestRun()
+        super(CsvResult, self).startTestRun()
         self._write_row(['test', 'status', 'start_time', 'stop_time'])

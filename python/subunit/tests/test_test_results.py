@@ -464,7 +464,7 @@ class TestCsvResult(testtools.TestCase):
 
     def test_csv_output(self):
         stream = StringIO()
-        result = subunit.test_results.csv_result(stream)
+        result = subunit.test_results.CsvResult(stream)
         result._now = iter(range(5)).next
         result.startTestRun()
         result.startTest(self)
@@ -479,7 +479,7 @@ class TestCsvResult(testtools.TestCase):
 
     def test_just_header_when_no_tests(self):
         stream = StringIO()
-        result = subunit.test_results.csv_result(stream)
+        result = subunit.test_results.CsvResult(stream)
         result.startTestRun()
         result.stopTestRun()
         self.assertEqual(
@@ -488,7 +488,7 @@ class TestCsvResult(testtools.TestCase):
 
     def test_no_output_before_events(self):
         stream = StringIO()
-        subunit.test_results.csv_result(stream)
+        subunit.test_results.CsvResult(stream)
         self.assertEqual([], self.parse_stream(stream))
 
 

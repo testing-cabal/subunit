@@ -15,7 +15,7 @@
 #
 
 # XXX: This is almost exactly the same as subunit2junitxml.  The only
-# difference is that we instantiate 'csv_result' rather than 'JUnitXmlResult'.
+# difference is that we instantiate 'CsvResult' rather than 'JUnitXmlResult'.
 # Consider factoring this out into a common script helper.
 
 """Turn a subunit stream into a CSV"""
@@ -24,7 +24,7 @@ from optparse import OptionParser
 import sys
 
 from subunit import DiscardStream, ProtocolTestCase
-from subunit.test_results import csv_result
+from subunit.test_results import CsvResult
 
 parser = OptionParser(description=__doc__)
 parser.add_option("--no-passthrough", action="store_true",
@@ -41,7 +41,7 @@ else:
     output_to = file(options.output_to, 'wb')
 
 try:
-    result = csv_result(output_to)
+    result = CsvResult(output_to)
     if options.no_passthrough:
         passthrough_stream = DiscardStream()
     else:
