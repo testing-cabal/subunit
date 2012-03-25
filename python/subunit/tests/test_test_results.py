@@ -486,6 +486,11 @@ class TestCsvResult(testtools.TestCase):
             [['test', 'status', 'start_time', 'stop_time']],
             self.parse_stream(stream))
 
+    def test_no_output_before_events(self):
+        stream = StringIO()
+        subunit.test_results.csv_result(stream)
+        self.assertEqual([], self.parse_stream(stream))
+
 
 def test_suite():
     loader = subunit.tests.TestUtil.TestLoader()

@@ -579,14 +579,15 @@ class TestByTestResult(testtools.TestResult):
         self._details = details
 
 
-def csv_result(stream):
-    writer = csv.writer(stream)
-    w = writer.writerow
-    # XXX: Not great that we write this out immediately. Probably better to
-    # wait for startTestRun.
-    w(['test', 'status', 'start_time', 'stop_time'])
-    def on_test(test, status, start_time, stop_time, tags, details):
-        # XXX: Don't really know how to serialize tags or details into csv in
-        # a useful way.
-        w([test.id(), status, start_time, stop_time])
-    return TestByTestResult(on_test)
+class csv_result(TestByTestResult):
+
+    def __init__(self, stream):
+        super(csv_result, self).__init__(self._on_test)
+        self._write_row = csv.writer(stream).writerow
+
+    def _on_test(self, test, status, start_time, stop_time, tags, details):
+        self._write_row([test.id(), status, start_time, stop_time])
+
+    def startTestRun(self):
+        super(csv_result, self).startTestRun()
+        self._write_row(['test', 'status', 'start_time', 'stop_time'])
