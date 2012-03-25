@@ -312,7 +312,7 @@ class TestByTestResultTests(testtools.TestCase):
     def assertCalled(self, **kwargs):
         defaults = {
             'test': self,
-            'tags': None,
+            'tags': set(),
             'details': None,
             'start_time': 0,
             'stop_time': 1,
@@ -344,11 +344,11 @@ class TestByTestResultTests(testtools.TestCase):
     def test_tags(self):
         if not getattr(self.result, 'tags', None):
             self.skipTest("No tags in testtools")
-        self.result.tags(['foo'])
+        self.result.tags(['foo'], [])
         self.result.startTest(self)
         self.result.addSuccess(self)
         self.result.stopTest(self)
-        self.assertCalled(status='success', tags=set('foo'))
+        self.assertCalled(status='success', tags=set(['foo']))
 
     def test_add_error(self):
         self.result.startTest(self)
@@ -441,13 +441,13 @@ class TestByTestResultTests(testtools.TestCase):
               'status': 'success',
               'start_time': 0,
               'stop_time': 1,
-              'tags': None,
+              'tags': set(),
               'details': {'foo': 'bar'}},
              {'test': self,
               'status': 'success',
               'start_time': 2,
               'stop_time': 3,
-              'tags': None,
+              'tags': set(),
               'details': None},
              ],
             self.log)
