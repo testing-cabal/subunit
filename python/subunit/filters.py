@@ -98,15 +98,7 @@ def filter_by_result(result_factory, output_path, passthrough, forward,
     return result
 
 
-def _default_post_run(result):
-    if result.wasSuccessful():
-        sys.exit(0)
-    else:
-        sys.exit(1)
-
-
-def run_filter_script(result_factory, description,
-                      post_run_hook=_default_post_run):
+def run_filter_script(result_factory, description, post_run_hook=None):
     """Main function for simple subunit filter scripts.
 
     Many subunit filter scripts take a stream of subunit input and use a
@@ -125,4 +117,9 @@ def run_filter_script(result_factory, description,
     result = filter_by_result(
         result_factory, options.output_to, not options.no_passthrough,
         options.forward)
-    post_run_hook(result)
+    if post_run_hook:
+        post_run_hook(result)
+    if result.wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)
