@@ -42,35 +42,38 @@ def get_output_stream(output_to):
         return file(output_to, 'wb')
 
 
-def filter_with_result(result, no_passthrough, forward):
+def filter_with_result(result_factory, input_stream, output_stream,
+                       passthrough_stream, forward_stream):
+    result = result_factory(output_stream)
+    test = ProtocolTestCase(
+        input_stream, passthrough=passthrough_stream,
+        forward=forward_stream)
+    result.startTestRun()
+    test.run(result)
+    result.stopTestRun()
+    return result
+
+
+def something(result_factory, output_path, no_passthrough, forward):
     if no_passthrough:
         passthrough_stream = DiscardStream()
     else:
         passthrough_stream = None
+
     if forward:
         forward_stream = sys.stdout
     else:
         forward_stream = None
 
-    test = ProtocolTestCase(
-        sys.stdin, passthrough=passthrough_stream,
-        forward=forward_stream)
-    result.startTestRun()
-    test.run(result)
-    result.stopTestRun()
-
-    return result.wasSuccessful()
-
-
-def something(result_factory, output_path, no_passthrough, forward):
     output_to = get_output_stream(output_path)
-    result = result_factory(output_to)
     try:
-        successful = filter_with_result(result, no_passthrough, forward)
+        result = filter_with_result(
+            result_factory, sys.stdin, output_to, passthrough_stream,
+            forward_stream)
     finally:
         if output_path:
             output_to.close()
-    if successful:
+    if result.wasSuccessful():
         return 0
     else:
         return 1
