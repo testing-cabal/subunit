@@ -12,6 +12,9 @@ IMPROVEMENTS
 
 * Shell functions now output timestamps. (Stewart Smith, Robert Collins)
 
+* 'subunit2csv' script that converts subunit output to CSV format.
+  (Jonathan Lange)
+
 BUG FIXES
 ~~~~~~~~~
 
