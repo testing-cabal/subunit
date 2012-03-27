@@ -18,7 +18,7 @@
 
 
 import sys
-from subunit.filters import main
+from subunit.filters import run_filter_script
 
 try:
     from junitxml import JUnitXmlResult
@@ -28,4 +28,4 @@ except ImportError:
     raise
 
 
-main(JUnitXmlResult, __doc__)
+run_filter_script(JUnitXmlResult, __doc__)
