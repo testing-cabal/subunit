@@ -21,11 +21,12 @@ from subunit import DiscardStream, ProtocolTestCase
 from subunit.test_results import CsvResult
 
 
-def make_options():
-    parser = OptionParser(description=__doc__)
+def make_options(description):
+    parser = OptionParser(description=description)
     parser.add_option(
         "--no-passthrough", action="store_true",
-        help="Hide all non subunit input.", default=False, dest="no_passthrough")
+        help="Hide all non subunit input.", default=False,
+        dest="no_passthrough")
     parser.add_option(
         "-o", "--output-to",
         help="Output the XML to this path rather than stdout.")
@@ -95,8 +96,7 @@ def filter_by_result(result_factory, output_path, no_passthrough, forward,
     try:
         result = result_factory(output_to)
         was_successful = run_tests_from_stream(
-            input_stream, result, output_to, passthrough_stream,
-            forward_stream)
+            input_stream, result, passthrough_stream, forward_stream)
     finally:
         if output_path:
             output_to.close()
@@ -106,10 +106,10 @@ def filter_by_result(result_factory, output_path, no_passthrough, forward,
         return 1
 
 
-def main(result_factory):
-    parser = make_options()
+def main(result_factory, description):
+    parser = make_options(description)
     (options, args) = parser.parse_args()
     sys.exit(
         filter_by_result(
-            CsvResult, options.output_to, options.no_passthrough,
+            result_factory, options.output_to, options.no_passthrough,
             options.forward))

@@ -14,14 +14,10 @@
 #  limitations under that license.
 #
 
-# XXX: This is almost exactly the same as subunit2junitxml.  The only
-# difference is that we instantiate 'CsvResult' rather than 'JUnitXmlResult'.
-# Consider factoring this out into a common script helper.
-
 """Turn a subunit stream into a CSV"""
 
 from subunit.filters import main
 from subunit.test_results import CsvResult
 
 
-main(CsvResult)
+main(CsvResult, __doc__)
