@@ -21,6 +21,7 @@
 """Turn a subunit stream into a CSV"""
 
 from subunit.filters import main
+from subunit.test_results import CsvResult
 
 
-main()
+main(CsvResult)

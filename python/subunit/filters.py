@@ -35,13 +35,6 @@ def make_options():
     return parser
 
 
-def get_output_stream(output_to):
-    if output_to is None:
-        return sys.stdout
-    else:
-        return file(output_to, 'wb')
-
-
 def filter_with_result(result_factory, input_stream, output_stream,
                        passthrough_stream, forward_stream):
     result = result_factory(output_stream)
@@ -65,7 +58,11 @@ def something(result_factory, output_path, no_passthrough, forward):
     else:
         forward_stream = None
 
-    output_to = get_output_stream(output_path)
+    if output_path is None:
+        output_to = sys.stdout
+    else:
+        output_to = file(output_path, 'wb')
+
     try:
         result = filter_with_result(
             result_factory, sys.stdin, output_to, passthrough_stream,
@@ -79,8 +76,9 @@ def something(result_factory, output_path, no_passthrough, forward):
         return 1
 
 
-def main():
+def main(result_factory):
     parser = make_options()
     (options, args) = parser.parse_args()
     sys.exit(
-        something(CsvResult, options.output_to, options.no_passthrough, options.forward))
+        something(CsvResult, options.output_to, options.no_passthrough,
+                  options.forward))
