@@ -59,7 +59,7 @@ def run_tests_from_stream(input_stream, result, passthrough_stream=None,
     return result.wasSuccessful()
 
 
-def filter_by_result(result_factory, output_path, no_passthrough, forward,
+def filter_by_result(result_factory, output_path, passthrough, forward,
                      input_stream=sys.stdin):
     """Filter an input stream using a test result.
 
@@ -68,8 +68,8 @@ def filter_by_result(result_factory, output_path, no_passthrough, forward,
         to the given stream.
     :param output_path: A path send output to.  If None, output will be go
         to ``sys.stdout``.
-    :param no_passthrough: If True, all non-subunit input will be discarded.
-        If False, that input will be sent to ``sys.stdout``.
+    :param passthrough: If True, all non-subunit input will be sent to
+        ``sys.stdout``.  If False, that input will be discarded.
     :param forward: If True, all subunit input will be forwarded directly to
         ``sys.stdout`` as well as to the ``TestResult``.
     :param input_stream: The source of subunit input.  Defaults to
@@ -77,15 +77,15 @@ def filter_by_result(result_factory, output_path, no_passthrough, forward,
     :return: 0 if the input represents a successful test run, 1 if a failed
         test run.
     """
-    if no_passthrough:
-        passthrough_stream = DiscardStream()
+    if passthrough:
+        passthrough_stream = sys.stdout
     else:
-        passthrough_stream = None
+        passthrough_stream = DiscardStream()
 
     if forward:
         forward_stream = sys.stdout
     else:
-        forward_stream = None
+        forward_stream = DiscardStream()
 
     if output_path is None:
         output_to = sys.stdout
@@ -123,5 +123,5 @@ def run_filter_script(result_factory, description):
     (options, args) = parser.parse_args()
     sys.exit(
         filter_by_result(
-            result_factory, options.output_to, options.no_passthrough,
+            result_factory, options.output_to, not options.no_passthrough,
             options.forward))
