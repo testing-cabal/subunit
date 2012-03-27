@@ -35,19 +35,48 @@ def make_options():
     return parser
 
 
-def filter_with_result(result_factory, input_stream, output_stream,
-                       passthrough_stream, forward_stream):
-    result = result_factory(output_stream)
+def run_tests_from_stream(input_stream, result, passthrough_stream=None,
+                          forward_stream=None):
+    """Run tests from a subunit input stream through 'result'.
+
+    :param input_stream: A stream containing subunit input.
+    :param result: A TestResult that will receive the test events.
+    :param passthrough_stream: All non-subunit input received will be
+        sent to this stream.  If not provided, uses the ``TestProtocolServer``
+        default, which is ``sys.stdout``.
+    :param forward_stream: All subunit input received will be forwarded
+        to this stream.  If not provided, uses the ``TestProtocolServer``
+        default, which is to not forward any input.
+    :return: True if the test run described by ``input_stream`` was
+        successful.  False otherwise.
+    """
     test = ProtocolTestCase(
         input_stream, passthrough=passthrough_stream,
         forward=forward_stream)
     result.startTestRun()
     test.run(result)
     result.stopTestRun()
-    return result
+    return result.wasSuccessful()
 
 
-def something(result_factory, output_path, no_passthrough, forward):
+def filter_by_result(result_factory, output_path, no_passthrough, forward,
+                     input_stream=sys.stdin):
+    """Filter an input stream using a test result.
+
+    :param result_factory: A callable that when passed an output stream
+        returns a TestResult.  It is expected that this result will output
+        to the given stream.
+    :param output_path: A path send output to.  If None, output will be go
+        to ``sys.stdout``.
+    :param no_passthrough: If True, all non-subunit input will be discarded.
+        If False, that input will be sent to ``sys.stdout``.
+    :param forward: If True, all subunit input will be forwarded directly to
+        ``sys.stdout`` as well as to the ``TestResult``.
+    :param input_stream: The source of subunit input.  Defaults to
+        ``sys.stdin``.
+    :return: 0 if the input represents a successful test run, 1 if a failed
+        test run.
+    """
     if no_passthrough:
         passthrough_stream = DiscardStream()
     else:
@@ -64,13 +93,14 @@ def something(result_factory, output_path, no_passthrough, forward):
         output_to = file(output_path, 'wb')
 
     try:
-        result = filter_with_result(
-            result_factory, sys.stdin, output_to, passthrough_stream,
+        result = result_factory(output_to)
+        was_successful = run_tests_from_stream(
+            input_stream, result, output_to, passthrough_stream,
             forward_stream)
     finally:
         if output_path:
             output_to.close()
-    if result.wasSuccessful():
+    if was_successful:
         return 0
     else:
         return 1
@@ -80,5 +110,6 @@ def main(result_factory):
     parser = make_options()
     (options, args) = parser.parse_args()
     sys.exit(
-        something(CsvResult, options.output_to, options.no_passthrough,
-                  options.forward))
+        filter_by_result(
+            CsvResult, options.output_to, options.no_passthrough,
+            options.forward))
