@@ -47,8 +47,6 @@ def run_tests_from_stream(input_stream, result, passthrough_stream=None,
     :param forward_stream: All subunit input received will be forwarded
         to this stream.  If not provided, uses the ``TestProtocolServer``
         default, which is to not forward any input.
-    :return: True if the test run described by ``input_stream`` was
-        successful.  False otherwise.
     """
     test = ProtocolTestCase(
         input_stream, passthrough=passthrough_stream,
@@ -56,7 +54,6 @@ def run_tests_from_stream(input_stream, result, passthrough_stream=None,
     result.startTestRun()
     test.run(result)
     result.stopTestRun()
-    return result.wasSuccessful()
 
 
 def filter_by_result(result_factory, output_path, passthrough, forward,
@@ -74,8 +71,7 @@ def filter_by_result(result_factory, output_path, passthrough, forward,
         ``sys.stdout`` as well as to the ``TestResult``.
     :param input_stream: The source of subunit input.  Defaults to
         ``sys.stdin``.
-    :return: 0 if the input represents a successful test run, 1 if a failed
-        test run.
+    :return: A test result with the resultts of the run.
     """
     if passthrough:
         passthrough_stream = sys.stdout
@@ -94,18 +90,23 @@ def filter_by_result(result_factory, output_path, passthrough, forward,
 
     try:
         result = result_factory(output_to)
-        was_successful = run_tests_from_stream(
+        run_tests_from_stream(
             input_stream, result, passthrough_stream, forward_stream)
     finally:
         if output_path:
             output_to.close()
-    if was_successful:
-        return 0
+    return result
+
+
+def _default_post_run(result):
+    if result.wasSuccessful():
+        sys.exit(0)
     else:
-        return 1
+        sys.exit(1)
 
 
-def run_filter_script(result_factory, description):
+def run_filter_script(result_factory, description,
+                      post_run_hook=_default_post_run):
     """Main function for simple subunit filter scripts.
 
     Many subunit filter scripts take a stream of subunit input and use a
@@ -121,7 +122,7 @@ def run_filter_script(result_factory, description):
     """
     parser = make_options(description)
     (options, args) = parser.parse_args()
-    sys.exit(
-        filter_by_result(
-            result_factory, options.output_to, not options.no_passthrough,
-            options.forward))
+    result = filter_by_result(
+        result_factory, options.output_to, not options.no_passthrough,
+        options.forward)
+    post_run_hook(result)
