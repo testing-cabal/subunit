@@ -28,7 +28,7 @@ def make_options(description):
         dest="no_passthrough")
     parser.add_option(
         "-o", "--output-to",
-        help="Output the XML to this path rather than stdout.")
+        help="Send the output to this path rather than stdout.")
     parser.add_option(
         "-f", "--forward", action="store_true", default=False,
         help="Forward subunit stream on stdout.")
