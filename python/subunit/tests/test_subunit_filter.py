@@ -151,8 +151,22 @@ xfail todo
 
     def test_filter_predicate(self):
         """You can filter by predicate callbacks"""
+        # 0.0.7 and earlier did not support the 'tags' parameter, so we need
+        # to test that we still support behaviour without it.
         filtered_result = unittest.TestResult()
         def filter_cb(test, outcome, err, details):
+            return outcome == 'success'
+        result_filter = TestResultFilter(filtered_result,
+            filter_predicate=filter_cb,
+            filter_success=False)
+        self.run_tests(result_filter)
+        # Only success should pass
+        self.assertEqual(1, filtered_result.testsRun)
+
+    def test_filter_predicate_with_tags(self):
+        """You can filter by predicate callbacks that accept tags"""
+        filtered_result = unittest.TestResult()
+        def filter_cb(test, outcome, err, details, tags):
             return outcome == 'success'
         result_filter = TestResultFilter(filtered_result,
             filter_predicate=filter_cb,

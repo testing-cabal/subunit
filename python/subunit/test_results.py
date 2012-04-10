@@ -308,11 +308,7 @@ class _PredicateFilter(TestResultDecorator):
         # XXX: ExtendedToOriginalDecorator doesn't properly wrap current_tags.
         # https://bugs.launchpad.net/testtools/+bug/978027
         tags = getattr(self.decorated, 'current_tags', frozenset())
-        # 0.0.7 and earlier did not support the 'tags' parameter.
-        try:
-            return self._predicate(test, outcome, error, details, tags)
-        except TypeError:
-            return self._predicate(test, outcome, error, details)
+        return self._predicate(test, outcome, error, details, tags)
 
     def addError(self, test, err=None, details=None):
         if (self.filter_predicate(test, 'error', err, details)):
@@ -425,20 +421,33 @@ class TestResultFilter(_PredicateFilter):
         """
         predicates = []
         if filter_error:
-            predicates.append(lambda t, outcome, e, d: outcome != 'error')
+            predicates.append(
+                lambda t, outcome, e, d, tags: outcome != 'error')
         if filter_failure:
-            predicates.append(lambda t, outcome, e, d: outcome != 'failure')
+            predicates.append(
+                lambda t, outcome, e, d, tags: outcome != 'failure')
         if filter_success:
-            predicates.append(lambda t, outcome, e, d: outcome != 'success')
+            predicates.append(
+                lambda t, outcome, e, d, tags: outcome != 'success')
         if filter_skip:
-            predicates.append(lambda t, outcome, e, d: outcome != 'skip')
+            predicates.append(
+                lambda t, outcome, e, d, tags: outcome != 'skip')
         if filter_xfail:
-            predicates.append(lambda t, outcome, e, d: outcome != 'expectedfailure')
+            predicates.append(
+                lambda t, outcome, e, d, tags: outcome != 'expectedfailure')
         if filter_predicate is not None:
-            predicates.append(filter_predicate)
+            def compat(test, outcome, error, details, tags):
+                # 0.0.7 and earlier did not support the 'tags' parameter.
+                try:
+                    return filter_predicate(
+                        test, outcome, error, details, tags)
+                except TypeError:
+                    return filter_predicate(test, outcome, error, details)
+            predicates.append(compat)
         predicate = (
-            lambda test, outcome, err, details:
-                all_true(p(test, outcome, err, details) for p in predicates))
+            lambda test, outcome, err, details, tags:
+                all_true(p(test, outcome, err, details, tags)
+                         for p in predicates))
         super(TestResultFilter, self).__init__(result, predicate)
         if fixup_expected_failures is None:
             self._fixup_expected_failures = frozenset()
