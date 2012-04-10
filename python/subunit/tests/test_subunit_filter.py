@@ -21,7 +21,7 @@ from subunit import iso8601
 import unittest
 
 from testtools import TestCase
-from testtools.compat import _b, BytesIO, StringIO
+from testtools.compat import _b, BytesIO
 from testtools.testresult.doubles import ExtendedTestResult
 
 import subunit
