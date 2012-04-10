@@ -292,13 +292,16 @@ class _PredicateFilter(TestResultDecorator):
         super(_PredicateFilter, self).__init__(result)
         self.decorated = TimeCollapsingDecorator(
             TagCollapsingDecorator(self.decorated))
-        self.filter_predicate = predicate
+        self._predicate = predicate
         # The current test (for filtering tags)
         self._current_test = None
         # Has the current test been filtered (for outputting test tags)
         self._current_test_filtered = None
         # Calls to this result that we don't know whether to forward on yet.
         self._buffered_calls = []
+
+    def filter_predicate(self, test, outcome, error, details):
+        return self._predicate(test, outcome, error, details)
 
     def addError(self, test, err=None, details=None):
         if (self.filter_predicate(test, 'error', err, details)):
