@@ -81,6 +81,10 @@ class TestResultDecorator(object):
         return self.decorated.wasSuccessful()
 
     @property
+    def current_tags(self):
+        return self.decorated.current_tags
+
+    @property
     def shouldStop(self):
         return self.decorated.shouldStop
 
@@ -301,7 +305,14 @@ class _PredicateFilter(TestResultDecorator):
         self._buffered_calls = []
 
     def filter_predicate(self, test, outcome, error, details):
-        return self._predicate(test, outcome, error, details)
+        # XXX: ExtendedToOriginalDecorator doesn't properly wrap current_tags.
+        # https://bugs.launchpad.net/testtools/+bug/978027
+        tags = getattr(self.decorated, 'current_tags', frozenset())
+        # 0.0.7 and earlier did not support the 'tags' parameter.
+        try:
+            return self._predicate(test, outcome, error, details, tags)
+        except TypeError:
+            return self._predicate(test, outcome, error, details)
 
     def addError(self, test, err=None, details=None):
         if (self.filter_predicate(test, 'error', err, details)):
