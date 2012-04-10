@@ -17,6 +17,9 @@
 """Tests for subunit.TestResultFilter."""
 
 from datetime import datetime
+import os
+import subprocess
+import sys
 from subunit import iso8601
 import unittest
 
@@ -214,6 +217,58 @@ xfail todo
             [('startTest', foo),
              ('addSkip', foo, {}),
              ('stopTest', foo), ], result._events)
+
+
+class TestFilterCommand(TestCase):
+
+    example_subunit_stream = _b("""\
+tags: global
+test passed
+success passed
+test failed
+tags: local
+failure failed
+test error
+error error [
+error details
+]
+test skipped
+skip skipped
+test todo
+xfail todo
+""")
+
+    def run_command(self, args, stream):
+        root = os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+        script_path = os.path.join(root, 'filters', 'subunit-filter')
+        command = [sys.executable, script_path] + list(args)
+        ps = subprocess.Popen(
+            command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
+        out, err = ps.communicate(stream)
+        if ps.returncode != 0:
+            raise RuntimeError("%s failed: %s" % (command, err))
+        return out
+
+    def to_events(self, stream):
+        test = subunit.ProtocolTestCase(BytesIO(stream))
+        result = ExtendedTestResult()
+        test.run(result)
+        return result._events
+
+    def test_default(self):
+        output = self.run_command([], (
+                "test: foo\n"
+                "skip: foo\n"
+                ))
+        events = self.to_events(output)
+        foo = subunit.RemotedTestCase('foo')
+        self.assertEqual(
+            [('startTest', foo),
+             ('addSkip', foo, {}),
+             ('stopTest', foo)],
+            events)
 
 
 def test_suite():
