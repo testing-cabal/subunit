@@ -20,6 +20,7 @@ import csv
 import datetime
 
 import testtools
+from testtools.compat import all
 from testtools.content import (
     text_content,
     TracebackContent,
@@ -282,12 +283,10 @@ class TimeCollapsingDecorator(HookedTestResultDecorator):
         self._last_received_time = a_time
 
 
-def all_true(bools):
-    """Return True if all of 'bools' are True. False otherwise."""
-    for b in bools:
-        if not b:
-            return False
-    return True
+def and_predicates(predicates):
+    """Return a predicate that is true iff all predicates are true."""
+    # XXX: Should probably be in testtools to be better used by matchers. jml
+    return lambda *args, **kwargs: all(p(*args, **kwargs) for p in predicates)
 
 
 class _PredicateFilter(TestResultDecorator):
@@ -444,10 +443,7 @@ class TestResultFilter(TestResultDecorator):
                 except TypeError:
                     return filter_predicate(test, outcome, error, details)
             predicates.append(compat)
-        predicate = (
-            lambda test, outcome, err, details, tags:
-                all_true(p(test, outcome, err, details, tags)
-                         for p in predicates))
+        predicate = and_predicates(predicates)
         super(TestResultFilter, self).__init__(
             _PredicateFilter(result, predicate))
         if fixup_expected_failures is None:
