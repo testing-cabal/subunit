@@ -389,7 +389,7 @@ class _PredicateFilter(TestResultDecorator):
         return id
 
 
-class TestResultFilter(_PredicateFilter):
+class TestResultFilter(TestResultDecorator):
     """A pyunit TestResult interface implementation which filters tests.
 
     Tests that pass the filter are handed on to another TestResult instance
@@ -448,7 +448,8 @@ class TestResultFilter(_PredicateFilter):
             lambda test, outcome, err, details, tags:
                 all_true(p(test, outcome, err, details, tags)
                          for p in predicates))
-        super(TestResultFilter, self).__init__(result, predicate)
+        super(TestResultFilter, self).__init__(
+            _PredicateFilter(result, predicate))
         if fixup_expected_failures is None:
             self._fixup_expected_failures = frozenset()
         else:
