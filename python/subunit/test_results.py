@@ -432,37 +432,24 @@ class TestResultFilter(_PredicateFilter):
             self._fixup_expected_failures = fixup_expected_failures
 
     def addError(self, test, err=None, details=None):
-        if (self.filter_predicate(test, 'error', err, details)):
-            if self._failure_expected(test):
-                self._buffered_calls.append(
-                    ('addExpectedFailure', [test, err], {'details': details}))
-            else:
-                self._buffered_calls.append(
-                    ('addError', [test, err], {'details': details}))
+        if self._failure_expected(test):
+            self.addExpectedFailure(test, err=err, details=details)
         else:
-            self._filtered()
+            super(TestResultFilter, self).addError(
+                test, err=err, details=details)
 
     def addFailure(self, test, err=None, details=None):
-        if (self.filter_predicate(test, 'failure', err, details)):
-            if self._failure_expected(test):
-                self._buffered_calls.append(
-                    ('addExpectedFailure', [test, err], {'details': details}))
-            else:
-                self._buffered_calls.append(
-                    ('addFailure', [test, err], {'details': details}))
+        if self._failure_expected(test):
+            self.addExpectedFailure(test, err=err, details=details)
         else:
-            self._filtered()
+            super(TestResultFilter, self).addFailure(
+                test, err=err, details=details)
 
     def addSuccess(self, test, details=None):
-        if (self.filter_predicate(test, 'success', None, details)):
-            if self._failure_expected(test):
-                self._buffered_calls.append(
-                    ('addUnexpectedSuccess', [test], {'details': details}))
-            else:
-                self._buffered_calls.append(
-                    ('addSuccess', [test], {'details': details}))
+        if self._failure_expected(test):
+            self.addUnexpectedSuccess(test, details=details)
         else:
-            self._filtered()
+            super(TestResultFilter, self).addSuccess(test, details=details)
 
     def _failure_expected(self, test):
         return (test.id() in self._fixup_expected_failures)
