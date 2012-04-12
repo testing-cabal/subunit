@@ -28,7 +28,7 @@ from testtools.compat import _b, BytesIO
 from testtools.testresult.doubles import ExtendedTestResult
 
 import subunit
-from subunit.test_results import TestResultFilter
+from subunit.test_results import _make_tag_filter, TestResultFilter
 
 
 class TestTestResultFilter(TestCase):
@@ -79,6 +79,22 @@ xfail todo
             [failure[0].id() for failure in
             filtered_result.failures])
         self.assertEqual(4, filtered_result.testsRun)
+
+    def test_tag_filter(self):
+        tag_filter = _make_tag_filter(['global'], ['local'])
+        result = ExtendedTestResult()
+        result_filter = TestResultFilter(
+            result, filter_success=False, filter_predicate=tag_filter)
+        self.run_tests(result_filter)
+        test = subunit.RemotedTestCase('passed')
+        self.assertEquals(
+            [('tags', set(['global']), set()),
+             ('startTest', test),
+             ('addSuccess', test),
+             ('stopTest', test),
+             ('tags', set(['local']), set()),
+             ],
+            result._events)
 
     def test_exclude_errors(self):
         filtered_result = unittest.TestResult()
@@ -267,6 +283,23 @@ xfail todo
         self.assertEqual(
             [('startTest', foo),
              ('addSkip', foo, {}),
+             ('stopTest', foo)],
+            events)
+
+    def test_tags(self):
+        output = self.run_command(['-s', '--with-tag', 'a'], (
+                "tags: a\n"
+                "test: foo\n"
+                "success: foo\n"
+                "tags: -a\n"
+                "test: bar\n"
+                "success: bar\n"
+                ))
+        events = self.to_events(output)
+        foo = subunit.RemotedTestCase('foo')
+        self.assertEqual(
+            [('startTest', foo),
+             ('addSuccess', foo),
              ('stopTest', foo)],
             events)
 

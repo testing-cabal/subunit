@@ -289,6 +289,22 @@ def and_predicates(predicates):
     return lambda *args, **kwargs: all(p(*args, **kwargs) for p in predicates)
 
 
+def _make_tag_filter(with_tags, without_tags):
+    """Make a callback that checks tests against tags."""
+
+    with_tags = with_tags and set(with_tags) or None
+    without_tags = without_tags and set(without_tags) or None
+
+    def check_tags(test, outcome, err, details, tags):
+        if with_tags and not with_tags <= tags:
+            return False
+        if without_tags and bool(without_tags & tags):
+            return False
+        return True
+
+    return check_tags
+
+
 class _PredicateFilter(TestResultDecorator):
 
     def __init__(self, result, predicate):
@@ -306,8 +322,8 @@ class _PredicateFilter(TestResultDecorator):
     def filter_predicate(self, test, outcome, error, details):
         # XXX: ExtendedToOriginalDecorator doesn't properly wrap current_tags.
         # https://bugs.launchpad.net/testtools/+bug/978027
-        tags = getattr(self.decorated, 'current_tags', frozenset())
-        return self._predicate(test, outcome, error, details, tags)
+        return self._predicate(
+            test, outcome, error, details, self.current_tags)
 
     def addError(self, test, err=None, details=None):
         if (self.filter_predicate(test, 'error', err, details)):
@@ -538,7 +554,7 @@ class TestIdPrintingResult(testtools.TestResult):
 class TestByTestResult(testtools.TestResult):
     """Call something every time a test completes."""
 
-    # XXX: Arguably belongs in testtools.
+# XXX: Arguably belongs in testtools.
 
     def __init__(self, on_test):
         """Construct a ``TestByTestResult``.
