@@ -92,7 +92,6 @@ xfail todo
              ('startTest', test),
              ('addSuccess', test),
              ('stopTest', test),
-             ('tags', set(['local']), set()),
              ],
             result._events)
 
@@ -298,9 +297,12 @@ xfail todo
         events = self.to_events(output)
         foo = subunit.RemotedTestCase('foo')
         self.assertEqual(
-            [('startTest', foo),
+            [('tags', set(['a']), set()),
+             ('startTest', foo),
              ('addSuccess', foo),
-             ('stopTest', foo)],
+             ('stopTest', foo),
+             ('tags', set(), set(['a'])),
+             ],
             events)
 
 

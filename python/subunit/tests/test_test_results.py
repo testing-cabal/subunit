@@ -56,16 +56,6 @@ class AssertBeforeTestResult(LoggingDecorator):
         super(AssertBeforeTestResult, self)._before_event()
 
 
-class TestTestResultDecorator(unittest.TestCase):
-
-    def test_current_tags(self):
-        result = ExtendedTestResult()
-        decorator = subunit.test_results.TestResultDecorator(result)
-        decorator.tags(set('foo'), set())
-        self.assertEqual(set('foo'), decorator.current_tags)
-        self.assertEqual(decorator.current_tags, result.current_tags)
-
-
 class TimeCapturingResult(unittest.TestResult):
 
     def __init__(self):

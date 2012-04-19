@@ -85,10 +85,6 @@ class TestResultDecorator(object):
         return self.decorated.wasSuccessful()
 
     @property
-    def current_tags(self):
-        return self.decorated.current_tags
-
-    @property
     def shouldStop(self):
         return self.decorated.shouldStop
 
@@ -315,6 +311,7 @@ class _PredicateFilter(TestResultDecorator):
         self.decorated = TimeCollapsingDecorator(
             TagCollapsingDecorator(self.decorated))
         self._predicate = predicate
+        self._current_tags = set()
         # The current test (for filtering tags)
         self._current_test = None
         # Has the current test been filtered (for outputting test tags)
@@ -326,7 +323,7 @@ class _PredicateFilter(TestResultDecorator):
         # XXX: ExtendedToOriginalDecorator doesn't properly wrap current_tags.
         # https://bugs.launchpad.net/testtools/+bug/978027
         return self._predicate(
-            test, outcome, error, details, self.current_tags)
+            test, outcome, error, details, self._current_tags)
 
     def addError(self, test, err=None, details=None):
         if (self.filter_predicate(test, 'error', err, details)):
@@ -387,13 +384,21 @@ class _PredicateFilter(TestResultDecorator):
         correctly.
         """
         if not self._current_test_filtered:
-            # Tags to output for this test.
             for method, args, kwargs in self._buffered_calls:
                 getattr(self.decorated, method)(*args, **kwargs)
             self.decorated.stopTest(test)
         self._current_test = None
         self._current_test_filtered = None
         self._buffered_calls = []
+
+    def tags(self, new_tags, gone_tags):
+        new_tags, gone_tags = set(new_tags), set(gone_tags)
+        self._current_tags.update(new_tags)
+        self._current_tags.difference_update(gone_tags)
+        if self._current_test is not None:
+            self._buffered_calls.append(('tags', [new_tags, gone_tags], {}))
+        else:
+            return super(_PredicateFilter, self).tags(new_tags, gone_tags)
 
     def time(self, a_time):
         if self._current_test is not None:
