@@ -40,6 +40,9 @@ class TestResultDecorator(object):
     or features by degrading them.
     """
 
+    # XXX: Since lp:testtools r250, this is in testtools. Once it's released,
+    # we should gut this and just use that.
+
     def __init__(self, decorated):
         """Create a TestResultDecorator forwarding to decorated."""
         # Make every decorator degrade gracefully.
