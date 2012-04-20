@@ -209,7 +209,7 @@ class AutoTimingTestResultDecorator(HookedTestResultDecorator):
         return self.decorated.time(a_datetime)
 
 
-class TagCollapsingDecorator(TestResultDecorator):
+class TagCollapsingDecorator(HookedTestResultDecorator):
     """Collapses many 'tags' calls into one where possible."""
 
     def __init__(self, result):
@@ -227,16 +227,15 @@ class TagCollapsingDecorator(TestResultDecorator):
         self._current_test_tags = set(), set()
 
     def stopTest(self, test):
-        """Stop a test.
+        super(TagCollapsingDecorator, self).stopTest(test)
+        self._current_test_tags = set(), set()
 
-        Not directly passed to the client, but used for handling of tags
-        correctly.
-        """
-        # Tags to output for this test.
+    def _before_event(self):
+        if not self._current_test_tags:
+            return
         if self._current_test_tags[0] or self._current_test_tags[1]:
             self.decorated.tags(*self._current_test_tags)
-        self.decorated.stopTest(test)
-        self._current_test_tags = None
+        self._current_test_tags = set(), set()
 
     def tags(self, new_tags, gone_tags):
         """Handle tag instructions.

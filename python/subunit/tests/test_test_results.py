@@ -238,6 +238,25 @@ class TestTagCollapsingDecorator(TestCase):
              ('stopTest', test)],
             result._events)
 
+    def test_tags_sent_before_result(self):
+        # Because addSuccess and friends tend to send subunit output
+        # immediately, and because 'tags:' before a result line means
+        # something different to 'tags:' after a result line, we need to be
+        # sure that tags are emitted before 'addSuccess' (or whatever).
+        result = ExtendedTestResult()
+        tag_collapser = subunit.test_results.TagCollapsingDecorator(result)
+        test = subunit.RemotedTestCase('foo')
+        tag_collapser.startTest(test)
+        tag_collapser.tags(set(['a']), set())
+        tag_collapser.addSuccess(test)
+        tag_collapser.stopTest(test)
+        self.assertEquals(
+            [('startTest', test),
+             ('tags', set(['a']), set()),
+             ('addSuccess', test),
+             ('stopTest', test)],
+            result._events)
+
 
 class TestTimeCollapsingDecorator(TestCase):
 
