@@ -36,6 +36,7 @@ from subunit import (
     TestProtocolClient,
     read_test_list,
     )
+from subunit.filters import run_tests_from_stream
 from subunit.test_results import (
     and_predicates,
     _make_tag_filter,
@@ -147,8 +148,5 @@ else:
     passthrough_stream = None
 
 result = make_result(sys.stdout, options, tag_filter)
-test = ProtocolTestCase(sys.stdin, passthrough=passthrough_stream)
-result.startTestRun()
-test.run(result)
-result.stopTestRun()
+run_tests_from_stream(sys.stdin, result, passthrough_stream)
 sys.exit(0)
