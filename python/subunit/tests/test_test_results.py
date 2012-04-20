@@ -208,6 +208,22 @@ class TestTagCollapsingDecorator(TestCase):
         self.assertEquals(
             [('tags', set(['a', 'b']), set([]))], result._events)
 
+    def test_tags_forwarded_after_tests(self):
+        test = subunit.RemotedTestCase('foo')
+        result = ExtendedTestResult()
+        tag_collapser = subunit.test_results.TagCollapsingDecorator(result)
+        tag_collapser.startTest(test)
+        tag_collapser.addSuccess(test)
+        tag_collapser.stopTest(test)
+        tag_collapser.tags(set(['a']), set(['b']))
+        self.assertEqual(
+            [('startTest', test),
+             ('addSuccess', test),
+             ('stopTest', test),
+             ('tags', set(['a']), set(['b'])),
+             ],
+            result._events)
+
     def test_tags_collapsed_inside_of_tests(self):
         result = ExtendedTestResult()
         tag_collapser = subunit.test_results.TagCollapsingDecorator(result)

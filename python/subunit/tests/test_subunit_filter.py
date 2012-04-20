@@ -301,6 +301,7 @@ xfail todo
              ('startTest', foo),
              ('addSuccess', foo),
              ('stopTest', foo),
+             ('tags', set(), set(['a'])),
              ],
             events)
 

@@ -228,7 +228,7 @@ class TagCollapsingDecorator(HookedTestResultDecorator):
 
     def stopTest(self, test):
         super(TagCollapsingDecorator, self).stopTest(test)
-        self._current_test_tags = set(), set()
+        self._current_test_tags = None
 
     def _before_event(self):
         if not self._current_test_tags:
