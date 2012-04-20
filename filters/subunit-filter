@@ -118,25 +118,35 @@ def _make_regexp_filter(with_regexps, without_regexps):
     return check_regexps
 
 
+
+def make_result(output, options, predicate):
+    """Make the result that we'll send the test outcomes to."""
+    fixup_expected_failures = set()
+    for path in options.fixup_expected_failures or ():
+        fixup_expected_failures.update(read_test_list(path))
+    return TestResultFilter(
+        TestProtocolClient(output),
+        filter_error=options.error,
+        filter_failure=options.failure,
+        filter_success=options.success,
+        filter_skip=options.skip,
+        filter_xfail=options.xfail,
+        filter_predicate=predicate,
+        fixup_expected_failures=fixup_expected_failures)
+
+
 regexp_filter = _make_regexp_filter(options.with_regexps,
         options.without_regexps)
 tag_filter = _make_tag_filter(options.with_tags, options.without_tags)
 
 filter_predicate = and_predicates([regexp_filter, tag_filter])
 
-fixup_expected_failures = set()
-for path in options.fixup_expected_failures or ():
-    fixup_expected_failures.update(read_test_list(path))
-result = TestProtocolClient(sys.stdout)
-result = TestResultFilter(result, filter_error=options.error,
-    filter_failure=options.failure, filter_success=options.success,
-    filter_skip=options.skip, filter_xfail=options.xfail,
-    filter_predicate=tag_filter,
-    fixup_expected_failures=fixup_expected_failures)
 if options.no_passthrough:
     passthrough_stream = DiscardStream()
 else:
     passthrough_stream = None
+
+result = make_result(sys.stdout, options, tag_filter)
 test = ProtocolTestCase(sys.stdin, passthrough=passthrough_stream)
 result.startTestRun()
 test.run(result)
