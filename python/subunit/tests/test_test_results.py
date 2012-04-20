@@ -212,6 +212,25 @@ class TestTagCollapsingDecorator(TestCase):
              ('startTest', self),
              ], result._events)
 
+    def test_tags_collapsed_outside_of_tests_are_flushed(self):
+        result = ExtendedTestResult()
+        tag_collapser = subunit.test_results.TagCollapsingDecorator(result)
+        tag_collapser.startTestRun()
+        tag_collapser.tags(set(['a']), set())
+        tag_collapser.tags(set(['b']), set())
+        tag_collapser.startTest(self)
+        tag_collapser.addSuccess(self)
+        tag_collapser.stopTest(self)
+        tag_collapser.stopTestRun()
+        self.assertEquals(
+            [('startTestRun',),
+             ('tags', set(['a', 'b']), set([])),
+             ('startTest', self),
+             ('addSuccess', self),
+             ('stopTest', self),
+             ('stopTestRun',),
+             ], result._events)
+
     def test_tags_forwarded_after_tests(self):
         test = subunit.RemotedTestCase('foo')
         result = ExtendedTestResult()
