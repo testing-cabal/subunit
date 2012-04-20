@@ -209,47 +209,44 @@ class AutoTimingTestResultDecorator(HookedTestResultDecorator):
         return self.decorated.time(a_datetime)
 
 
-class TagCollapsingDecorator(HookedTestResultDecorator):
-    """Collapses many 'tags' calls into one where possible."""
+class TagsMixin(object):
 
-    def __init__(self, result):
-        super(TagCollapsingDecorator, self).__init__(result)
+    def __init__(self):
         self._clear_tags()
 
     def _clear_tags(self):
         self._global_tags = set(), set()
-        self._current_test_tags = None
+        self._test_tags = None
 
-    def _get_current_tags(self):
-        if self._current_test_tags:
-            return self._current_test_tags
+    def _get_active_tags(self):
+        global_new, global_gone = self._global_tags
+        if self._test_tags is None:
+            return set(global_new)
+        test_new, test_gone = self._test_tags
+        return global_new.difference(test_gone).union(test_new)
+
+    def _get_current_scope(self):
+        if self._test_tags:
+            return self._test_tags
         return self._global_tags
 
+    def _flush_current_scope(self, tag_receiver):
+        new_tags, gone_tags = self._get_current_scope()
+        if new_tags or gone_tags:
+            tag_receiver.tags(new_tags, gone_tags)
+        if self._test_tags:
+            self._test_tags = set(), set()
+        else:
+            self._global_tags = set(), set()
+
     def startTestRun(self):
-        super(TagCollapsingDecorator, self).startTestRun()
         self._clear_tags()
 
     def startTest(self, test):
-        """Start a test.
-
-        Not directly passed to the client, but used for handling of tags
-        correctly.
-        """
-        super(TagCollapsingDecorator, self).startTest(test)
-        self._current_test_tags = set(), set()
+        self._test_tags = set(), set()
 
     def stopTest(self, test):
-        super(TagCollapsingDecorator, self).stopTest(test)
-        self._current_test_tags = None
-
-    def _before_event(self):
-        new_tags, gone_tags = self._get_current_tags()
-        if new_tags or gone_tags:
-            self.decorated.tags(new_tags, gone_tags)
-        if self._current_test_tags:
-            self._current_test_tags = set(), set()
-        else:
-            self._global_tags = set(), set()
+        self._test_tags = None
 
     def tags(self, new_tags, gone_tags):
         """Handle tag instructions.
@@ -260,11 +257,25 @@ class TagCollapsingDecorator(HookedTestResultDecorator):
         :param new_tags: Tags to add,
         :param gone_tags: Tags to remove.
         """
-        current_new_tags, current_gone_tags = self._get_current_tags()
+        current_new_tags, current_gone_tags = self._get_current_scope()
         current_new_tags.update(new_tags)
         current_new_tags.difference_update(gone_tags)
         current_gone_tags.update(gone_tags)
         current_gone_tags.difference_update(new_tags)
+
+
+class TagCollapsingDecorator(HookedTestResultDecorator, TagsMixin):
+    """Collapses many 'tags' calls into one where possible."""
+
+    def __init__(self, result):
+        super(TagCollapsingDecorator, self).__init__(result)
+        self._clear_tags()
+
+    def _before_event(self):
+        self._flush_current_scope(self.decorated)
+
+    def tags(self, new_tags, gone_tags):
+        TagsMixin.tags(self, new_tags, gone_tags)
 
 
 class TimeCollapsingDecorator(HookedTestResultDecorator):
