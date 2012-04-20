@@ -214,8 +214,20 @@ class TagCollapsingDecorator(HookedTestResultDecorator):
 
     def __init__(self, result):
         super(TagCollapsingDecorator, self).__init__(result)
-        # The (new, gone) tags for the current test.
+        self._clear_tags()
+
+    def _clear_tags(self):
+        self._global_tags = set(), set()
         self._current_test_tags = None
+
+    def _get_current_tags(self):
+        if self._current_test_tags:
+            return self._current_test_tags
+        return self._global_tags
+
+    def startTestRun(self):
+        super(TagCollapsingDecorator, self).startTestRun()
+        self._clear_tags()
 
     def startTest(self, test):
         """Start a test.
@@ -223,7 +235,7 @@ class TagCollapsingDecorator(HookedTestResultDecorator):
         Not directly passed to the client, but used for handling of tags
         correctly.
         """
-        self.decorated.startTest(test)
+        super(TagCollapsingDecorator, self).startTest(test)
         self._current_test_tags = set(), set()
 
     def stopTest(self, test):
@@ -231,11 +243,11 @@ class TagCollapsingDecorator(HookedTestResultDecorator):
         self._current_test_tags = None
 
     def _before_event(self):
-        if not self._current_test_tags:
-            return
-        if self._current_test_tags[0] or self._current_test_tags[1]:
-            self.decorated.tags(*self._current_test_tags)
-        self._current_test_tags = set(), set()
+        new_tags, gone_tags = self._get_current_tags()
+        if new_tags or gone_tags:
+            self.decorated.tags(new_tags, gone_tags)
+        if self._current_test_tags:
+            self._current_test_tags = set(), set()
 
     def tags(self, new_tags, gone_tags):
         """Handle tag instructions.
@@ -246,14 +258,11 @@ class TagCollapsingDecorator(HookedTestResultDecorator):
         :param new_tags: Tags to add,
         :param gone_tags: Tags to remove.
         """
-        if self._current_test_tags is not None:
-            # gather the tags until the test stops.
-            self._current_test_tags[0].update(new_tags)
-            self._current_test_tags[0].difference_update(gone_tags)
-            self._current_test_tags[1].update(gone_tags)
-            self._current_test_tags[1].difference_update(new_tags)
-        else:
-            return self.decorated.tags(new_tags, gone_tags)
+        current_new_tags, current_gone_tags = self._get_current_tags()
+        current_new_tags.update(new_tags)
+        current_new_tags.difference_update(gone_tags)
+        current_gone_tags.update(gone_tags)
+        current_gone_tags.difference_update(new_tags)
 
 
 class TimeCollapsingDecorator(HookedTestResultDecorator):

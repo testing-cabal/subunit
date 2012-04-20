@@ -138,5 +138,7 @@ if options.no_passthrough:
 else:
     passthrough_stream = None
 test = ProtocolTestCase(sys.stdin, passthrough=passthrough_stream)
+result.startTestRun()
 test.run(result)
+result.stopTestRun()
 sys.exit(0)
