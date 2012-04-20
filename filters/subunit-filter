@@ -143,7 +143,7 @@ tag_filter = _make_tag_filter(options.with_tags, options.without_tags)
 filter_predicate = and_predicates([regexp_filter, tag_filter])
 
 filter_by_result(
-    lambda output_to: make_result(sys.stdout, options, tag_filter),
+    lambda output_to: make_result(sys.stdout, options, filter_predicate),
     output_path=None,
     passthrough=(not options.no_passthrough),
     forward=False)
