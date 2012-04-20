@@ -293,15 +293,23 @@ xfail todo
                 "tags: -a\n"
                 "test: bar\n"
                 "success: bar\n"
+                "test: baz\n"
+                "tags: a\n"
+                "success: baz\n"
                 ))
         events = self.to_events(output)
         foo = subunit.RemotedTestCase('foo')
+        baz = subunit.RemotedTestCase('baz')
         self.assertEqual(
             [('tags', set(['a']), set()),
              ('startTest', foo),
              ('addSuccess', foo),
              ('stopTest', foo),
              ('tags', set(), set(['a'])),
+             ('startTest', baz),
+             ('tags', set(['a']), set()),
+             ('addSuccess', baz),
+             ('stopTest', baz),
              ],
             events)
 
