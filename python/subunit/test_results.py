@@ -325,14 +325,14 @@ def _make_tag_filter(with_tags, without_tags):
     return check_tags
 
 
-class _PredicateFilter(TestResultDecorator):
+class _PredicateFilter(TestResultDecorator, TagsMixin):
 
     def __init__(self, result, predicate):
         super(_PredicateFilter, self).__init__(result)
+        self._clear_tags()
         self.decorated = TimeCollapsingDecorator(
             TagCollapsingDecorator(self.decorated))
         self._predicate = predicate
-        self._current_tags = set()
         # The current test (for filtering tags)
         self._current_test = None
         # Has the current test been filtered (for outputting test tags)
@@ -344,7 +344,7 @@ class _PredicateFilter(TestResultDecorator):
         # XXX: ExtendedToOriginalDecorator doesn't properly wrap current_tags.
         # https://bugs.launchpad.net/testtools/+bug/978027
         return self._predicate(
-            test, outcome, error, details, self._current_tags)
+            test, outcome, error, details, self._get_active_tags())
 
     def addError(self, test, err=None, details=None):
         if (self.filter_predicate(test, 'error', err, details)):
@@ -394,6 +394,7 @@ class _PredicateFilter(TestResultDecorator):
         Not directly passed to the client, but used for handling of tags
         correctly.
         """
+        TagsMixin.startTest(self, test)
         self._current_test = test
         self._current_test_filtered = False
         self._buffered_calls.append(('startTest', [test], {}))
@@ -411,11 +412,10 @@ class _PredicateFilter(TestResultDecorator):
         self._current_test = None
         self._current_test_filtered = None
         self._buffered_calls = []
+        TagsMixin.stopTest(self, test)
 
     def tags(self, new_tags, gone_tags):
-        new_tags, gone_tags = set(new_tags), set(gone_tags)
-        self._current_tags.update(new_tags)
-        self._current_tags.difference_update(gone_tags)
+        TagsMixin.tags(self, new_tags, gone_tags)
         if self._current_test is not None:
             self._buffered_calls.append(('tags', [new_tags, gone_tags], {}))
         else:
