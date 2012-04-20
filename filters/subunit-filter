@@ -36,7 +36,7 @@ from subunit import (
     TestProtocolClient,
     read_test_list,
     )
-from subunit.filters import run_tests_from_stream
+from subunit.filters import filter_by_result
 from subunit.test_results import (
     and_predicates,
     _make_tag_filter,
@@ -142,11 +142,9 @@ tag_filter = _make_tag_filter(options.with_tags, options.without_tags)
 
 filter_predicate = and_predicates([regexp_filter, tag_filter])
 
-if options.no_passthrough:
-    passthrough_stream = DiscardStream()
-else:
-    passthrough_stream = None
-
-result = make_result(sys.stdout, options, tag_filter)
-run_tests_from_stream(sys.stdin, result, passthrough_stream)
+filter_by_result(
+    lambda output_to: make_result(sys.stdout, options, tag_filter),
+    output_path=None,
+    passthrough=(not options.no_passthrough),
+    forward=False)
 sys.exit(0)
