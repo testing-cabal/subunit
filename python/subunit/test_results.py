@@ -248,6 +248,8 @@ class TagCollapsingDecorator(HookedTestResultDecorator):
             self.decorated.tags(new_tags, gone_tags)
         if self._current_test_tags:
             self._current_test_tags = set(), set()
+        else:
+            self._global_tags = set(), set()
 
     def tags(self, new_tags, gone_tags):
         """Handle tag instructions.
