@@ -341,8 +341,6 @@ class _PredicateFilter(TestResultDecorator, TagsMixin):
         self._buffered_calls = []
 
     def filter_predicate(self, test, outcome, error, details):
-        # XXX: ExtendedToOriginalDecorator doesn't properly wrap current_tags.
-        # https://bugs.launchpad.net/testtools/+bug/978027
         return self._predicate(
             test, outcome, error, details, self._get_active_tags())
 
@@ -583,7 +581,8 @@ class TestIdPrintingResult(testtools.TestResult):
 class TestByTestResult(testtools.TestResult):
     """Call something every time a test completes."""
 
-# XXX: Arguably belongs in testtools.
+# XXX: In testtools since lp:testtools r249.  Once that's released, just
+# import that.
 
     def __init__(self, on_test):
         """Construct a ``TestByTestResult``.
