@@ -18,6 +18,9 @@ IMPROVEMENTS
 * ``TagCollapsingDecorator`` now correctly distinguishes between local and
   global tags.  (Jonathan Lange)
 
+* ``TestResultFilter`` always forwards ``time:`` events.
+  (Benji York, Brad Crittenden)
+
 BUG FIXES
 ~~~~~~~~~
 

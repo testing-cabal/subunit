@@ -179,10 +179,11 @@ xfail todo
         result_filter = TestResultFilter(result)
         self.run_tests(result_filter, subunit_stream)
         foo = subunit.RemotedTestCase('foo')
-        self.assertEquals(
+        self.maxDiff = None
+        self.assertSequenceEqual(
             [('time', date_a),
-             ('startTest', foo),
              ('time', date_b),
+             ('startTest', foo),
              ('addError', foo, {}),
              ('stopTest', foo),
              ('time', date_c)], result._events)
