@@ -15,6 +15,9 @@ IMPROVEMENTS
 * 'subunit2csv' script that converts subunit output to CSV format.
   (Jonathan Lange)
 
+* ``TagCollapsingDecorator`` now correctly distinguishes between local and
+  global tags.  (Jonathan Lange)
+
 BUG FIXES
 ~~~~~~~~~
 
