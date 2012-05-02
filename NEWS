@@ -34,6 +34,8 @@ BUG FIXES
 * Tag support has been implemented for TestProtocolClient.
   (Robert Collins, #518016)
 
+* Tags can now be filtered. (Jonathan Lange, #664171)
+
 * Test suite works with latest testtools (but not older ones - formatting
   changes only). (Robert Collins)
 
