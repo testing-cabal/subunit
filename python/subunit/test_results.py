@@ -420,10 +420,7 @@ class _PredicateFilter(TestResultDecorator, TagsMixin):
             return super(_PredicateFilter, self).tags(new_tags, gone_tags)
 
     def time(self, a_time):
-        if self._current_test is not None:
-            self._buffered_calls.append(('time', [a_time], {}))
-        else:
-            return self.decorated.time(a_time)
+        return self.decorated.time(a_time)
 
     def id_to_orig_id(self, id):
         if id.startswith("subunit.RemotedTestCase."):

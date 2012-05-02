@@ -233,11 +233,37 @@ xfail todo
         self.maxDiff = None
         self.assertSequenceEqual(
             [('time', date_a),
-             ('startTest', foo),
              ('time', date_b),
+             ('startTest', foo),
              ('addError', foo, {}),
              ('stopTest', foo),
              ('time', date_c)], result._events)
+
+    def test_time_passes_through_filtered_tests(self):
+        # Passing a subunit stream through TestResultFilter preserves 'time'
+        # directives even if a specific test is filtered out.
+        date_a = datetime(year=2000, month=1, day=1, tzinfo=iso8601.UTC)
+        date_b = datetime(year=2000, month=1, day=2, tzinfo=iso8601.UTC)
+        date_c = datetime(year=2000, month=1, day=3, tzinfo=iso8601.UTC)
+        subunit_stream = _b('\n'.join([
+            "time: %s",
+            "test: foo",
+            "time: %s",
+            "success: foo",
+            "time: %s",
+            ""]) % (date_a, date_b, date_c))
+        result = ExtendedTestResult()
+        result_filter = TestResultFilter(result)
+        result_filter.startTestRun()
+        self.run_tests(result_filter, subunit_stream)
+        result_filter.stopTestRun()
+        foo = subunit.RemotedTestCase('foo')
+        self.maxDiff = None
+        self.assertSequenceEqual(
+            [('startTestRun',),
+             ('time', date_a),
+             ('time', date_c),
+             ('stopTestRun',),], result._events)
 
     def test_skip_preserved(self):
         subunit_stream = _b('\n'.join([
