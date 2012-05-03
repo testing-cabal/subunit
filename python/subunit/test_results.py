@@ -309,7 +309,7 @@ def and_predicates(predicates):
     return lambda *args, **kwargs: all(p(*args, **kwargs) for p in predicates)
 
 
-def _make_tag_filter(with_tags, without_tags):
+def make_tag_filter(with_tags, without_tags):
     """Make a callback that checks tests against tags."""
 
     with_tags = with_tags and set(with_tags) or None

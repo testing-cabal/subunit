@@ -28,7 +28,7 @@ from testtools.compat import _b, BytesIO
 from testtools.testresult.doubles import ExtendedTestResult
 
 import subunit
-from subunit.test_results import _make_tag_filter, TestResultFilter
+from subunit.test_results import make_tag_filter, TestResultFilter
 
 
 class TestTestResultFilter(TestCase):
@@ -81,7 +81,7 @@ xfail todo
         self.assertEqual(4, filtered_result.testsRun)
 
     def test_tag_filter(self):
-        tag_filter = _make_tag_filter(['global'], ['local'])
+        tag_filter = make_tag_filter(['global'], ['local'])
         result = ExtendedTestResult()
         result_filter = TestResultFilter(
             result, filter_success=False, filter_predicate=tag_filter)
@@ -94,7 +94,7 @@ xfail todo
         self.assertEquals(tests_expected, tests_included)
 
     def test_tags_tracked_correctly(self):
-        tag_filter = _make_tag_filter(['a'], [])
+        tag_filter = make_tag_filter(['a'], [])
         result = ExtendedTestResult()
         result_filter = TestResultFilter(
             result, filter_success=False, filter_predicate=tag_filter)
