@@ -45,3 +45,4 @@ debian/*.substvars
 subunit-*.tar.gz
 perl/Makefile.PL
 ./.testrepository
+__pycache__
