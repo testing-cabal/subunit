@@ -34,6 +34,9 @@ BUG FIXES
 * Python3 support regressed in trunk.
   (Arfrever Frehtes Taifersar Arahesis, #987514)
 
+* Python3 support was insufficiently robust in detecting unicode streams.
+  (Robert Collins)
+
 * Tag support has been implemented for TestProtocolClient.
   (Robert Collins, #518016)
 

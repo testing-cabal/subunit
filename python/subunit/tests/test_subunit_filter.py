@@ -88,9 +88,9 @@ xfail todo
         self.run_tests(result_filter)
         tests_included = [
             event[1] for event in result._events if event[0] == 'startTest']
-        tests_expected = map(
+        tests_expected = list(map(
             subunit.RemotedTestCase,
-            ['passed', 'error', 'skipped', 'todo'])
+            ['passed', 'error', 'skipped', 'todo']))
         self.assertEquals(tests_expected, tests_included)
 
     def test_tags_tracked_correctly(self):
@@ -98,7 +98,7 @@ xfail todo
         result = ExtendedTestResult()
         result_filter = TestResultFilter(
             result, filter_success=False, filter_predicate=tag_filter)
-        input_stream = (
+        input_stream = _b(
             "test: foo\n"
             "tags: a\n"
             "successful: foo\n"
@@ -319,7 +319,7 @@ xfail todo
         return result._events
 
     def test_default(self):
-        output = self.run_command([], (
+        output = self.run_command([], _b(
                 "test: foo\n"
                 "skip: foo\n"
                 ))
@@ -332,7 +332,7 @@ xfail todo
             events)
 
     def test_tags(self):
-        output = self.run_command(['-s', '--with-tag', 'a'], (
+        output = self.run_command(['-s', '--with-tag', 'a'], _b(
                 "tags: a\n"
                 "test: foo\n"
                 "success: foo\n"
