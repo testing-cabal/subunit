@@ -1280,7 +1280,7 @@ def _unwrap_text(stream):
             # Read streams
             if type(stream.read(0)) is str:
                 return stream.buffer
-        except _UnsupportedOperation:
+        except (_UnsupportedOperation, IOError):
             # Cannot read from the stream: try via writes
             try:
                 stream.write(_b(''))
