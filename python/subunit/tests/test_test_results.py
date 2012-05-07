@@ -371,7 +371,10 @@ class TestByTestResultTests(testtools.TestCase):
         super(TestByTestResultTests, self).setUp()
         self.log = []
         self.result = subunit.test_results.TestByTestResult(self.on_test)
-        self.result._now = iter(range(5)).next
+        if sys.version_info >= (3, 0):
+            self.result._now = iter(range(5)).__next__
+        else:
+            self.result._now = iter(range(5)).next
 
     def assertCalled(self, **kwargs):
         defaults = {
@@ -527,7 +530,10 @@ class TestCsvResult(testtools.TestCase):
     def test_csv_output(self):
         stream = StringIO()
         result = subunit.test_results.CsvResult(stream)
-        result._now = iter(range(5)).next
+        if sys.version_info >= (3, 0):
+            result._now = iter(range(5)).__next__
+        else:
+            result._now = iter(range(5)).next
         result.startTestRun()
         result.startTest(self)
         result.addSuccess(self)

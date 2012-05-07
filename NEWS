@@ -31,6 +31,9 @@ BUG FIXES
   '--no-xfail', '--no-passthrough, '--no-success', and gives you just the
   failure stream. (John Arbash Meinel)
 
+* Python3 support regressed in trunk.
+  (Arfrever Frehtes Taifersar Arahesis, #987514)
+
 * Tag support has been implemented for TestProtocolClient.
   (Robert Collins, #518016)
 
