@@ -231,7 +231,7 @@ xfail todo
         self.run_tests(result_filter, subunit_stream)
         foo = subunit.RemotedTestCase('foo')
         self.maxDiff = None
-        self.assertSequenceEqual(
+        self.assertEqual(
             [('time', date_a),
              ('time', date_b),
              ('startTest', foo),
@@ -259,7 +259,7 @@ xfail todo
         result_filter.stopTestRun()
         foo = subunit.RemotedTestCase('foo')
         self.maxDiff = None
-        self.assertSequenceEqual(
+        self.assertEqual(
             [('startTestRun',),
              ('time', date_a),
              ('time', date_c),
@@ -278,6 +278,10 @@ xfail todo
             [('startTest', foo),
              ('addSkip', foo, {}),
              ('stopTest', foo), ], result._events)
+
+    if sys.version_info < (2, 7):
+        # These tests require Python >=2.7.
+        del test_fixup_expected_failures, test_fixup_expected_errors, test_fixup_unexpected_success
 
 
 class TestFilterCommand(TestCase):
