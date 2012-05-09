@@ -8,8 +8,8 @@ NEXT (In development)
 BUG FIXES
 ~~~~~~~~~
 
-* ``python/subunit/tests/test_run.py`` was not included in the 0.0.8 tarball.
-  (Robert Collins)
+* ``python/subunit/tests/test_run.py`` and ``python/subunit/filters.py`` were
+  not included in the 0.0.8 tarball. (Robert Collins)
 
 0.0.8
 -----

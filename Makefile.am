@@ -68,6 +68,7 @@ pkgpython_PYTHON = \
 	python/subunit/__init__.py \
 	python/subunit/chunked.py \
 	python/subunit/details.py \
+	python/subunit/filters.py \
 	python/subunit/iso8601.py \
 	python/subunit/progress_model.py \
 	python/subunit/run.py \
