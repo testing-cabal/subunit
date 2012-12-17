@@ -689,7 +689,7 @@ class TestProtocolClient(testresult.TestResult):
         :param error_permitted: If True then one and only one of error or
             details must be supplied. If False then error must not be supplied
             and details is still optional.  """
-        self._stream.write(_b("%s: %s" % (outcome, test.id())))
+        self._stream.write(_b("%s: " % outcome) + self._test_id(test))
         if error_permitted:
             if error is None and details is None:
                 raise ValueError
@@ -737,10 +737,16 @@ class TestProtocolClient(testresult.TestResult):
         if self.failfast:
             self.stop()
 
+    def _test_id(self, test):
+        result = test.id()
+        if type(result) is not bytes:
+            result = result.encode('utf8')
+        return result
+
     def startTest(self, test):
         """Mark a test as starting its test run."""
         super(TestProtocolClient, self).startTest(test)
-        self._stream.write(_b("test: %s\n" % test.id()))
+        self._stream.write(_b("test: ") + self._test_id(test) + _b("\n"))
         self._stream.flush()
 
     def stopTest(self, test):

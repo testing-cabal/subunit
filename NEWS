@@ -14,6 +14,9 @@ BUG FIXES
 * ``python/subunit/tests/test_run.py`` and ``python/subunit/filters.py`` were
   not included in the 0.0.8 tarball. (Robert Collins)
 
+* Test ids which include non-ascii unicode characters are now supported.
+  (Robert Collins, #1029866)
+
 * The ``failfast`` option to ``subunit.run`` will now work. The dependency on
   testtools has been raised to 0.9.23 to permit this.
   (Robert Collins, #1090582)
