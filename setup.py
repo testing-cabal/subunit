@@ -46,7 +46,7 @@ setup(
     author='Robert Collins',
     author_email='subunit-dev@lists.launchpad.net',
     url='http://launchpad.net/subunit',
-    packages=['subunit'],
+    packages=['subunit', 'subunit.tests'],
     package_dir={'subunit': 'python/subunit'},
     scripts = [
         'filters/subunit2gtk',
