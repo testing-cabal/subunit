@@ -215,3 +215,15 @@ to indicate a test that errored in some expected fashion (also know as "TODO"
 tests in some frameworks). uxsuccess is used to indicate and unexpected success
 where a test though to be failing actually passes. It is complementary to
 xfail.
+
+Hacking on subunit
+------------------
+
+Releases
+========
+
+* Update versions in configure.ac and python/subunit/__init__.py.
+* Make PyPI and regular tarball releases. Upload the regular one to LP, the
+  PyPI one to PyPI.
+* Push a tagged commit.
+
