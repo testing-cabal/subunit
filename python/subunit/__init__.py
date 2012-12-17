@@ -636,6 +636,8 @@ class TestProtocolClient(testresult.TestResult):
             to subunit.Content objects.
         """
         self._addOutcome("error", test, error=error, details=details)
+        if self.failfast:
+            self.stop()
 
     def addExpectedFailure(self, test, error=None, details=None):
         """Report an expected failure in test test.
@@ -666,6 +668,8 @@ class TestProtocolClient(testresult.TestResult):
             to subunit.Content objects.
         """
         self._addOutcome("failure", test, error=error, details=details)
+        if self.failfast:
+            self.stop()
 
     def _addOutcome(self, outcome, test, error=None, details=None,
         error_permitted=True):
@@ -730,6 +734,8 @@ class TestProtocolClient(testresult.TestResult):
         """
         self._addOutcome("uxsuccess", test, details=details,
             error_permitted=False)
+        if self.failfast:
+            self.stop()
 
     def startTest(self, test):
         """Mark a test as starting its test run."""
