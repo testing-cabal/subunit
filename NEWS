@@ -8,6 +8,9 @@ NEXT (In development)
 BUG FIXES
 ~~~~~~~~~
 
+* All the source files are now included in the distribution tarball.
+  (Arfrever Frehtes Taifersar Arahesis, Robert Collins, #996275)
+
 * ``python/subunit/tests/test_run.py`` and ``python/subunit/filters.py`` were
   not included in the 0.0.8 tarball. (Robert Collins)
 
