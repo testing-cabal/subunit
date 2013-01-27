@@ -5,6 +5,16 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+BUG FIXES
+~~~~~~~~~
+
+* UnsupportedOperation is available in the Python2.6 io library, so ask
+  forgiveness rather than permission for obtaining it. (Robert Collins)
+
+* Streams with no fileno() attribute are now supported, but they are not
+  checked for being in binary mode: be sure to take care of that if using
+  the library yourself. (Robert Collins)
+
 0.0.9
 -----
 

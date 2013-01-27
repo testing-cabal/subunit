@@ -121,9 +121,9 @@ import re
 import subprocess
 import sys
 import unittest
-if sys.version_info > (3, 0):
+try:
     from io import UnsupportedOperation as _UnsupportedOperation
-else:
+except ImportError:
     _UnsupportedOperation = AttributeError
 
 
@@ -1285,7 +1285,7 @@ def _make_stream_binary(stream):
     """
     try:
         fileno = stream.fileno()
-    except _UnsupportedOperation:
+    except (_UnsupportedOperation, AttributeError):
         pass
     else:
         _make_binary_on_windows(fileno)
