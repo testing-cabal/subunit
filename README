@@ -163,6 +163,7 @@ tags: [-]TAG ...
 time: YYYY-MM-DD HH:MM:SSZ
 
 LABEL: UTF8*
+NAME: UTF8*
 DETAILS ::= BRACKETED | MULTIPART
 BRACKETED ::= '[' CR UTF8-lines ']' CR
 MULTIPART ::= '[ multipart' CR PART* ']' CR

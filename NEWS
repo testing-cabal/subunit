@@ -8,6 +8,10 @@ NEXT (In development)
 BUG FIXES
 ~~~~~~~~~
 
+* make_stream_binary is now public for reuse. (Robert Collins)
+
+* NAME was not defined in the protocol BNF. (Robert Collins)
+
 * UnsupportedOperation is available in the Python2.6 io library, so ask
   forgiveness rather than permission for obtaining it. (Robert Collins)
 

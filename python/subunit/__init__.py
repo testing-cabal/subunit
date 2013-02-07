@@ -624,7 +624,7 @@ class TestProtocolClient(testresult.TestResult):
 
     def __init__(self, stream):
         testresult.TestResult.__init__(self)
-        stream = _make_stream_binary(stream)
+        stream = make_stream_binary(stream)
         self._stream = stream
         self._progress_fmt = _b("progress: ")
         self._bytes_eol = _b("\n")
@@ -921,7 +921,7 @@ class ExecTestCase(unittest.TestCase):
         protocol = TestProtocolServer(result)
         process = subprocess.Popen(self.script, shell=True,
             stdout=subprocess.PIPE)
-        _make_stream_binary(process.stdout)
+        make_stream_binary(process.stdout)
         output = process.communicate()[0]
         protocol.readFrom(BytesIO(output))
 
@@ -1177,11 +1177,11 @@ class ProtocolTestCase(object):
         :param forward: A stream to pass subunit input on to. If not supplied
             subunit input is not forwarded.
         """
-        stream = _make_stream_binary(stream)
+        stream = make_stream_binary(stream)
         self._stream = stream
         self._passthrough = passthrough
         if forward is not None:
-            forward = _make_stream_binary(forward)
+            forward = make_stream_binary(forward)
         self._forward = forward
 
     def __call__(self, result=None):
@@ -1277,7 +1277,7 @@ def read_test_list(path):
         f.close()
 
 
-def _make_stream_binary(stream):
+def make_stream_binary(stream):
     """Ensure that a stream will be binary safe. See _make_binary_on_windows.
     
     :return: A binary version of the same stream (some streams cannot be
