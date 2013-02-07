@@ -1,6 +1,6 @@
 
   subunit: A streaming protocol for test results
-  Copyright (C) 2005-2009 Robert Collins <robertc@robertcollins.net>
+  Copyright (C) 2005-2013 Robert Collins <robertc@robertcollins.net>
 
   Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
   license at the users choice. A copy of both licenses are available in the
