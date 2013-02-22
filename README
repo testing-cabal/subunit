@@ -310,7 +310,7 @@ Trivial test "foo" enumeration packet, with test id, runnable set,
 status=enumeration. Spaces below are to visually break up signature / flags /
 testid / crc32
 
-b3 2901 00000f 0003666f6f 9d9e6da6
+b3 2901 00000f 0003666f6f 990c343f
 
 
 Version 1 (and 1.1)
