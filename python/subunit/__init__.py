@@ -146,6 +146,7 @@ except ImportError:
 from testtools import testresult
 
 from subunit import chunked, details, iso8601, test_results
+from subunit.v2 import StreamResultToBytes
 
 # same format as sys.version_info: "A tuple containing the five components of
 # the version number: major, minor, micro, releaselevel, and serial. All
