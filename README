@@ -253,7 +253,7 @@ Bit 2 | Bit 1 | Bit 0 - mask 0x0007 - A test status enum lookup:
 004 - Unexpected Success
 005 - Skipped
 006 - Failed
-007 - Unexpected failure
+007 - Expected failure
 
 After the flags field is an unsigned 24-bit length field. 24-bits was chosen
 because it allows quite substantial amounts of data in a single packet (16Mib)
