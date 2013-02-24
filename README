@@ -276,7 +276,7 @@ with a simple ordinal ('0', '1' etc), and given an incoming packet with route
 code '3' from stream '0' would adjust the route code when forwarding the packet
 to be '0/3'.
 
-Forwarding and multiplexing of packets can done without interpreting the
+Forwarding and multiplexing of packets can be done without interpreting the
 remainder of the packet.
 
 Timestamp when present is two 32 bit integers, seconds and nanoseconds
