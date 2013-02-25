@@ -153,6 +153,10 @@ Version 2
 Version 2 is a binary protocol consisting of independent packets that can be
 embedded in the output from tools like make - as long as each packet has no
 other bytes mixed in with it (which 'make -j N>1' has a tendency of doing).
+Version 2 is currently in draft form, and early adopters should be willing
+to either discard stored results (if protocol changes are made), or bulk
+convert them back to v1 and then to a newer edition of v2.
+
 The protocol synchronises at the start of the stream, after a packet, or
 after any 0x0A byte. That is, a subunit v2 packet starts after a newline or
 directly after the end of the prior packet.
