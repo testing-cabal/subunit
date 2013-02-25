@@ -18,6 +18,7 @@ import datetime
 import struct
 import zlib
 
+import subunit
 import subunit.iso8601 as iso8601
 
 __all__ = [
@@ -68,8 +69,10 @@ class StreamResultToBytes(object):
 
         :param output_stream: A file-like object. Must support write(bytes)
             and flush() methods. Flush will be called after each write.
+            The stream will be passed through subunit.make_stream_binary,
+            to handle regular cases such as stdout.
         """
-        self.output_stream = output_stream
+        self.output_stream = subunit.make_stream_binary(output_stream)
 
     def startTestRun(self):
         pass
@@ -120,13 +123,13 @@ class StreamResultToBytes(object):
                 self._write_utf8(tag, packet)
         if runnable:
             flags = flags | FLAG_RUNNABLE
+        if mime_type:
+            flags = flags | FLAG_MIME_TYPE
+            self._write_utf8(mime_type, packet)
         if file_name is not None:
             flags = flags | FLAG_FILE_CONTENT
             self._write_utf8(file_name, packet)
             packet.append(file_bytes)
-        if mime_type:
-            flags = flags | FLAG_MIME_TYPE
-            self._write_utf8(mime_type, packet)
         if eof: 
            flags = flags | FLAG_EOF
         # 0x0008 - not used in v2.
@@ -177,13 +180,15 @@ class ByteStreamToStreamResult(object):
         """Create a ByteStreamToStreamResult.
 
         :param source: A file like object to read bytes from. Must support
-            read(<count>). The file is not closed by ByteStreamToStreamResult.
+            read(<count>) and return bytes. The file is not closed by
+            ByteStreamToStreamResult. subunit.make_stream_binary() is
+            called on the stream to get it into bytes mode.
         :param non_subunit_name: If set to non-None, non subunit content
             encountered in the stream will be converted into file packets
             labelled with this name.
         """
         self.non_subunit_name = non_subunit_name
-        self.source = source
+        self.source = subunit.make_stream_binary(source)
 
     def run(self, result):
         """Parse source and emit events to result.
