@@ -47,6 +47,8 @@ ACLOCAL_AMFLAGS = -I m4
 include_subunitdir = $(includedir)/subunit
 
 dist_bin_SCRIPTS = \
+	filters/subunit-1to2 \
+	filters/subunit-2to1 \
 	filters/subunit-filter \
 	filters/subunit-ls \
 	filters/subunit-notify \

@@ -49,6 +49,8 @@ setup(
     packages=['subunit', 'subunit.tests'],
     package_dir={'subunit': 'python/subunit'},
     scripts = [
+        'filters/subunit-1to2',
+        'filters/subunit-2to1',
         'filters/subunit2gtk',
         'filters/subunit2junitxml',
         'filters/subunit2pyunit',
