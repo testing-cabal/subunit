@@ -15,6 +15,8 @@
 #
 
 import datetime
+from io import UnsupportedOperation
+import select
 import struct
 import zlib
 
@@ -202,13 +204,32 @@ class ByteStreamToStreamResult(object):
                 return
             if content[0] != SIGNATURE[0]:
                 # Not subunit.
-                # TODO: do nonblocking IO and wait 5ms or so to send more
-                # efficient events than one per character.
-                if self.non_subunit_name is not None:
-                    result.status(
-                        file_name=self.non_subunit_name, file_bytes=content)
-                else:
+                if self.non_subunit_name is None:
                     raise Exception("Non subunit content", content)
+                # Aggregate all content that is not subunit until either
+                # 1MiB is accumulated or 50ms has passed with no input.
+                # Both are arbitrary amounts intended to give a simple
+                # balance between efficiency (avoiding death by a thousand
+                # one-byte packets), buffering (avoiding overlarge state
+                # being hidden on intermediary nodes) and interactivity
+                # (when driving a debugger, slow response to typing is
+                # annoying).
+                buffered = [content]
+                while len(buffered[-1]):
+                    try:
+                        self.source.fileno()
+                    except:
+                        # Won't be able to select, fallback to
+                        # one-byte-at-a-time.
+                        break
+                    readable = select.select([self.source], [], [], 0.050)[0]
+                    if readable:
+                        buffered.append(self.source.read(1))
+                    if not readable or len(buffered) >= 1048576:
+                        break
+                result.status(
+                    file_name=self.non_subunit_name,
+                    file_bytes=b''.join(buffered))
                 continue
             try:
                 packet = [SIGNATURE]

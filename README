@@ -142,10 +142,9 @@ The protocol
 ------------
 
 Version 2, or v2 is new and still under development, but is intended to
-supercede version 1 in the very near future. Subunit's bundled tools will
-accept only version 2 and only emit version 2 from that point, but the new
-filters subunit-1to2 and subunit-2to1 can be used to interoperate with
-older third party libraries.
+supercede version 1 in the very near future. Subunit's bundled tools accept
+only version 2 and only emit version 2, but the new filters subunit-1to2 and
+subunit-2to1 can be used to interoperate with older third party libraries.
 
 Version 2
 =========

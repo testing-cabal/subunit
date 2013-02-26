@@ -342,8 +342,7 @@ class TestFilterCommand(TestCase):
         output = self.run_command([], b'hi thar')
         byte_stream = BytesIO()
         stream = StreamResultToBytes(byte_stream)
-        for pos, _ in enumerate(b'hi thar'):
-            stream.status(file_name="stdout", file_bytes=b'hi thar'[pos:pos+1])
+        stream.status(file_name="stdout", file_bytes=b'hi thar')
         self.assertEqual(byte_stream.getvalue(), output)
 
 
