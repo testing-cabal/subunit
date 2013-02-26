@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #  subunit: extensions to python unittest to get test results from subprocesses.
-#  Copyright (C) 2008  Robert Collins <robertc@robertcollins.net>
+#  Copyright (C) 200-2013  Robert Collins <robertc@robertcollins.net>
 #            (C) 2009  Martin Pool
 #
 #  Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
@@ -30,10 +30,12 @@ from optparse import OptionParser
 import sys
 import re
 
+from testtools import ExtendedToStreamDecorator, StreamToExtendedDecorator
+
 from subunit import (
     DiscardStream,
     ProtocolTestCase,
-    TestProtocolClient,
+    StreamResultToBytes,
     read_test_list,
     )
 from subunit.filters import filter_by_result
@@ -55,9 +57,11 @@ def make_options(description):
     parser.add_option("-f", "--no-failure", action="store_true",
         help="exclude failures", dest="failure")
     parser.add_option("--passthrough", action="store_false",
-        help="Show all non subunit input.", default=False, dest="no_passthrough")
+        help="Forward non-subunit input as 'stdout'.", default=False,
+        dest="no_passthrough")
     parser.add_option("--no-passthrough", action="store_true",
-        help="Hide all non subunit input.", default=False, dest="no_passthrough")
+        help="Discard all non subunit input.", default=False,
+        dest="no_passthrough")
     parser.add_option("-s", "--success", action="store_false",
         help="include successes", dest="success")
     parser.add_option("--no-success", action="store_true",
@@ -126,15 +130,16 @@ def _make_result(output, options, predicate):
     fixup_expected_failures = set()
     for path in options.fixup_expected_failures or ():
         fixup_expected_failures.update(read_test_list(path))
-    return TestResultFilter(
-        TestProtocolClient(output),
+    return StreamToExtendedDecorator(TestResultFilter(
+        ExtendedToStreamDecorator(
+        StreamResultToBytes(output)),
         filter_error=options.error,
         filter_failure=options.failure,
         filter_success=options.success,
         filter_skip=options.skip,
         filter_xfail=options.xfail,
         filter_predicate=predicate,
-        fixup_expected_failures=fixup_expected_failures)
+        fixup_expected_failures=fixup_expected_failures))
 
 
 def main():
@@ -150,7 +155,8 @@ def main():
         lambda output_to: _make_result(sys.stdout, options, filter_predicate),
         output_path=None,
         passthrough=(not options.no_passthrough),
-        forward=False)
+        forward=False,
+        protocol_version=2)
     sys.exit(0)
 
 

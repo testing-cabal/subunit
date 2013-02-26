@@ -17,7 +17,12 @@
 from optparse import OptionParser
 import sys
 
-from subunit import DiscardStream, ProtocolTestCase
+from testtools import StreamResultRouter
+
+from subunit import (
+    DiscardStream, ProtocolTestCase, ByteStreamToStreamResult,
+    StreamResultToBytes,
+    )
 
 
 def make_options(description):
@@ -36,28 +41,53 @@ def make_options(description):
 
 
 def run_tests_from_stream(input_stream, result, passthrough_stream=None,
-                          forward_stream=None):
+                          forward_stream=None, protocol_version=1):
     """Run tests from a subunit input stream through 'result'.
+
+    Non-test events - top level file attachments - are expected to be
+    dropped by v2 StreamResults at the present time (as all the analysis code
+    is in ExtendedTestResult API's), so to implement passthrough_stream they
+    are diverted and copied directly when that is set.
 
     :param input_stream: A stream containing subunit input.
     :param result: A TestResult that will receive the test events.
+        NB: This should be an ExtendedTestResult for v1 and a StreamResult for
+        v2.
     :param passthrough_stream: All non-subunit input received will be
         sent to this stream.  If not provided, uses the ``TestProtocolServer``
         default, which is ``sys.stdout``.
     :param forward_stream: All subunit input received will be forwarded
         to this stream.  If not provided, uses the ``TestProtocolServer``
         default, which is to not forward any input.
+    :param protocol_version: What version of the subunit protocol to expect.
     """
-    test = ProtocolTestCase(
-        input_stream, passthrough=passthrough_stream,
-        forward=forward_stream)
+    orig_result = None
+    if 1==protocol_version:
+        test = ProtocolTestCase(
+            input_stream, passthrough=passthrough_stream,
+            forward=forward_stream)
+    elif 2==protocol_version:
+        if passthrough_stream is not None:
+            # As the StreamToExtendedDecorator discards non-test events
+            # we merely have to copy them IFF they are requested.
+            passthrough_result = StreamResultToBytes(passthrough_stream)
+            orig_result = result
+            result = StreamResultRouter(result)
+            result.map(passthrough_result, 'test_id', test_id=None)
+            orig_result.startTestRun()
+        test = ByteStreamToStreamResult(input_stream,
+            non_subunit_name='stdout')
+    else:
+        raise Exception("Unknown protocol version.")
     result.startTestRun()
     test.run(result)
+    if orig_result is not None:
+        orig_result.stopTestRun()
     result.stopTestRun()
 
 
 def filter_by_result(result_factory, output_path, passthrough, forward,
-                     input_stream=sys.stdin):
+                     input_stream=sys.stdin, protocol_version=1):
     """Filter an input stream using a test result.
 
     :param result_factory: A callable that when passed an output stream
@@ -71,12 +101,16 @@ def filter_by_result(result_factory, output_path, passthrough, forward,
         ``sys.stdout`` as well as to the ``TestResult``.
     :param input_stream: The source of subunit input.  Defaults to
         ``sys.stdin``.
+    :param protocol_version: The subunit protocol version to expect.
     :return: A test result with the resultts of the run.
     """
     if passthrough:
         passthrough_stream = sys.stdout
     else:
-        passthrough_stream = DiscardStream()
+        if 1==protocol_version:
+            passthrough_stream = DiscardStream()
+        else:
+            passthrough_stream = None
 
     if forward:
         forward_stream = sys.stdout
@@ -91,7 +125,8 @@ def filter_by_result(result_factory, output_path, passthrough, forward,
     try:
         result = result_factory(output_to)
         run_tests_from_stream(
-            input_stream, result, passthrough_stream, forward_stream)
+            input_stream, result, passthrough_stream, forward_stream,
+            protocol_version=protocol_version)
     finally:
         if output_path:
             output_to.close()

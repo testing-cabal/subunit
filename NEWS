@@ -5,13 +5,35 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+v2 protocol draft included in this release. The v2 protocol trades off human
+readability for a massive improvement in robustness, the ability to represent
+concurrent tests in a single stream, cheaper parsing, and that provides
+significantly better in-line debugging support and structured forwarding
+of non-test data (such as stdout or stdin data).
+
+This change includes two new filters (subunit-1to2 and subunit-2to1). Use
+these filters to convert old streams to v2 and convert v2 streams to v1.
+
+All the other filters now only parse and emit v2 streams. V2 is still in
+draft format, so if you want to delay and wait for v2 to be finalised, you
+should use subunit-2to1 before any serialisation steps take place.
+With the ability to encapsulate multiple non-test streams, another significant
+cange is that filters which emit subunit now encapsulate any non-subunit they
+encounter, labelling it 'stdout'. This permits multiplexing such streams and
+detangling the stdout streams from each input.
+
+The subunit libraries (Python etc) have not changed their behaviour: they
+still emit v1 from their existing API calls. New API's are being added
+and applications should migrate once their language has those API's available.
+
 IMPROVEMENTS
 ~~~~~~~~~~~~
 
-* v2 protocol draft included in this release. The v2 protocol trades off
-  human readability for a massive improvement in robustness, the ability
-  to represent concurrent tests in a single stream, cheaper parsing,
-  and that provides significantly better in-line debugging support.
+* v2 protocol draft included in this release.
+  (Robert Collins)
+
+* Two new Python classes -- ``StreamResultToBytes`` and
+  ``ByteStreamToStreamResult`` handle v2 generation and parsing.
   (Robert Collins)
 
 0.0.10

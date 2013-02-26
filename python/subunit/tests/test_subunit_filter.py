@@ -25,10 +25,11 @@ import unittest
 
 from testtools import TestCase
 from testtools.compat import _b, BytesIO
-from testtools.testresult.doubles import ExtendedTestResult
+from testtools.testresult.doubles import ExtendedTestResult, StreamResult
 
 import subunit
 from subunit.test_results import make_tag_filter, TestResultFilter
+from subunit import ByteStreamToStreamResult, StreamResultToBytes
 
 
 class TestTestResultFilter(TestCase):
@@ -286,23 +287,6 @@ xfail todo
 
 class TestFilterCommand(TestCase):
 
-    example_subunit_stream = _b("""\
-tags: global
-test passed
-success passed
-test failed
-tags: local
-failure failed
-test error
-error error [
-error details
-]
-test skipped
-skip skipped
-test todo
-xfail todo
-""")
-
     def run_command(self, args, stream):
         root = os.path.dirname(
             os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
@@ -316,52 +300,51 @@ xfail todo
             raise RuntimeError("%s failed: %s" % (command, err))
         return out
 
-    def to_events(self, stream):
-        test = subunit.ProtocolTestCase(BytesIO(stream))
-        result = ExtendedTestResult()
-        test.run(result)
-        return result._events
-
     def test_default(self):
-        output = self.run_command([], _b(
-                "test: foo\n"
-                "skip: foo\n"
-                ))
-        events = self.to_events(output)
-        foo = subunit.RemotedTestCase('foo')
-        self.assertEqual(
-            [('startTest', foo),
-             ('addSkip', foo, {}),
-             ('stopTest', foo)],
-            events)
+        byte_stream = BytesIO()
+        stream = StreamResultToBytes(byte_stream)
+        stream.status(test_id="foo", test_status="inprogress")
+        stream.status(test_id="foo", test_status="skip")
+        output = self.run_command([], byte_stream.getvalue())
+        events = StreamResult()
+        ByteStreamToStreamResult(BytesIO(output)).run(events)
+        ids = set(event[1] for event in events._events)
+        self.assertEqual([
+            ('status', 'foo', 'inprogress'),
+            ('status', 'foo', 'skip'),
+            ], [event[:3] for event in events._events])
 
     def test_tags(self):
-        output = self.run_command(['-s', '--with-tag', 'a'], _b(
-                "tags: a\n"
-                "test: foo\n"
-                "success: foo\n"
-                "tags: -a\n"
-                "test: bar\n"
-                "success: bar\n"
-                "test: baz\n"
-                "tags: a\n"
-                "success: baz\n"
-                ))
-        events = self.to_events(output)
-        foo = subunit.RemotedTestCase('foo')
-        baz = subunit.RemotedTestCase('baz')
-        self.assertEqual(
-            [('tags', set(['a']), set()),
-             ('startTest', foo),
-             ('addSuccess', foo),
-             ('stopTest', foo),
-             ('tags', set(), set(['a'])),
-             ('startTest', baz),
-             ('tags', set(['a']), set()),
-             ('addSuccess', baz),
-             ('stopTest', baz),
-             ],
-            events)
+        byte_stream = BytesIO()
+        stream = StreamResultToBytes(byte_stream)
+        stream.status(
+            test_id="foo", test_status="inprogress", test_tags=set(["a"]))
+        stream.status(
+            test_id="foo", test_status="success", test_tags=set(["a"]))
+        stream.status(test_id="bar", test_status="inprogress")
+        stream.status(test_id="bar", test_status="inprogress")
+        stream.status(
+            test_id="baz", test_status="inprogress", test_tags=set(["a"]))
+        stream.status(
+            test_id="baz", test_status="success", test_tags=set(["a"]))
+        output = self.run_command(
+            ['-s', '--with-tag', 'a'], byte_stream.getvalue())
+        events = StreamResult()
+        ByteStreamToStreamResult(BytesIO(output)).run(events)
+        ids = set(event[1] for event in events._events)
+        self.assertEqual(set(['foo', 'baz']), ids)
+
+    def test_no_passthrough(self):
+        output = self.run_command(['--no-passthrough'], b'hi thar')
+        self.assertEqual(b'', output)
+
+    def test_passthrough(self):
+        output = self.run_command([], b'hi thar')
+        byte_stream = BytesIO()
+        stream = StreamResultToBytes(byte_stream)
+        for pos, _ in enumerate(b'hi thar'):
+            stream.status(file_name="stdout", file_bytes=b'hi thar'[pos:pos+1])
+        self.assertEqual(byte_stream.getvalue(), output)
 
 
 def test_suite():
