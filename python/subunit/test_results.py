@@ -25,8 +25,10 @@ from testtools.content import (
     text_content,
     TracebackContent,
     )
+from testtools import StreamResult
 
 from subunit import iso8601
+import subunit
 
 
 # NOT a TestResult, because we are implementing the interface, not inheriting
@@ -676,3 +678,16 @@ class CsvResult(TestByTestResult):
     def startTestRun(self):
         super(CsvResult, self).startTestRun()
         self._write_row(['test', 'status', 'start_time', 'stop_time'])
+
+
+class CatFiles(StreamResult):
+    """Cat file attachments received to a stream."""
+
+    def __init__(self, byte_stream):
+        self.stream = subunit.make_stream_binary(byte_stream)
+
+    def status(self, test_id=None, test_status=None, test_tags=None,
+        runnable=True, file_name=None, file_bytes=None, eof=False,
+        mime_type=None, route_code=None, timestamp=None):
+        if file_name is not None:
+            self.stream.write(file_bytes)

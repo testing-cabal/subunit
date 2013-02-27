@@ -102,7 +102,7 @@ def filter_by_result(result_factory, output_path, passthrough, forward,
     :param input_stream: The source of subunit input.  Defaults to
         ``sys.stdin``.
     :param protocol_version: The subunit protocol version to expect.
-    :return: A test result with the resultts of the run.
+    :return: A test result with the results of the run.
     """
     if passthrough:
         passthrough_stream = sys.stdout

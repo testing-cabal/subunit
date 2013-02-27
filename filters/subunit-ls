@@ -19,9 +19,12 @@
 from optparse import OptionParser
 import sys
 
-from subunit import DiscardStream, ProtocolTestCase
+from testtools import StreamToExtendedDecorator, StreamResultRouter
+
+from subunit import ByteStreamToStreamResult
+from subunit.filters import run_tests_from_stream
 from subunit.test_results import (
-    AutoTimingTestResultDecorator,
+    CatFiles,
     TestIdPrintingResult,
     )
 
@@ -33,15 +36,20 @@ parser.add_option("--times", action="store_true",
 parser.add_option("--no-passthrough", action="store_true",
     help="Hide all non subunit input.", default=False, dest="no_passthrough")
 (options, args) = parser.parse_args()
-result = AutoTimingTestResultDecorator(
-    TestIdPrintingResult(sys.stdout, options.times))
-if options.no_passthrough:
-    passthrough_stream = DiscardStream()
+test = ByteStreamToStreamResult(sys.stdin, non_subunit_name="stdout")
+printer = TestIdPrintingResult(sys.stdout, options.times)
+result = StreamToExtendedDecorator(printer)
+if not options.no_passthrough:
+    orig_result = result
+    result = StreamResultRouter(result)
+    cat = CatFiles(sys.stdout)
+    result.map(cat, 'test_id', test_id=None)
 else:
-    passthrough_stream = None
-test = ProtocolTestCase(sys.stdin, passthrough=passthrough_stream)
+    orig_result = result
+orig_result.startTestRun()
 test.run(result)
-if result.wasSuccessful():
+orig_result.stopTestRun()
+if printer.wasSuccessful():
     exit_code = 0
 else:
     exit_code = 1
