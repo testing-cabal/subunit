@@ -18,6 +18,7 @@ from testtools.compat import BytesIO
 import unittest
 
 from testtools import PlaceHolder
+from testtools.testresult.doubles import StreamResult
 
 import subunit
 from subunit.run import SubunitTestRunner
@@ -29,16 +30,6 @@ def test_suite():
     return result
 
 
-class TimeCollectingTestResult(unittest.TestResult):
-
-    def __init__(self, *args, **kwargs):
-        super(TimeCollectingTestResult, self).__init__(*args, **kwargs)
-        self.time_called = []
-
-    def time(self, a_time):
-        self.time_called.append(a_time)
-
-
 class TestSubunitTestRunner(unittest.TestCase):
 
     def test_includes_timing_output(self):
@@ -46,7 +37,9 @@ class TestSubunitTestRunner(unittest.TestCase):
         runner = SubunitTestRunner(stream=io)
         test = PlaceHolder('name')
         runner.run(test)
-        client = TimeCollectingTestResult()
         io.seek(0)
-        subunit.TestProtocolServer(client).readFrom(io)
-        self.assertTrue(len(client.time_called) > 0)
+        eventstream = StreamResult()
+        subunit.ByteStreamToStreamResult(io).run(eventstream)
+        timestamps = [event[-1] for event in eventstream._events
+            if event is not None]
+        self.assertNotEqual([], timestamps)

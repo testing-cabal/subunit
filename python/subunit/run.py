@@ -22,7 +22,9 @@
 
 import sys
 
-from subunit import TestProtocolClient, get_default_formatter
+from testtools import ExtendedToStreamDecorator
+
+from subunit import StreamResultToBytes, get_default_formatter
 from subunit.test_results import AutoTimingTestResultDecorator
 from testtools.run import (
     BUFFEROUTPUT,
@@ -46,11 +48,15 @@ class SubunitTestRunner(object):
 
     def run(self, test):
         "Run the given test case or test suite."
-        result = TestProtocolClient(self.stream)
+        result = ExtendedToStreamDecorator(StreamResultToBytes(self.stream))
         result = AutoTimingTestResultDecorator(result)
         if self.failfast is not None:
             result.failfast = self.failfast
-        test(result)
+        result.startTestRun()
+        try:
+            test(result)
+        finally:
+            result.stopTestRun()
         return result
 
 
