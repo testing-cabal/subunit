@@ -20,6 +20,7 @@
   $ python -m subunit.run mylib.tests.test_suite
 """
 
+import os
 import sys
 
 from testtools import ExtendedToStreamDecorator
@@ -84,6 +85,9 @@ class SubunitTestProgram(TestProgram):
 
 
 if __name__ == '__main__':
+    # Disable the default buffering, for Python 2.x where pdb doesn't do it
+    # on non-ttys.
+    sys.stdout = os.fdopen(sys.stdout.fileno(), 'ab', 0)
     stream = get_default_formatter()
     runner = SubunitTestRunner
     SubunitTestProgram(module=None, argv=sys.argv, testRunner=runner,

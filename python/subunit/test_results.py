@@ -691,3 +691,4 @@ class CatFiles(StreamResult):
         mime_type=None, route_code=None, timestamp=None):
         if file_name is not None:
             self.stream.write(file_bytes)
+            self.stream.flush()
