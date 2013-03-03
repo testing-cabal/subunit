@@ -16,9 +16,8 @@
 
 """Tests for subunit.tag_stream."""
 
+from io import BytesIO
 import unittest
-
-from testtools.compat import StringIO
 
 import subunit
 import subunit.test_results
@@ -27,40 +26,42 @@ import subunit.test_results
 class TestSubUnitTags(unittest.TestCase):
 
     def setUp(self):
-        self.original = StringIO()
-        self.filtered = StringIO()
+        self.original = BytesIO()
+        self.filtered = BytesIO()
 
     def test_add_tag(self):
-        self.original.write("tags: foo\n")
-        self.original.write("test: test\n")
-        self.original.write("tags: bar -quux\n")
-        self.original.write("success: test\n")
+        reference = BytesIO()
+        stream = subunit.StreamResultToBytes(reference)
+        stream.status(
+            test_id='test', test_status='inprogress', test_tags=set(['quux', 'foo']))
+        stream.status(
+            test_id='test', test_status='success', test_tags=set(['bar', 'quux', 'foo']))
+        stream = subunit.StreamResultToBytes(self.original)
+        stream.status(
+            test_id='test', test_status='inprogress', test_tags=set(['foo']))
+        stream.status(
+            test_id='test', test_status='success', test_tags=set(['foo', 'bar']))
         self.original.seek(0)
-        result = subunit.tag_stream(self.original, self.filtered, ["quux"])
-        self.assertEqual([
-            "tags: quux",
-            "tags: foo",
-            "test: test",
-            "tags: bar",
-            "success: test",
-            ],
-            self.filtered.getvalue().splitlines())
+        self.assertEqual(
+            0, subunit.tag_stream(self.original, self.filtered, ["quux"]))
+        self.assertEqual(reference.getvalue(), self.filtered.getvalue())
 
     def test_remove_tag(self):
-        self.original.write("tags: foo\n")
-        self.original.write("test: test\n")
-        self.original.write("tags: bar -quux\n")
-        self.original.write("success: test\n")
+        reference = BytesIO()
+        stream = subunit.StreamResultToBytes(reference)
+        stream.status(
+            test_id='test', test_status='inprogress', test_tags=set(['foo']))
+        stream.status(
+            test_id='test', test_status='success', test_tags=set(['foo']))
+        stream = subunit.StreamResultToBytes(self.original)
+        stream.status(
+            test_id='test', test_status='inprogress', test_tags=set(['foo']))
+        stream.status(
+            test_id='test', test_status='success', test_tags=set(['foo', 'bar']))
         self.original.seek(0)
-        result = subunit.tag_stream(self.original, self.filtered, ["-bar"])
-        self.assertEqual([
-            "tags: -bar",
-            "tags: foo",
-            "test: test",
-            "tags: -quux",
-            "success: test",
-            ],
-            self.filtered.getvalue().splitlines())
+        self.assertEqual(
+            0, subunit.tag_stream(self.original, self.filtered, ["-bar"]))
+        self.assertEqual(reference.getvalue(), self.filtered.getvalue())
 
 
 def test_suite():

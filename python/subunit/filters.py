@@ -17,12 +17,14 @@
 from optparse import OptionParser
 import sys
 
-from testtools import StreamResultRouter
+from extras import safe_hasattr
+from testtools import CopyStreamResult, StreamResult, StreamResultRouter
 
 from subunit import (
     DiscardStream, ProtocolTestCase, ByteStreamToStreamResult,
     StreamResultToBytes,
     )
+from subunit.test_results import CatFiles
 
 
 def make_options(description):
@@ -36,12 +38,13 @@ def make_options(description):
         help="Send the output to this path rather than stdout.")
     parser.add_option(
         "-f", "--forward", action="store_true", default=False,
-        help="Forward subunit stream on stdout.")
+        help="Forward subunit stream on stdout. When set, received "
+            "non-subunit output will be encapsulated in subunit.")
     return parser
 
 
 def run_tests_from_stream(input_stream, result, passthrough_stream=None,
-                          forward_stream=None, protocol_version=1):
+    forward_stream=None, protocol_version=1, passthrough_subunit=True):
     """Run tests from a subunit input stream through 'result'.
 
     Non-test events - top level file attachments - are expected to be
@@ -57,32 +60,48 @@ def run_tests_from_stream(input_stream, result, passthrough_stream=None,
         sent to this stream.  If not provided, uses the ``TestProtocolServer``
         default, which is ``sys.stdout``.
     :param forward_stream: All subunit input received will be forwarded
-        to this stream.  If not provided, uses the ``TestProtocolServer``
-        default, which is to not forward any input.
+        to this stream. If not provided, uses the ``TestProtocolServer``
+        default, which is to not forward any input. Do not set this when
+        transforming the stream - items would be double-reported.
     :param protocol_version: What version of the subunit protocol to expect.
+    :param passthrough_subunit: If True, passthrough should be as subunit
+        otherwise unwrap it. Only has effect when forward_stream is None.
+        (when forwarding as subunit non-subunit input is always turned into
+        subunit)
     """
-    orig_result = None
     if 1==protocol_version:
         test = ProtocolTestCase(
             input_stream, passthrough=passthrough_stream,
             forward=forward_stream)
     elif 2==protocol_version:
-        if passthrough_stream is not None:
-            # As the StreamToExtendedDecorator discards non-test events
-            # we merely have to copy them IFF they are requested.
-            passthrough_result = StreamResultToBytes(passthrough_stream)
-            orig_result = result
+        # In all cases we encapsulate unknown inputs.
+        if forward_stream is not None:
+            # Send events to forward_stream as subunit.
+            forward_result = StreamResultToBytes(forward_stream)
+            # If we're passing non-subunit through, copy:
+            if passthrough_stream is None:
+                # Not passing non-test events - split them off to nothing.
+                router = StreamResultRouter(forward_result)
+                router.map(StreamResult(), 'test_id', test_id=None)
+                result = CopyStreamResult([router, result])
+            else:
+                # otherwise, copy all events to forward_result
+                result = CopyStreamResult([forward_result, result])
+        elif passthrough_stream is not None:
+            if not passthrough_subunit:
+                # Route non-test events to passthrough_stream, unwrapping them for
+                # display.
+                passthrough_result = CatFiles(passthrough_stream)
+            else:
+                passthrough_result = StreamResultToBytes(passthrough_stream)
             result = StreamResultRouter(result)
             result.map(passthrough_result, 'test_id', test_id=None)
-            orig_result.startTestRun()
         test = ByteStreamToStreamResult(input_stream,
             non_subunit_name='stdout')
     else:
         raise Exception("Unknown protocol version.")
     result.startTestRun()
     test.run(result)
-    if orig_result is not None:
-        orig_result.stopTestRun()
     result.stopTestRun()
 
 
@@ -114,8 +133,10 @@ def filter_by_result(result_factory, output_path, passthrough, forward,
 
     if forward:
         forward_stream = sys.stdout
-    else:
+    elif 1==protocol_version:
         forward_stream = DiscardStream()
+    else:
+        forward_stream = None
 
     if output_path is None:
         output_to = sys.stdout
@@ -133,7 +154,8 @@ def filter_by_result(result_factory, output_path, passthrough, forward,
     return result
 
 
-def run_filter_script(result_factory, description, post_run_hook=None):
+def run_filter_script(result_factory, description, post_run_hook=None,
+    protocol_version=1):
     """Main function for simple subunit filter scripts.
 
     Many subunit filter scripts take a stream of subunit input and use a
@@ -146,14 +168,17 @@ def run_filter_script(result_factory, description, post_run_hook=None):
     :param result_factory: A callable that takes an output stream and returns
         a test result that outputs to that stream.
     :param description: A description of the filter script.
+    :param protocol_version: What protocol version to consume/emit.
     """
     parser = make_options(description)
     (options, args) = parser.parse_args()
     result = filter_by_result(
         result_factory, options.output_to, not options.no_passthrough,
-        options.forward)
+        options.forward, protocol_version=protocol_version)
     if post_run_hook:
         post_run_hook(result)
+    if not safe_hasattr(result, 'wasSuccessful'):
+        result = result.decorated
     if result.wasSuccessful():
         sys.exit(0)
     else:

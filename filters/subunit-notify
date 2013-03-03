@@ -19,6 +19,7 @@
 import pygtk
 pygtk.require('2.0')
 import pynotify
+from testtools import StreamToExtendedDecorator
 
 from subunit import TestResultStats
 from subunit.filters import run_filter_script
@@ -28,6 +29,7 @@ if not pynotify.init("Subunit-notify"):
 
 
 def notify_of_result(result):
+    result = result.decorated
     if result.failed_tests > 0:
         summary = "Test run failed"
     else:
@@ -41,4 +43,6 @@ def notify_of_result(result):
     nw.show()
 
 
-run_filter_script(TestResultStats, __doc__, notify_of_result)
+run_filter_script(
+    lambda output:StreamToExtendedDecorator(TestResultStats(output)),
+    __doc__, notify_of_result, protocol_version=2)

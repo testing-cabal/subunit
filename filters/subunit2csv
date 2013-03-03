@@ -16,8 +16,11 @@
 
 """Turn a subunit stream into a CSV"""
 
+from testtools import StreamToExtendedDecorator
+
 from subunit.filters import run_filter_script
 from subunit.test_results import CsvResult
 
 
-run_filter_script(CsvResult, __doc__)
+run_filter_script(lambda output:StreamToExtendedDecorator(CsvResult(output)),
+    __doc__, protocol_version=2)

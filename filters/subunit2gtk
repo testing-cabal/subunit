@@ -46,17 +46,20 @@
 """Display a subunit stream in a gtk progress window."""
 
 import sys
+import threading
 import unittest
 
 import pygtk
 pygtk.require('2.0')
 import gtk, gtk.gdk, gobject
 
+from testtools import StreamToExtendedDecorator
+
 from subunit import (
     PROGRESS_POP,
     PROGRESS_PUSH,
     PROGRESS_SET,
-    TestProtocolServer,
+    ByteStreamToStreamResult,
     )
 from subunit.progress_model import  ProgressModel
 
@@ -139,6 +142,9 @@ class GTKTestResult(unittest.TestResult):
 
     def stopTest(self, test):
         super(GTKTestResult, self).stopTest(test)
+	gobject.idle_add(self._stopTest)
+
+    def _stopTest(self):
         self.progress_model.advance()
         if self.progress_model.width() == 0:
             self.pbar.pulse()
@@ -153,26 +159,26 @@ class GTKTestResult(unittest.TestResult):
             super(GTKTestResult, self).stopTestRun()
         except AttributeError:
             pass
-        self.pbar.set_text('Finished')
+	gobject.idle_add(self.pbar.set_text, 'Finished')
 
     def addError(self, test, err):
         super(GTKTestResult, self).addError(test, err)
-        self.update_counts()
+	gobject.idle_add(self.update_counts)
 
     def addFailure(self, test, err):
         super(GTKTestResult, self).addFailure(test, err)
-        self.update_counts()
+	gobject.idle_add(self.update_counts)
 
     def addSuccess(self, test):
         super(GTKTestResult, self).addSuccess(test)
-        self.update_counts()
+	gobject.idle_add(self.update_counts)
 
     def addSkip(self, test, reason):
         # addSkip is new in Python 2.7/3.1
         addSkip = getattr(super(GTKTestResult, self), 'addSkip', None)
         if callable(addSkip):
             addSkip(test, reason)
-        self.update_counts()
+	gobject.idle_add(self.update_counts)
 
     def addExpectedFailure(self, test, err):
         # addExpectedFailure is new in Python 2.7/3.1
@@ -180,7 +186,7 @@ class GTKTestResult(unittest.TestResult):
             'addExpectedFailure', None)
         if callable(addExpectedFailure):
             addExpectedFailure(test, err)
-        self.update_counts()
+	gobject.idle_add(self.update_counts)
 
     def addUnexpectedSuccess(self, test):
         # addUnexpectedSuccess is new in Python 2.7/3.1
@@ -188,7 +194,7 @@ class GTKTestResult(unittest.TestResult):
             'addUnexpectedSuccess', None)
         if callable(addUnexpectedSuccess):
             addUnexpectedSuccess(test)
-        self.update_counts()
+	gobject.idle_add(self.update_counts)
 
     def progress(self, offset, whence):
         if whence == PROGRESS_PUSH:
@@ -212,47 +218,22 @@ class GTKTestResult(unittest.TestResult):
         self.ok_label.set_text(str(self.testsRun - bad))
         self.not_ok_label.set_text(str(bad))
 
-
-class GIOProtocolTestCase(object):
-
-    def __init__(self, stream, result, on_finish):
-        self.stream = stream
-        self.schedule_read()
-        self.hup_id = gobject.io_add_watch(stream, gobject.IO_HUP, self.hup)
-        self.protocol = TestProtocolServer(result)
-        self.on_finish = on_finish
-
-    def read(self, source, condition, all=False):
-        #NB: \o/ actually blocks
-        line = source.readline()
-        if not line:
-            self.protocol.lostConnection()
-            self.on_finish()
-            return False
-        self.protocol.lineReceived(line)
-        # schedule more IO shortly - if we say we're willing to do it
-        # immediately we starve things.
-        if not all:
-            source_id = gobject.timeout_add(1, self.schedule_read)
-            return False
-        else:
-            return True
-
-    def schedule_read(self):
-        self.read_id = gobject.io_add_watch(self.stream, gobject.IO_IN, self.read)
-
-    def hup(self, source, condition):
-        while self.read(source, condition, all=True): pass
-        self.protocol.lostConnection()
-        gobject.source_remove(self.read_id)
-        self.on_finish()
-        return False
-
-
-result = GTKTestResult()
-test = GIOProtocolTestCase(sys.stdin, result, result.stopTestRun)
+gobject.threads_init()
+result = StreamToExtendedDecorator(GTKTestResult())
+test = ByteStreamToStreamResult(sys.stdin, non_subunit_name='stdout')
+# Get setup
+while gtk.events_pending():
+  gtk.main_iteration()
+# Start IO
+def run_and_finish():
+    test.run(result)
+    result.stopTestRun()
+t = threading.Thread(target=run_and_finish)
+t.daemon = True
+result.startTestRun()
+t.start()
 gtk.main()
-if result.wasSuccessful():
+if result.decorated.wasSuccessful():
     exit_code = 0
 else:
     exit_code = 1

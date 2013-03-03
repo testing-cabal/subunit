@@ -16,26 +16,17 @@
 
 """Filter a subunit stream to get aggregate statistics."""
 
-from optparse import OptionParser
 import sys
-import unittest
 
-from subunit import DiscardStream, ProtocolTestCase, TestResultStats
+from testtools import StreamToExtendedDecorator
 
-parser = OptionParser(description=__doc__)
-parser.add_option("--no-passthrough", action="store_true",
-    help="Hide all non subunit input.", default=False, dest="no_passthrough")
-(options, args) = parser.parse_args()
+from subunit import TestResultStats
+from subunit.filters import run_filter_script
+
+
 result = TestResultStats(sys.stdout)
-if options.no_passthrough:
-    passthrough_stream = DiscardStream()
-else:
-    passthrough_stream = None
-test = ProtocolTestCase(sys.stdin, passthrough=passthrough_stream)
-test.run(result)
-result.formatStats()
-if result.wasSuccessful():
-    exit_code = 0
-else:
-    exit_code = 1
-sys.exit(exit_code)
+def show_stats(r):
+    r.decorated.formatStats()
+run_filter_script(
+    lambda output:StreamToExtendedDecorator(result),
+    __doc__, show_stats, protocol_version=2)

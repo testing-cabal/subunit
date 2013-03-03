@@ -18,6 +18,9 @@
 
 
 import sys
+
+from testtools import StreamToExtendedDecorator
+
 from subunit.filters import run_filter_script
 
 try:
@@ -28,4 +31,6 @@ except ImportError:
     raise
 
 
-run_filter_script(JUnitXmlResult, __doc__)
+run_filter_script(
+    lambda output:StreamToExtendedDecorator(JUnitXmlResult(output)), __doc__,
+    protocol_version=2)

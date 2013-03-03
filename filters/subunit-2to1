@@ -33,7 +33,7 @@ def make_options(description):
 def main():
     parser = make_options(__doc__)
     (options, args) = parser.parse_args()
-    case = ByteStreamToStreamResult(sys.stdin)
+    case = ByteStreamToStreamResult(sys.stdin, non_subunit_name='stdout')
     result = StreamToExtendedDecorator(TestProtocolClient(sys.stdout))
     # What about stdout chunks?
     result.startTestRun()
