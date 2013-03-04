@@ -24,6 +24,7 @@ import os
 import sys
 
 from testtools import ExtendedToStreamDecorator
+from testtools.testsuite import iterate_tests
 
 from subunit import StreamResultToBytes, get_default_formatter
 from subunit.test_results import AutoTimingTestResultDecorator
@@ -49,7 +50,10 @@ class SubunitTestRunner(object):
 
     def run(self, test):
         "Run the given test case or test suite."
-        result = ExtendedToStreamDecorator(StreamResultToBytes(self.stream))
+        result = StreamResultToBytes(self.stream)
+        for case in iterate_tests(test):
+            result.status(test_id=case.id(), test_status='exists')
+        result = ExtendedToStreamDecorator(result)
         result = AutoTimingTestResultDecorator(result)
         if self.failfast is not None:
             result.failfast = self.failfast

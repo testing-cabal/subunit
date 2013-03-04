@@ -43,3 +43,18 @@ class TestSubunitTestRunner(unittest.TestCase):
         timestamps = [event[-1] for event in eventstream._events
             if event is not None]
         self.assertNotEqual([], timestamps)
+
+    def test_enumerates_tests_before_run(self):
+        io = BytesIO()
+        runner = SubunitTestRunner(stream=io)
+        test1 = PlaceHolder('name1')
+        test2 = PlaceHolder('name2')
+        case = unittest.TestSuite([test1, test2])
+        runner.run(case)
+        io.seek(0)
+        eventstream = StreamResult()
+        subunit.ByteStreamToStreamResult(io).run(eventstream)
+        self.assertEqual([
+            ('status', 'name1', 'exists'),
+            ('status', 'name2', 'exists'),
+            ], [event[:3] for event in eventstream._events[:2]])
