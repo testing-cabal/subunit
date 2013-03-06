@@ -126,7 +126,7 @@ try:
 except ImportError:
     _UnsupportedOperation = AttributeError
 
-
+from extras import safe_hasattr
 from testtools import content, content_type, ExtendedToOriginalDecorator
 from testtools.content import TracebackContent
 from testtools.compat import _b, _u, BytesIO, StringIO
@@ -1268,7 +1268,8 @@ def get_default_formatter():
     else:
         stream = sys.stdout
         if sys.version_info > (3, 0):
-            stream = stream.buffer
+            if safe_hasattr(stream, 'buffer'):
+                stream = stream.buffer
         return stream
 
 

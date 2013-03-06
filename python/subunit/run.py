@@ -50,9 +50,7 @@ class SubunitTestRunner(object):
 
     def run(self, test):
         "Run the given test case or test suite."
-        result = StreamResultToBytes(self.stream)
-        for case in iterate_tests(test):
-            result.status(test_id=case.id(), test_status='exists')
+        result = self._list(test)
         result = ExtendedToStreamDecorator(result)
         result = AutoTimingTestResultDecorator(result)
         if self.failfast is not None:
@@ -62,6 +60,24 @@ class SubunitTestRunner(object):
             test(result)
         finally:
             result.stopTestRun()
+        return result
+
+    def list(self, test):
+        "List the test."
+        self._list(test)
+
+    def _list(self, test):
+        try:
+            fileno = self.stream.fileno()
+        except:
+            fileno = None
+        if fileno is not None:
+            stream = os.fdopen(fileno, 'wb', 0)
+        else:
+            stream = self.stream
+        result = StreamResultToBytes(stream)
+        for case in iterate_tests(test):
+            result.status(test_id=case.id(), test_status='exists')
         return result
 
 
@@ -91,7 +107,6 @@ class SubunitTestProgram(TestProgram):
 if __name__ == '__main__':
     # Disable the default buffering, for Python 2.x where pdb doesn't do it
     # on non-ttys.
-    sys.stdout = os.fdopen(sys.stdout.fileno(), 'ab', 0)
     stream = get_default_formatter()
     runner = SubunitTestRunner
     SubunitTestProgram(module=None, argv=sys.argv, testRunner=runner,
