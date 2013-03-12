@@ -20,6 +20,7 @@
   $ python -m subunit.run mylib.tests.test_suite
 """
 
+import io
 import os
 import sys
 
@@ -109,5 +110,11 @@ if __name__ == '__main__':
     # on non-ttys.
     stream = get_default_formatter()
     runner = SubunitTestRunner
+    # Patch stdout to be unbuffered, so that pdb works well.
+    binstdout = io.open(sys.stdout.fileno(), 'wb', 0)
+    if sys.version_info[0] > 2:
+        sys.stdout = io.TextIOWrapper(binstdout, encoding=sys.stdout.encoding)
+    else:
+        sys.stdout = binstdout
     SubunitTestProgram(module=None, argv=sys.argv, testRunner=runner,
         stdout=sys.stdout)

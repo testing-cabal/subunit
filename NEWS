@@ -29,6 +29,10 @@ and applications should migrate once their language has those API's available.
 IMPROVEMENTS
 ~~~~~~~~~~~~
 
+* ``subunit.run`` now replaces sys.stdout to ensure that stdout is unbuffered
+  - without this pdb output is not reliably visible when stdout is a pipe
+  as it usually is. (Robert Collins)
+
 * v2 protocol draft included in this release.
   (Robert Collins)
 
