@@ -18,11 +18,28 @@ from io import BytesIO
 import datetime
 
 from testtools import TestCase
+from testtools.matchers import HasLength
 from testtools.tests.test_testresult import TestStreamResultContract
 from testtools.testresult.doubles import StreamResult
 
 import subunit
 import subunit.iso8601 as iso8601
+
+CONSTANT_ENUM = b'\xb3)\x01\x0c\x03foo\x08U_\x1b'
+CONSTANT_INPROGRESS = b'\xb3)\x02\x0c\x03foo\x8e\xc1-\xb5'
+CONSTANT_SUCCESS = b'\xb3)\x03\x0c\x03fooE\x9d\xfe\x10'
+CONSTANT_UXSUCCESS = b'\xb3)\x04\x0c\x03fooX\x98\xce\xa8'
+CONSTANT_SKIP = b'\xb3)\x05\x0c\x03foo\x93\xc4\x1d\r'
+CONSTANT_FAIL = b'\xb3)\x06\x0c\x03foo\x15Po\xa3'
+CONSTANT_XFAIL = b'\xb3)\x07\x0c\x03foo\xde\x0c\xbc\x06'
+CONSTANT_EOF = b'\xb3!\x10\x08S\x15\x88\xdc'
+CONSTANT_FILE_CONTENT = b'\xb3!@\x13\x06barney\x03wooA5\xe3\x8c'
+CONSTANT_MIME = b'\xb3! #\x1aapplication/foo; charset=1x3Q\x15'
+CONSTANT_TIMESTAMP = b'\xb3+\x03\x13<\x17T\xcf\x80\xaf\xc8\x03barI\x96>-'
+CONSTANT_ROUTE_CODE = b'\xb3-\x03\x13\x03bar\x06source\x9cY9\x19'
+CONSTANT_RUNNABLE = b'\xb3(\x03\x0c\x03foo\xe3\xea\xf5\xa4'
+CONSTANT_TAGS = b'\xb3)\x80\x15\x03bar\x02\x03foo\x03barTHn\xb4'
+
 
 class TestStreamResultToBytesContract(TestCase, TestStreamResultContract):
     """Check that StreamResult behaves as testtools expects."""
@@ -37,47 +54,119 @@ class TestStreamResultToBytes(TestCase):
         output = BytesIO()
         return subunit.StreamResultToBytes(output), output
 
+    def test_numbers(self):
+        result = subunit.StreamResultToBytes(BytesIO())
+        packet = []
+        self.assertRaises(Exception, result._write_number, -1, packet)
+        self.assertEqual([], packet)
+        result._write_number(0, packet)
+        self.assertEqual([b'\x00'], packet)
+        del packet[:]
+        result._write_number(63, packet)
+        self.assertEqual([b'\x3f'], packet)
+        del packet[:]
+        result._write_number(64, packet)
+        self.assertEqual([b'\x40\x40'], packet)
+        del packet[:]
+        result._write_number(16383, packet)
+        self.assertEqual([b'\x7f\xff'], packet)
+        del packet[:]
+        result._write_number(16384, packet)
+        self.assertEqual([b'\x80\x40', b'\x00'], packet)
+        del packet[:]
+        result._write_number(4194303, packet)
+        self.assertEqual([b'\xbf\xff', b'\xff'], packet)
+        del packet[:]
+        result._write_number(4194304, packet)
+        self.assertEqual([b'\xc0\x40\x00\x00'], packet)
+        del packet[:]
+        result._write_number(1073741823, packet)
+        self.assertEqual([b'\xff\xff\xff\xff'], packet)
+        del packet[:]
+        self.assertRaises(Exception, result._write_number, 1073741824, packet)
+        self.assertEqual([], packet)
+
+    def test_volatile_length(self):
+        # if the length of the packet data before the length itself is
+        # considered is right on the boundary for length's variable length
+        # encoding, it is easy to get the length wrong by not accounting for
+        # length itself.
+        # that is, the encoder has to ensure that length == sum (length_of_rest
+        # + length_of_length)
+        result, output = self._make_result()
+        # 1 byte short:
+        result.status(file_name="", file_bytes=b'\xff'*0)
+        self.assertThat(output.getvalue(), HasLength(10))
+        self.assertEqual(b'\x0a', output.getvalue()[3:4])
+        output.seek(0)
+        output.truncate()
+        # 1 byte long:
+        result.status(file_name="", file_bytes=b'\xff'*53)
+        self.assertThat(output.getvalue(), HasLength(63))
+        self.assertEqual(b'\x3f', output.getvalue()[3:4])
+        output.seek(0)
+        output.truncate()
+        # 2 bytes short
+        result.status(file_name="", file_bytes=b'\xff'*54)
+        self.assertThat(output.getvalue(), HasLength(65))
+        self.assertEqual(b'\x40\x41', output.getvalue()[3:5])
+        output.seek(0)
+        output.truncate()
+        # 2 bytes long
+        result.status(file_name="", file_bytes=b'\xff'*16371)
+        self.assertThat(output.getvalue(), HasLength(16383))
+        self.assertEqual(b'\x7f\xff', output.getvalue()[3:5])
+        output.seek(0)
+        output.truncate()
+        # 3 bytes short
+        result.status(file_name="", file_bytes=b'\xff'*16372)
+        self.assertThat(output.getvalue(), HasLength(16385))
+        self.assertEqual(b'\x80\x40\x01', output.getvalue()[3:6])
+        output.seek(0)
+        output.truncate()
+        # 3 bytes long
+        result.status(file_name="", file_bytes=b'\xff'*4194289)
+        self.assertThat(output.getvalue(), HasLength(4194303))
+        self.assertEqual(b'\xbf\xff\xff', output.getvalue()[3:6])
+        output.seek(0)
+        output.truncate()
+        self.assertRaises(Exception, result.status, file_name="",
+            file_bytes=b'\xff'*4194290)
+
     def test_trivial_enumeration(self):
         result, output = self._make_result()
         result.status("foo", 'exists')
-        self.assertEqual(b'\xb3\x29\x01\0\0\x0f\0\x03foo\x99\x0c\x34\x3f',
-            output.getvalue())
+        self.assertEqual(CONSTANT_ENUM, output.getvalue())
 
     def test_inprogress(self):
         result, output = self._make_result()
         result.status("foo", 'inprogress')
-        self.assertEqual(b'\xb3\x29\x02\0\0\x0f\0\x03foo\xa0\x81\x08\xfa',
-            output.getvalue())
+        self.assertEqual(CONSTANT_INPROGRESS, output.getvalue())
 
     def test_success(self):
         result, output = self._make_result()
         result.status("foo", 'success')
-        self.assertEqual(b'\xb3\x29\x03\0\0\x0f\0\x03foo\xb7\xfa\x1c\xb9',
-            output.getvalue())
+        self.assertEqual(CONSTANT_SUCCESS, output.getvalue())
 
     def test_uxsuccess(self):
         result, output = self._make_result()
         result.status("foo", 'uxsuccess')
-        self.assertEqual(b'\xb3\x29\x04\0\0\x0f\0\x03foo\xd3\x9bqp',
-            output.getvalue())
+        self.assertEqual(CONSTANT_UXSUCCESS, output.getvalue())
 
     def test_skip(self):
         result, output = self._make_result()
         result.status("foo", 'skip')
-        self.assertEqual(b'\xb3\x29\x05\0\0\x0f\0\x03foo\xc4\xe0e3',
-            output.getvalue())
+        self.assertEqual(CONSTANT_SKIP, output.getvalue())
 
     def test_fail(self):
         result, output = self._make_result()
         result.status("foo", 'fail')
-        self.assertEqual(b'\xb3\x29\x06\0\0\x0f\0\x03foo\xfdmY\xf6',
-            output.getvalue())
+        self.assertEqual(CONSTANT_FAIL, output.getvalue())
 
     def test_xfail(self):
         result, output = self._make_result()
         result.status("foo", 'xfail')
-        self.assertEqual(b'\xb3\x29\x07\0\0\x0f\0\x03foo\xea\x16M\xb5',
-            output.getvalue())
+        self.assertEqual(CONSTANT_XFAIL, output.getvalue())
 
     def test_unknown_status(self):
         result, output = self._make_result()
@@ -87,50 +176,40 @@ class TestStreamResultToBytes(TestCase):
     def test_eof(self):
         result, output = self._make_result()
         result.status(eof=True)
-        self.assertEqual(
-            b'\xb3!\x10\x00\x00\na\xf1xM',
-            output.getvalue())
+        self.assertEqual(CONSTANT_EOF, output.getvalue())
 
     def test_file_content(self):
         result, output = self._make_result()
         result.status(file_name="barney", file_bytes=b"woo")
-        self.assertEqual(
-            b'\xb3!@\x00\x00\x15\x00\x06barneywoo\xfd\xecu\x1c',
-            output.getvalue())
+        self.assertEqual(CONSTANT_FILE_CONTENT, output.getvalue())
 
     def test_mime(self):
         result, output = self._make_result()
         result.status(mime_type="application/foo; charset=1")
-        self.assertEqual(
-            b'\xb3! \x00\x00&\x00\x1aapplication/foo; charset=1]#\xf9\xf9',
-            output.getvalue())
+        self.assertEqual(CONSTANT_MIME, output.getvalue())
 
     def test_route_code(self):
         result, output = self._make_result()
         result.status(test_id="bar", test_status='success',
             route_code="source")
-        self.assertEqual(b'\xb3-\x03\x00\x00\x17\x00\x06source\x00\x03bar\xad\xbd\x8c$',
-            output.getvalue())
+        self.assertEqual(CONSTANT_ROUTE_CODE, output.getvalue())
 
     def test_runnable(self):
         result, output = self._make_result()
         result.status("foo", 'success', runnable=False)
-        self.assertEqual(b'\xb3(\x03\x00\x00\x0f\x00\x03fooX8w\x87',
-            output.getvalue())
+        self.assertEqual(CONSTANT_RUNNABLE, output.getvalue())
 
     def test_tags(self):
         result, output = self._make_result()
         result.status(test_id="bar", test_tags=set(['foo', 'bar']))
-        self.assertEqual(b'\xb3)\x80\x00\x00\x1b\x00\x03bar\x00\x02\x00\x03foo\x00\x03bar\xabMw\xe6',
-            output.getvalue())
+        self.assertEqual(CONSTANT_TAGS, output.getvalue())
 
     def test_timestamp(self):
         timestamp = datetime.datetime(2001, 12, 12, 12, 59, 59, 45,
             iso8601.Utc())
         result, output = self._make_result()
         result.status(test_id="bar", test_status='success', timestamp=timestamp)
-        self.assertEqual(b'\xb3+\x03\x00\x00\x17<\x17T\xcf\x00\x00\xaf\xc8\x00\x03barU>\xb2\xdb',
-            output.getvalue())
+        self.assertEqual(CONSTANT_TIMESTAMP, output.getvalue())
 
 
 class TestByteStreamToStreamResult(TestCase):
@@ -152,6 +231,20 @@ class TestByteStreamToStreamResult(TestCase):
             ], result._events)
         self.assertEqual(b'', source.read())
 
+    def test_signature_middle_utf8_char(self):
+        utf8_bytes = b'\xe3\xb3\x8a'
+        source = BytesIO(utf8_bytes)
+        # Should be treated as one character (it is u'\u3cca') and wrapped
+        result = StreamResult()
+        subunit.ByteStreamToStreamResult(
+            source, non_subunit_name="stdout").run(
+            result)
+        self.assertEqual([
+            ('status', None, None, None, True, 'stdout', b'\xe3', False, None, None, None),
+            ('status', None, None, None, True, 'stdout', b'\xb3', False, None, None, None),
+            ('status', None, None, None, True, 'stdout', b'\x8a', False, None, None, None),
+            ], result._events)
+
     def test_non_subunit_disabled_raises(self):
         source = BytesIO(b"foo\nbar\n")
         result = StreamResult()
@@ -162,7 +255,7 @@ class TestByteStreamToStreamResult(TestCase):
         self.assertEqual([], result._events)
 
     def test_trivial_enumeration(self):
-        source = BytesIO(b'\xb3\x29\x01\0\0\x0f\0\x03foo\x99\x0c\x34\x3f')
+        source = BytesIO(CONSTANT_ENUM)
         result = StreamResult()
         subunit.ByteStreamToStreamResult(
             source, non_subunit_name="stdout").run(result)
@@ -172,8 +265,7 @@ class TestByteStreamToStreamResult(TestCase):
             ], result._events)
 
     def test_multiple_events(self):
-        source = BytesIO(b'\xb3\x29\x01\0\0\x0f\0\x03foo\x99\x0c\x34\x3f'
-                         b'\xb3\x29\x01\0\0\x0f\0\x03foo\x99\x0c\x34\x3f')
+        source = BytesIO(CONSTANT_ENUM + CONSTANT_ENUM)
         result = StreamResult()
         subunit.ByteStreamToStreamResult(
             source, non_subunit_name="stdout").run(result)
@@ -184,28 +276,22 @@ class TestByteStreamToStreamResult(TestCase):
             ], result._events)
 
     def test_inprogress(self):
-        self.check_event(
-            b'\xb3\x29\x02\0\0\x0f\0\x03foo\xa0\x81\x08\xfa', 'inprogress')
+        self.check_event(CONSTANT_INPROGRESS, 'inprogress')
 
     def test_success(self):
-        self.check_event(
-            b'\xb3\x29\x03\0\0\x0f\0\x03foo\xb7\xfa\x1c\xb9', 'success')
+        self.check_event(CONSTANT_SUCCESS, 'success')
 
     def test_uxsuccess(self):
-        self.check_event(
-            b'\xb3\x29\x04\0\0\x0f\0\x03foo\xd3\x9bqp', 'uxsuccess')
+        self.check_event(CONSTANT_UXSUCCESS, 'uxsuccess')
 
     def test_skip(self):
-        self.check_event(
-            b'\xb3\x29\x05\0\0\x0f\0\x03foo\xc4\xe0e3', 'skip')
+        self.check_event(CONSTANT_SKIP, 'skip')
 
     def test_fail(self):
-        self.check_event(
-            b'\xb3\x29\x06\0\0\x0f\0\x03foo\xfdmY\xf6', 'fail')
+        self.check_event(CONSTANT_FAIL, 'fail')
 
     def test_xfail(self):
-        self.check_event(
-            b'\xb3\x29\x07\0\0\x0f\0\x03foo\xea\x16M\xb5', 'xfail')
+        self.check_event(CONSTANT_XFAIL, 'xfail')
 
     def check_events(self, source_bytes, events):
         source = BytesIO(source_bytes)
@@ -231,86 +317,95 @@ class TestByteStreamToStreamResult(TestCase):
             file_bytes, eof, mime_type, route_code, timestamp)
 
     def test_eof(self):
-        self.check_event(
-            b'\xb3!\x10\x00\x00\na\xf1xM',
-            test_id=None, eof=True)
+        self.check_event(CONSTANT_EOF, test_id=None, eof=True)
 
     def test_file_content(self):
-        self.check_event(
-            b'\xb3!@\x00\x00\x15\x00\x06barneywoo\xfd\xecu\x1c',
+        self.check_event(CONSTANT_FILE_CONTENT,
             test_id=None, file_name="barney", file_bytes=b"woo")
 
+    def test_file_content_length_into_checksum(self):
+        # A bad file content length which creeps into the checksum.
+        bad_file_length_content = b'\xb3!@\x13\x06barney\x04woo\xdc\xe2\xdb\x35'
+        self.check_events(bad_file_length_content, [
+            self._event(test_id="subunit.parser", eof=True,
+                file_name="Packet data", file_bytes=bad_file_length_content),
+            self._event(test_id="subunit.parser", test_status="fail", eof=True,
+                file_name="Parser Error",
+                file_bytes=b"File content extends past end of packet: claimed 4 bytes, 3 available"),
+            ])
+
+    def test_packet_length_4_word_varint(self):
+        packet_data = b'\xb3!@\xc0\x00\x11'
+        self.check_events(packet_data, [
+            self._event(test_id="subunit.parser", eof=True,
+                file_name="Packet data", file_bytes=packet_data),
+            self._event(test_id="subunit.parser", test_status="fail", eof=True,
+                file_name="Parser Error",
+                file_bytes=b"3 byte maximum given but 4 byte value found."),
+            ])
+
     def test_mime(self):
-        self.check_event(
-            b'\xb3! \x00\x00&\x00\x1aapplication/foo; charset=1]#\xf9\xf9',
+        self.check_event(CONSTANT_MIME,
             test_id=None, mime_type='application/foo; charset=1')
 
     def test_route_code(self):
-        self.check_event(
-            b'\xb3-\x03\x00\x00\x17\x00\x06source\x00\x03bar\xad\xbd\x8c$',
+        self.check_event(CONSTANT_ROUTE_CODE,
             'success', route_code="source", test_id="bar")
 
     def test_runnable(self):
-        self.check_event(
-            b'\xb3(\x03\x00\x00\x0f\x00\x03fooX8w\x87',
+        self.check_event(CONSTANT_RUNNABLE,
             test_status='success', runnable=False)
 
     def test_tags(self):
-        self.check_event(
-            b'\xb3)\x80\x00\x00\x1b\x00\x03bar\x00\x02\x00\x03foo\x00\x03bar\xabMw\xe6',
+        self.check_event(CONSTANT_TAGS,
             None, tags=set(['foo', 'bar']), test_id="bar")
 
     def test_timestamp(self):
         timestamp = datetime.datetime(2001, 12, 12, 12, 59, 59, 45,
             iso8601.Utc())
-        self.check_event(
-            b'\xb3+\x03\x00\x00\x17<\x17T\xcf\x00\x00\xaf\xc8\x00\x03barU>\xb2\xdb',
+        self.check_event(CONSTANT_TIMESTAMP,
             'success', test_id='bar', timestamp=timestamp)
 
     def test_bad_crc_errors_via_status(self):
-        file_bytes = \
-            b'\xb3! \x00\x00&\x00\x1aapplication/foo; charset=1]#\xf9\xee'
+        file_bytes = CONSTANT_MIME[:-1] + b'\x00'
         self.check_events( file_bytes, [
             self._event(test_id="subunit.parser", eof=True,
                 file_name="Packet data", file_bytes=file_bytes),
             self._event(test_id="subunit.parser", test_status="fail", eof=True,
                 file_name="Parser Error",
-                file_bytes=b'Bad checksum - calculated (0x5d23f9f9), '
-                    b'stored (0x5d23f9ee)'),
+                file_bytes=b'Bad checksum - calculated (0x78335115), '
+                    b'stored (0x78335100)'),
             ])
 
     def test_not_utf8_in_string(self):
-        file_bytes = \
-            b'\xb3-\x03\x00\x00\x17\x00\x06\xb4ource\x00\x03bar\x25\x2f\xb5\xd7'
+        file_bytes = CONSTANT_ROUTE_CODE[:5] + b'\xb4' + CONSTANT_ROUTE_CODE[6:-4] + b'\xce\x56\xc6\x17'
         self.check_events(file_bytes, [
             self._event(test_id="subunit.parser", eof=True,
                 file_name="Packet data", file_bytes=file_bytes),
             self._event(test_id="subunit.parser", test_status="fail", eof=True,
                 file_name="Parser Error",
-                file_bytes=b'UTF8 string at offset 0 is not UTF8'),
+                file_bytes=b'UTF8 string at offset 2 is not UTF8'),
             ])
 
     def test_NULL_in_string(self):
-        file_bytes = \
-            b'\xb3-\x03\x00\x00\x17\x00\x06so\x00rce\x00\x03bar\x17\x89\x0a\xbe'
+        file_bytes = CONSTANT_ROUTE_CODE[:6] + b'\x00' + CONSTANT_ROUTE_CODE[7:-4] + b'\xd7\x41\xac\xfe'
         self.check_events(file_bytes, [
             self._event(test_id="subunit.parser", eof=True,
                 file_name="Packet data", file_bytes=file_bytes),
             self._event(test_id="subunit.parser", test_status="fail", eof=True,
                 file_name="Parser Error",
-                file_bytes=b'UTF8 string at offset 0 contains NUL byte'),
+                file_bytes=b'UTF8 string at offset 2 contains NUL byte'),
             ])
 
     def test_bad_utf8_stringlength(self):
-        file_bytes = \
-            b'\xb3-\x03\x00\x00\x17\x00\x06source\x00\x08bar\x7a\xbc\x0b\x25'
+        file_bytes = CONSTANT_ROUTE_CODE[:4] + b'\x3f' + CONSTANT_ROUTE_CODE[5:-4] + b'\xbe\x29\xe0\xc2'
         self.check_events(file_bytes, [
             self._event(test_id="subunit.parser", eof=True,
                 file_name="Packet data", file_bytes=file_bytes),
             self._event(test_id="subunit.parser", test_status="fail", eof=True,
                 file_name="Parser Error",
-                file_bytes=b'UTF8 string at offset 8 extends past end of '
-                    b'packet: claimed 8 bytes, 7 available'),
+                file_bytes=b'UTF8 string at offset 2 extends past end of '
+                    b'packet: claimed 63 bytes, 10 available'),
             ])
 
 

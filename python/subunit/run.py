@@ -110,7 +110,7 @@ if __name__ == '__main__':
     # on non-ttys.
     stream = get_default_formatter()
     runner = SubunitTestRunner
-    # Patch stdout to be unbuffered, so that pdb works well.
+    # Patch stdout to be unbuffered, so that pdb works well on 2.6/2.7.
     binstdout = io.open(sys.stdout.fileno(), 'wb', 0)
     if sys.version_info[0] > 2:
         sys.stdout = io.TextIOWrapper(binstdout, encoding=sys.stdout.encoding)
