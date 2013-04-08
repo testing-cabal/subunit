@@ -5,6 +5,9 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+0.0.11
+------
+
 v2 protocol draft included in this release. The v2 protocol trades off human
 readability for a massive improvement in robustness, the ability to represent
 concurrent tests in a single stream, cheaper parsing, and that provides
@@ -33,8 +36,8 @@ IMPROVEMENTS
   - without this pdb output is not reliably visible when stdout is a pipe
   as it usually is. (Robert Collins)
 
-* v2 protocol draft included in this release.
-  (Robert Collins)
+* v2 protocol draft included in this release. (Python implementation only so
+  far). (Robert Collins)
 
 * Two new Python classes -- ``StreamResultToBytes`` and
   ``ByteStreamToStreamResult`` handle v2 generation and parsing.

@@ -33,6 +33,7 @@ EXTRA_DIST =  \
 	python/subunit/tests/test_subunit_tags.py \
 	python/subunit/tests/test_tap2subunit.py \
 	python/subunit/tests/test_test_protocol.py \
+	python/subunit/tests/test_test_protocol2.py \
 	python/subunit/tests/test_test_results.py \
 	runtests.py \
 	setup.py \
@@ -77,6 +78,7 @@ pkgpython_PYTHON = \
 	python/subunit/iso8601.py \
 	python/subunit/progress_model.py \
 	python/subunit/run.py \
+	python/subunit/v2.py \
 	python/subunit/test_results.py
 
 lib_LTLIBRARIES = libsubunit.la

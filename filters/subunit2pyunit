@@ -38,7 +38,7 @@ def wrap_result(result):
     result = StreamToExtendedDecorator(result)
     if not options.no_passthrough:
         result = StreamResultRouter(result)
-        result.map(CatFiles(sys.stdout), 'test_id', test_id=None)
+        result.add_rule(CatFiles(sys.stdout), 'test_id', test_id=None)
     return result
 test = DecorateTestCaseResult(test, wrap_result,
     before_run=methodcaller('startTestRun'),

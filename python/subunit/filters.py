@@ -82,7 +82,7 @@ def run_tests_from_stream(input_stream, result, passthrough_stream=None,
             if passthrough_stream is None:
                 # Not passing non-test events - split them off to nothing.
                 router = StreamResultRouter(forward_result)
-                router.map(StreamResult(), 'test_id', test_id=None)
+                router.add_rule(StreamResult(), 'test_id', test_id=None)
                 result = CopyStreamResult([router, result])
             else:
                 # otherwise, copy all events to forward_result
@@ -95,7 +95,7 @@ def run_tests_from_stream(input_stream, result, passthrough_stream=None,
             else:
                 passthrough_result = StreamResultToBytes(passthrough_stream)
             result = StreamResultRouter(result)
-            result.map(passthrough_result, 'test_id', test_id=None)
+            result.add_rule(passthrough_result, 'test_id', test_id=None)
         test = ByteStreamToStreamResult(input_stream,
             non_subunit_name='stdout')
     else:

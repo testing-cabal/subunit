@@ -46,7 +46,7 @@ result = TestIdPrintingResult(sys.stdout, options.times, options.exists)
 if not options.no_passthrough:
     result = StreamResultRouter(result)
     cat = CatFiles(sys.stdout)
-    result.map(cat, 'test_id', test_id=None)
+    result.add_rule(cat, 'test_id', test_id=None)
 summary = StreamSummary()
 result = CopyStreamResult([result, summary])
 result.startTestRun()
