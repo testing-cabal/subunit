@@ -408,6 +408,14 @@ class TestByteStreamToStreamResult(TestCase):
                     b'packet: claimed 63 bytes, 10 available'),
             ])
 
+    def test_route_code_and_file_content(self):
+        content = BytesIO()
+        subunit.StreamResultToBytes(content).status(
+            route_code='0', mime_type='text/plain', file_name='bar',
+            file_bytes=b'foo')
+        self.check_event(content.getvalue(), test_id=None, file_name='bar',
+            route_code='0', mime_type='text/plain', file_bytes=b'foo')
+
 
 def test_suite():
     loader = subunit.tests.TestUtil.TestLoader()

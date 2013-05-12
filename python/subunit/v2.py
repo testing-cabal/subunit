@@ -423,6 +423,7 @@ class ByteStreamToStreamResult(object):
                     raise ParseError('File content extends past end of packet: '
                         'claimed %d bytes, %d available' % (
                         content_length, len(file_bytes)))
+                pos += content_length
             else:
                 file_name = None
                 file_bytes = None

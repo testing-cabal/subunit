@@ -5,6 +5,14 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+BUG FIXES
+~~~~~~~~~
+
+* Subunit v2 packets with both file content and route code were not being
+  parsed correctly - they would incorrectly emit a parser error, due to trying
+  to parse the route code length from the first byes of the file content.
+  (Robert Collins, 1172815)
+
 0.0.11
 ------
 
