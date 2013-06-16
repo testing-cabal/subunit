@@ -5,8 +5,13 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+0.0.13
+------
+
 IMPROVEMENTS
 ~~~~~~~~~~~~
+
+* subunit should now build with automake 1.11 again. (Robert Collins)
 
 * `subunit-stats` no longer outputs encapsulated stdout as subunit.
   (Robert Collins, #1171987)
