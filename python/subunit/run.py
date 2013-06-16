@@ -105,7 +105,7 @@ class SubunitTestProgram(TestProgram):
         sys.exit(2)
 
 
-if __name__ == '__main__':
+def main():
     # Disable the default buffering, for Python 2.x where pdb doesn't do it
     # on non-ttys.
     stream = get_default_formatter()
@@ -118,3 +118,7 @@ if __name__ == '__main__':
         sys.stdout = binstdout
     SubunitTestProgram(module=None, argv=sys.argv, testRunner=runner,
         stdout=sys.stdout)
+
+
+if __name__ == '__main__':
+    main()

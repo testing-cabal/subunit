@@ -5,6 +5,12 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+IMPROVEMENTS
+~~~~~~~~~~~~
+
+* The logic for `subunit.run` is now importable via python -
+  `subunit.run.main`. (Robert Collins, #606770)
+
 BUG FIXES
 ~~~~~~~~~
 
