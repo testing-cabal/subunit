@@ -76,9 +76,3 @@ Seen tags: global, local
         self.setUpUsedStream()
         self.result.formatStats()
         self.assertEqual(expected, self.output.getvalue())
-
-
-def test_suite():
-    loader = subunit.tests.TestUtil.TestLoader()
-    result = loader.loadTestsFromName(__name__)
-    return result

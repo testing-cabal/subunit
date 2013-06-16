@@ -22,12 +22,6 @@ import subunit.tests
 from subunit import content, content_type, details
 
 
-def test_suite():
-    loader = subunit.tests.TestUtil.TestLoader()
-    result = loader.loadTestsFromName(__name__)
-    return result
-
-
 class TestSimpleDetails(unittest.TestCase):
 
     def test_lineReceived(self):

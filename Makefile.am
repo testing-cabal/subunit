@@ -6,6 +6,7 @@ EXTRA_DIST =  \
 	Makefile.am \
 	NEWS \
 	README \
+	all_tests.py \
 	c++/README \
 	c/README \
 	c/check-subunit-0.9.3.patch \
@@ -20,7 +21,6 @@ EXTRA_DIST =  \
 	python/iso8601/README.subunit \
 	python/iso8601/setup.py \
 	python/iso8601/test_iso8601.py \
-	python/subunit/tests/TestUtil.py \
 	python/subunit/tests/__init__.py \
 	python/subunit/tests/sample-script.py \
 	python/subunit/tests/sample-two-script.py \
@@ -35,7 +35,6 @@ EXTRA_DIST =  \
 	python/subunit/tests/test_test_protocol.py \
 	python/subunit/tests/test_test_protocol2.py \
 	python/subunit/tests/test_test_results.py \
-	runtests.py \
 	setup.py \
 	shell/README \
 	shell/share/subunit.sh \
@@ -61,8 +60,7 @@ dist_bin_SCRIPTS = \
 	filters/subunit2pyunit \
 	filters/tap2subunit
 
-TESTS_ENVIRONMENT = SHELL_SHARE='$(top_srcdir)/shell/share/' PYTHONPATH='$(abs_top_srcdir)/python':${PYTHONPATH}
-TESTS = runtests.py $(check_PROGRAMS)
+TESTS = $(check_PROGRAMS)
 
 ## install libsubunit.pc
 pcdatadir = $(libdir)/pkgconfig
@@ -91,9 +89,6 @@ include_subunit_HEADERS = \
 check_PROGRAMS = \
 	c/tests/test_child
 
-check_SCRIPTS = \
-	runtests.py
-
 libsubunit_la_SOURCES = \
 	c/lib/child.c \
 	c/include/subunit/child.h
@@ -112,6 +107,9 @@ all-local: perl/Makefile
 
 check-local: perl/Makefile
 	$(MAKE) -C perl check
+	SHELL_SHARE='$(top_srcdir)/shell/share/' \
+	PYTHONPATH='$(abs_top_srcdir)/python':'$(abs_top_srcdir)':${PYTHONPATH} \
+	$(PYTHON) -m testtools.run all_tests.test_suite
 
 clean-local:
 	find . -type f -name "*.pyc" -exec rm {} ';'

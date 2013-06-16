@@ -1329,9 +1329,3 @@ class TestTestProtocolClient(unittest.TestCase):
     def test_tags_gone(self):
         self.protocol.tags(set(), set(['bar']))
         self.assertEqual(_b("tags: -bar\n"), self.io.getvalue())
-
-
-def test_suite():
-    loader = subunit.tests.TestUtil.TestLoader()
-    result = loader.loadTestsFromName(__name__)
-    return result

@@ -344,9 +344,3 @@ class TestFilterCommand(TestCase):
         stream = StreamResultToBytes(byte_stream)
         stream.status(file_name="stdout", file_bytes=b'hi thar')
         self.assertEqual(byte_stream.getvalue(), output)
-
-
-def test_suite():
-    loader = subunit.tests.TestUtil.TestLoader()
-    result = loader.loadTestsFromName(__name__)
-    return result

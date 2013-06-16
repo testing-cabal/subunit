@@ -385,9 +385,3 @@ class TestTAP2SubUnit(TestCase):
         eventstream = StreamResult()
         subunit.ByteStreamToStreamResult(self.subunit).run(eventstream)
         self.assertEqual(events, eventstream._events)
-
-
-def test_suite():
-    loader = subunit.tests.TestUtil.TestLoader()
-    result = loader.loadTestsFromName(__name__)
-    return result

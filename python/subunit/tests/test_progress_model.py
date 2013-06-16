@@ -110,9 +110,3 @@ class TestProgressModel(unittest.TestCase):
         progress.advance()
         progress.pop()
         self.assertProgressSummary(1, 3, progress)
-
-
-def test_suite():
-    loader = subunit.tests.TestUtil.TestLoader()
-    result = loader.loadTestsFromName(__name__)
-    return result

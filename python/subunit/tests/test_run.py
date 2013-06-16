@@ -24,12 +24,6 @@ import subunit
 from subunit.run import SubunitTestRunner
 
 
-def test_suite():
-    loader = subunit.tests.TestUtil.TestLoader()
-    result = loader.loadTestsFromName(__name__)
-    return result
-
-
 class TestSubunitTestRunner(unittest.TestCase):
 
     def test_includes_timing_output(self):

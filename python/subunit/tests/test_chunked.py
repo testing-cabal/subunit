@@ -22,12 +22,6 @@ from testtools.compat import _b, BytesIO
 import subunit.chunked
 
 
-def test_suite():
-    loader = subunit.tests.TestUtil.TestLoader()
-    result = loader.loadTestsFromName(__name__)
-    return result
-
-
 class TestDecode(unittest.TestCase):
 
     def setUp(self):

@@ -415,9 +415,3 @@ class TestByteStreamToStreamResult(TestCase):
             file_bytes=b'foo')
         self.check_event(content.getvalue(), test_id=None, file_name='bar',
             route_code='0', mime_type='text/plain', file_bytes=b'foo')
-
-
-def test_suite():
-    loader = subunit.tests.TestUtil.TestLoader()
-    result = loader.loadTestsFromName(__name__)
-    return result

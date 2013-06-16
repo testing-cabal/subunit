@@ -5,6 +5,13 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+BUG FIXES
+~~~~~~~~~
+
+* Removed GPL files that were (C) non Subunit Developers - they are
+  incompatible for binary distribution, which affects redistributors.
+  (Robert Collins, #1185591)
+
 0.0.12
 ------
 

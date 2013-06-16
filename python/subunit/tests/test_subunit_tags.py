@@ -62,9 +62,3 @@ class TestSubUnitTags(unittest.TestCase):
         self.assertEqual(
             0, subunit.tag_stream(self.original, self.filtered, ["-bar"]))
         self.assertEqual(reference.getvalue(), self.filtered.getvalue())
-
-
-def test_suite():
-    loader = subunit.tests.TestUtil.TestLoader()
-    result = loader.loadTestsFromName(__name__)
-    return result

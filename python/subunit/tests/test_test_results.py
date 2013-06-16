@@ -564,9 +564,3 @@ class TestCsvResult(testtools.TestCase):
         stream = StringIO()
         subunit.test_results.CsvResult(stream)
         self.assertEqual([], self.parse_stream(stream))
-
-
-def test_suite():
-    loader = subunit.tests.TestUtil.TestLoader()
-    result = loader.loadTestsFromName(__name__)
-    return result

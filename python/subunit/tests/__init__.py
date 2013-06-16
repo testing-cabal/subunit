@@ -14,8 +14,9 @@
 #  limitations under that license.
 #
 
+from unittest import TestLoader
+
 from subunit.tests import (
-    TestUtil,
     test_chunked,
     test_details,
     test_progress_model,
@@ -30,16 +31,16 @@ from subunit.tests import (
     )
 
 def test_suite():
-    result = TestUtil.TestSuite()
-    result.addTest(test_chunked.test_suite())
-    result.addTest(test_details.test_suite())
-    result.addTest(test_progress_model.test_suite())
-    result.addTest(test_test_results.test_suite())
-    result.addTest(test_test_protocol.test_suite())
-    result.addTest(test_test_protocol2.test_suite())
-    result.addTest(test_tap2subunit.test_suite())
-    result.addTest(test_subunit_filter.test_suite())
-    result.addTest(test_subunit_tags.test_suite())
-    result.addTest(test_subunit_stats.test_suite())
-    result.addTest(test_run.test_suite())
+    loader = TestLoader()
+    result = loader.loadTestsFromModule(test_chunked)
+    result.addTest(loader.loadTestsFromModule(test_details))
+    result.addTest(loader.loadTestsFromModule(test_progress_model))
+    result.addTest(loader.loadTestsFromModule(test_test_results))
+    result.addTest(loader.loadTestsFromModule(test_test_protocol))
+    result.addTest(loader.loadTestsFromModule(test_test_protocol2))
+    result.addTest(loader.loadTestsFromModule(test_tap2subunit))
+    result.addTest(loader.loadTestsFromModule(test_subunit_filter))
+    result.addTest(loader.loadTestsFromModule(test_subunit_tags))
+    result.addTest(loader.loadTestsFromModule(test_subunit_stats))
+    result.addTest(loader.loadTestsFromModule(test_run))
     return result
