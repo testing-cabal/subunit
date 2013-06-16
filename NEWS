@@ -8,6 +8,9 @@ NEXT (In development)
 IMPROVEMENTS
 ~~~~~~~~~~~~
 
+* `subunit-stats` no longer outputs encapsulated stdout as subunit.
+  (Robert Collins, #1171987)
+
 * The logic for `subunit.run` is now importable via python -
   `subunit.run.main`. (Robert Collins, #606770)
 

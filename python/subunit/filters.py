@@ -106,7 +106,8 @@ def run_tests_from_stream(input_stream, result, passthrough_stream=None,
 
 
 def filter_by_result(result_factory, output_path, passthrough, forward,
-                     input_stream=sys.stdin, protocol_version=1):
+                     input_stream=sys.stdin, protocol_version=1,
+                     passthrough_subunit=True):
     """Filter an input stream using a test result.
 
     :param result_factory: A callable that when passed an output stream
@@ -121,6 +122,7 @@ def filter_by_result(result_factory, output_path, passthrough, forward,
     :param input_stream: The source of subunit input.  Defaults to
         ``sys.stdin``.
     :param protocol_version: The subunit protocol version to expect.
+    :param passthrough_subunit: If True, passthrough should be as subunit.
     :return: A test result with the results of the run.
     """
     if passthrough:
@@ -147,7 +149,8 @@ def filter_by_result(result_factory, output_path, passthrough, forward,
         result = result_factory(output_to)
         run_tests_from_stream(
             input_stream, result, passthrough_stream, forward_stream,
-            protocol_version=protocol_version)
+            protocol_version=protocol_version,
+            passthrough_subunit=passthrough_subunit)
     finally:
         if output_path:
             output_to.close()
@@ -155,7 +158,7 @@ def filter_by_result(result_factory, output_path, passthrough, forward,
 
 
 def run_filter_script(result_factory, description, post_run_hook=None,
-    protocol_version=1):
+    protocol_version=1, passthrough_subunit=True):
     """Main function for simple subunit filter scripts.
 
     Many subunit filter scripts take a stream of subunit input and use a
@@ -169,12 +172,14 @@ def run_filter_script(result_factory, description, post_run_hook=None,
         a test result that outputs to that stream.
     :param description: A description of the filter script.
     :param protocol_version: What protocol version to consume/emit.
+    :param passthrough_subunit: If True, passthrough should be as subunit.
     """
     parser = make_options(description)
     (options, args) = parser.parse_args()
     result = filter_by_result(
         result_factory, options.output_to, not options.no_passthrough,
-        options.forward, protocol_version=protocol_version)
+        options.forward, protocol_version=protocol_version,
+        passthrough_subunit=passthrough_subunit)
     if post_run_hook:
         post_run_hook(result)
     if not safe_hasattr(result, 'wasSuccessful'):
