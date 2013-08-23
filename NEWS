@@ -14,6 +14,12 @@ BUG FIXES
 * TestTestProtocols' test_tags_both was set sort order dependent.
   (Robert Collins, #1025392)
 
+* TestTestProtocols' test_*_details were dictionary sort order dependent.
+  (Robert Collins, #1025392)
+
+* TestSubUnitTags's test_add_tag was also se sort order dependent.
+  (Robert Collins, #1025392)
+
 0.0.13
 ------
 

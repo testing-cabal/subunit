@@ -17,25 +17,46 @@
 """Tests for subunit.tag_stream."""
 
 from io import BytesIO
-import unittest
+
+import testtools
+from testtools.matchers import Contains
 
 import subunit
 import subunit.test_results
 
 
-class TestSubUnitTags(unittest.TestCase):
+class TestSubUnitTags(testtools.TestCase):
 
     def setUp(self):
+        super(TestSubUnitTags, self).setUp()
         self.original = BytesIO()
         self.filtered = BytesIO()
 
     def test_add_tag(self):
-        reference = BytesIO()
-        stream = subunit.StreamResultToBytes(reference)
-        stream.status(
-            test_id='test', test_status='inprogress', test_tags=set(['quux', 'foo']))
-        stream.status(
-            test_id='test', test_status='success', test_tags=set(['bar', 'quux', 'foo']))
+        # Literal values to avoid set sort-order dependencies. Python code show
+        # derivation.
+        # reference = BytesIO()
+        # stream = subunit.StreamResultToBytes(reference)
+        # stream.status(
+        #     test_id='test', test_status='inprogress', test_tags=set(['quux', 'foo']))
+        # stream.status(
+        #     test_id='test', test_status='success', test_tags=set(['bar', 'quux', 'foo']))
+        reference = [
+            b'\xb3)\x82\x17\x04test\x02\x04quux\x03foo\x05\x97n\x86\xb3)'
+                b'\x83\x1b\x04test\x03\x03bar\x04quux\x03fooqn\xab)',
+            b'\xb3)\x82\x17\x04test\x02\x04quux\x03foo\x05\x97n\x86\xb3)'
+                b'\x83\x1b\x04test\x03\x04quux\x03foo\x03bar\xaf\xbd\x9d\xd6',
+            b'\xb3)\x82\x17\x04test\x02\x04quux\x03foo\x05\x97n\x86\xb3)'
+                b'\x83\x1b\x04test\x03\x04quux\x03bar\x03foo\x03\x04b\r',
+            b'\xb3)\x82\x17\x04test\x02\x04quux\x03foo\x05\x97n\x86\xb3)'
+                b'\x83\x1b\x04test\x03\x03bar\x03foo\x04quux\xd2\x18\x1bC',
+            b'\xb3)\x82\x17\x04test\x02\x03foo\x04quux\xa6\xe1\xde\xec\xb3)'
+                b'\x83\x1b\x04test\x03\x03foo\x04quux\x03bar\x08\xc2X\x83',
+            b'\xb3)\x82\x17\x04test\x02\x03foo\x04quux\xa6\xe1\xde\xec\xb3)'
+                b'\x83\x1b\x04test\x03\x03bar\x03foo\x04quux\xd2\x18\x1bC',
+            b'\xb3)\x82\x17\x04test\x02\x03foo\x04quux\xa6\xe1\xde\xec\xb3)'
+                b'\x83\x1b\x04test\x03\x03foo\x03bar\x04quux:\x05e\x80',
+            ]
         stream = subunit.StreamResultToBytes(self.original)
         stream.status(
             test_id='test', test_status='inprogress', test_tags=set(['foo']))
@@ -44,7 +65,7 @@ class TestSubUnitTags(unittest.TestCase):
         self.original.seek(0)
         self.assertEqual(
             0, subunit.tag_stream(self.original, self.filtered, ["quux"]))
-        self.assertEqual(reference.getvalue(), self.filtered.getvalue())
+        self.assertThat(reference, Contains(self.filtered.getvalue()))
 
     def test_remove_tag(self):
         reference = BytesIO()
