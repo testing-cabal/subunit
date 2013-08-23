@@ -18,7 +18,7 @@ from io import BytesIO
 import datetime
 
 from testtools import TestCase
-from testtools.matchers import HasLength
+from testtools.matchers import Contains, HasLength
 from testtools.tests.test_testresult import TestStreamResultContract
 from testtools.testresult.doubles import StreamResult
 
@@ -38,7 +38,10 @@ CONSTANT_MIME = b'\xb3! #\x1aapplication/foo; charset=1x3Q\x15'
 CONSTANT_TIMESTAMP = b'\xb3+\x03\x13<\x17T\xcf\x80\xaf\xc8\x03barI\x96>-'
 CONSTANT_ROUTE_CODE = b'\xb3-\x03\x13\x03bar\x06source\x9cY9\x19'
 CONSTANT_RUNNABLE = b'\xb3(\x03\x0c\x03foo\xe3\xea\xf5\xa4'
-CONSTANT_TAGS = b'\xb3)\x80\x15\x03bar\x02\x03foo\x03barTHn\xb4'
+CONSTANT_TAGS = [
+    b'\xb3)\x80\x15\x03bar\x02\x03foo\x03barTHn\xb4',
+    b'\xb3)\x80\x15\x03bar\x02\x03bar\x03foo\xf8\xf1\x91o',
+    ]
 
 
 class TestStreamResultToBytesContract(TestCase, TestStreamResultContract):
@@ -202,7 +205,7 @@ class TestStreamResultToBytes(TestCase):
     def test_tags(self):
         result, output = self._make_result()
         result.status(test_id="bar", test_tags=set(['foo', 'bar']))
-        self.assertEqual(CONSTANT_TAGS, output.getvalue())
+        self.assertThat(CONSTANT_TAGS, Contains(output.getvalue()))
 
     def test_timestamp(self):
         timestamp = datetime.datetime(2001, 12, 12, 12, 59, 59, 45,
@@ -357,7 +360,7 @@ class TestByteStreamToStreamResult(TestCase):
             test_status='success', runnable=False)
 
     def test_tags(self):
-        self.check_event(CONSTANT_TAGS,
+        self.check_event(CONSTANT_TAGS[0],
             None, tags=set(['foo', 'bar']), test_id="bar")
 
     def test_timestamp(self):
