@@ -15,6 +15,7 @@
 #
 
 import codecs
+utf_8_decode = codecs.utf_8_decode
 import datetime
 from io import UnsupportedOperation
 import os
@@ -22,7 +23,8 @@ import select
 import struct
 import zlib
 
-from extras import safe_hasattr
+from extras import safe_hasattr, try_imports
+builtins = try_imports(['__builtin__', 'builtins'])
 
 import subunit
 import subunit.iso8601 as iso8601
@@ -381,7 +383,7 @@ class ByteStreamToStreamResult(object):
                 raise ParseError(
                     'Bad checksum - calculated (0x%x), stored (0x%x)'
                         % (crc, packet_crc))
-            if safe_hasattr(__builtins__, 'memoryview'):
+            if safe_hasattr(builtins, 'memoryview'):
                 body = memoryview(packet[-1])
             else:
                 body = packet[-1]
@@ -453,7 +455,12 @@ class ByteStreamToStreamResult(object):
             raise ParseError('UTF8 string at offset %d contains NUL byte' % (
                 pos-2,))
         try:
-            return utf8_bytes.decode('utf-8'), length+pos
+            utf8, decoded_bytes = utf_8_decode(utf8_bytes)
+            if decoded_bytes != length:
+                raise ParseError("Invalid (partially decodable) string at "
+                    "offset %d, %d undecoded bytes" % (
+                    pos-2, length - decoded_bytes))
+            return utf8, length+pos
         except UnicodeDecodeError:
             raise ParseError('UTF8 string at offset %d is not UTF8' % (pos-2,))
 

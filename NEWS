@@ -8,6 +8,9 @@ NEXT (In development)
 BUG FIXES
 ~~~~~~~~~
 
+* Memoryview detection was broken and thus it's use was never really tested.
+  (Robert Collins, 1216101)
+
 * TestProtocol2's tag tests were set sort order dependent.
   (Robert Collins, #1025392)
 
