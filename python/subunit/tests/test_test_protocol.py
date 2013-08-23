@@ -34,6 +34,7 @@ except ImportError:
         Python27TestResult,
         ExtendedTestResult,
         )
+from testtools.matchers import Contains
 
 import subunit
 from subunit import _remote_exception_str, _remote_exception_str_chunked
@@ -1128,9 +1129,10 @@ class TestIsolatedTestSuite(TestCase):
         self.assertEqual(self.SampleTestToIsolate.TEST, False)
 
 
-class TestTestProtocolClient(unittest.TestCase):
+class TestTestProtocolClient(TestCase):
 
     def setUp(self):
+        super(TestTestProtocolClient, self).setUp()
         self.io = BytesIO()
         self.protocol = subunit.TestProtocolClient(self.io)
         self.unicode_test = PlaceHolder(_u('\u2603'))
@@ -1324,7 +1326,9 @@ class TestTestProtocolClient(unittest.TestCase):
 
     def test_tags_both(self):
         self.protocol.tags(set(['quux']), set(['bar']))
-        self.assertEqual(_b("tags: quux -bar\n"), self.io.getvalue())
+        self.assertThat(
+            [b"tags: quux -bar\n", b"tags: -bar quux\n"],
+            Contains(self.io.getvalue()))
 
     def test_tags_gone(self):
         self.protocol.tags(set(), set(['bar']))
