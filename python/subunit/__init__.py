@@ -160,7 +160,7 @@ from subunit.v2 import ByteStreamToStreamResult, StreamResultToBytes
 # If the releaselevel is 'final', then the tarball will be major.minor.micro.
 # Otherwise it is major.minor.micro~$(revno).
 
-__version__ = (0, 0, 13, 'final', 0)
+__version__ = (0, 0, 14, 'final', 0)
 
 PROGRESS_SET = 0
 PROGRESS_CUR = 1
