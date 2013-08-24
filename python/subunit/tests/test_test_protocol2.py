@@ -335,20 +335,24 @@ class TestByteStreamToStreamResult(TestCase):
         bad_file_length_content = b'\xb3!@\x13\x06barney\x04woo\xdc\xe2\xdb\x35'
         self.check_events(bad_file_length_content, [
             self._event(test_id="subunit.parser", eof=True,
-                file_name="Packet data", file_bytes=bad_file_length_content),
+                file_name="Packet data", file_bytes=bad_file_length_content,
+                mime_type="application/octet-stream"),
             self._event(test_id="subunit.parser", test_status="fail", eof=True,
                 file_name="Parser Error",
-                file_bytes=b"File content extends past end of packet: claimed 4 bytes, 3 available"),
+                file_bytes=b"File content extends past end of packet: claimed 4 bytes, 3 available",
+                mime_type="text/plain;charset=utf8"),
             ])
 
     def test_packet_length_4_word_varint(self):
         packet_data = b'\xb3!@\xc0\x00\x11'
         self.check_events(packet_data, [
             self._event(test_id="subunit.parser", eof=True,
-                file_name="Packet data", file_bytes=packet_data),
+                file_name="Packet data", file_bytes=packet_data,
+                mime_type="application/octet-stream"),
             self._event(test_id="subunit.parser", test_status="fail", eof=True,
                 file_name="Parser Error",
-                file_bytes=b"3 byte maximum given but 4 byte value found."),
+                file_bytes=b"3 byte maximum given but 4 byte value found.",
+                mime_type="text/plain;charset=utf8"),
             ])
 
     def test_mime(self):
@@ -377,42 +381,50 @@ class TestByteStreamToStreamResult(TestCase):
         file_bytes = CONSTANT_MIME[:-1] + b'\x00'
         self.check_events( file_bytes, [
             self._event(test_id="subunit.parser", eof=True,
-                file_name="Packet data", file_bytes=file_bytes),
+                file_name="Packet data", file_bytes=file_bytes,
+                mime_type="application/octet-stream"),
             self._event(test_id="subunit.parser", test_status="fail", eof=True,
                 file_name="Parser Error",
                 file_bytes=b'Bad checksum - calculated (0x78335115), '
-                    b'stored (0x78335100)'),
+                    b'stored (0x78335100)',
+                mime_type="text/plain;charset=utf8"),
             ])
 
     def test_not_utf8_in_string(self):
         file_bytes = CONSTANT_ROUTE_CODE[:5] + b'\xb4' + CONSTANT_ROUTE_CODE[6:-4] + b'\xce\x56\xc6\x17'
         self.check_events(file_bytes, [
             self._event(test_id="subunit.parser", eof=True,
-                file_name="Packet data", file_bytes=file_bytes),
+                file_name="Packet data", file_bytes=file_bytes,
+                mime_type="application/octet-stream"),
             self._event(test_id="subunit.parser", test_status="fail", eof=True,
                 file_name="Parser Error",
-                file_bytes=b'UTF8 string at offset 2 is not UTF8'),
+                file_bytes=b'UTF8 string at offset 2 is not UTF8',
+                mime_type="text/plain;charset=utf8"),
             ])
 
     def test_NULL_in_string(self):
         file_bytes = CONSTANT_ROUTE_CODE[:6] + b'\x00' + CONSTANT_ROUTE_CODE[7:-4] + b'\xd7\x41\xac\xfe'
         self.check_events(file_bytes, [
             self._event(test_id="subunit.parser", eof=True,
-                file_name="Packet data", file_bytes=file_bytes),
+                file_name="Packet data", file_bytes=file_bytes,
+                mime_type="application/octet-stream"),
             self._event(test_id="subunit.parser", test_status="fail", eof=True,
                 file_name="Parser Error",
-                file_bytes=b'UTF8 string at offset 2 contains NUL byte'),
+                file_bytes=b'UTF8 string at offset 2 contains NUL byte',
+                mime_type="text/plain;charset=utf8"),
             ])
 
     def test_bad_utf8_stringlength(self):
         file_bytes = CONSTANT_ROUTE_CODE[:4] + b'\x3f' + CONSTANT_ROUTE_CODE[5:-4] + b'\xbe\x29\xe0\xc2'
         self.check_events(file_bytes, [
             self._event(test_id="subunit.parser", eof=True,
-                file_name="Packet data", file_bytes=file_bytes),
+                file_name="Packet data", file_bytes=file_bytes,
+                mime_type="application/octet-stream"),
             self._event(test_id="subunit.parser", test_status="fail", eof=True,
                 file_name="Parser Error",
                 file_bytes=b'UTF8 string at offset 2 extends past end of '
-                    b'packet: claimed 63 bytes, 10 available'),
+                    b'packet: claimed 63 bytes, 10 available',
+                mime_type="text/plain;charset=utf8"),
             ])
 
     def test_route_code_and_file_content(self):

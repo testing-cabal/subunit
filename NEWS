@@ -5,6 +5,12 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+BUG FIXES
+~~~~~~~~~
+
+* V2 parser errors now set appropriate mime types for the encapsulated packet
+  data and the error message. (Robert Collins)
+
 0.0.15
 ------
 
