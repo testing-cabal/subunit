@@ -11,6 +11,9 @@ BUG FIXES
 * Clients of subunit did not expect memoryview objects in StreamResult events.
   (Robert Collins)
 
+* Memoryview and struct were mutually incompatible in 2.7.3 and 3.2.
+  (Robert Collins, #1216163)
+
 0.0.14
 ------
 
