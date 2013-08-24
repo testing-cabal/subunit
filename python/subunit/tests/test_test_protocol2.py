@@ -303,6 +303,10 @@ class TestByteStreamToStreamResult(TestCase):
             source, non_subunit_name="stdout").run(result)
         self.assertEqual(b'', source.read())
         self.assertEqual(events, result._events)
+        #- any file attachments should be byte contents [as users assume that].
+        for event in result._events:
+            if event[5] is not None:
+                self.assertIsInstance(event[6], bytes)
 
     def check_event(self, source_bytes, test_status=None, test_id="foo",
         route_code=None, timestamp=None, tags=None, mime_type=None,

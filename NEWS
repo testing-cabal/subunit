@@ -5,6 +5,12 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+BUG FIXES
+~~~~~~~~~
+
+* Clients of subunit did not expect memoryview objects in StreamResult events.
+  (Robert Collins)
+
 0.0.14
 ------
 

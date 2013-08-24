@@ -385,8 +385,10 @@ class ByteStreamToStreamResult(object):
                         % (crc, packet_crc))
             if safe_hasattr(builtins, 'memoryview'):
                 body = memoryview(packet[-1])
+                view = True
             else:
                 body = packet[-1]
+                view = False
             # Discard CRC-32
             body = body[:-4]
             # One packet could have both file and status data; the Python API
@@ -421,6 +423,8 @@ class ByteStreamToStreamResult(object):
                 content_length, consumed = self._parse_varint(body, pos)
                 pos += consumed
                 file_bytes = body[pos:pos+content_length]
+                if view:
+                    file_bytes = file_bytes.tobytes()
                 if len(file_bytes) != content_length:
                     raise ParseError('File content extends past end of packet: '
                         'claimed %d bytes, %d available' % (
