@@ -50,6 +50,24 @@ FLAG_EOF = 0x0010
 FLAG_FILE_CONTENT = 0x0040
 EPOCH = datetime.datetime.utcfromtimestamp(0).replace(tzinfo=iso8601.Utc())
 NUL_ELEMENT = b'\0'[0]
+# Contains True for types for which 'nul in thing' falsely returns false.
+_nul_test_broken = {}
+
+
+def has_nul(buffer_or_bytes):
+    """Return True if a null byte is present in buffer_or_bytes."""
+    # Simple "if NUL_ELEMENT in utf8_bytes:" fails on Python 3.1 and 3.2 with
+    # memoryviews. See https://bugs.launchpad.net/subunit/+bug/1216246
+    buffer_type = type(buffer_or_bytes)
+    broken = _nul_test_broken.get(buffer_type)
+    if broken is None:
+        reference = buffer_type(b'\0')
+        broken = not NUL_ELEMENT in reference
+        _nul_test_broken[buffer_type] = broken
+    if broken:
+        return b'\0' in buffer_or_bytes
+    else:
+        return NUL_ELEMENT in buffer_or_bytes
 
 
 class ParseError(Exception):
@@ -462,7 +480,7 @@ class ByteStreamToStreamResult(object):
                 'UTF8 string at offset %d extends past end of packet: '
                 'claimed %d bytes, %d available' % (pos - 2, length,
                 len(utf8_bytes)))
-        if NUL_ELEMENT in utf8_bytes:
+        if has_nul(utf8_bytes):
             raise ParseError('UTF8 string at offset %d contains NUL byte' % (
                 pos-2,))
         try:
