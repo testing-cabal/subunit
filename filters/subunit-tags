@@ -23,4 +23,5 @@ subunit-tags foo -bar -> adds foo and removes bar
 import sys
 
 from subunit import tag_stream
+
 sys.exit(tag_stream(sys.stdin, sys.stdout, sys.argv[1:]))
