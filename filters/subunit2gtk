@@ -142,7 +142,7 @@ class GTKTestResult(unittest.TestResult):
 
     def stopTest(self, test):
         super(GTKTestResult, self).stopTest(test)
-	gobject.idle_add(self._stopTest)
+        gobject.idle_add(self._stopTest)
 
     def _stopTest(self):
         self.progress_model.advance()
@@ -159,26 +159,26 @@ class GTKTestResult(unittest.TestResult):
             super(GTKTestResult, self).stopTestRun()
         except AttributeError:
             pass
-	gobject.idle_add(self.pbar.set_text, 'Finished')
+        gobject.idle_add(self.pbar.set_text, 'Finished')
 
     def addError(self, test, err):
         super(GTKTestResult, self).addError(test, err)
-	gobject.idle_add(self.update_counts)
+        gobject.idle_add(self.update_counts)
 
     def addFailure(self, test, err):
         super(GTKTestResult, self).addFailure(test, err)
-	gobject.idle_add(self.update_counts)
+        gobject.idle_add(self.update_counts)
 
     def addSuccess(self, test):
         super(GTKTestResult, self).addSuccess(test)
-	gobject.idle_add(self.update_counts)
+        gobject.idle_add(self.update_counts)
 
     def addSkip(self, test, reason):
         # addSkip is new in Python 2.7/3.1
         addSkip = getattr(super(GTKTestResult, self), 'addSkip', None)
         if callable(addSkip):
             addSkip(test, reason)
-	gobject.idle_add(self.update_counts)
+        gobject.idle_add(self.update_counts)
 
     def addExpectedFailure(self, test, err):
         # addExpectedFailure is new in Python 2.7/3.1
@@ -186,7 +186,7 @@ class GTKTestResult(unittest.TestResult):
             'addExpectedFailure', None)
         if callable(addExpectedFailure):
             addExpectedFailure(test, err)
-	gobject.idle_add(self.update_counts)
+        gobject.idle_add(self.update_counts)
 
     def addUnexpectedSuccess(self, test):
         # addUnexpectedSuccess is new in Python 2.7/3.1
@@ -194,7 +194,7 @@ class GTKTestResult(unittest.TestResult):
             'addUnexpectedSuccess', None)
         if callable(addUnexpectedSuccess):
             addUnexpectedSuccess(test)
-	gobject.idle_add(self.update_counts)
+        gobject.idle_add(self.update_counts)
 
     def progress(self, offset, whence):
         if whence == PROGRESS_PUSH:
