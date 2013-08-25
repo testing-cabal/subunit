@@ -19,6 +19,7 @@ from unittest import TestLoader
 from subunit.tests import (
     test_chunked,
     test_details,
+    test_filters,
     test_progress_model,
     test_run,
     test_subunit_filter,
@@ -34,6 +35,7 @@ def test_suite():
     loader = TestLoader()
     result = loader.loadTestsFromModule(test_chunked)
     result.addTest(loader.loadTestsFromModule(test_details))
+    result.addTest(loader.loadTestsFromModule(test_filters))
     result.addTest(loader.loadTestsFromModule(test_progress_model))
     result.addTest(loader.loadTestsFromModule(test_test_results))
     result.addTest(loader.loadTestsFromModule(test_test_protocol))

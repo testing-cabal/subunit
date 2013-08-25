@@ -179,7 +179,8 @@ def run_filter_script(result_factory, description, post_run_hook=None,
     result = filter_by_result(
         result_factory, options.output_to, not options.no_passthrough,
         options.forward, protocol_version=protocol_version,
-        passthrough_subunit=passthrough_subunit)
+        passthrough_subunit=passthrough_subunit,
+        input_stream=find_stream(sys.stdin, args))
     if post_run_hook:
         post_run_hook(result)
     if not safe_hasattr(result, 'wasSuccessful'):
@@ -188,3 +189,18 @@ def run_filter_script(result_factory, description, post_run_hook=None,
         sys.exit(0)
     else:
         sys.exit(1)
+
+
+def find_stream(stdin, argv):
+    """Find a stream to use as input for filters.
+
+    :param stdin: Standard in - used if no files are named in argv.
+    :param argv: Command line arguments after option parsing. If one file
+        is named, that is opened in read only binary mode and returned.
+        A missing file will raise an exception, as will multiple file names.
+    """
+    assert len(argv) < 2, "Too many filenames."
+    if argv:
+        return open(argv[0], 'rb')
+    else:
+        return stdin

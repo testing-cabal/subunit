@@ -14,6 +14,12 @@ BUG FIXES
 * V2 parser errors now set appropriate mime types for the encapsulated packet
   data and the error message. (Robert Collins)
 
+IMPROVEMENTS
+~~~~~~~~~~~~
+
+* Most filters will now accept a file path argument instead of only reading
+  from stdin. (Robert Collins, #409206)
+
 0.0.15
 ------
 

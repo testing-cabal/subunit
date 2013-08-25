@@ -24,6 +24,7 @@ import unittest
 from testtools import StreamToExtendedDecorator, DecorateTestCaseResult, StreamResultRouter
 
 from subunit import ByteStreamToStreamResult
+from subunit.filters import find_stream
 from subunit.test_results import CatFiles
 
 parser = OptionParser(description=__doc__)
@@ -33,7 +34,8 @@ parser.add_option("--progress", action="store_true",
     help="Use bzrlib's test reporter (requires bzrlib)",
         default=False)
 (options, args) = parser.parse_args()
-test = ByteStreamToStreamResult(sys.stdin, non_subunit_name='stdout')
+test = ByteStreamToStreamResult(
+    find_stream(sys.stdin, args), non_subunit_name='stdout')
 def wrap_result(result):
     result = StreamToExtendedDecorator(result)
     if not options.no_passthrough:

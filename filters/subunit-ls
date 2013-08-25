@@ -24,7 +24,7 @@ from testtools import (
     StreamSummary)
 
 from subunit import ByteStreamToStreamResult
-from subunit.filters import run_tests_from_stream
+from subunit.filters import find_stream, run_tests_from_stream
 from subunit.test_results import (
     CatFiles,
     TestIdPrintingResult,
@@ -41,7 +41,8 @@ parser.add_option("--exists", action="store_true",
 parser.add_option("--no-passthrough", action="store_true",
     help="Hide all non subunit input.", default=False, dest="no_passthrough")
 (options, args) = parser.parse_args()
-test = ByteStreamToStreamResult(sys.stdin, non_subunit_name="stdout")
+test = ByteStreamToStreamResult(
+    find_stream(sys.stdin, args), non_subunit_name="stdout")
 result = TestIdPrintingResult(sys.stdout, options.times, options.exists)
 if not options.no_passthrough:
     result = StreamResultRouter(result)

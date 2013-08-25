@@ -22,7 +22,7 @@ import sys
 from testtools import StreamToExtendedDecorator
 
 from subunit import ByteStreamToStreamResult, TestProtocolClient
-from subunit.filters import run_tests_from_stream
+from subunit.filters import find_stream, run_tests_from_stream
 
 
 def make_options(description):
@@ -33,7 +33,8 @@ def make_options(description):
 def main():
     parser = make_options(__doc__)
     (options, args) = parser.parse_args()
-    case = ByteStreamToStreamResult(sys.stdin, non_subunit_name='stdout')
+    case = ByteStreamToStreamResult(
+        find_stream(sys.stdin, args), non_subunit_name='stdout')
     result = StreamToExtendedDecorator(TestProtocolClient(sys.stdout))
     # What about stdout chunks?
     result.startTestRun()

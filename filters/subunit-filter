@@ -38,7 +38,7 @@ from subunit import (
     StreamResultToBytes,
     read_test_list,
     )
-from subunit.filters import filter_by_result
+from subunit.filters import filter_by_result, find_stream
 from subunit.test_results import (
     and_predicates,
     make_tag_filter,
@@ -156,7 +156,8 @@ def main():
         output_path=None,
         passthrough=(not options.no_passthrough),
         forward=False,
-        protocol_version=2)
+        protocol_version=2,
+        input_stream=find_stream(sys.stdin, args))
     sys.exit(0)
 
 
