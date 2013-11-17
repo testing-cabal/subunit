@@ -6,7 +6,7 @@
 #  license at the users choice. A copy of both licenses are available in the
 #  project source as Apache-2.0 and BSD. You may not use this file except in
 #  compliance with one of these two licences.
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 #  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -20,6 +20,7 @@ from subunit.tests import (
     test_chunked,
     test_details,
     test_filters,
+    test_output_filter,
     test_progress_model,
     test_run,
     test_subunit_filter,
@@ -45,4 +46,5 @@ def test_suite():
     result.addTest(loader.loadTestsFromModule(test_subunit_tags))
     result.addTest(loader.loadTestsFromModule(test_subunit_stats))
     result.addTest(loader.loadTestsFromModule(test_run))
+    result.addTest(loader.loadTestsFromModule(test_output_filter))
     return result
