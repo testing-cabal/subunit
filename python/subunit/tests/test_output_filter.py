@@ -20,10 +20,13 @@ from collections import namedtuple
 import datetime
 from functools import partial
 from io import BytesIO
+from tempfile import NamedTemporaryFile
 from testtools import TestCase
 from testtools.matchers import (
     Equals,
+    IsInstance,
     Matcher,
+    MatchesListwise,
     Mismatch,
 )
 from testtools.testresult.doubles import StreamResult
@@ -34,6 +37,7 @@ from subunit._output import (
     parse_arguments,
     translate_command_name,
     utc,
+    write_chunked_file,
 )
 import subunit._output as _o
 
@@ -71,11 +75,13 @@ class OutputFilterArgumentTests(TestCase):
             self.assertThat(translate_command_name(command), Equals(command))
 
     def test_all_commands_parse_file_attachment(self):
-        for command in self._all_supported_commands:
-            args = safe_parse_arguments(
-                args=[command, 'foo', '--attach-file', '/some/path']
-            )
-            self.assertThat(args.attach_file, Equals('/some/path'))
+        with NamedTemporaryFile() as tmp_file:
+            for command in self._all_supported_commands:
+                args = safe_parse_arguments(
+                    args=[command, 'foo', '--attach-file', tmp_file.name]
+                )
+                self.assertThat(args.attach_file, IsInstance(file))
+                self.assertThat(args.attach_file.name, Equals(tmp_file.name))
 
 
 class ByteStreamCompatibilityTests(TestCase):
@@ -184,6 +190,40 @@ class ByteStreamCompatibilityTests(TestCase):
             )
         )
 
+
+class FileChunkingTests(TestCase):
+
+    def _write_chunk_file(self, file_data, chunk_size):
+        """Write chunked data to a subunit stream, return a StreamResult object."""
+        stream = BytesIO()
+        output_writer = StreamResultToBytes(output_stream=stream)
+
+        with NamedTemporaryFile() as f:
+            f.write(file_data)
+            f.seek(0)
+
+            write_chunked_file(f, 'foo_test', output_writer, chunk_size)
+
+        stream.seek(0)
+
+        case = ByteStreamToStreamResult(source=stream)
+        result = StreamResult()
+        case.run(result)
+        return result
+
+    def test_file_chunk_size_is_honored(self):
+        result = self._write_chunk_file("Hello", 1)
+        self.assertThat(
+            result._events,
+            MatchesListwise([
+                MatchesCall(call='status', file_bytes='H', eof=False),
+                MatchesCall(call='status', file_bytes='e', eof=False),
+                MatchesCall(call='status', file_bytes='l', eof=False),
+                MatchesCall(call='status', file_bytes='l', eof=False),
+                MatchesCall(call='status', file_bytes='o', eof=False),
+                MatchesCall(call='status', file_bytes='', eof=True),
+            ])
+        )
 
 class MatchesCall(Matcher):
 

@@ -15,6 +15,7 @@
 
 from argparse import ArgumentParser
 import datetime
+from functools import partial
 from sys import stdout
 
 from subunit.v2 import StreamResultToBytes
@@ -45,6 +46,11 @@ def parse_arguments(args=None, ParserClass=ArgumentParser):
     common_args.add_argument(
         "test_id",
         help="A string that uniquely identifies this test."
+    )
+    common_args.add_argument(
+        "--attach-file",
+        type=file,
+        help="Attach a file to the result stream for this test."
     )
     sub_parsers = parser.add_subparsers(dest="action")
 
@@ -101,12 +107,31 @@ def get_output_stream_writer():
 
 def generate_bytestream(args, output_writer):
     output_writer.startTestRun()
+    if args.attach_file:
+        write_chunked_file(args.attach_file, args.test_id, output_writer)
     output_writer.status(
         test_id=args.test_id,
         test_status=translate_command_name(args.action),
         timestamp=create_timestamp()
         )
     output_writer.stopTestRun()
+
+
+def write_chunked_file(file_obj, test_id, output_writer, chunk_size=1024):
+    reader = partial(file_obj.read, chunk_size)
+    for chunk in iter(reader, ''):
+        output_writer.status(
+            test_id=test_id,
+            file_name=file_obj.name,
+            file_bytes=chunk,
+            eof=False,
+        )
+    output_writer.status(
+            test_id=test_id,
+            file_name=file_obj.name,
+            file_bytes='',
+            eof=True,
+        )
 
 
 _ZERO = datetime.timedelta(0)
