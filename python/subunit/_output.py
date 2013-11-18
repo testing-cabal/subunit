@@ -101,6 +101,20 @@ def parse_arguments(args=None, ParserClass=ArgumentParser):
         parents=[common_args]
     )
 
+    parser_expected_fail = sub_parsers.add_parser(
+        "expected-fail",
+        help="Marks a test as failing expectedly (this is not counted as a "\
+            "failure). " + final_state,
+        parents=[common_args],
+    )
+
+    parser_unexpected_success = sub_parsers.add_parser(
+        "unexpected-success",
+        help="Marks a test as succeeding unexpectedly (this is counted as a "\
+            "failure). " + final_state,
+        parents=[common_args],
+    )
+
     return parser.parse_args(args)
 
 
@@ -112,6 +126,8 @@ def translate_command_name(command_name):
     return {
         'start': 'inprogress',
         'pass': 'success',
+        'expected-fail': 'xfail',
+        'unexpected-success': 'uxsuccess',
     }.get(command_name, command_name)
 
 

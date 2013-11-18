@@ -55,7 +55,15 @@ safe_parse_arguments = partial(parse_arguments, ParserClass=SafeArgumentParser)
 
 class OutputFilterArgumentParserTests(TestCase):
 
-    _all_supported_commands = ('start', 'pass', 'fail', 'skip', 'exists')
+    _all_supported_commands = (
+        'exists',
+        'expected-fail',
+        'fail',
+        'pass',
+        'skip',
+        'start',
+        'unexpected-success',
+    )
 
     def _test_command(self, command, test_id):
         args = safe_parse_arguments(args=[command, test_id])
@@ -70,6 +78,8 @@ class OutputFilterArgumentParserTests(TestCase):
     def test_command_translation(self):
         self.assertThat(translate_command_name('start'), Equals('inprogress'))
         self.assertThat(translate_command_name('pass'), Equals('success'))
+        self.assertThat(translate_command_name('expected-fail'), Equals('xfail'))
+        self.assertThat(translate_command_name('unexpected-success'), Equals('uxsuccess'))
         for command in ('fail', 'skip', 'exists'):
             self.assertThat(translate_command_name(command), Equals(command))
 
@@ -199,6 +209,36 @@ class ByteStreamCompatibilityTests(TestCase):
                 call='status',
                 test_id='foo',
                 test_status='exists',
+                timestamp=self._dummy_timestamp,
+            )
+        )
+
+    def test_expected_fail_generates_xfail(self):
+        result = self._get_result_for(
+            ['expected-fail', 'foo'],
+        )
+
+        self.assertThat(
+            result._events[0],
+            MatchesCall(
+                call='status',
+                test_id='foo',
+                test_status='xfail',
+                timestamp=self._dummy_timestamp,
+            )
+        )
+
+    def test_unexpected_success_generates_uxsuccess(self):
+        result = self._get_result_for(
+            ['unexpected-success', 'foo'],
+        )
+
+        self.assertThat(
+            result._events[0],
+            MatchesCall(
+                call='status',
+                test_id='foo',
+                test_status='uxsuccess',
                 timestamp=self._dummy_timestamp,
             )
         )
