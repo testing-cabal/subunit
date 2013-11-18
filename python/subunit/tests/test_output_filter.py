@@ -23,7 +23,6 @@ from testtools.matchers import (
     Equals,
     Matcher,
     Mismatch,
-    MatchesListwise,
 )
 from testtools.testresult.doubles import StreamResult
 
@@ -94,10 +93,8 @@ class ByteStreamCompatibilityTests(TestCase):
         )
 
         self.assertThat(
-            result._events,
-            MatchesListwise([
-                MatchesCall(call='status', test_id='foo', test_status='inprogress'),
-            ])
+            result._events[0],
+            MatchesCall(call='status', test_id='foo', test_status='inprogress')
         )
 
     def test_pass_generates_success(self):
@@ -106,10 +103,8 @@ class ByteStreamCompatibilityTests(TestCase):
         )
 
         self.assertThat(
-            result._events,
-            MatchesListwise([
-                MatchesCall(call='status', test_id='foo', test_status='success'),
-            ])
+            result._events[0],
+            MatchesCall(call='status', test_id='foo', test_status='success')
         )
 
     def test_fail_generates_fail(self):
@@ -118,10 +113,8 @@ class ByteStreamCompatibilityTests(TestCase):
         )
 
         self.assertThat(
-            result._events,
-            MatchesListwise([
-                MatchesCall(call='status', test_id='foo', test_status='fail'),
-            ])
+            result._events[0],
+            MatchesCall(call='status', test_id='foo', test_status='fail')
         )
 
     def test_skip_generates_skip(self):
@@ -130,10 +123,8 @@ class ByteStreamCompatibilityTests(TestCase):
         )
 
         self.assertThat(
-            result._events,
-            MatchesListwise([
-                MatchesCall(call='status', test_id='foo', test_status='skip'),
-            ])
+            result._events[0],
+            MatchesCall(call='status', test_id='foo', test_status='skip')
         )
 
 
