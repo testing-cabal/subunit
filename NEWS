@@ -20,6 +20,9 @@ IMPROVEMENTS
 * Most filters will now accept a file path argument instead of only reading
   from stdin. (Robert Collins, #409206)
 
+* Add ``subunit-output`` tool that can generate a Subunit v2 bytestream from
+  arguments passed on the command line. (Thomi Richards, #1252084)
+
 0.0.15
 ------
 
@@ -334,10 +337,10 @@ BUG FIXES
 IMPROVEMENTS
 ~~~~~~~~~~~~
 
-* New filter `subunit-notify` that will show a notification window with test 
+* New filter `subunit-notify` that will show a notification window with test
   statistics when the test run finishes.
 
-* subunit.run will now pipe its output to the command in the 
+* subunit.run will now pipe its output to the command in the
   SUBUNIT_FORMATTER environment variable, if set.
 
 0.0.4
@@ -356,7 +359,7 @@ BUG FIXES
 -----
 
   CHANGES:
-  
+
     * License change, by unanimous agreement of contributors to BSD/Apache
       License Version 2.0. This makes Subunit compatible with more testing
       frameworks.
@@ -364,7 +367,7 @@ BUG FIXES
   IMPROVEMENTS:
 
     * CPPUnit is now directly supported: subunit builds a cppunit listener
-      ``libcppunit-subunit``. 
+      ``libcppunit-subunit``.
 
     * In the python API ``addExpectedFailure`` and ``addUnexpectedSuccess``
       from python 2.7/3.1 are now supported. ``addExpectedFailure`` is
@@ -382,7 +385,7 @@ BUG FIXES
     * Multipart test outcomes are tentatively supported; the exact protocol
       for them, both serialiser and object is not yet finalised. Testers and
       early adopters are sought. As part of this and also in an attempt to
-      provider a more precise focus on the wire protocol and toolchain, 
+      provider a more precise focus on the wire protocol and toolchain,
       Subunit now depends on testtools (http://launchpad.net/testtools)
       release 0.9.0 or newer.
 
@@ -453,7 +456,7 @@ BUG FIXES
       and like in the protocol, if called while a test is active only applies
       to that test. (Robert Collins)
 
-    * ``TestResultFilter`` takes a new optional constructor parameter 
+    * ``TestResultFilter`` takes a new optional constructor parameter
       ``filter_predicate``.  (Martin Pool)
 
     * When a progress: directive is encountered in a subunit stream, the

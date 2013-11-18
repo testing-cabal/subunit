@@ -43,6 +43,7 @@ import subunit._output as _o
 
 
 class SafeArgumentParser(argparse.ArgumentParser):
+    """An ArgumentParser class that doesn't call sys.exit."""
 
     def exit(self, status=0, message=""):
         raise RuntimeError("ArgumentParser requested to exit with status "\
@@ -52,9 +53,7 @@ class SafeArgumentParser(argparse.ArgumentParser):
 safe_parse_arguments = partial(parse_arguments, ParserClass=SafeArgumentParser)
 
 
-class OutputFilterArgumentTests(TestCase):
-
-    """Tests for the command line argument parser."""
+class OutputFilterArgumentParserTests(TestCase):
 
     _all_supported_commands = ('start', 'pass', 'fail', 'skip', 'exists')
 
