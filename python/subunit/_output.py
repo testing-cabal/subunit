@@ -43,17 +43,38 @@ def parse_arguments(args=None):
         identifies this test.""")
     sub_parsers = parser.add_subparsers(dest="action")
 
-    parser_start = sub_parsers.add_parser("start", help="Start a test.",
-        parents=[common_args])
+    final_state = "This is a final action: No more actions may be generated " \
+        "for this test id after this one."
 
-    parser_pass = sub_parsers.add_parser("pass", help="Pass a test.",
-        parents=[common_args])
+    parser_start = sub_parsers.add_parser(
+        "start",
+        help="Start a test.",
+        parents=[common_args]
+    )
 
-    parser_fail = sub_parsers.add_parser("fail", help="Fail a test.",
-        parents=[common_args])
+    parser_pass = sub_parsers.add_parser(
+        "pass",
+        help="Pass a test. " + final_state,
+        parents=[common_args]
+    )
 
-    parser_skip = sub_parsers.add_parser("skip", help="Skip a test.",
-        parents=[common_args])
+    parser_fail = sub_parsers.add_parser(
+        "fail",
+        help="Fail a test. " + final_state,
+        parents=[common_args]
+    )
+
+    parser_skip = sub_parsers.add_parser(
+        "skip",
+        help="Skip a test. " + final_state,
+        parents=[common_args]
+    )
+
+    parser_exists = sub_parsers.add_parser(
+        "exists",
+        help="Marks a test as existing. " + final_state,
+        parents=[common_args]
+    )
 
     return parser.parse_args(args)
 

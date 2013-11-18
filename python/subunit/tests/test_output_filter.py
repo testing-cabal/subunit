@@ -18,6 +18,7 @@
 from io import BytesIO
 
 from collections import namedtuple
+import datetime
 from testtools import TestCase
 from testtools.matchers import (
     Equals,
@@ -31,7 +32,9 @@ from subunit._output import (
     generate_bytestream,
     parse_arguments,
     translate_command_name,
+    utc,
 )
+import subunit._output as _o
 
 class OutputFilterArgumentTests(TestCase):
 
@@ -55,6 +58,9 @@ class OutputFilterArgumentTests(TestCase):
     def test_can_parse_skip_test(self):
         self._test_command('skip', self.getUniqueString())
 
+    def test_can_parse_exists(self):
+        self._test_command('exists', self.getUniqueString())
+
     def test_command_translation(self):
         self.assertThat(translate_command_name('start'), Equals('inprogress'))
         self.assertThat(translate_command_name('pass'), Equals('success'))
@@ -63,6 +69,12 @@ class OutputFilterArgumentTests(TestCase):
 
 
 class ByteStreamCompatibilityTests(TestCase):
+
+    _dummy_timestamp = datetime.datetime(2013, 1, 1, 0, 0, 0, 0, utc)
+
+    def setUp(self):
+        super(ByteStreamCompatibilityTests, self).setUp()
+        self.patch(_o, 'create_timestamp', lambda: self._dummy_timestamp)
 
     def _get_result_for(self, *commands):
         """Get a result object from *commands.
@@ -94,7 +106,12 @@ class ByteStreamCompatibilityTests(TestCase):
 
         self.assertThat(
             result._events[0],
-            MatchesCall(call='status', test_id='foo', test_status='inprogress')
+            MatchesCall(
+                call='status',
+                test_id='foo',
+                test_status='inprogress',
+                timestamp=self._dummy_timestamp,
+            )
         )
 
     def test_pass_generates_success(self):
@@ -104,7 +121,12 @@ class ByteStreamCompatibilityTests(TestCase):
 
         self.assertThat(
             result._events[0],
-            MatchesCall(call='status', test_id='foo', test_status='success')
+            MatchesCall(
+                call='status',
+                test_id='foo',
+                test_status='success',
+                timestamp=self._dummy_timestamp,
+            )
         )
 
     def test_fail_generates_fail(self):
@@ -114,7 +136,12 @@ class ByteStreamCompatibilityTests(TestCase):
 
         self.assertThat(
             result._events[0],
-            MatchesCall(call='status', test_id='foo', test_status='fail')
+            MatchesCall(
+                call='status',
+                test_id='foo',
+                test_status='fail',
+                timestamp=self._dummy_timestamp,
+            )
         )
 
     def test_skip_generates_skip(self):
@@ -124,7 +151,27 @@ class ByteStreamCompatibilityTests(TestCase):
 
         self.assertThat(
             result._events[0],
-            MatchesCall(call='status', test_id='foo', test_status='skip')
+            MatchesCall(
+                call='status',
+                test_id='foo',
+                test_status='skip',
+                timestamp=self._dummy_timestamp,
+            )
+        )
+
+    def test_exists_generates_exists(self):
+        result = self._get_result_for(
+            ['exists', 'foo'],
+        )
+
+        self.assertThat(
+            result._events[0],
+            MatchesCall(
+                call='status',
+                test_id='foo',
+                test_status='exists',
+                timestamp=self._dummy_timestamp,
+            )
         )
 
 
