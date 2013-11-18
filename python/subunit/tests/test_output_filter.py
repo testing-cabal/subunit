@@ -17,8 +17,14 @@
 
 from io import BytesIO
 
-from testtools import TestCase, StreamToExtendedDecorator, TestResult
-from testtools.matchers import Equals
+from collections import namedtuple
+from testtools import TestCase
+from testtools.matchers import (
+    Equals,
+    Matcher,
+    MatchesListwise,
+)
+from testtools.testresult.doubles import StreamResult
 
 from subunit.v2 import StreamResultToBytes, ByteStreamToStreamResult
 from subunit._output import (
@@ -58,16 +64,11 @@ class OutputFilterArgumentTests(TestCase):
 
 class ByteStreamCompatibilityTests(TestCase):
 
-    """Tests that ensure that the subunit byetstream we generate contains what
-    we expect it to.
-
-    """
-
     def _get_result_for(self, *commands):
-        """Get a result object from *args.
+        """Get a result object from *commands.
 
         Runs the 'generate_bytestream' function from subunit._output after
-        parsing *args as if they were specified on the command line. The
+        parsing *commands as if they were specified on the command line. The
         resulting bytestream is then converted back into a result object and
         returned.
 
@@ -82,8 +83,7 @@ class ByteStreamCompatibilityTests(TestCase):
         stream.seek(0)
 
         case = ByteStreamToStreamResult(source=stream)
-        result = TestResult()
-        result = StreamToExtendedDecorator(result)
+        result = StreamResult()
         result.startTestRun()
         case.run(result)
         result.stopTestRun()
@@ -95,9 +95,50 @@ class ByteStreamCompatibilityTests(TestCase):
             ['pass', 'foo'],
         )
 
-        self.assertThat(result.decorated.wasSuccessful(), Equals(True))
-        # How do I get the id? or details?
-        self.assertThat(result.decorated.id(), Equals('foo'))
+        self.assertThat(
+            result._events,
+            MatchesListwise([
+                MatchesCall(call='startTestRun'),
+                MatchesCall(call='status', test_id='foo', test_status='inprogress'),
+                MatchesCall(call='status', test_id='foo', test_status='success'),
+                MatchesCall(call='stopTestRun'),
+            ])
+        )
 
 
+class MatchesCall(Matcher):
+
+    _position_lookup = {
+            'call': 0,
+            'test_id': 1,
+            'test_status': 2,
+            'test_tags': 3,
+            'runnable': 4,
+            'file_name': 5,
+            'file_bytes': 6,
+            'eof': 7,
+            'mime_type': 8,
+            'route_code': 9,
+            'timestamp': 10,
+        }
+
+    def __init__(self, **kwargs):
+        unknown_kwargs = filter(
+            lambda k: k not in self._position_lookup,
+            kwargs
+        )
+        if unknown_kwargs:
+            raise ValueError("Unknown keywords: %s" % ','.join(unknown_kwargs))
+        self._filters = kwargs
+
+    def match(self, call_tuple):
+        for k,v in self._filters.items():
+            try:
+                if call_tuple[self._position_lookup[k]] != v:
+                    return Mismatch("Value for key is %r, not %r" % (self._position_lookup[k], v))
+            except IndexError:
+                return Mismatch("Key %s is not present." % k)
+
+    def __str__(self):
+        return "<MatchesCall %r>" % self._filters
 
