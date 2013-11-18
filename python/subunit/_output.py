@@ -27,20 +27,25 @@ def output_main():
     return 0
 
 
-def parse_arguments(args=None):
+def parse_arguments(args=None, ParserClass=ArgumentParser):
     """Parse arguments from the command line.
 
     If specified, args must be a list of strings, similar to sys.argv[1:].
 
+    ParserClass can be specified to override the class we use to parse the
+    command-line arguments. This is useful for testing.
+
     """
-    parser = ArgumentParser(
+    parser = ParserClass(
         prog='subunit-output',
         description="A tool to generate a subunit result byte-stream",
     )
 
-    common_args = ArgumentParser(add_help=False)
-    common_args.add_argument("test_id", help="""A string that uniquely
-        identifies this test.""")
+    common_args = ParserClass(add_help=False)
+    common_args.add_argument(
+        "test_id",
+        help="A string that uniquely identifies this test."
+    )
     sub_parsers = parser.add_subparsers(dest="action")
 
     final_state = "This is a final action: No more actions may be generated " \

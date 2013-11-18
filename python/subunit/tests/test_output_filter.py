@@ -15,10 +15,11 @@
 #
 
 
-from io import BytesIO
-
+import argparse
 from collections import namedtuple
 import datetime
+from functools import partial
+from io import BytesIO
 from testtools import TestCase
 from testtools.matchers import (
     Equals,
@@ -36,36 +37,45 @@ from subunit._output import (
 )
 import subunit._output as _o
 
+
+class SafeArgumentParser(argparse.ArgumentParser):
+
+    def exit(self, status=0, message=""):
+        raise RuntimeError("ArgumentParser requested to exit with status "\
+            " %d and message %r" % (status, message))
+
+
+safe_parse_arguments = partial(parse_arguments, ParserClass=SafeArgumentParser)
+
+
 class OutputFilterArgumentTests(TestCase):
 
     """Tests for the command line argument parser."""
 
+    _all_supported_commands = ('start', 'pass', 'fail', 'skip', 'exists')
+
     def _test_command(self, command, test_id):
-        args = parse_arguments(args=[command, test_id])
+        args = safe_parse_arguments(args=[command, test_id])
 
         self.assertThat(args.action, Equals(command))
         self.assertThat(args.test_id, Equals(test_id))
 
-    def test_can_parse_start_test(self):
-        self._test_command('start', self.getUniqueString())
-
-    def test_can_parse_pass_test(self):
-        self._test_command('pass', self.getUniqueString())
-
-    def test_can_parse_fail_test(self):
-        self._test_command('fail', self.getUniqueString())
-
-    def test_can_parse_skip_test(self):
-        self._test_command('skip', self.getUniqueString())
-
-    def test_can_parse_exists(self):
-        self._test_command('exists', self.getUniqueString())
+    def test_can_parse_all_commands_with_test_id(self):
+        for command in self._all_supported_commands:
+            self._test_command(command, self.getUniqueString())
 
     def test_command_translation(self):
         self.assertThat(translate_command_name('start'), Equals('inprogress'))
         self.assertThat(translate_command_name('pass'), Equals('success'))
-        for command in ('fail', 'skip'):
+        for command in ('fail', 'skip', 'exists'):
             self.assertThat(translate_command_name(command), Equals(command))
+
+    def test_all_commands_parse_file_attachment(self):
+        for command in self._all_supported_commands:
+            args = safe_parse_arguments(
+                args=[command, 'foo', '--attach-file', '/some/path']
+            )
+            self.assertThat(args.attach_file, Equals('/some/path'))
 
 
 class ByteStreamCompatibilityTests(TestCase):
@@ -88,7 +98,7 @@ class ByteStreamCompatibilityTests(TestCase):
         stream = BytesIO()
 
         for command_list in commands:
-            args = parse_arguments(command_list)
+            args = safe_parse_arguments(command_list)
             output_writer = StreamResultToBytes(output_stream=stream)
             generate_bytestream(args, output_writer)
 
