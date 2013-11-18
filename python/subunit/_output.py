@@ -14,6 +14,7 @@
 #  limitations under that license.
 
 from argparse import ArgumentParser
+import datetime
 from sys import stdout
 
 from subunit.v2 import StreamResultToBytes
@@ -36,19 +37,23 @@ def parse_arguments(args=None):
         prog='subunit-output',
         description="A tool to generate a subunit result byte-stream",
     )
+
+    common_args = ArgumentParser(add_help=False)
+    common_args.add_argument("test_id", help="""A string that uniquely
+        identifies this test.""")
     sub_parsers = parser.add_subparsers(dest="action")
 
-    parser_start = sub_parsers.add_parser("start", help="Start a test.")
-    parser_start.add_argument("test_id", help="The test id you want to start.")
+    parser_start = sub_parsers.add_parser("start", help="Start a test.",
+        parents=[common_args])
 
-    parser_pass = sub_parsers.add_parser("pass", help="Pass a test.")
-    parser_pass.add_argument("test_id", help="The test id you want to pass.")
+    parser_pass = sub_parsers.add_parser("pass", help="Pass a test.",
+        parents=[common_args])
 
-    parser_fail = sub_parsers.add_parser("fail", help="Fail a test.")
-    parser_fail.add_argument("test_id", help="The test id you want to fail.")
+    parser_fail = sub_parsers.add_parser("fail", help="Fail a test.",
+        parents=[common_args])
 
-    parser_skip = sub_parsers.add_parser("skip", help="Skip a test.")
-    parser_skip.add_argument("test_id", help="The test id you want to skip.")
+    parser_skip = sub_parsers.add_parser("skip", help="Skip a test.",
+        parents=[common_args])
 
     return parser.parse_args(args)
 
@@ -69,7 +74,30 @@ def get_output_stream_writer():
 
 
 def generate_bytestream(args, output_writer):
+    output_writer.startTestRun()
     output_writer.status(
         test_id=args.test_id,
-        test_status=translate_command_name(args.action)
+        test_status=translate_command_name(args.action),
+        timestamp=create_timestamp()
         )
+    output_writer.stopTestRun()
+
+
+_ZERO = datetime.timedelta(0)
+
+
+class UTC(datetime.tzinfo):
+    """UTC"""
+    def utcoffset(self, dt):
+        return _ZERO
+    def tzname(self, dt):
+        return "UTC"
+    def dst(self, dt):
+        return _ZERO
+
+
+utc = UTC()
+
+
+def create_timestamp():
+    return datetime.datetime.now(utc)
