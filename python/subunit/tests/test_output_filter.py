@@ -83,6 +83,13 @@ class OutputFilterArgumentTests(TestCase):
                 self.assertThat(args.attach_file, IsInstance(file))
                 self.assertThat(args.attach_file.name, Equals(tmp_file.name))
 
+    def test_all_commands_accept_mimetype_argument(self):
+        for command in self._all_supported_commands:
+            args = safe_parse_arguments(
+                args=[command, 'foo', '--mimetype', "text/plain"]
+            )
+            self.assertThat(args.mimetype, Equals("text/plain"))
+
 
 class ByteStreamCompatibilityTests(TestCase):
 
@@ -193,7 +200,7 @@ class ByteStreamCompatibilityTests(TestCase):
 
 class FileChunkingTests(TestCase):
 
-    def _write_chunk_file(self, file_data, chunk_size):
+    def _write_chunk_file(self, file_data, chunk_size, mimetype=None):
         """Write chunked data to a subunit stream, return a StreamResult object."""
         stream = BytesIO()
         output_writer = StreamResultToBytes(output_stream=stream)
@@ -202,7 +209,7 @@ class FileChunkingTests(TestCase):
             f.write(file_data)
             f.seek(0)
 
-            write_chunked_file(f, 'foo_test', output_writer, chunk_size)
+            write_chunked_file(f, 'foo_test', output_writer, chunk_size, mimetype)
 
         stream.seek(0)
 
@@ -224,6 +231,17 @@ class FileChunkingTests(TestCase):
                 MatchesCall(call='status', file_bytes='', mime_type=None, eof=True),
             ])
         )
+
+    def test_file_mimetype_is_honored(self):
+        result = self._write_chunk_file("SomeData", 1024, "text/plain")
+        self.assertThat(
+            result._events,
+            MatchesListwise([
+                MatchesCall(call='status', file_bytes='SomeData', mime_type="text/plain"),
+                MatchesCall(call='status', file_bytes='', mime_type="text/plain"),
+            ])
+        )
+
 
 class MatchesCall(Matcher):
 
@@ -253,8 +271,9 @@ class MatchesCall(Matcher):
     def match(self, call_tuple):
         for k,v in self._filters.items():
             try:
-                if call_tuple[self._position_lookup[k]] != v:
-                    return Mismatch("Value for key is %r, not %r" % (self._position_lookup[k], v))
+                pos = self._position_lookup[k]
+                if call_tuple[pos] != v:
+                    return Mismatch("Value for key is %r, not %r" % (call_tuple[pos], v))
             except IndexError:
                 return Mismatch("Key %s is not present." % k)
 

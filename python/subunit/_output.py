@@ -52,6 +52,13 @@ def parse_arguments(args=None, ParserClass=ArgumentParser):
         type=file,
         help="Attach a file to the result stream for this test."
     )
+    common_args.add_argument(
+        "--mimetype",
+        help="The mime type to send with this file. This is only used if the "\
+        "--attach-file argument is used. This argument is optional. If it is "\
+        "not specified, the file will be sent wihtout a mime type.",
+        default=None
+    )
     sub_parsers = parser.add_subparsers(dest="action")
 
     final_state = "This is a final action: No more actions may be generated " \
@@ -108,7 +115,12 @@ def get_output_stream_writer():
 def generate_bytestream(args, output_writer):
     output_writer.startTestRun()
     if args.attach_file:
-        write_chunked_file(args.attach_file, args.test_id, output_writer)
+        write_chunked_file(
+            args.attach_file,
+            args.test_id,
+            output_writer,
+            args.mimetype,
+        )
     output_writer.status(
         test_id=args.test_id,
         test_status=translate_command_name(args.action),
