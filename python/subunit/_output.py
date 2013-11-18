@@ -17,6 +17,7 @@ from argparse import ArgumentParser
 import datetime
 from functools import partial
 from sys import stdout
+from string import split
 
 from subunit.v2 import StreamResultToBytes
 
@@ -57,6 +58,12 @@ def parse_arguments(args=None, ParserClass=ArgumentParser):
         help="The mime type to send with this file. This is only used if the "\
         "--attach-file argument is used. This argument is optional. If it is "\
         "not specified, the file will be sent wihtout a mime type.",
+        default=None
+    )
+    common_args.add_argument(
+        "--tags",
+        help="A comma-separated list of tags to associate with this test.",
+        type=partial(split, sep=','),
         default=None
     )
     sub_parsers = parser.add_subparsers(dest="action")
@@ -124,7 +131,8 @@ def generate_bytestream(args, output_writer):
     output_writer.status(
         test_id=args.test_id,
         test_status=translate_command_name(args.action),
-        timestamp=create_timestamp()
+        timestamp=create_timestamp(),
+        test_tags=args.tags,
         )
     output_writer.stopTestRun()
 

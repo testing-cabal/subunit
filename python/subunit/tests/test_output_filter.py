@@ -89,6 +89,13 @@ class OutputFilterArgumentParserTests(TestCase):
             )
             self.assertThat(args.mimetype, Equals("text/plain"))
 
+    def test_all_commands_accept_tags_argument(self):
+        for command in self._all_supported_commands:
+            args = safe_parse_arguments(
+                args=[command, 'foo', '--tags', "foo,bar,baz"]
+            )
+            self.assertThat(args.tags, Equals(["foo","bar","baz"]))
+
 
 class ByteStreamCompatibilityTests(TestCase):
 
@@ -192,6 +199,20 @@ class ByteStreamCompatibilityTests(TestCase):
                 call='status',
                 test_id='foo',
                 test_status='exists',
+                timestamp=self._dummy_timestamp,
+            )
+        )
+
+    def test_tags_are_generated(self):
+        result = self._get_result_for(
+            ['exists', 'foo', '--tags', 'hello,world']
+        )
+        self.assertThat(
+            result._events[0],
+            MatchesCall(
+                call='status',
+                test_id='foo',
+                test_tags=set(['hello','world']),
                 timestamp=self._dummy_timestamp,
             )
         )
