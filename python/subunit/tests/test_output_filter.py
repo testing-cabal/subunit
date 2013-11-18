@@ -216,12 +216,12 @@ class FileChunkingTests(TestCase):
         self.assertThat(
             result._events,
             MatchesListwise([
-                MatchesCall(call='status', file_bytes='H', eof=False),
-                MatchesCall(call='status', file_bytes='e', eof=False),
-                MatchesCall(call='status', file_bytes='l', eof=False),
-                MatchesCall(call='status', file_bytes='l', eof=False),
-                MatchesCall(call='status', file_bytes='o', eof=False),
-                MatchesCall(call='status', file_bytes='', eof=True),
+                MatchesCall(call='status', file_bytes='H', mime_type=None, eof=False),
+                MatchesCall(call='status', file_bytes='e', mime_type=None, eof=False),
+                MatchesCall(call='status', file_bytes='l', mime_type=None, eof=False),
+                MatchesCall(call='status', file_bytes='l', mime_type=None, eof=False),
+                MatchesCall(call='status', file_bytes='o', mime_type=None, eof=False),
+                MatchesCall(call='status', file_bytes='', mime_type=None, eof=True),
             ])
         )
 

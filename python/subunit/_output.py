@@ -117,19 +117,22 @@ def generate_bytestream(args, output_writer):
     output_writer.stopTestRun()
 
 
-def write_chunked_file(file_obj, test_id, output_writer, chunk_size=1024):
+def write_chunked_file(file_obj, test_id, output_writer, chunk_size=1024,
+    mime_type=None):
     reader = partial(file_obj.read, chunk_size)
     for chunk in iter(reader, ''):
         output_writer.status(
             test_id=test_id,
             file_name=file_obj.name,
             file_bytes=chunk,
+            mime_type=mime_type,
             eof=False,
         )
     output_writer.status(
             test_id=test_id,
             file_name=file_obj.name,
             file_bytes='',
+            mime_type=mime_type,
             eof=True,
         )
 
