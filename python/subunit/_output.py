@@ -41,6 +41,10 @@ def parse_arguments(args=None, ParserClass=ArgumentParser):
     parser = ParserClass(
         prog='subunit-output',
         description="A tool to generate a subunit result byte-stream",
+        usage="""%(prog)s [-h] action [-h] test [--attach-file ATTACH_FILE]
+                      [--mimetype MIMETYPE] [--tags TAGS]""",
+        epilog="""Additional help can be printed by passing -h to an action
+        (e.g.- '%(prog)s pass -h' will show help for the 'pass' action)."""
     )
 
     common_args = ParserClass(add_help=False)
@@ -66,7 +70,11 @@ def parse_arguments(args=None, ParserClass=ArgumentParser):
         type=partial(split, sep=','),
         default=None
     )
-    sub_parsers = parser.add_subparsers(dest="action")
+    sub_parsers = parser.add_subparsers(
+        dest="action",
+        title="actions",
+        description="These actions are supported by this tool",
+    )
 
     final_state = "This is a final action: No more actions may be generated " \
         "for this test id after this one."
@@ -80,7 +88,7 @@ def parse_arguments(args=None, ParserClass=ArgumentParser):
     parser_pass = sub_parsers.add_parser(
         "pass",
         help="Pass a test. " + final_state,
-        parents=[common_args]
+        parents=[common_args],
     )
 
     parser_fail = sub_parsers.add_parser(
