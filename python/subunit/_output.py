@@ -21,6 +21,7 @@ from string import split
 
 from subunit.v2 import StreamResultToBytes
 
+
 def output_main():
     args = parse_arguments()
     output = get_output_stream_writer()
@@ -59,8 +60,8 @@ def parse_arguments(args=None, ParserClass=ArgumentParser):
     )
     common_args.add_argument(
         "--mimetype",
-        help="The mime type to send with this file. This is only used if the "\
-        "--attach-file argument is used. This argument is optional. If it is "\
+        help="The mime type to send with this file. This is only used if the "
+        "--attach-file argument is used. This argument is optional. If it is "
         "not specified, the file will be sent wihtout a mime type.",
         default=None
     )
@@ -76,7 +77,7 @@ def parse_arguments(args=None, ParserClass=ArgumentParser):
         description="These actions are supported by this tool",
     )
 
-    final_state = "This is a final action: No more actions may be generated " \
+    final_state = "This is a final action: No more actions may be generated "\
         "for this test id after this one."
 
     parser_start = sub_parsers.add_parser(
@@ -111,15 +112,15 @@ def parse_arguments(args=None, ParserClass=ArgumentParser):
 
     parser_expected_fail = sub_parsers.add_parser(
         "expected-fail",
-        help="Marks a test as failing expectedly (this is not counted as a "\
-            "failure). " + final_state,
+        help="Marks a test as failing expectedly (this is not counted as a "
+        "failure). " + final_state,
         parents=[common_args],
     )
 
     parser_unexpected_success = sub_parsers.add_parser(
         "unexpected-success",
-        help="Marks a test as succeeding unexpectedly (this is counted as a "\
-            "failure). " + final_state,
+        help="Marks a test as succeeding unexpectedly (this is counted as a "
+        "failure). " + final_state,
         parents=[common_args],
     )
 
@@ -162,7 +163,7 @@ def generate_bytestream(args, output_writer):
 
 
 def write_chunked_file(file_obj, test_id, output_writer, chunk_size=1024,
-    mime_type=None):
+                       mime_type=None):
     reader = partial(file_obj.read, chunk_size)
     for chunk in iter(reader, ''):
         output_writer.status(
@@ -173,23 +174,25 @@ def write_chunked_file(file_obj, test_id, output_writer, chunk_size=1024,
             eof=False,
         )
     output_writer.status(
-            test_id=test_id,
-            file_name=file_obj.name,
-            file_bytes='',
-            mime_type=mime_type,
-            eof=True,
-        )
+        test_id=test_id,
+        file_name=file_obj.name,
+        file_bytes='',
+        mime_type=mime_type,
+        eof=True,
+    )
 
 
 _ZERO = datetime.timedelta(0)
 
 
 class UTC(datetime.tzinfo):
-    """UTC"""
+
     def utcoffset(self, dt):
         return _ZERO
+
     def tzname(self, dt):
         return "UTC"
+
     def dst(self, dt):
         return _ZERO
 

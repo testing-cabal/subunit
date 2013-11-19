@@ -46,8 +46,10 @@ class SafeArgumentParser(argparse.ArgumentParser):
     """An ArgumentParser class that doesn't call sys.exit."""
 
     def exit(self, status=0, message=""):
-        raise RuntimeError("ArgumentParser requested to exit with status "\
-            " %d and message %r" % (status, message))
+        raise RuntimeError(
+            "ArgumentParser requested to exit with status %d and message %r"
+            % (status, message)
+        )
 
 
 safe_parse_arguments = partial(parse_arguments, ParserClass=SafeArgumentParser)
@@ -76,10 +78,22 @@ class OutputFilterArgumentParserTests(TestCase):
             self._test_command(command, self.getUniqueString())
 
     def test_command_translation(self):
-        self.assertThat(translate_command_name('start'), Equals('inprogress'))
-        self.assertThat(translate_command_name('pass'), Equals('success'))
-        self.assertThat(translate_command_name('expected-fail'), Equals('xfail'))
-        self.assertThat(translate_command_name('unexpected-success'), Equals('uxsuccess'))
+        self.assertThat(
+            translate_command_name('start'),
+            Equals('inprogress')
+        )
+        self.assertThat(
+            translate_command_name('pass'),
+            Equals('success')
+        )
+        self.assertThat(
+            translate_command_name('expected-fail'),
+            Equals('xfail')
+        )
+        self.assertThat(
+            translate_command_name('unexpected-success'),
+            Equals('uxsuccess')
+        )
         for command in ('fail', 'skip', 'exists'):
             self.assertThat(translate_command_name(command), Equals(command))
 
@@ -104,7 +118,7 @@ class OutputFilterArgumentParserTests(TestCase):
             args = safe_parse_arguments(
                 args=[command, 'foo', '--tags', "foo,bar,baz"]
             )
-            self.assertThat(args.tags, Equals(["foo","bar","baz"]))
+            self.assertThat(args.tags, Equals(["foo", "bar", "baz"]))
 
 
 class ByteStreamCompatibilityTests(TestCase):
@@ -252,7 +266,7 @@ class ByteStreamCompatibilityTests(TestCase):
             MatchesCall(
                 call='status',
                 test_id='foo',
-                test_tags=set(['hello','world']),
+                test_tags=set(['hello', 'world']),
                 timestamp=self._dummy_timestamp,
             )
         )
@@ -261,7 +275,7 @@ class ByteStreamCompatibilityTests(TestCase):
 class FileChunkingTests(TestCase):
 
     def _write_chunk_file(self, file_data, chunk_size, mimetype=None):
-        """Write chunked data to a subunit stream, return a StreamResult object."""
+        """Write file data to a subunit stream, get a StreamResult object."""
         stream = BytesIO()
         output_writer = StreamResultToBytes(output_stream=stream)
 
@@ -269,7 +283,13 @@ class FileChunkingTests(TestCase):
             f.write(file_data)
             f.seek(0)
 
-            write_chunked_file(f, 'foo_test', output_writer, chunk_size, mimetype)
+            write_chunked_file(
+                f,
+                'foo_test',
+                output_writer,
+                chunk_size,
+                mimetype
+            )
 
         stream.seek(0)
 
@@ -333,7 +353,9 @@ class MatchesCall(Matcher):
             try:
                 pos = self._position_lookup[k]
                 if call_tuple[pos] != v:
-                    return Mismatch("Value for key is %r, not %r" % (call_tuple[pos], v))
+                    return Mismatch(
+                        "Value for key is %r, not %r" % (call_tuple[pos], v)
+                    )
             except IndexError:
                 return Mismatch("Key %s is not present." % k)
 
