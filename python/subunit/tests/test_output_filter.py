@@ -1,6 +1,6 @@
 #
 #  subunit: extensions to python unittest to get test results from subprocesses.
-#  Copyright (C) 2005  Thomi Richards <thomi.richards@canonical.com>
+#  Copyright (C) 2013 'Subunit Contributors'
 #
 #  Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 #  license at the users choice. A copy of both licenses are available in the
@@ -18,10 +18,13 @@
 import argparse
 import datetime
 from functools import partial
-from io import BytesIO
+from io import BytesIO, StringIO
+import sys
 from tempfile import NamedTemporaryFile
+
+from testscenarios import WithScenarios
 from testtools import TestCase
-from testtools.compat import _b
+from testtools.compat import _b, _u
 from testtools.matchers import (
     Equals,
     IsInstance,
@@ -31,12 +34,11 @@ from testtools.matchers import (
 )
 from testtools.testresult.doubles import StreamResult
 
+from subunit.iso8601 import UTC
 from subunit.v2 import StreamResultToBytes, ByteStreamToStreamResult
 from subunit._output import (
     generate_bytestream,
     parse_arguments,
-    translate_command_name,
-    utc,
     write_chunked_file,
 )
 import subunit._output as _o
@@ -55,17 +57,19 @@ class SafeArgumentParser(argparse.ArgumentParser):
 safe_parse_arguments = partial(parse_arguments, ParserClass=SafeArgumentParser)
 
 
-class OutputFilterArgumentParserTests(TestCase):
+class TestStatusArgParserTests(WithScenarios, TestCase):
 
-    _all_supported_commands = (
-        'exists',
-        'expected-fail',
-        'fail',
-        'pass',
-        'skip',
-        'start',
-        'unexpected-success',
-    )
+    scenarios = [
+        (cmd, dict(command=cmd)) for cmd in (
+            'exists',
+            'xfail',
+            'fail',
+            'success',
+            'skip',
+            'inprogress',
+            'uxsuccess',
+        )
+    ]
 
     def _test_command(self, command, test_id):
         args = safe_parse_arguments(args=[command, test_id])
@@ -74,55 +78,49 @@ class OutputFilterArgumentParserTests(TestCase):
         self.assertThat(args.test_id, Equals(test_id))
 
     def test_can_parse_all_commands_with_test_id(self):
-        for command in self._all_supported_commands:
-            self._test_command(command, self.getUniqueString())
-
-    def test_command_translation(self):
-        self.assertThat(
-            translate_command_name('start'),
-            Equals('inprogress')
-        )
-        self.assertThat(
-            translate_command_name('pass'),
-            Equals('success')
-        )
-        self.assertThat(
-            translate_command_name('expected-fail'),
-            Equals('xfail')
-        )
-        self.assertThat(
-            translate_command_name('unexpected-success'),
-            Equals('uxsuccess')
-        )
-        for command in ('fail', 'skip', 'exists'):
-            self.assertThat(translate_command_name(command), Equals(command))
+        self._test_command(self.command, self.getUniqueString())
 
     def test_all_commands_parse_file_attachment(self):
         with NamedTemporaryFile() as tmp_file:
-            for command in self._all_supported_commands:
-                args = safe_parse_arguments(
-                    args=[command, 'foo', '--attach-file', tmp_file.name]
-                )
-                self.assertThat(args.attach_file.name, Equals(tmp_file.name))
+            args = safe_parse_arguments(
+                args=[self.command, 'foo', '--attach-file', tmp_file.name]
+            )
+            self.assertThat(args.attach_file.name, Equals(tmp_file.name))
 
     def test_all_commands_accept_mimetype_argument(self):
-        for command in self._all_supported_commands:
+        with NamedTemporaryFile() as tmp_file:
             args = safe_parse_arguments(
-                args=[command, 'foo', '--mimetype', "text/plain"]
+                args=[self.command, 'foo', '--attach-file', tmp_file.name, '--mimetype', "text/plain"]
             )
             self.assertThat(args.mimetype, Equals("text/plain"))
 
     def test_all_commands_accept_tags_argument(self):
-        for command in self._all_supported_commands:
-            args = safe_parse_arguments(
-                args=[command, 'foo', '--tags', "foo,bar,baz"]
-            )
-            self.assertThat(args.tags, Equals(["foo", "bar", "baz"]))
+        args = safe_parse_arguments(
+            args=[self.command, 'foo', '--tags', "foo,bar,baz"]
+        )
+        self.assertThat(args.tags, Equals(["foo", "bar", "baz"]))
 
+    def test_attach_file_with_hyphen_opens_stdin(self):
+        self.patch(_o, 'stdin', StringIO(_u("Hello")))
+        args = safe_parse_arguments(
+            args=[self.command, "foo", "--attach-file", "-"]
+        )
+
+        self.assertThat(args.attach_file.read(), Equals("Hello"))
+
+
+class GlobalFileAttachmentTests(TestCase):
+
+    def test_can_parse_attach_file_without_test_id(self):
+        with NamedTemporaryFile() as tmp_file:
+            args = safe_parse_arguments(
+                args=["--attach-file", tmp_file.name]
+            )
+            self.assertThat(args.attach_file.name, Equals(tmp_file.name))
 
 class ByteStreamCompatibilityTests(TestCase):
 
-    _dummy_timestamp = datetime.datetime(2013, 1, 1, 0, 0, 0, 0, utc)
+    _dummy_timestamp = datetime.datetime(2013, 1, 1, 0, 0, 0, 0, UTC)
 
     def setUp(self):
         super(ByteStreamCompatibilityTests, self).setUp()
@@ -135,7 +133,6 @@ class ByteStreamCompatibilityTests(TestCase):
         parsing *commands as if they were specified on the command line. The
         resulting bytestream is then converted back into a result object and
         returned.
-
         """
         stream = BytesIO()
 
@@ -153,7 +150,7 @@ class ByteStreamCompatibilityTests(TestCase):
 
     def test_start_generates_inprogress(self):
         result = self._get_result_for(
-            ['start', 'foo'],
+            ['inprogress', 'foo'],
         )
 
         self.assertThat(
@@ -168,7 +165,7 @@ class ByteStreamCompatibilityTests(TestCase):
 
     def test_pass_generates_success(self):
         result = self._get_result_for(
-            ['pass', 'foo'],
+            ['success', 'foo'],
         )
 
         self.assertThat(
@@ -228,7 +225,7 @@ class ByteStreamCompatibilityTests(TestCase):
 
     def test_expected_fail_generates_xfail(self):
         result = self._get_result_for(
-            ['expected-fail', 'foo'],
+            ['xfail', 'foo'],
         )
 
         self.assertThat(
@@ -243,7 +240,7 @@ class ByteStreamCompatibilityTests(TestCase):
 
     def test_unexpected_success_generates_uxsuccess(self):
         result = self._get_result_for(
-            ['unexpected-success', 'foo'],
+            ['uxsuccess', 'foo'],
         )
 
         self.assertThat(
@@ -273,21 +270,23 @@ class ByteStreamCompatibilityTests(TestCase):
 
 class FileChunkingTests(TestCase):
 
-    def _write_chunk_file(self, file_data, chunk_size, mimetype=None):
+    def _write_chunk_file(self, file_data, chunk_size=1024, mimetype=None, filename=None):
         """Write file data to a subunit stream, get a StreamResult object."""
         stream = BytesIO()
         output_writer = StreamResultToBytes(output_stream=stream)
 
         with NamedTemporaryFile() as f:
+            self._tmp_filename = f.name
             f.write(file_data)
             f.seek(0)
 
             write_chunked_file(
-                f,
-                'foo_test',
-                output_writer,
-                chunk_size,
-                mimetype
+                file_obj=f,
+                output_writer=output_writer,
+                chunk_size=chunk_size,
+                mime_type=mimetype,
+                test_id='foo_test',
+                file_name=filename,
             )
 
         stream.seek(0)
@@ -298,7 +297,7 @@ class FileChunkingTests(TestCase):
         return result
 
     def test_file_chunk_size_is_honored(self):
-        result = self._write_chunk_file(_b("Hello"), 1)
+        result = self._write_chunk_file(file_data=_b("Hello"), chunk_size=1)
         self.assertThat(
             result._events,
             MatchesListwise([
@@ -312,12 +311,32 @@ class FileChunkingTests(TestCase):
         )
 
     def test_file_mimetype_is_honored(self):
-        result = self._write_chunk_file(_b("SomeData"), 1024, "text/plain")
+        result = self._write_chunk_file(file_data=_b("SomeData"), mimetype="text/plain")
         self.assertThat(
             result._events,
             MatchesListwise([
                 MatchesCall(call='status', file_bytes=_b('SomeData'), mime_type="text/plain"),
                 MatchesCall(call='status', file_bytes=_b(''), mime_type="text/plain"),
+            ])
+        )
+
+    def test_file_name_is_honored(self):
+        result = self._write_chunk_file(file_data=_b("data"), filename="/some/name")
+        self.assertThat(
+            result._events,
+            MatchesListwise([
+                MatchesCall(call='status', file_name='/some/name'),
+                MatchesCall(call='status', file_name='/some/name'),
+            ])
+        )
+
+    def test_default_filename_is_used(self):
+        result = self._write_chunk_file(file_data=_b("data"))
+        self.assertThat(
+            result._events,
+            MatchesListwise([
+                MatchesCall(call='status', file_name=self._tmp_filename),
+                MatchesCall(call='status', file_name=self._tmp_filename),
             ])
         )
 
