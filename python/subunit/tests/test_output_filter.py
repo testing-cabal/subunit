@@ -21,6 +21,7 @@ from functools import partial
 from io import BytesIO
 from tempfile import NamedTemporaryFile
 from testtools import TestCase
+from testtools.compat import _b
 from testtools.matchers import (
     Equals,
     IsInstance,
@@ -102,7 +103,6 @@ class OutputFilterArgumentParserTests(TestCase):
                 args = safe_parse_arguments(
                     args=[command, 'foo', '--attach-file', tmp_file.name]
                 )
-                self.assertThat(args.attach_file, IsInstance(file))
                 self.assertThat(args.attach_file.name, Equals(tmp_file.name))
 
     def test_all_commands_accept_mimetype_argument(self):
@@ -298,26 +298,26 @@ class FileChunkingTests(TestCase):
         return result
 
     def test_file_chunk_size_is_honored(self):
-        result = self._write_chunk_file("Hello", 1)
+        result = self._write_chunk_file(_b("Hello"), 1)
         self.assertThat(
             result._events,
             MatchesListwise([
-                MatchesCall(call='status', file_bytes='H', mime_type=None, eof=False),
-                MatchesCall(call='status', file_bytes='e', mime_type=None, eof=False),
-                MatchesCall(call='status', file_bytes='l', mime_type=None, eof=False),
-                MatchesCall(call='status', file_bytes='l', mime_type=None, eof=False),
-                MatchesCall(call='status', file_bytes='o', mime_type=None, eof=False),
-                MatchesCall(call='status', file_bytes='', mime_type=None, eof=True),
+                MatchesCall(call='status', file_bytes=_b('H'), mime_type=None, eof=False),
+                MatchesCall(call='status', file_bytes=_b('e'), mime_type=None, eof=False),
+                MatchesCall(call='status', file_bytes=_b('l'), mime_type=None, eof=False),
+                MatchesCall(call='status', file_bytes=_b('l'), mime_type=None, eof=False),
+                MatchesCall(call='status', file_bytes=_b('o'), mime_type=None, eof=False),
+                MatchesCall(call='status', file_bytes=_b(''), mime_type=None, eof=True),
             ])
         )
 
     def test_file_mimetype_is_honored(self):
-        result = self._write_chunk_file("SomeData", 1024, "text/plain")
+        result = self._write_chunk_file(_b("SomeData"), 1024, "text/plain")
         self.assertThat(
             result._events,
             MatchesListwise([
-                MatchesCall(call='status', file_bytes='SomeData', mime_type="text/plain"),
-                MatchesCall(call='status', file_bytes='', mime_type="text/plain"),
+                MatchesCall(call='status', file_bytes=_b('SomeData'), mime_type="text/plain"),
+                MatchesCall(call='status', file_bytes=_b(''), mime_type="text/plain"),
             ])
         )
 
@@ -339,10 +339,10 @@ class MatchesCall(Matcher):
         }
 
     def __init__(self, **kwargs):
-        unknown_kwargs = filter(
+        unknown_kwargs = list(filter(
             lambda k: k not in self._position_lookup,
             kwargs
-        )
+        ))
         if unknown_kwargs:
             raise ValueError("Unknown keywords: %s" % ','.join(unknown_kwargs))
         self._filters = kwargs

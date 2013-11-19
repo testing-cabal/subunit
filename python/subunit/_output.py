@@ -17,7 +17,7 @@ from argparse import ArgumentParser
 import datetime
 from functools import partial
 from sys import stdout
-from string import split
+from testtools.compat import _b
 
 from subunit.v2 import StreamResultToBytes
 
@@ -55,7 +55,7 @@ def parse_arguments(args=None, ParserClass=ArgumentParser):
     )
     common_args.add_argument(
         "--attach-file",
-        type=file,
+        type=open,
         help="Attach a file to the result stream for this test."
     )
     common_args.add_argument(
@@ -68,7 +68,7 @@ def parse_arguments(args=None, ParserClass=ArgumentParser):
     common_args.add_argument(
         "--tags",
         help="A comma-separated list of tags to associate with this test.",
-        type=partial(split, sep=','),
+        type=lambda s: s.split(','),
         default=None
     )
     sub_parsers = parser.add_subparsers(
@@ -165,7 +165,7 @@ def generate_bytestream(args, output_writer):
 def write_chunked_file(file_obj, test_id, output_writer, chunk_size=1024,
                        mime_type=None):
     reader = partial(file_obj.read, chunk_size)
-    for chunk in iter(reader, ''):
+    for chunk in iter(reader, _b('')):
         output_writer.status(
             test_id=test_id,
             file_name=file_obj.name,
@@ -176,7 +176,7 @@ def write_chunked_file(file_obj, test_id, output_writer, chunk_size=1024,
     output_writer.status(
         test_id=test_id,
         file_name=file_obj.name,
-        file_bytes='',
+        file_bytes=_b(''),
         mime_type=mime_type,
         eof=True,
     )
