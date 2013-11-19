@@ -80,44 +80,44 @@ def parse_arguments(args=None, ParserClass=ArgumentParser):
     final_state = "This is a final action: No more actions may be generated "\
         "for this test id after this one."
 
-    parser_start = sub_parsers.add_parser(
+    sub_parsers.add_parser(
         "start",
         help="Start a test.",
         parents=[common_args]
     )
 
-    parser_pass = sub_parsers.add_parser(
+    sub_parsers.add_parser(
         "pass",
         help="Pass a test. " + final_state,
         parents=[common_args],
     )
 
-    parser_fail = sub_parsers.add_parser(
+    sub_parsers.add_parser(
         "fail",
         help="Fail a test. " + final_state,
         parents=[common_args]
     )
 
-    parser_skip = sub_parsers.add_parser(
+    sub_parsers.add_parser(
         "skip",
         help="Skip a test. " + final_state,
         parents=[common_args]
     )
 
-    parser_exists = sub_parsers.add_parser(
+    sub_parsers.add_parser(
         "exists",
         help="Marks a test as existing. " + final_state,
         parents=[common_args]
     )
 
-    parser_expected_fail = sub_parsers.add_parser(
+    sub_parsers.add_parser(
         "expected-fail",
         help="Marks a test as failing expectedly (this is not counted as a "
         "failure). " + final_state,
         parents=[common_args],
     )
 
-    parser_unexpected_success = sub_parsers.add_parser(
+    sub_parsers.add_parser(
         "unexpected-success",
         help="Marks a test as succeeding unexpectedly (this is counted as a "
         "failure). " + final_state,

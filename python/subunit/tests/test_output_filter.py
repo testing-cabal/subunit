@@ -16,7 +16,6 @@
 
 
 import argparse
-from collections import namedtuple
 import datetime
 from functools import partial
 from io import BytesIO
