@@ -124,21 +124,21 @@ def parse_arguments(args=None, ParserClass=ArgumentParser):
 
 
 class StatusAction(Action):
-        """A custom action that stores option name and argument separately.
+    """A custom action that stores option name and argument separately.
 
-        This is part of a workaround for the fact that argparse does not
-        support optional subcommands (http://bugs.python.org/issue9253).
-        """
+    This is part of a workaround for the fact that argparse does not
+    support optional subcommands (http://bugs.python.org/issue9253).
+    """
 
-        def __init__(self, status_name, *args, **kwargs):
-            super(StatusAction, self).__init__(*args, **kwargs)
-            self._status_name = status_name
+    def __init__(self, status_name, *args, **kwargs):
+        super(StatusAction, self).__init__(*args, **kwargs)
+        self._status_name = status_name
 
-        def __call__(self, parser, namespace, values, option_string=None):
-            if getattr(namespace, self.dest, None) is not None:
-                raise ArgumentError(self, "Only one status may be specified at once.")
-            setattr(namespace, self.dest, self._status_name)
-            setattr(namespace, 'test_id', values[0])
+    def __call__(self, parser, namespace, values, option_string=None):
+        if getattr(namespace, self.dest, None) is not None:
+            raise ArgumentError(self, "Only one status may be specified at once.")
+        setattr(namespace, self.dest, self._status_name)
+        setattr(namespace, 'test_id', values[0])
 
 
 def get_output_stream_writer():
