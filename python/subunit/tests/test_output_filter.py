@@ -19,7 +19,6 @@ import argparse
 import datetime
 from functools import partial
 from io import BytesIO, StringIO
-import sys
 from tempfile import NamedTemporaryFile
 
 from testscenarios import WithScenarios
@@ -27,7 +26,6 @@ from testtools import TestCase
 from testtools.compat import _b, _u
 from testtools.matchers import (
     Equals,
-    IsInstance,
     Matcher,
     MatchesListwise,
     Mismatch,
@@ -125,6 +123,7 @@ class TestStatusArgParserTests(WithScenarios, TestCase):
 
         self.assertThat(args.file_name, Equals("foo"))
 
+
 class ArgParserTests(TestCase):
 
     def setUp(self):
@@ -144,7 +143,7 @@ class ArgParserTests(TestCase):
         fn = lambda: safe_parse_arguments(['--fail', 'foo', '--skip', 'bar'])
         self.assertThat(
             fn,
-            raises(RuntimeError('subunit-output: error: argument --skip: '\
+            raises(RuntimeError('subunit-output: error: argument --skip: '
                 'Only one status may be specified at once.\n'))
         )
 
@@ -152,7 +151,7 @@ class ArgParserTests(TestCase):
         fn = lambda: safe_parse_arguments(['--mimetype', 'foo'])
         self.assertThat(
             fn,
-            raises(RuntimeError('subunit-output: error: Cannot specify '\
+            raises(RuntimeError('subunit-output: error: Cannot specify '
                 '--mimetype without --attach-file\n'))
         )
 
@@ -160,7 +159,7 @@ class ArgParserTests(TestCase):
         fn = lambda: safe_parse_arguments(['--file-name', 'foo'])
         self.assertThat(
             fn,
-            raises(RuntimeError('subunit-output: error: Cannot specify '\
+            raises(RuntimeError('subunit-output: error: Cannot specify '
                 '--file-name without --attach-file\n'))
         )
 
@@ -168,7 +167,7 @@ class ArgParserTests(TestCase):
         fn = lambda: safe_parse_arguments(['--tags', 'foo'])
         self.assertThat(
             fn,
-            raises(RuntimeError('subunit-output: error: Cannot specify '\
+            raises(RuntimeError('subunit-output: error: Cannot specify '
                 '--tags without a status command\n'))
         )
 
@@ -214,7 +213,6 @@ class ByteStreamCompatibilityTests(WithScenarios, TestCase):
     def setUp(self):
         super(ByteStreamCompatibilityTests, self).setUp()
         self.patch(_o, 'create_timestamp', lambda: self._dummy_timestamp)
-
 
     def test_correct_status_is_generated(self):
         result = get_result_for([self.option, 'foo'])
@@ -335,18 +333,18 @@ class FileChunkingTests(WithScenarios, TestCase):
 class MatchesCall(Matcher):
 
     _position_lookup = {
-            'call': 0,
-            'test_id': 1,
-            'test_status': 2,
-            'test_tags': 3,
-            'runnable': 4,
-            'file_name': 5,
-            'file_bytes': 6,
-            'eof': 7,
-            'mime_type': 8,
-            'route_code': 9,
-            'timestamp': 10,
-        }
+        'call': 0,
+        'test_id': 1,
+        'test_status': 2,
+        'test_tags': 3,
+        'runnable': 4,
+        'file_name': 5,
+        'file_bytes': 6,
+        'eof': 7,
+        'mime_type': 8,
+        'route_code': 9,
+        'timestamp': 10,
+    }
 
     def __init__(self, **kwargs):
         unknown_kwargs = list(filter(
@@ -358,7 +356,7 @@ class MatchesCall(Matcher):
         self._filters = kwargs
 
     def match(self, call_tuple):
-        for k,v in self._filters.items():
+        for k, v in self._filters.items():
             try:
                 pos = self._position_lookup[k]
                 if call_tuple[pos] != v:
@@ -370,4 +368,3 @@ class MatchesCall(Matcher):
 
     def __str__(self):
         return "<MatchesCall %r>" % self._filters
-
