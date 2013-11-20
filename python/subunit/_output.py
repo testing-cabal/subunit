@@ -40,7 +40,7 @@ def parse_arguments(args=None, ParserClass=ArgumentParser):
     """
     parser = ParserClass(
         prog='subunit-output',
-        description="A tool to generate a subunit result byte-stream",
+        description="A tool to generate a subunit v2 result byte-stream",
     )
 
     status_commands = parser.add_argument_group(
@@ -48,9 +48,10 @@ def parse_arguments(args=None, ParserClass=ArgumentParser):
         "These options report the status of a test. TEST_ID must be a string "
             "that uniquely identifies the test."
     )
-    final_actions = 'success fail skip xfail uxsuccess'.split()
-    for action in "inprogress success fail skip exists xfail uxsuccess".split():
-        final_text =  "This is a final state: No more status reports may "\
+    final_actions = 'exists fail skip success xfail uxsuccess'.split()
+    all_actions = final_actions + ['inprogress']
+    for action in all_actions:
+        final_text =  " This is a final state: No more status reports may "\
             "be generated for this test id after this one."
 
         status_commands.add_argument(

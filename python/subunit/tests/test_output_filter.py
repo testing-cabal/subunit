@@ -90,6 +90,13 @@ class TestStatusArgParserTests(WithScenarios, TestCase):
             )
             self.assertThat(args.mimetype, Equals("text/plain"))
 
+    def test_all_commands_accept_file_name_argument(self):
+        with NamedTemporaryFile() as tmp_file:
+            args = safe_parse_arguments(
+                args=[self.option, 'foo', '--attach-file', tmp_file.name, '--file-name', "foo"]
+            )
+            self.assertThat(args.file_name, Equals("foo"))
+
     def test_all_commands_accept_tags_argument(self):
         args = safe_parse_arguments(
             args=[self.option, 'foo', '--tags', "foo,bar,baz"]
@@ -104,6 +111,19 @@ class TestStatusArgParserTests(WithScenarios, TestCase):
 
         self.assertThat(args.attach_file.read(), Equals("Hello"))
 
+    def test_attach_file_with_hyphen_sets_filename_to_stdin(self):
+        args = safe_parse_arguments(
+            args=[self.option, "foo", "--attach-file", "-"]
+        )
+
+        self.assertThat(args.file_name, Equals("stdin"))
+
+    def test_can_override_stdin_filename(self):
+        args = safe_parse_arguments(
+            args=[self.option, "foo", "--attach-file", "-", '--file-name', 'foo']
+        )
+
+        self.assertThat(args.file_name, Equals("foo"))
 
 class ArgParserTests(TestCase):
 
