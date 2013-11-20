@@ -35,29 +35,9 @@ def parse_arguments(args=None, ParserClass=ArgumentParser):
 
     If specified, args must be a list of strings, similar to sys.argv[1:].
 
-    ParserClass can be specified to override the class we use to parse the
+    ParserClass may be specified to override the class we use to parse the
     command-line arguments. This is useful for testing.
-
     """
-
-    class StatusAction(Action):
-        """A custom action that stores option name and argument separately.
-
-        This is part of a workaround for the fact that argparse does not
-        support optional subcommands (http://bugs.python.org/issue9253).
-        """
-
-        def __init__(self, status_name, *args, **kwargs):
-            super(StatusAction, self).__init__(*args, **kwargs)
-            self._status_name = status_name
-
-        def __call__(self, parser, namespace, values, option_string=None):
-            if getattr(namespace, self.dest, None) is not None:
-                raise ArgumentError(self, "Only one status may be specified at once.")
-            setattr(namespace, self.dest, self._status_name)
-            setattr(namespace, 'test_id', values[0])
-
-
     parser = ParserClass(
         prog='subunit-output',
         description="A tool to generate a subunit result byte-stream",
@@ -140,6 +120,24 @@ def parse_arguments(args=None, ParserClass=ArgumentParser):
         parser.error("Cannot specify --tags without a status command")
 
     return args
+
+
+class StatusAction(Action):
+        """A custom action that stores option name and argument separately.
+
+        This is part of a workaround for the fact that argparse does not
+        support optional subcommands (http://bugs.python.org/issue9253).
+        """
+
+        def __init__(self, status_name, *args, **kwargs):
+            super(StatusAction, self).__init__(*args, **kwargs)
+            self._status_name = status_name
+
+        def __call__(self, parser, namespace, values, option_string=None):
+            if getattr(namespace, self.dest, None) is not None:
+                raise ArgumentError(self, "Only one status may be specified at once.")
+            setattr(namespace, self.dest, self._status_name)
+            setattr(namespace, 'test_id', values[0])
 
 
 def get_output_stream_writer():
