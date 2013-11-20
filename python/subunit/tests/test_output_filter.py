@@ -31,6 +31,7 @@ from testtools.matchers import (
     Matcher,
     MatchesListwise,
     Mismatch,
+    raises,
 )
 from testtools.testresult.doubles import StreamResult
 
@@ -48,10 +49,7 @@ class SafeArgumentParser(argparse.ArgumentParser):
     """An ArgumentParser class that doesn't call sys.exit."""
 
     def exit(self, status=0, message=""):
-        raise RuntimeError(
-            "ArgumentParser requested to exit with status %d and message %r"
-            % (status, message)
-        )
+        raise RuntimeError(message)
 
 
 safe_parse_arguments = partial(parse_arguments, ParserClass=SafeArgumentParser)
@@ -60,56 +58,60 @@ safe_parse_arguments = partial(parse_arguments, ParserClass=SafeArgumentParser)
 class TestStatusArgParserTests(WithScenarios, TestCase):
 
     scenarios = [
-        (cmd, dict(command=cmd)) for cmd in (
+        (cmd, dict(command=cmd, option='--' + cmd)) for cmd in (
             'exists',
-            'xfail',
             'fail',
-            'success',
-            'skip',
             'inprogress',
+            'skip',
+            'success',
             'uxsuccess',
+            'xfail',
         )
     ]
 
-    def _test_command(self, command, test_id):
-        args = safe_parse_arguments(args=[command, test_id])
-
-        self.assertThat(args.action, Equals(command))
-        self.assertThat(args.test_id, Equals(test_id))
-
     def test_can_parse_all_commands_with_test_id(self):
-        self._test_command(self.command, self.getUniqueString())
+        test_id = self.getUniqueString()
+        args = safe_parse_arguments(args=[self.option, test_id])
+
+        self.assertThat(args.action, Equals(self.command))
+        self.assertThat(args.test_id, Equals(test_id))
 
     def test_all_commands_parse_file_attachment(self):
         with NamedTemporaryFile() as tmp_file:
             args = safe_parse_arguments(
-                args=[self.command, 'foo', '--attach-file', tmp_file.name]
+                args=[self.option, 'foo', '--attach-file', tmp_file.name]
             )
             self.assertThat(args.attach_file.name, Equals(tmp_file.name))
 
     def test_all_commands_accept_mimetype_argument(self):
         with NamedTemporaryFile() as tmp_file:
             args = safe_parse_arguments(
-                args=[self.command, 'foo', '--attach-file', tmp_file.name, '--mimetype', "text/plain"]
+                args=[self.option, 'foo', '--attach-file', tmp_file.name, '--mimetype', "text/plain"]
             )
             self.assertThat(args.mimetype, Equals("text/plain"))
 
     def test_all_commands_accept_tags_argument(self):
         args = safe_parse_arguments(
-            args=[self.command, 'foo', '--tags', "foo,bar,baz"]
+            args=[self.option, 'foo', '--tags', "foo,bar,baz"]
         )
         self.assertThat(args.tags, Equals(["foo", "bar", "baz"]))
 
     def test_attach_file_with_hyphen_opens_stdin(self):
         self.patch(_o, 'stdin', StringIO(_u("Hello")))
         args = safe_parse_arguments(
-            args=[self.command, "foo", "--attach-file", "-"]
+            args=[self.option, "foo", "--attach-file", "-"]
         )
 
         self.assertThat(args.attach_file.read(), Equals("Hello"))
 
 
-class GlobalFileAttachmentTests(TestCase):
+class ArgParserTests(TestCase):
+
+    def setUp(self):
+        super(ArgParserTests, self).setUp()
+        # prevent ARgumentParser from printing to stderr:
+        self._stderr = BytesIO()
+        self.patch(argparse._sys, 'stderr', self._stderr)
 
     def test_can_parse_attach_file_without_test_id(self):
         with NamedTemporaryFile() as tmp_file:
@@ -118,7 +120,74 @@ class GlobalFileAttachmentTests(TestCase):
             )
             self.assertThat(args.attach_file.name, Equals(tmp_file.name))
 
-class ByteStreamCompatibilityTests(TestCase):
+    def test_cannot_specify_more_than_one_status_command(self):
+        fn = lambda: safe_parse_arguments(['--fail', 'foo', '--skip', 'bar'])
+        self.assertThat(
+            fn,
+            raises(RuntimeError('subunit-output: error: argument --skip: '\
+                'Only one status may be specified at once.\n'))
+        )
+
+    def test_cannot_specify_mimetype_without_attach_file(self):
+        fn = lambda: safe_parse_arguments(['--mimetype', 'foo'])
+        self.assertThat(
+            fn,
+            raises(RuntimeError('subunit-output: error: Cannot specify '\
+                '--mimetype without --attach-file\n'))
+        )
+
+    def test_cannot_specify_filename_without_attach_file(self):
+        fn = lambda: safe_parse_arguments(['--file-name', 'foo'])
+        self.assertThat(
+            fn,
+            raises(RuntimeError('subunit-output: error: Cannot specify '\
+                '--file-name without --attach-file\n'))
+        )
+
+    def test_cannot_specify_tags_without_status_command(self):
+        fn = lambda: safe_parse_arguments(['--tags', 'foo'])
+        self.assertThat(
+            fn,
+            raises(RuntimeError('subunit-output: error: Cannot specify '\
+                '--tags without a status command\n'))
+        )
+
+
+def get_result_for(commands):
+    """Get a result object from *commands.
+
+    Runs the 'generate_bytestream' function from subunit._output after
+    parsing *commands as if they were specified on the command line. The
+    resulting bytestream is then converted back into a result object and
+    returned.
+    """
+    stream = BytesIO()
+
+    args = safe_parse_arguments(commands)
+    output_writer = StreamResultToBytes(output_stream=stream)
+    generate_bytestream(args, output_writer)
+
+    stream.seek(0)
+
+    case = ByteStreamToStreamResult(source=stream)
+    result = StreamResult()
+    case.run(result)
+    return result
+
+
+class ByteStreamCompatibilityTests(WithScenarios, TestCase):
+
+    scenarios = [
+        (s, dict(status=s, option='--' + s)) for s in (
+            'exists',
+            'fail',
+            'inprogress',
+            'skip',
+            'success',
+            'uxsuccess',
+            'xfail',
+        )
+    ]
 
     _dummy_timestamp = datetime.datetime(2013, 1, 1, 0, 0, 0, 0, UTC)
 
@@ -126,137 +195,22 @@ class ByteStreamCompatibilityTests(TestCase):
         super(ByteStreamCompatibilityTests, self).setUp()
         self.patch(_o, 'create_timestamp', lambda: self._dummy_timestamp)
 
-    def _get_result_for(self, *commands):
-        """Get a result object from *commands.
 
-        Runs the 'generate_bytestream' function from subunit._output after
-        parsing *commands as if they were specified on the command line. The
-        resulting bytestream is then converted back into a result object and
-        returned.
-        """
-        stream = BytesIO()
-
-        for command_list in commands:
-            args = safe_parse_arguments(command_list)
-            output_writer = StreamResultToBytes(output_stream=stream)
-            generate_bytestream(args, output_writer)
-
-        stream.seek(0)
-
-        case = ByteStreamToStreamResult(source=stream)
-        result = StreamResult()
-        case.run(result)
-        return result
-
-    def test_start_generates_inprogress(self):
-        result = self._get_result_for(
-            ['inprogress', 'foo'],
-        )
+    def test_correct_status_is_generated(self):
+        result = get_result_for([self.option, 'foo'])
 
         self.assertThat(
             result._events[0],
             MatchesCall(
                 call='status',
                 test_id='foo',
-                test_status='inprogress',
+                test_status=self.status,
                 timestamp=self._dummy_timestamp,
             )
         )
 
-    def test_pass_generates_success(self):
-        result = self._get_result_for(
-            ['success', 'foo'],
-        )
-
-        self.assertThat(
-            result._events[0],
-            MatchesCall(
-                call='status',
-                test_id='foo',
-                test_status='success',
-                timestamp=self._dummy_timestamp,
-            )
-        )
-
-    def test_fail_generates_fail(self):
-        result = self._get_result_for(
-            ['fail', 'foo'],
-        )
-
-        self.assertThat(
-            result._events[0],
-            MatchesCall(
-                call='status',
-                test_id='foo',
-                test_status='fail',
-                timestamp=self._dummy_timestamp,
-            )
-        )
-
-    def test_skip_generates_skip(self):
-        result = self._get_result_for(
-            ['skip', 'foo'],
-        )
-
-        self.assertThat(
-            result._events[0],
-            MatchesCall(
-                call='status',
-                test_id='foo',
-                test_status='skip',
-                timestamp=self._dummy_timestamp,
-            )
-        )
-
-    def test_exists_generates_exists(self):
-        result = self._get_result_for(
-            ['exists', 'foo'],
-        )
-
-        self.assertThat(
-            result._events[0],
-            MatchesCall(
-                call='status',
-                test_id='foo',
-                test_status='exists',
-                timestamp=self._dummy_timestamp,
-            )
-        )
-
-    def test_expected_fail_generates_xfail(self):
-        result = self._get_result_for(
-            ['xfail', 'foo'],
-        )
-
-        self.assertThat(
-            result._events[0],
-            MatchesCall(
-                call='status',
-                test_id='foo',
-                test_status='xfail',
-                timestamp=self._dummy_timestamp,
-            )
-        )
-
-    def test_unexpected_success_generates_uxsuccess(self):
-        result = self._get_result_for(
-            ['uxsuccess', 'foo'],
-        )
-
-        self.assertThat(
-            result._events[0],
-            MatchesCall(
-                call='status',
-                test_id='foo',
-                test_status='uxsuccess',
-                timestamp=self._dummy_timestamp,
-            )
-        )
-
-    def test_tags_are_generated(self):
-        result = self._get_result_for(
-            ['exists', 'foo', '--tags', 'hello,world']
-        )
+    def test_all_commands_accept_tags(self):
+        result = get_result_for([self.option, 'foo', '--tags', 'hello,world'])
         self.assertThat(
             result._events[0],
             MatchesCall(
@@ -268,9 +222,14 @@ class ByteStreamCompatibilityTests(TestCase):
         )
 
 
-class FileChunkingTests(TestCase):
+class FileChunkingTests(WithScenarios, TestCase):
 
-    def _write_chunk_file(self, file_data, chunk_size=1024, mimetype=None, filename=None):
+    scenarios = [
+        ("With test_id", dict(test_id="foo")),
+        ("Without test_id", dict(test_id=None)),
+    ]
+
+    def _write_chunk_file(self, file_data, chunk_size=1024, mimetype=None, filename=None, test_id=None):
         """Write file data to a subunit stream, get a StreamResult object."""
         stream = BytesIO()
         output_writer = StreamResultToBytes(output_stream=stream)
@@ -285,7 +244,7 @@ class FileChunkingTests(TestCase):
                 output_writer=output_writer,
                 chunk_size=chunk_size,
                 mime_type=mimetype,
-                test_id='foo_test',
+                test_id=test_id,
                 file_name=filename,
             )
 
@@ -297,36 +256,48 @@ class FileChunkingTests(TestCase):
         return result
 
     def test_file_chunk_size_is_honored(self):
-        result = self._write_chunk_file(file_data=_b("Hello"), chunk_size=1)
+        result = self._write_chunk_file(
+            file_data=_b("Hello"),
+            chunk_size=1,
+            test_id=self.test_id,
+        )
         self.assertThat(
             result._events,
             MatchesListwise([
-                MatchesCall(call='status', file_bytes=_b('H'), mime_type=None, eof=False),
-                MatchesCall(call='status', file_bytes=_b('e'), mime_type=None, eof=False),
-                MatchesCall(call='status', file_bytes=_b('l'), mime_type=None, eof=False),
-                MatchesCall(call='status', file_bytes=_b('l'), mime_type=None, eof=False),
-                MatchesCall(call='status', file_bytes=_b('o'), mime_type=None, eof=False),
-                MatchesCall(call='status', file_bytes=_b(''), mime_type=None, eof=True),
+                MatchesCall(call='status', test_id=self.test_id, file_bytes=_b('H'), mime_type=None, eof=False),
+                MatchesCall(call='status', test_id=self.test_id, file_bytes=_b('e'), mime_type=None, eof=False),
+                MatchesCall(call='status', test_id=self.test_id, file_bytes=_b('l'), mime_type=None, eof=False),
+                MatchesCall(call='status', test_id=self.test_id, file_bytes=_b('l'), mime_type=None, eof=False),
+                MatchesCall(call='status', test_id=self.test_id, file_bytes=_b('o'), mime_type=None, eof=False),
+                MatchesCall(call='status', test_id=self.test_id, file_bytes=_b(''), mime_type=None, eof=True),
             ])
         )
 
     def test_file_mimetype_is_honored(self):
-        result = self._write_chunk_file(file_data=_b("SomeData"), mimetype="text/plain")
+        result = self._write_chunk_file(
+            file_data=_b("SomeData"),
+            mimetype="text/plain",
+            test_id=self.test_id,
+        )
         self.assertThat(
             result._events,
             MatchesListwise([
-                MatchesCall(call='status', file_bytes=_b('SomeData'), mime_type="text/plain"),
-                MatchesCall(call='status', file_bytes=_b(''), mime_type="text/plain"),
+                MatchesCall(call='status', test_id=self.test_id, file_bytes=_b('SomeData'), mime_type="text/plain"),
+                MatchesCall(call='status', test_id=self.test_id, file_bytes=_b(''), mime_type="text/plain"),
             ])
         )
 
     def test_file_name_is_honored(self):
-        result = self._write_chunk_file(file_data=_b("data"), filename="/some/name")
+        result = self._write_chunk_file(
+            file_data=_b("data"),
+            filename="/some/name",
+            test_id=self.test_id
+        )
         self.assertThat(
             result._events,
             MatchesListwise([
-                MatchesCall(call='status', file_name='/some/name'),
-                MatchesCall(call='status', file_name='/some/name'),
+                MatchesCall(call='status', test_id=self.test_id, file_name='/some/name'),
+                MatchesCall(call='status', test_id=self.test_id, file_name='/some/name'),
             ])
         )
 
