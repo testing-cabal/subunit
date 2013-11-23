@@ -133,13 +133,6 @@ from testtools.compat import _b, _u, BytesIO, StringIO
 try:
     from testtools.testresult.real import _StringException
     RemoteException = _StringException
-    # For testing: different pythons have different str() implementations.
-    if sys.version_info > (3, 0):
-        _remote_exception_str = "testtools.testresult.real._StringException"
-        _remote_exception_str_chunked = "34\r\n" + _remote_exception_str
-    else:
-        _remote_exception_str = "_StringException" 
-        _remote_exception_str_chunked = "1A\r\n" + _remote_exception_str
 except ImportError:
     raise ImportError ("testtools.testresult.real does not contain "
         "_StringException, check your version.")

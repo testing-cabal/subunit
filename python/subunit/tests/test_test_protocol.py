@@ -37,7 +37,11 @@ except ImportError:
 from testtools.matchers import Contains
 
 import subunit
-from subunit import _remote_exception_str, _remote_exception_str_chunked
+from subunit.tests import (
+    _remote_exception_repr,
+    _remote_exception_str,
+    _remote_exception_str_chunked,
+    )
 import subunit.iso8601 as iso8601
 
 
@@ -105,10 +109,10 @@ class TestTestProtocolServerPipe(unittest.TestCase):
         bing = subunit.RemotedTestCase("bing crosby")
         an_error = subunit.RemotedTestCase("an error")
         self.assertEqual(client.errors,
-                         [(an_error, _remote_exception_str + '\n')])
+                         [(an_error, _remote_exception_repr + '\n')])
         self.assertEqual(
             client.failures,
-            [(bing, _remote_exception_str + ": "
+            [(bing, _remote_exception_repr + ": "
               + details_to_str({'traceback': text_content(traceback)}) + "\n")])
         self.assertEqual(client.testsRun, 3)
 
@@ -963,7 +967,7 @@ class TestRemotedTestCase(unittest.TestCase):
                          "'A test description'>", "%r" % test)
         result = unittest.TestResult()
         test.run(result)
-        self.assertEqual([(test, _remote_exception_str + ": "
+        self.assertEqual([(test, _remote_exception_repr + ": "
                                  "Cannot run RemotedTestCases.\n\n")],
                          result.errors)
         self.assertEqual(1, result.testsRun)
@@ -1199,15 +1203,15 @@ class TestTestProtocolClient(TestCase):
             "something\n"
             "F\r\nserialised\nform0\r\n"
             "Content-Type: text/x-traceback;charset=utf8,language=python\n"
-            "traceback\n" + _remote_exception_str_chunked + ": boo qux\n0\r\n"
+            "traceback\n" + _remote_exception_str_chunked +
             "]\n") % self.test.id()),
             _b(("failure: %s [ multipart\n"
             "Content-Type: text/plain\n"
             "something\n"
             "F\r\nserialised\nform0\r\n"
             "Content-Type: text/x-traceback;language=python,charset=utf8\n"
-            "traceback\n" + _remote_exception_str_chunked + ": boo qux\n0\r\n"
-            "]\n") % self.test.id())
+            "traceback\n" + _remote_exception_str_chunked +
+            "]\n") % self.test.id()),
             ],
             Contains(self.io.getvalue())),
 
@@ -1231,14 +1235,14 @@ class TestTestProtocolClient(TestCase):
             "something\n"
             "F\r\nserialised\nform0\r\n"
             "Content-Type: text/x-traceback;charset=utf8,language=python\n"
-            "traceback\n" + _remote_exception_str_chunked + ": boo qux\n0\r\n"
+            "traceback\n" + _remote_exception_str_chunked +
             "]\n") % self.test.id()),
             _b(("error: %s [ multipart\n"
             "Content-Type: text/plain\n"
             "something\n"
             "F\r\nserialised\nform0\r\n"
             "Content-Type: text/x-traceback;language=python,charset=utf8\n"
-            "traceback\n" + _remote_exception_str_chunked + ": boo qux\n0\r\n"
+            "traceback\n" + _remote_exception_str_chunked +
             "]\n") % self.test.id()),
             ],
             Contains(self.io.getvalue())),
@@ -1263,14 +1267,14 @@ class TestTestProtocolClient(TestCase):
             "something\n"
             "F\r\nserialised\nform0\r\n"
             "Content-Type: text/x-traceback;charset=utf8,language=python\n"
-            "traceback\n" + _remote_exception_str_chunked + ": boo qux\n0\r\n"
+            "traceback\n" + _remote_exception_str_chunked +
             "]\n") % self.test.id()),
             _b(("xfail: %s [ multipart\n"
             "Content-Type: text/plain\n"
             "something\n"
             "F\r\nserialised\nform0\r\n"
             "Content-Type: text/x-traceback;language=python,charset=utf8\n"
-            "traceback\n" + _remote_exception_str_chunked + ": boo qux\n0\r\n"
+            "traceback\n" + _remote_exception_str_chunked +
             "]\n") % self.test.id()),
             ],
             Contains(self.io.getvalue())),
