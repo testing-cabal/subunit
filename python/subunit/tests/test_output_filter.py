@@ -52,7 +52,19 @@ class SafeOptionParser(optparse.OptionParser):
 safe_parse_arguments = partial(parse_arguments, ParserClass=SafeOptionParser)
 
 
-class TestStatusArgParserTests(WithScenarios, TestCase):
+class TestCaseWithPatchedStderr(TestCase):
+
+    def setUp(self):
+        super(TestCaseWithPatchedStderr, self).setUp()
+        # prevent OptionParser from printing to stderr:
+        if sys.version[0] > '2':
+            self._stderr = StringIO()
+        else:
+            self._stderr = BytesIO()
+        self.patch(optparse.sys, 'stderr', self._stderr)
+
+
+class TestStatusArgParserTests(WithScenarios, TestCaseWithPatchedStderr):
 
     scenarios = [
         (cmd, dict(command=cmd, option='--' + cmd)) for cmd in (
@@ -122,17 +134,16 @@ class TestStatusArgParserTests(WithScenarios, TestCase):
 
         self.assertThat(args.file_name, Equals("foo"))
 
+    def test_requires_test_id(self):
+        fn = lambda: safe_parse_arguments(args=[self.option])
+        self.assertThat(
+            fn,
+            raises(RuntimeError('subunit-output: error: argument %s: must '
+                'specify a single TEST_ID.\n'))
+        )
 
-class ArgParserTests(TestCase):
 
-    def setUp(self):
-        super(ArgParserTests, self).setUp()
-        # prevent OptionParser from printing to stderr:
-        if sys.version[0] > '2':
-            self._stderr = StringIO()
-        else:
-            self._stderr = BytesIO()
-        self.patch(optparse.sys, 'stderr', self._stderr)
+class ArgParserTests(TestCaseWithPatchedStderr):
 
     def test_can_parse_attach_file_without_test_id(self):
         with NamedTemporaryFile() as tmp_file:
@@ -140,6 +151,14 @@ class ArgParserTests(TestCase):
                 args=["--attach-file", tmp_file.name]
             )
             self.assertThat(args.attach_file.name, Equals(tmp_file.name))
+
+    def test_must_specify_argument(self):
+        fn = lambda: safe_parse_arguments([])
+        self.assertThat(
+            fn,
+            raises(RuntimeError('subunit-output: error: Must specify either '
+                '--attach-file or a status command\n'))
+        )
 
     def test_cannot_specify_more_than_one_status_command(self):
         fn = lambda: safe_parse_arguments(['--fail', 'foo', '--skip', 'bar'])

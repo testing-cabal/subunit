@@ -43,8 +43,9 @@ def parse_arguments(args=None, ParserClass=OptionParser):
     command-line arguments. This is useful for testing.
     """
     parser = ParserClass(
-        prog='subunit-output',
+        prog="subunit-output",
         description="A tool to generate a subunit v2 result byte-stream",
+        usage="subunit-output [-h] [status test_id] [options]",
     )
     parser.set_default('tags', None)
 
@@ -131,6 +132,8 @@ def parse_arguments(args=None, ParserClass=OptionParser):
                 parser.error("Cannot open %s (%s)" % (options.attach_file, e.strerror))
     if options.tags and not options.action:
         parser.error("Cannot specify --tags without a status command")
+    if not (options.attach_file or options.action):
+        parser.error("Must specify either --attach-file or a status command")
 
     return options
 
@@ -139,6 +142,8 @@ def status_action(option, opt_str, value, parser, status_name):
     if getattr(parser.values, "action", None) is not None:
         raise OptionValueError("argument %s: Only one status may be specified at once." % option)
 
+    if len(parser.rargs) == 0:
+        raise OptionValueError("argument %s: must specify a single TEST_ID.")
     parser.values.action = status_name
     parser.values.test_id = parser.rargs.pop(0)
 
