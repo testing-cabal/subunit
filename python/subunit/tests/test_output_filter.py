@@ -13,9 +13,7 @@
 #  license you chose for the specific language governing permissions and
 #  limitations under that license.
 #
-
-
-import argparse
+import optparse
 import datetime
 from functools import partial
 from io import BytesIO, StringIO
@@ -43,14 +41,14 @@ from subunit._output import (
 import subunit._output as _o
 
 
-class SafeArgumentParser(argparse.ArgumentParser):
+class SafeOptionParser(optparse.OptionParser):
     """An ArgumentParser class that doesn't call sys.exit."""
 
     def exit(self, status=0, message=""):
         raise RuntimeError(message)
 
 
-safe_parse_arguments = partial(parse_arguments, ParserClass=SafeArgumentParser)
+safe_parse_arguments = partial(parse_arguments, ParserClass=SafeOptionParser)
 
 
 class TestStatusArgParserTests(WithScenarios, TestCase):
@@ -128,9 +126,9 @@ class ArgParserTests(TestCase):
 
     def setUp(self):
         super(ArgParserTests, self).setUp()
-        # prevent ARgumentParser from printing to stderr:
+        # prevent OptionParser from printing to stderr:
         self._stderr = BytesIO()
-        self.patch(argparse._sys, 'stderr', self._stderr)
+        self.patch(optparse.sys, 'stderr', self._stderr)
 
     def test_can_parse_attach_file_without_test_id(self):
         with NamedTemporaryFile() as tmp_file:

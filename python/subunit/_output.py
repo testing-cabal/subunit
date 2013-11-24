@@ -12,7 +12,11 @@
 #  license you chose for the specific language governing permissions and
 #  limitations under that license.
 
-from argparse import ArgumentError, ArgumentParser, Action
+from optparse import (
+    OptionGroup,
+    OptionParser,
+    OptionValueError,
+)
 import datetime
 from functools import partial
 from sys import stdin, stdout
@@ -30,7 +34,7 @@ def output_main():
     return 0
 
 
-def parse_arguments(args=None, ParserClass=ArgumentParser):
+def parse_arguments(args=None, ParserClass=OptionParser):
     """Parse arguments from the command line.
 
     If specified, args must be a list of strings, similar to sys.argv[1:].
@@ -42,28 +46,34 @@ def parse_arguments(args=None, ParserClass=ArgumentParser):
         prog='subunit-output',
         description="A tool to generate a subunit v2 result byte-stream",
     )
+    parser.set_default('tags', None)
 
-    status_commands = parser.add_argument_group(
+    status_commands = OptionGroup(
+        parser,
         "Status Commands",
         "These options report the status of a test. TEST_ID must be a string "
             "that uniquely identifies the test."
     )
     final_actions = 'exists fail skip success xfail uxsuccess'.split()
     all_actions = final_actions + ['inprogress']
-    for action in all_actions:
+    for action_name in all_actions:
         final_text =  " This is a final state: No more status reports may "\
             "be generated for this test id after this one."
 
-        status_commands.add_argument(
-            "--%s" % action,
+        status_commands.add_option(
+            "--%s" % action_name,
             nargs=1,
-            action=partial(StatusAction, action),
+            action="callback",
+            callback=status_action,
+            callback_args=(action_name,),
             dest="action",
             metavar="TEST_ID",
-            help="Report a test status." + final_text if action in final_actions else ""
+            help="Report a test status." + final_text if action_name in final_actions else ""
         )
+    parser.add_option_group(status_commands)
 
-    file_commands = parser.add_argument_group(
+    file_commands = OptionGroup(
+        parser,
         "File Options",
         "These options control attaching data to a result stream. They can "
             "either be specified with a status command, in which case the file "
@@ -71,21 +81,21 @@ def parse_arguments(args=None, ParserClass=ArgumentParser):
             "the file is attached to the stream (and not associated with any "
             "test id)."
     )
-    file_commands.add_argument(
+    file_commands.add_option(
         "--attach-file",
         help="Attach a file to the result stream for this test. If '-' is "
             "specified, stdin will be read instead. In this case, the file "
             "name will be set to 'stdin' (but can still be overridden with "
             "the --file-name option)."
     )
-    file_commands.add_argument(
+    file_commands.add_option(
         "--file-name",
         help="The name to give this file attachment. If not specified, the "
             "name of the file on disk will be used, or 'stdin' in the case "
             "where '-' was passed to the '--attach-file' argument. This option"
             " may only be specified when '--attach-file' is specified.",
         )
-    file_commands.add_argument(
+    file_commands.add_option(
         "--mimetype",
         help="The mime type to send with this file. This is only used if the "
             "--attach-file argument is used. This argument is optional. If it "
@@ -93,52 +103,48 @@ def parse_arguments(args=None, ParserClass=ArgumentParser):
             "option may only be specified when '--attach-file' is specified.",
         default=None
     )
+    parser.add_option_group(file_commands)
 
-    parser.add_argument(
+    parser.add_option(
         "--tags",
         help="A comma-separated list of tags to associate with a test. This "
             "option may only be used with a status command.",
-        type=lambda s: s.split(','),
-        default=None
+        action="callback",
+        callback=tags_action,
+        default=[]
     )
 
-    args = parser.parse_args(args)
-    if args.mimetype and not args.attach_file:
+    (options, args) = parser.parse_args(args)
+    if options.mimetype and not options.attach_file:
         parser.error("Cannot specify --mimetype without --attach-file")
-    if args.file_name and not args.attach_file:
+    if options.file_name and not options.attach_file:
         parser.error("Cannot specify --file-name without --attach-file")
-    if args.attach_file:
-        if args.attach_file == '-':
-            if not args.file_name:
-                args.file_name = 'stdin'
-            args.attach_file = stdin
+    if options.attach_file:
+        if options.attach_file == '-':
+            if not options.file_name:
+                options.file_name = 'stdin'
+            options.attach_file = stdin
         else:
             try:
-                args.attach_file = open(args.attach_file)
+                options.attach_file = open(options.attach_file)
             except IOError as e:
-                parser.error("Cannot open %s (%s)" % (args.attach_file, e.strerror))
-    if args.tags and not args.action:
+                parser.error("Cannot open %s (%s)" % (options.attach_file, e.strerror))
+    if options.tags and not options.action:
         parser.error("Cannot specify --tags without a status command")
 
-    return args
+    return options
 
 
-class StatusAction(Action):
-    """A custom action that stores option name and argument separately.
+def status_action(option, opt_str, value, parser, status_name):
+    if getattr(parser.values, "action", None) is not None:
+        raise OptionValueError("argument %s: Only one status may be specified at once." % option)
 
-    This is part of a workaround for the fact that argparse does not
-    support optional subcommands (http://bugs.python.org/issue9253).
-    """
+    parser.values.action = status_name
+    parser.values.test_id = parser.rargs.pop(0)
 
-    def __init__(self, status_name, *args, **kwargs):
-        super(StatusAction, self).__init__(*args, **kwargs)
-        self._status_name = status_name
 
-    def __call__(self, parser, namespace, values, option_string=None):
-        if getattr(namespace, self.dest, None) is not None:
-            raise ArgumentError(self, "Only one status may be specified at once.")
-        setattr(namespace, self.dest, self._status_name)
-        setattr(namespace, 'test_id', values[0])
+def tags_action(option, opt_str, value, parser):
+    parser.values.tags = parser.rargs.pop(0).split(',')
 
 
 def get_output_stream_writer():
