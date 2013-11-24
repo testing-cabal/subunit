@@ -1,6 +1,6 @@
 use ExtUtils::MakeMaker;
 WriteMakefile(
-    'INSTALL_BASE' => '@prefix@',
+    'PREFIX' => '@prefix@',
     'NAME'	=> 'Subunit',
     'VERSION' => '@SUBUNIT_VERSION@',
     'test' => { 'TESTS' => 'tests/*.pl' },

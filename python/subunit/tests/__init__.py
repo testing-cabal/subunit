@@ -14,7 +14,21 @@
 #  limitations under that license.
 #
 
+import sys
 from unittest import TestLoader
+
+
+# Before the test module imports to avoid circularity.
+# For testing: different pythons have different str() implementations.
+if sys.version_info > (3, 0):
+    _remote_exception_repr = "testtools.testresult.real._StringException"
+    _remote_exception_str = "Traceback (most recent call last):\ntesttools.testresult.real._StringException"
+    _remote_exception_str_chunked = "57\r\n" + _remote_exception_str + ": boo qux\n0\r\n"
+else:
+    _remote_exception_repr = "_StringException" 
+    _remote_exception_str = "Traceback (most recent call last):\n_StringException" 
+    _remote_exception_str_chunked = "3D\r\n" + _remote_exception_str + ": boo qux\n0\r\n"
+
 
 from subunit.tests import (
     test_chunked,
@@ -31,6 +45,7 @@ from subunit.tests import (
     test_test_protocol2,
     test_test_results,
     )
+
 
 def test_suite():
     loader = TestLoader()

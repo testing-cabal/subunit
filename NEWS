@@ -8,8 +8,14 @@ NEXT (In development)
 BUG FIXES
 ~~~~~~~~~
 
+* Perl files should now honour perl system config.
+  (Benedikt Morbach, #1233198)
+
 * Python 3.1 and 3.2 have an inconsistent memoryview implementation which
   required a workaround for NUL byte detection. (Robert Collins, #1216246)
+
+* The test suite was failing 6 tests due to testtools changing it's output
+  formatting of exceptions. (Robert Collins)
 
 * V2 parser errors now set appropriate mime types for the encapsulated packet
   data and the error message. (Robert Collins)
