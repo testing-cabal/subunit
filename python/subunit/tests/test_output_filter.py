@@ -13,10 +13,11 @@
 #  license you chose for the specific language governing permissions and
 #  limitations under that license.
 #
-import optparse
 import datetime
 from functools import partial
 from io import BytesIO, StringIO
+import optparse
+import sys
 from tempfile import NamedTemporaryFile
 
 from testscenarios import WithScenarios
@@ -127,7 +128,10 @@ class ArgParserTests(TestCase):
     def setUp(self):
         super(ArgParserTests, self).setUp()
         # prevent OptionParser from printing to stderr:
-        self._stderr = BytesIO()
+        if sys.version[0] > '2':
+            self._stderr = StringIO()
+        else:
+            self._stderr = BytesIO()
         self.patch(optparse.sys, 'stderr', self._stderr)
 
     def test_can_parse_attach_file_without_test_id(self):
