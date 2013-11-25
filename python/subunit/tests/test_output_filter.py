@@ -288,6 +288,39 @@ class StatusStreamResultTests(WithScenarios, TestCase):
                 ])
             )
 
+    def test_can_read_binary_files(self):
+        with temp_file_contents(b"\xDE\xAD\xBE\xEF") as f:
+            result = get_result_for([self.option, self.test_id, '--attach-file', f.name])
+
+            self.assertThat(
+                result._events,
+                MatchesListwise([
+                    MatchesStatusCall(file_bytes=b"\xDE\xAD\xBE\xEF", eof=True),
+                ])
+            )
+
+    def test_can_read_empty_files(self):
+        with temp_file_contents(b"") as f:
+            result = get_result_for([self.option, self.test_id, '--attach-file', f.name])
+
+            self.assertThat(
+                result._events,
+                MatchesListwise([
+                    MatchesStatusCall(file_bytes=b"", file_name=f.name, eof=True),
+                ])
+            )
+
+    def test_can_read_stdin(self):
+        self.patch(_o.sys, 'stdin', BytesIO(b"\xFE\xED\xFA\xCE"))
+        result = get_result_for([self.option, self.test_id, '--attach-file', '-'])
+
+        self.assertThat(
+            result._events,
+            MatchesListwise([
+                MatchesStatusCall(file_bytes=b"\xFE\xED\xFA\xCE", file_name='stdin', eof=True),
+            ])
+        )
+
     def test_file_is_sent_with_test_id(self):
         with temp_file_contents(b"Hello") as f:
             result = get_result_for([self.option, self.test_id, '--attach-file', f.name])
