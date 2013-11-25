@@ -175,29 +175,20 @@ def generate_stream_results(args, output_writer):
     is_first_packet = True
     is_last_packet = False
     while not is_last_packet:
-
-        # XXX
-        def logme(*args, **kwargs):
-            print(args, kwargs)
-            output_writer.status(*args, **kwargs)
         write_status = output_writer.status
 
         if is_first_packet:
             if args.attach_file:
-                # mimetype is specified on the first chunk only:
                 if args.mimetype:
                     write_status = partial(write_status, mime_type=args.mimetype)
-            # tags are only written on the first packet:
             if args.tags:
                 write_status = partial(write_status, test_tags=args.tags)
-            # timestamp is specified on the first chunk as well:
             write_status = partial(write_status, timestamp=create_timestamp())
             if args.action not in _FINAL_ACTIONS:
                 write_status = partial(write_status, test_status=args.action)
             is_first_packet = False
 
         if args.attach_file:
-            # filename might be overridden by the user
             filename = args.file_name or args.attach_file.name
             write_status = partial(write_status, file_name=filename, file_bytes=this_file_hunk)
             if next_file_hunk == b'':
