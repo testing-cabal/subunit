@@ -56,7 +56,7 @@ def parse_arguments(args=None, ParserClass=OptionParser):
     parser = ParserClass(
         prog="subunit-output",
         description="A tool to generate a subunit v2 result byte-stream",
-        usage="subunit-output [-h] [status test_id] [options]",
+        usage="subunit-output [-h] [status TEST_ID] [options]",
     )
     parser.set_default('tags', None)
     parser.set_default('test_id', None)
