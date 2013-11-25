@@ -6,7 +6,7 @@
   license at the users choice. A copy of both licenses are available in the
   project source as Apache-2.0 and BSD. You may not use this file except in
   compliance with one of these two licences.
-  
+
   Unless required by applicable law or agreed to in writing, software
   distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
   WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -90,7 +90,7 @@ The most common way is to run an existing python test suite and have it output
 subunit via the ``subunit.run`` module::
 
   $ python -m subunit.run mypackage.tests.test_suite
- 
+
 For more information on the Python support Subunit offers , please see
 ``pydoc subunit``, or the source in ``python/subunit/``
 
@@ -343,7 +343,7 @@ b3 2901 0c 03666f6f 08555f1b
 Version 1 (and 1.1)
 ===================
 
-Version 1 (and 1.1) are mostly human readable protocols. 
+Version 1 (and 1.1) are mostly human readable protocols.
 
 Sample subunit wire contents
 ----------------------------
