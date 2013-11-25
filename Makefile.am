@@ -52,6 +52,7 @@ dist_bin_SCRIPTS = \
 	filters/subunit-filter \
 	filters/subunit-ls \
 	filters/subunit-notify \
+	filters/subunit-output \
 	filters/subunit-stats \
 	filters/subunit-tags \
 	filters/subunit2csv \
