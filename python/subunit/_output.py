@@ -150,12 +150,14 @@ def set_status_cb(option, opt_str, value, parser, status_name):
         raise OptionValueError("argument %s: Only one status may be specified at once." % option)
 
     if len(parser.rargs) == 0:
-        raise OptionValueError("argument %s: must specify a single TEST_ID.")
+        raise OptionValueError("argument %s: must specify a single TEST_ID." % option)
     parser.values.action = status_name
     parser.values.test_id = parser.rargs.pop(0)
 
 
 def set_tags_cb(option, opt_str, value, parser):
+    if not parser.rargs:
+        raise OptionValueError("Must specify at least one tag with --tags")
     parser.values.tags = parser.rargs.pop(0).split(',')
 
 

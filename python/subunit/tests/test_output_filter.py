@@ -187,6 +187,13 @@ class ArgParserTests(TestCaseWithPatchedStderr):
                 '--tags without a status command\n'))
         )
 
+    def test_must_specify_tags_with_tags_options(self):
+        fn = lambda: safe_parse_arguments(['--fail', 'foo', '--tags'])
+        self.assertThat(
+            fn,
+            raises(RuntimeError('subunit-output: error: Must specify at least one tag with --tags\n'))
+        )
+
 
 def get_result_for(commands):
     """Get a result object from *commands.
