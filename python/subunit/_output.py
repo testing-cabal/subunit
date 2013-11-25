@@ -134,7 +134,7 @@ def parse_arguments(args=None, ParserClass=OptionParser):
             options.attach_file = sys.stdin
         else:
             try:
-                options.attach_file = open(options.attach_file)
+                options.attach_file = open(options.attach_file, 'rb')
             except IOError as e:
                 parser.error("Cannot open %s (%s)" % (options.attach_file, e.strerror))
     if options.tags and not options.action:
@@ -166,8 +166,8 @@ def generate_stream_results(args, output_writer):
 
     if args.attach_file:
         reader = partial(args.attach_file.read, _CHUNK_SIZE)
-        this_file_hunk = reader().encode('utf8')
-        next_file_hunk = reader().encode('utf8')
+        this_file_hunk = reader()
+        next_file_hunk = reader()
 
     is_first_packet = True
     is_last_packet = False
@@ -202,7 +202,7 @@ def generate_stream_results(args, output_writer):
                 is_last_packet = True
             else:
                 this_file_hunk = next_file_hunk
-                next_file_hunk = reader().encode('utf8')
+                next_file_hunk = reader()
         else:
             is_last_packet = True
 
