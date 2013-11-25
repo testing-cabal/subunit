@@ -9,9 +9,10 @@ except ImportError:
 else:
     extra = {
         'install_requires': [
+            'contextlib',
             'extras',
-            'testtools>=0.9.30',
             'testscenarios',
+            'testtools>=0.9.30',
         ]
     }
 

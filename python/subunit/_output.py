@@ -12,25 +12,35 @@
 #  license you chose for the specific language governing permissions and
 #  limitations under that license.
 
+import datetime
+from functools import partial
 from optparse import (
     OptionGroup,
     OptionParser,
     OptionValueError,
 )
-import datetime
-from functools import partial
-from sys import stdin, stdout
-
-from testtools.compat import _b
+import sys
 
 from subunit.iso8601 import UTC
 from subunit.v2 import StreamResultToBytes
 
 
+_FINAL_ACTIONS = frozenset([
+    'exists',
+    'fail',
+    'skip',
+    'success',
+    'uxsuccess',
+    'xfail',
+])
+_ALL_ACTIONS = _FINAL_ACTIONS.union(['inprogress'])
+_CHUNK_SIZE=3670016 # 3.5 MiB
+
+
 def output_main():
     args = parse_arguments()
-    output = get_output_stream_writer()
-    generate_bytestream(args, output)
+    output = StreamResultToBytes(sys.stdout)
+    generate_stream_results(args, output)
     return 0
 
 
@@ -48,6 +58,7 @@ def parse_arguments(args=None, ParserClass=OptionParser):
         usage="subunit-output [-h] [status test_id] [options]",
     )
     parser.set_default('tags', None)
+    parser.set_default('test_id', None)
 
     status_commands = OptionGroup(
         parser,
@@ -55,21 +66,16 @@ def parse_arguments(args=None, ParserClass=OptionParser):
         "These options report the status of a test. TEST_ID must be a string "
             "that uniquely identifies the test."
     )
-    final_actions = 'exists fail skip success xfail uxsuccess'.split()
-    all_actions = final_actions + ['inprogress']
-    for action_name in all_actions:
-        final_text =  " This is a final state: No more status reports may "\
-            "be generated for this test id after this one."
-
+    for action_name in _ALL_ACTIONS:
         status_commands.add_option(
             "--%s" % action_name,
             nargs=1,
             action="callback",
-            callback=status_action,
+            callback=set_status_cb,
             callback_args=(action_name,),
             dest="action",
             metavar="TEST_ID",
-            help="Report a test status." + final_text if action_name in final_actions else ""
+            help="Report a test status."
         )
     parser.add_option_group(status_commands)
 
@@ -111,7 +117,7 @@ def parse_arguments(args=None, ParserClass=OptionParser):
         help="A comma-separated list of tags to associate with a test. This "
             "option may only be used with a status command.",
         action="callback",
-        callback=tags_action,
+        callback=set_tags_cb,
         default=[]
     )
 
@@ -124,7 +130,7 @@ def parse_arguments(args=None, ParserClass=OptionParser):
         if options.attach_file == '-':
             if not options.file_name:
                 options.file_name = 'stdin'
-            options.attach_file = stdin
+            options.attach_file = sys.stdin
         else:
             try:
                 options.attach_file = open(options.attach_file)
@@ -138,7 +144,7 @@ def parse_arguments(args=None, ParserClass=OptionParser):
     return options
 
 
-def status_action(option, opt_str, value, parser, status_name):
+def set_status_cb(option, opt_str, value, parser, status_name):
     if getattr(parser.values, "action", None) is not None:
         raise OptionValueError("argument %s: Only one status may be specified at once." % option)
 
@@ -148,60 +154,66 @@ def status_action(option, opt_str, value, parser, status_name):
     parser.values.test_id = parser.rargs.pop(0)
 
 
-def tags_action(option, opt_str, value, parser):
+def set_tags_cb(option, opt_str, value, parser):
     parser.values.tags = parser.rargs.pop(0).split(',')
 
 
-def get_output_stream_writer():
-    return StreamResultToBytes(stdout)
-
-
-def generate_bytestream(args, output_writer):
+def generate_stream_results(args, output_writer):
     output_writer.startTestRun()
+
     if args.attach_file:
-        write_chunked_file(
-            file_obj=args.attach_file,
-            test_id=args.test_id,
-            output_writer=output_writer,
-            mime_type=args.mimetype,
-        )
-    output_writer.status(
-        test_id=args.test_id,
-        test_status=args.action,
-        timestamp=create_timestamp(),
-        test_tags=args.tags,
-        )
+        reader = partial(args.attach_file.read, _CHUNK_SIZE)
+        this_file_hunk = reader().encode('utf8')
+        next_file_hunk = reader().encode('utf8')
+
+    is_first_packet = True
+    is_last_packet = False
+    while not is_last_packet:
+
+        # XXX
+        def logme(*args, **kwargs):
+            print(args, kwargs)
+            output_writer.status(*args, **kwargs)
+        write_status = output_writer.status
+
+        if is_first_packet:
+            if args.attach_file:
+                # mimetype is specified on the first chunk only:
+                if args.mimetype:
+                    write_status = partial(write_status, mime_type=args.mimetype)
+            # tags are only written on the first packet:
+            if args.tags:
+                write_status = partial(write_status, test_tags=args.tags)
+            # timestamp is specified on the first chunk as well:
+            write_status = partial(write_status, timestamp=create_timestamp())
+            if args.action not in _FINAL_ACTIONS:
+                write_status = partial(write_status, test_status=args.action)
+            is_first_packet = False
+
+        if args.attach_file:
+            # filename might be overridden by the user
+            filename = args.file_name or args.attach_file.name
+            write_status = partial(write_status, file_name=filename, file_bytes=this_file_hunk)
+            if next_file_hunk == b'':
+                write_status = partial(write_status, eof=True)
+                is_last_packet = True
+            else:
+                this_file_hunk = next_file_hunk
+                next_file_hunk = reader().encode('utf8')
+        else:
+            is_last_packet = True
+
+        if args.test_id:
+            write_status = partial(write_status, test_id=args.test_id)
+
+        if is_last_packet:
+            write_status = partial(write_status, eof=True)
+            if args.action in _FINAL_ACTIONS:
+                write_status = partial(write_status, test_status=args.action)
+
+        write_status()
+
     output_writer.stopTestRun()
-
-
-def write_chunked_file(file_obj, output_writer, chunk_size=1024,
-                       mime_type=None, test_id=None, file_name=None):
-    reader = partial(file_obj.read, chunk_size)
-
-    write_status = output_writer.status
-    if mime_type is not None:
-        write_status = partial(
-            write_status,
-            mime_type=mime_type
-        )
-    if test_id is not None:
-        write_status = partial(
-            write_status,
-            test_id=test_id
-        )
-    filename = file_name if file_name else file_obj.name
-
-    for chunk in iter(reader, _b('')):
-        write_status(
-            file_name=filename,
-            file_bytes=chunk,
-            eof=False,
-        )
-    write_status(
-        file_name=filename,
-        file_bytes=_b(''),
-        eof=True,
-    )
 
 
 def create_timestamp():
