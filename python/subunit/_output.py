@@ -131,7 +131,10 @@ def parse_arguments(args=None, ParserClass=OptionParser):
         if options.attach_file == '-':
             if not options.file_name:
                 options.file_name = 'stdin'
-            options.attach_file = sys.stdin
+            if sys.version[0] >= '3':
+                options.attach_file = sys.stdin.buffer
+            else:
+                options.attach_file = sys.stdin
         else:
             try:
                 options.attach_file = open(options.attach_file, 'rb')
