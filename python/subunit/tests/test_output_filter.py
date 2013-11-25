@@ -292,6 +292,17 @@ class StatusStreamResultTests(WithScenarios, TestCase):
                 ])
             )
 
+    def test_file_is_sent_with_test_status(self):
+        with temp_file_contents(b"Hello") as f:
+            result = get_result_for([self.option, self.test_id, '--attach-file', f.name])
+
+            self.assertThat(
+                result._events,
+                MatchesListwise([
+                    MatchesStatusCall(test_status=self.status, file_bytes=b'Hello', eof=True),
+                ])
+            )
+
     def test_file_chunk_size_is_honored(self):
         with temp_file_contents(b"Hello") as f:
             self.patch(_o, '_CHUNK_SIZE', 1)
@@ -419,7 +430,7 @@ class StatusStreamResultTests(WithScenarios, TestCase):
             )
 
 
-class GlobalFileDataTests(TestCase):
+class FileDataTests(TestCase):
 
     def test_can_attach_file_without_test_id(self):
         with temp_file_contents(b"Hello") as f:
@@ -450,12 +461,31 @@ class GlobalFileDataTests(TestCase):
                 '--attach-file',
                 f.name,
                 '--file-name',
-                specified_file_name])
+                specified_file_name
+            ])
 
             self.assertThat(
                 result._events,
                 MatchesListwise([
                     MatchesStatusCall(file_name=specified_file_name, file_bytes=b'Hello'),
+                ])
+            )
+
+    def test_files_have_timestamp(self):
+        _dummy_timestamp = datetime.datetime(2013, 1, 1, 0, 0, 0, 0, UTC)
+        self.patch(_o, 'create_timestamp', lambda: self._dummy_timestamp)
+
+        with temp_file_contents(b"Hello") as f:
+            specified_file_name = self.getUniqueString()
+            result = get_result_for([
+                '--attach-file',
+                f.name,
+            ])
+
+            self.assertThat(
+                result._events,
+                MatchesListwise([
+                    MatchesStatusCall(file_bytes=b'Hello', timestamp=self._dummy_timestamp),
                 ])
             )
 
