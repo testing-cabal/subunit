@@ -26,6 +26,7 @@ EXTRA_DIST =  \
 	python/subunit/tests/sample-two-script.py \
 	python/subunit/tests/test_chunked.py \
 	python/subunit/tests/test_details.py \
+	python/subunit/tests/test_filters.py \
 	python/subunit/tests/test_progress_model.py \
 	python/subunit/tests/test_subunit_filter.py \
 	python/subunit/tests/test_run.py \
