@@ -20,6 +20,11 @@ BUG FIXES
 * V2 parser errors now set appropriate mime types for the encapsulated packet
   data and the error message. (Robert Collins)
 
+* When tests fail to import ``python subunit.run -l ...`` will now write a 
+  subunit file attachment listing the failed imports and exit 2, rather than
+  listing the stub objects from the importer and exiting 0.
+  (Robert Collins, #1245672)
+
 IMPROVEMENTS
 ~~~~~~~~~~~~
 
