@@ -16,7 +16,7 @@
 
 import datetime
 from functools import partial
-from io import BytesIO, StringIO
+from io import BytesIO, StringIO, TextIOWrapper
 import optparse
 import sys
 from tempfile import NamedTemporaryFile
@@ -108,12 +108,12 @@ class TestStatusArgParserTests(WithScenarios, TestCaseWithPatchedStderr):
         self.assertThat(args.tags, Equals(["foo", "bar", "baz"]))
 
     def test_attach_file_with_hyphen_opens_stdin(self):
-        self.patch(_o.sys, 'stdin', StringIO(_u("Hello")))
+        self.patch(_o.sys, 'stdin', TextIOWrapper(BytesIO(b"Hello")))
         args = safe_parse_arguments(
             args=[self.option, "foo", "--attach-file", "-"]
         )
 
-        self.assertThat(args.attach_file.read(), Equals("Hello"))
+        self.assertThat(args.attach_file.read(), Equals(b"Hello"))
 
     def test_attach_file_with_hyphen_sets_filename_to_stdin(self):
         args = safe_parse_arguments(
@@ -311,7 +311,7 @@ class StatusStreamResultTests(WithScenarios, TestCase):
             )
 
     def test_can_read_stdin(self):
-        self.patch(_o.sys, 'stdin', BytesIO(b"\xFE\xED\xFA\xCE"))
+        self.patch(_o.sys, 'stdin', TextIOWrapper(BytesIO(b"\xFE\xED\xFA\xCE")))
         result = get_result_for([self.option, self.test_id, '--attach-file', '-'])
 
         self.assertThat(
