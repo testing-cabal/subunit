@@ -134,7 +134,7 @@ class TestStatusArgParserTests(WithScenarios, TestCaseWithPatchedStderr):
         self.assertThat(
             fn,
             raises(RuntimeError('subunit-output: error: argument %s: must '
-                'specify a single TEST_ID.\n'))
+                'specify a single TEST_ID.\n' % self.option))
         )
 
 
