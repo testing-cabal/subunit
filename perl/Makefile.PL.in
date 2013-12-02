@@ -12,7 +12,7 @@ sub MY::postamble {
 check: # test
 
 uninstall_distcheck:
-	rm -fr $(DESTINSTALLARCHLIB)
+	find $(DESTDIR)$(INSTALLSITEARCH) -type f -exec rm {} \; 
 	rm MYMETA.yml
 
 VPATH = @srcdir@

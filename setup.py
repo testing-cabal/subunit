@@ -11,7 +11,7 @@ else:
         'install_requires': [
             'extras',
             'testscenarios',
-            'testtools>=0.9.30',
+            'testtools>=0.9.34',
         ]
     }
 

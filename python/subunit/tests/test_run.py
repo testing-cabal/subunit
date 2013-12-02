@@ -17,14 +17,15 @@
 from testtools.compat import BytesIO
 import unittest
 
-from testtools import PlaceHolder
+from testtools import PlaceHolder, TestCase
 from testtools.testresult.doubles import StreamResult
 
 import subunit
+from subunit import run
 from subunit.run import SubunitTestRunner
 
 
-class TestSubunitTestRunner(unittest.TestCase):
+class TestSubunitTestRunner(TestCase):
 
     def test_includes_timing_output(self):
         io = BytesIO()
@@ -52,3 +53,12 @@ class TestSubunitTestRunner(unittest.TestCase):
             ('status', 'name1', 'exists'),
             ('status', 'name2', 'exists'),
             ], [event[:3] for event in eventstream._events[:2]])
+
+    def test_list_errors_if_errors_from_list_test(self):
+        io = BytesIO()
+        runner = SubunitTestRunner(stream=io)
+        def list_test(test):
+            return [], ['failed import']
+        self.patch(run, 'list_test', list_test)
+        exc = self.assertRaises(SystemExit, runner.list, None)
+        self.assertEqual((2,), exc.args)
