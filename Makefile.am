@@ -27,9 +27,10 @@ EXTRA_DIST =  \
 	python/subunit/tests/test_chunked.py \
 	python/subunit/tests/test_details.py \
 	python/subunit/tests/test_filters.py \
+	python/subunit/tests/test_output_filter.py \
 	python/subunit/tests/test_progress_model.py \
-	python/subunit/tests/test_subunit_filter.py \
 	python/subunit/tests/test_run.py \
+	python/subunit/tests/test_subunit_filter.py \
 	python/subunit/tests/test_subunit_stats.py \
 	python/subunit/tests/test_subunit_tags.py \
 	python/subunit/tests/test_tap2subunit.py \
@@ -79,7 +80,8 @@ pkgpython_PYTHON = \
 	python/subunit/progress_model.py \
 	python/subunit/run.py \
 	python/subunit/v2.py \
-	python/subunit/test_results.py
+	python/subunit/test_results.py \
+	python/subunit/_output.py
 
 lib_LTLIBRARIES = libsubunit.la
 lib_LTLIBRARIES +=  libcppunit_subunit.la
