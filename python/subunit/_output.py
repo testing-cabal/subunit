@@ -132,7 +132,7 @@ def parse_arguments(args=None, ParserClass=OptionParser):
             if not options.file_name:
                 options.file_name = 'stdin'
             if sys.version[0] >= '3':
-                options.attach_file = sys.stdin.buffer
+                options.attach_file = getattr(sys.stdin, 'buffer', sys.stdin)
             else:
                 options.attach_file = sys.stdin
         else:
@@ -150,10 +150,10 @@ def parse_arguments(args=None, ParserClass=OptionParser):
 
 def set_status_cb(option, opt_str, value, parser, status_name):
     if getattr(parser.values, "action", None) is not None:
-        raise OptionValueError("argument %s: Only one status may be specified at once." % option)
+        raise OptionValueError("argument %s: Only one status may be specified at once." % opt_str)
 
     if len(parser.rargs) == 0:
-        raise OptionValueError("argument %s: must specify a single TEST_ID." % option)
+        raise OptionValueError("argument %s: must specify a single TEST_ID." % opt_str)
     parser.values.action = status_name
     parser.values.test_id = parser.rargs.pop(0)
 

@@ -513,7 +513,7 @@ class FileDataTests(TestCase):
 
     def test_files_have_timestamp(self):
         _dummy_timestamp = datetime.datetime(2013, 1, 1, 0, 0, 0, 0, UTC)
-        self.patch(_o, 'create_timestamp', lambda: self._dummy_timestamp)
+        self.patch(_o, 'create_timestamp', lambda: _dummy_timestamp)
 
         with temp_file_contents(b"Hello") as f:
             specified_file_name = self.getUniqueString()
@@ -525,7 +525,7 @@ class FileDataTests(TestCase):
             self.assertThat(
                 result._events,
                 MatchesListwise([
-                    MatchesStatusCall(file_bytes=b'Hello', timestamp=self._dummy_timestamp),
+                    MatchesStatusCall(file_bytes=b'Hello', timestamp=_dummy_timestamp),
                 ])
             )
 
