@@ -22,6 +22,7 @@ from optparse import (
 )
 import sys
 
+from subunit import make_stream_binary
 from subunit.iso8601 import UTC
 from subunit.v2 import StreamResultToBytes
 
@@ -131,10 +132,7 @@ def parse_arguments(args=None, ParserClass=OptionParser):
         if options.attach_file == '-':
             if not options.file_name:
                 options.file_name = 'stdin'
-            if sys.version[0] >= '3':
-                options.attach_file = getattr(sys.stdin, 'buffer', sys.stdin)
-            else:
-                options.attach_file = sys.stdin
+                options.attach_file = make_stream_binary(sys.stdin)
         else:
             try:
                 options.attach_file = open(options.attach_file, 'rb')
