@@ -5,6 +5,12 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+IMPROVMENTS
+~~~~~~~~~~~
+
+* Add ``subunit-output`` tool that can generate a Subunit v2 bytestream from
+  arguments passed on the command line. (Thomi Richards, #1252084)
+
 0.0.16
 ------
 
@@ -33,9 +39,6 @@ IMPROVEMENTS
 
 * Most filters will now accept a file path argument instead of only reading
   from stdin. (Robert Collins, #409206)
-
-* Add ``subunit-output`` tool that can generate a Subunit v2 bytestream from
-  arguments passed on the command line. (Thomi Richards, #1252084)
 
 0.0.15
 ------
