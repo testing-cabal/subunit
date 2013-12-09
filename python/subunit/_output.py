@@ -137,10 +137,6 @@ def parse_arguments(args=None, ParserClass=OptionParser):
                 options.attach_file = open(options.attach_file, 'rb')
             except IOError as e:
                 parser.error("Cannot open %s (%s)" % (options.attach_file, e.strerror))
-    if options.tags and not options.action:
-        parser.error("Cannot specify --tag without a status command")
-    if not (options.attach_file or options.action):
-        parser.error("Must specify either --attach-file or a status command")
 
     return options
 

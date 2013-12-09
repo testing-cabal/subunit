@@ -147,13 +147,8 @@ class ArgParserTests(TestCaseWithPatchedStderr):
             )
             self.assertThat(args.attach_file.name, Equals(tmp_file.name))
 
-    def test_must_specify_argument(self):
-        fn = lambda: safe_parse_arguments([])
-        self.assertThat(
-            fn,
-            raises(RuntimeError('subunit-output: error: Must specify either '
-                '--attach-file or a status command\n'))
-        )
+    def test_can_run_without_args(self):
+        args = safe_parse_arguments([])
 
     def test_cannot_specify_more_than_one_status_command(self):
         fn = lambda: safe_parse_arguments(['--fail', 'foo', '--skip', 'bar'])
@@ -179,13 +174,9 @@ class ArgParserTests(TestCaseWithPatchedStderr):
                 '--file-name without --attach-file\n'))
         )
 
-    def test_cannot_specify_tags_without_status_command(self):
-        fn = lambda: safe_parse_arguments(['--tag', 'foo'])
-        self.assertThat(
-            fn,
-            raises(RuntimeError('subunit-output: error: Cannot specify '
-                '--tag without a status command\n'))
-        )
+    def test_can_specify_tags_without_status_command(self):
+        args = safe_parse_arguments(['--tag', 'foo'])
+        self.assertEqual(['foo'], args.tags)
 
     def test_must_specify_tags_with_tags_options(self):
         fn = lambda: safe_parse_arguments(['--fail', 'foo', '--tag'])
@@ -531,6 +522,18 @@ class FileDataTests(TestCase):
                 ])
             )
 
+    def test_can_specify_tags_without_test_status(self):
+        result = get_result_for([
+            '--tag',
+            'foo',
+        ])
+
+        self.assertThat(
+            result._events,
+            MatchesListwise([
+                MatchesStatusCall(test_tags=set(['foo'])),
+            ])
+        )
 
 class MatchesStatusCall(Matcher):
 
