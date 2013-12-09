@@ -108,7 +108,7 @@ def parse_arguments(args=None, ParserClass=OptionParser):
         "--mimetype",
         help="The mime type to send with this file. This is only used if the "
             "--attach-file argument is used. This argument is optional. If it "
-            "is not specified, the file will be sent wihtout a mime type. This "
+            "is not specified, the file will be sent without a mime type. This "
             "option may only be specified when '--attach-file' is specified.",
         default=None
     )
