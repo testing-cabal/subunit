@@ -180,17 +180,9 @@ def get_result_for(commands):
     resulting bytestream is then converted back into a result object and
     returned.
     """
-    stream = BytesIO()
-
-    args = safe_parse_arguments(commands)
-    output_writer = StreamResultToBytes(output_stream=stream)
-    generate_stream_results(args, output_writer)
-
-    stream.seek(0)
-
-    case = ByteStreamToStreamResult(source=stream)
     result = StreamResult()
-    case.run(result)
+    args = safe_parse_arguments(commands)
+    generate_stream_results(args, result)
     return result
 
 
@@ -220,21 +212,21 @@ class StatusStreamResultTests(TestCase):
         result = get_result_for([self.option, self.test_id])
         self.assertThat(
             len(result._events),
-            Equals(1)
+            Equals(3) # startTestRun and stopTestRun are also called, making 3 total.
         )
 
     def test_correct_status_is_generated(self):
         result = get_result_for([self.option, self.test_id])
 
         self.assertThat(
-            result._events[0],
+            result._events[1],
             MatchesStatusCall(test_status=self.status)
         )
 
     def test_all_commands_generate_tags(self):
         result = get_result_for([self.option, self.test_id, '--tag', 'hello', '--tag', 'world'])
         self.assertThat(
-            result._events[0],
+            result._events[1],
             MatchesStatusCall(test_tags=set(['hello', 'world']))
         )
 
@@ -242,7 +234,7 @@ class StatusStreamResultTests(TestCase):
         result = get_result_for([self.option, self.test_id])
 
         self.assertThat(
-            result._events[0],
+            result._events[1],
             MatchesStatusCall(timestamp=self._dummy_timestamp)
         )
 
@@ -250,7 +242,7 @@ class StatusStreamResultTests(TestCase):
         result = get_result_for([self.option, self.test_id])
 
         self.assertThat(
-            result._events[0],
+            result._events[1],
             MatchesStatusCall(test_id=self.test_id)
         )
 
@@ -261,7 +253,9 @@ class StatusStreamResultTests(TestCase):
             self.assertThat(
                 result._events,
                 MatchesListwise([
+                    MatchesStatusCall(call='startTestRun'),
                     MatchesStatusCall(file_bytes=b'Hello', eof=True),
+                    MatchesStatusCall(call='stopTestRun'),
                 ])
             )
 
@@ -272,7 +266,9 @@ class StatusStreamResultTests(TestCase):
             self.assertThat(
                 result._events,
                 MatchesListwise([
+                    MatchesStatusCall(call='startTestRun'),
                     MatchesStatusCall(file_bytes=b"\xDE\xAD\xBE\xEF", eof=True),
+                    MatchesStatusCall(call='stopTestRun'),
                 ])
             )
 
@@ -283,7 +279,9 @@ class StatusStreamResultTests(TestCase):
             self.assertThat(
                 result._events,
                 MatchesListwise([
+                    MatchesStatusCall(call='startTestRun'),
                     MatchesStatusCall(file_bytes=b"", file_name=f.name, eof=True),
+                    MatchesStatusCall(call='stopTestRun'),
                 ])
             )
 
@@ -294,7 +292,9 @@ class StatusStreamResultTests(TestCase):
         self.assertThat(
             result._events,
             MatchesListwise([
+                MatchesStatusCall(call='startTestRun'),
                 MatchesStatusCall(file_bytes=b"\xFE\xED\xFA\xCE", file_name='stdin', eof=True),
+                MatchesStatusCall(call='stopTestRun'),
             ])
         )
 
@@ -305,7 +305,9 @@ class StatusStreamResultTests(TestCase):
             self.assertThat(
                 result._events,
                 MatchesListwise([
+                    MatchesStatusCall(call='startTestRun'),
                     MatchesStatusCall(test_id=self.test_id, file_bytes=b'Hello', eof=True),
+                    MatchesStatusCall(call='stopTestRun'),
                 ])
             )
 
@@ -316,7 +318,9 @@ class StatusStreamResultTests(TestCase):
             self.assertThat(
                 result._events,
                 MatchesListwise([
+                    MatchesStatusCall(call='startTestRun'),
                     MatchesStatusCall(test_status=self.status, file_bytes=b'Hello', eof=True),
+                    MatchesStatusCall(call='stopTestRun'),
                 ])
             )
 
@@ -328,11 +332,13 @@ class StatusStreamResultTests(TestCase):
             self.assertThat(
                 result._events,
                 MatchesListwise([
+                    MatchesStatusCall(call='startTestRun'),
                     MatchesStatusCall(test_id=self.test_id, file_bytes=b'H', eof=False),
                     MatchesStatusCall(test_id=self.test_id, file_bytes=b'e', eof=False),
                     MatchesStatusCall(test_id=self.test_id, file_bytes=b'l', eof=False),
                     MatchesStatusCall(test_id=self.test_id, file_bytes=b'l', eof=False),
                     MatchesStatusCall(test_id=self.test_id, file_bytes=b'o', eof=True),
+                    MatchesStatusCall(call='stopTestRun'),
                 ])
             )
 
@@ -351,8 +357,10 @@ class StatusStreamResultTests(TestCase):
             self.assertThat(
                 result._events,
                 MatchesListwise([
+                    MatchesStatusCall(call='startTestRun'),
                     MatchesStatusCall(test_id=self.test_id, mime_type='text/plain', file_bytes=b'H', eof=False),
                     MatchesStatusCall(test_id=self.test_id, mime_type=None, file_bytes=b'i', eof=True),
+                    MatchesStatusCall(call='stopTestRun'),
                 ])
             )
 
@@ -373,8 +381,10 @@ class StatusStreamResultTests(TestCase):
             self.assertThat(
                 result._events,
                 MatchesListwise([
+                    MatchesStatusCall(call='startTestRun'),
                     MatchesStatusCall(test_id=self.test_id, test_tags=set(['foo', 'bar'])),
                     MatchesStatusCall(test_id=self.test_id, test_tags=None),
+                    MatchesStatusCall(call='stopTestRun'),
                 ])
             )
 
@@ -391,8 +401,10 @@ class StatusStreamResultTests(TestCase):
             self.assertThat(
                 result._events,
                 MatchesListwise([
+                    MatchesStatusCall(call='startTestRun'),
                     MatchesStatusCall(test_id=self.test_id, timestamp=self._dummy_timestamp),
                     MatchesStatusCall(test_id=self.test_id, timestamp=None),
+                    MatchesStatusCall(call='stopTestRun'),
                 ])
             )
 
@@ -416,7 +428,12 @@ class StatusStreamResultTests(TestCase):
                 last_call = MatchesStatusCall(test_id=self.test_id, test_status=None)
             self.assertThat(
                 result._events,
-                MatchesListwise([first_call, last_call])
+                MatchesListwise([
+                    MatchesStatusCall(call='startTestRun'),
+                    first_call,
+                    last_call,
+                    MatchesStatusCall(call='stopTestRun'),
+                ])
             )
 
     def test_filename_can_be_overridden(self):
@@ -433,7 +450,9 @@ class StatusStreamResultTests(TestCase):
             self.assertThat(
                 result._events,
                 MatchesListwise([
+                    MatchesStatusCall(call='startTestRun'),
                     MatchesStatusCall(file_name=specified_file_name, file_bytes=b'Hello'),
+                    MatchesStatusCall(call='stopTestRun'),
                 ])
             )
 
@@ -444,7 +463,9 @@ class StatusStreamResultTests(TestCase):
             self.assertThat(
                 result._events,
                 MatchesListwise([
+                    MatchesStatusCall(call='startTestRun'),
                     MatchesStatusCall(file_name=f.name, file_bytes=b'Hello', eof=True),
+                    MatchesStatusCall(call='stopTestRun'),
                 ])
             )
 
@@ -458,7 +479,9 @@ class FileDataTests(TestCase):
             self.assertThat(
                 result._events,
                 MatchesListwise([
+                    MatchesStatusCall(call='startTestRun'),
                     MatchesStatusCall(test_id=None, file_bytes=b'Hello', eof=True),
+                    MatchesStatusCall(call='stopTestRun'),
                 ])
             )
 
@@ -469,7 +492,9 @@ class FileDataTests(TestCase):
             self.assertThat(
                 result._events,
                 MatchesListwise([
+                    MatchesStatusCall(call='startTestRun'),
                     MatchesStatusCall(file_name=f.name, file_bytes=b'Hello', eof=True),
+                    MatchesStatusCall(call='stopTestRun'),
                 ])
             )
 
@@ -486,7 +511,9 @@ class FileDataTests(TestCase):
             self.assertThat(
                 result._events,
                 MatchesListwise([
+                    MatchesStatusCall(call='startTestRun'),
                     MatchesStatusCall(file_name=specified_file_name, file_bytes=b'Hello'),
+                    MatchesStatusCall(call='stopTestRun'),
                 ])
             )
 
@@ -504,7 +531,9 @@ class FileDataTests(TestCase):
             self.assertThat(
                 result._events,
                 MatchesListwise([
+                    MatchesStatusCall(call='startTestRun'),
                     MatchesStatusCall(file_bytes=b'Hello', timestamp=_dummy_timestamp),
+                    MatchesStatusCall(call='stopTestRun'),
                 ])
             )
 
@@ -517,9 +546,12 @@ class FileDataTests(TestCase):
         self.assertThat(
             result._events,
             MatchesListwise([
+                MatchesStatusCall(call='startTestRun'),
                 MatchesStatusCall(test_tags=set(['foo'])),
+                MatchesStatusCall(call='stopTestRun'),
             ])
         )
+
 
 class MatchesStatusCall(Matcher):
 

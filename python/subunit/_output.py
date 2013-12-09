@@ -169,7 +169,7 @@ def generate_stream_results(args, output_writer):
                 if args.mimetype:
                     write_status = partial(write_status, mime_type=args.mimetype)
             if args.tags:
-                write_status = partial(write_status, test_tags=args.tags)
+                write_status = partial(write_status, test_tags=set(args.tags))
             write_status = partial(write_status, timestamp=create_timestamp())
             if args.action not in _FINAL_ACTIONS:
                 write_status = partial(write_status, test_status=args.action)
