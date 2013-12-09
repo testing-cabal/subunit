@@ -115,11 +115,10 @@ def parse_arguments(args=None, ParserClass=OptionParser):
     parser.add_option_group(file_commands)
 
     parser.add_option(
-        "--tags",
-        help="A comma-separated list of tags to associate with a test. This "
-            "option may only be used with a status command.",
-        action="callback",
-        callback=set_tags_cb,
+        "--tag",
+        help="Specifies a tag. May be used multiple times",
+        action="append",
+        dest="tags",
         default=[]
     )
 
@@ -139,7 +138,7 @@ def parse_arguments(args=None, ParserClass=OptionParser):
             except IOError as e:
                 parser.error("Cannot open %s (%s)" % (options.attach_file, e.strerror))
     if options.tags and not options.action:
-        parser.error("Cannot specify --tags without a status command")
+        parser.error("Cannot specify --tag without a status command")
     if not (options.attach_file or options.action):
         parser.error("Must specify either --attach-file or a status command")
 
@@ -154,12 +153,6 @@ def set_status_cb(option, opt_str, value, parser, status_name):
         raise OptionValueError("argument %s: must specify a single TEST_ID." % opt_str)
     parser.values.action = status_name
     parser.values.test_id = parser.rargs.pop(0)
-
-
-def set_tags_cb(option, opt_str, value, parser):
-    if not parser.rargs:
-        raise OptionValueError("Must specify at least one tag with --tags")
-    parser.values.tags = parser.rargs.pop(0).split(',')
 
 
 def generate_stream_results(args, output_writer):
@@ -202,7 +195,6 @@ def generate_stream_results(args, output_writer):
             write_status = partial(write_status, test_id=args.test_id)
 
         if is_last_packet:
-            write_status = partial(write_status, eof=True)
             if args.action in _FINAL_ACTIONS:
                 write_status = partial(write_status, test_status=args.action)
 

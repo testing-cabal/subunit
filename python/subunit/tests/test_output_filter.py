@@ -103,7 +103,7 @@ class TestStatusArgParserTests(WithScenarios, TestCaseWithPatchedStderr):
 
     def test_all_commands_accept_tags_argument(self):
         args = safe_parse_arguments(
-            args=[self.option, 'foo', '--tags', "foo,bar,baz"]
+            args=[self.option, 'foo', '--tag', "foo", "--tag", "bar", "--tag", "baz"]
         )
         self.assertThat(args.tags, Equals(["foo", "bar", "baz"]))
 
@@ -180,18 +180,18 @@ class ArgParserTests(TestCaseWithPatchedStderr):
         )
 
     def test_cannot_specify_tags_without_status_command(self):
-        fn = lambda: safe_parse_arguments(['--tags', 'foo'])
+        fn = lambda: safe_parse_arguments(['--tag', 'foo'])
         self.assertThat(
             fn,
             raises(RuntimeError('subunit-output: error: Cannot specify '
-                '--tags without a status command\n'))
+                '--tag without a status command\n'))
         )
 
     def test_must_specify_tags_with_tags_options(self):
-        fn = lambda: safe_parse_arguments(['--fail', 'foo', '--tags'])
+        fn = lambda: safe_parse_arguments(['--fail', 'foo', '--tag'])
         self.assertThat(
             fn,
-            raises(RuntimeError('subunit-output: error: Must specify at least one tag with --tags\n'))
+            raises(RuntimeError('subunit-output: error: --tag option requires 1 argument\n'))
         )
 
 
@@ -255,7 +255,7 @@ class StatusStreamResultTests(WithScenarios, TestCase):
         )
 
     def test_all_commands_generate_tags(self):
-        result = get_result_for([self.option, self.test_id, '--tags', 'hello,world'])
+        result = get_result_for([self.option, self.test_id, '--tag', 'hello', '--tag', 'world'])
         self.assertThat(
             result._events[0],
             MatchesStatusCall(test_tags=set(['hello', 'world']))
@@ -387,8 +387,10 @@ class StatusStreamResultTests(WithScenarios, TestCase):
                 self.test_id,
                 '--attach-file',
                 f.name,
-                '--tags',
-                'foo,bar',
+                '--tag',
+                'foo',
+                '--tag',
+                'bar',
             ])
 
             self.assertThat(
