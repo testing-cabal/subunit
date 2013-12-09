@@ -22,7 +22,6 @@ import sys
 from tempfile import NamedTemporaryFile
 
 from contextlib import contextmanager
-from testscenarios import WithScenarios
 from testtools import TestCase
 from testtools.compat import _u
 from testtools.matchers import (
@@ -58,7 +57,7 @@ class SafeOptionParser(optparse.OptionParser):
 safe_parse_arguments = partial(parse_arguments, ParserClass=SafeOptionParser)
 
 
-class TestStatusArgParserTests(WithScenarios, TestCase):
+class TestStatusArgParserTests(TestCase):
 
     scenarios = [
         (cmd, dict(command=cmd, option='--' + cmd)) for cmd in _ALL_ACTIONS
@@ -204,7 +203,7 @@ def temp_file_contents(data):
         yield f
 
 
-class StatusStreamResultTests(WithScenarios, TestCase):
+class StatusStreamResultTests(TestCase):
 
     scenarios = [
         (s, dict(status=s, option='--' + s)) for s in _ALL_ACTIONS

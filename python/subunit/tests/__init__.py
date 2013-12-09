@@ -17,6 +17,8 @@
 import sys
 from unittest import TestLoader
 
+from testscenarios import generate_scenarios
+
 
 # Before the test module imports to avoid circularity.
 # For testing: different pythons have different str() implementations.
@@ -61,5 +63,7 @@ def test_suite():
     result.addTest(loader.loadTestsFromModule(test_subunit_tags))
     result.addTest(loader.loadTestsFromModule(test_subunit_stats))
     result.addTest(loader.loadTestsFromModule(test_run))
-    result.addTest(loader.loadTestsFromModule(test_output_filter))
+    result.addTests(
+        generate_scenarios(loader.loadTestsFromModule(test_output_filter))
+    )
     return result
