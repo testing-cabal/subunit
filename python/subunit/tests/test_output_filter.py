@@ -51,23 +51,14 @@ class SafeOptionParser(optparse.OptionParser):
     def exit(self, status=0, message=""):
         raise RuntimeError(message)
 
+    def error(self, message):
+        raise RuntimeError(message)
+
 
 safe_parse_arguments = partial(parse_arguments, ParserClass=SafeOptionParser)
 
 
-class TestCaseWithPatchedStderr(TestCase):
-
-    def setUp(self):
-        super(TestCaseWithPatchedStderr, self).setUp()
-        # prevent OptionParser from printing to stderr:
-        if sys.version[0] > '2':
-            self._stderr = StringIO()
-        else:
-            self._stderr = BytesIO()
-        self.patch(optparse.sys, 'stderr', self._stderr)
-
-
-class TestStatusArgParserTests(WithScenarios, TestCaseWithPatchedStderr):
+class TestStatusArgParserTests(WithScenarios, TestCase):
 
     scenarios = [
         (cmd, dict(command=cmd, option='--' + cmd)) for cmd in _ALL_ACTIONS
@@ -133,12 +124,11 @@ class TestStatusArgParserTests(WithScenarios, TestCaseWithPatchedStderr):
         fn = lambda: safe_parse_arguments(args=[self.option])
         self.assertThat(
             fn,
-            raises(RuntimeError('subunit-output: error: argument %s: must '
-                'specify a single TEST_ID.\n' % self.option))
+            raises(RuntimeError('argument %s: must specify a single TEST_ID.' % self.option))
         )
 
 
-class ArgParserTests(TestCaseWithPatchedStderr):
+class ArgParserTests(TestCase):
 
     def test_can_parse_attach_file_without_test_id(self):
         with NamedTemporaryFile() as tmp_file:
@@ -154,24 +144,21 @@ class ArgParserTests(TestCaseWithPatchedStderr):
         fn = lambda: safe_parse_arguments(['--fail', 'foo', '--skip', 'bar'])
         self.assertThat(
             fn,
-            raises(RuntimeError('subunit-output: error: argument --skip: '
-                'Only one status may be specified at once.\n'))
+            raises(RuntimeError('argument --skip: Only one status may be specified at once.'))
         )
 
     def test_cannot_specify_mimetype_without_attach_file(self):
         fn = lambda: safe_parse_arguments(['--mimetype', 'foo'])
         self.assertThat(
             fn,
-            raises(RuntimeError('subunit-output: error: Cannot specify '
-                '--mimetype without --attach-file\n'))
+            raises(RuntimeError('Cannot specify --mimetype without --attach-file'))
         )
 
     def test_cannot_specify_filename_without_attach_file(self):
         fn = lambda: safe_parse_arguments(['--file-name', 'foo'])
         self.assertThat(
             fn,
-            raises(RuntimeError('subunit-output: error: Cannot specify '
-                '--file-name without --attach-file\n'))
+            raises(RuntimeError('Cannot specify --file-name without --attach-file'))
         )
 
     def test_can_specify_tags_without_status_command(self):
@@ -182,7 +169,7 @@ class ArgParserTests(TestCaseWithPatchedStderr):
         fn = lambda: safe_parse_arguments(['--fail', 'foo', '--tag'])
         self.assertThat(
             fn,
-            raises(RuntimeError('subunit-output: error: --tag option requires 1 argument\n'))
+            raises(RuntimeError('--tag option requires 1 argument'))
         )
 
 
