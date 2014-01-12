@@ -27,6 +27,7 @@ from testtools.compat import _u
 from testtools.matchers import (
     Equals,
     Matcher,
+    MatchesAny,
     MatchesListwise,
     Mismatch,
     raises,
