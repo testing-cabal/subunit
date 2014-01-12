@@ -166,15 +166,13 @@ class ArgParserTests(TestCase):
 
     def test_must_specify_tags_with_tags_options(self):
         fn = lambda: safe_parse_arguments(['--fail', 'foo', '--tag'])
-        if sys.version[0] > '3.2':
-            expected_message = '--tag option requires 1 argument'
-        else:
-            expected_message = '--tag option requires an argument'
         self.assertThat(
             fn,
-            raises(RuntimeError(expected_message))
+            MatchesAny(
+                raises(RuntimeError('--tag option requires 1 argument')),
+                raises(RuntimeError('--tag option requires an argument')),
+            )
         )
-
 
 def get_result_for(commands):
     """Get a result object from *commands.
