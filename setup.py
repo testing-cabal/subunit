@@ -10,6 +10,7 @@ else:
     extra = {
         'install_requires': [
             'extras',
+            'testscenarios',
             'testtools>=0.9.34',
         ]
     }
@@ -52,14 +53,15 @@ setup(
     scripts = [
         'filters/subunit-1to2',
         'filters/subunit-2to1',
-        'filters/subunit2gtk',
-        'filters/subunit2junitxml',
-        'filters/subunit2pyunit',
         'filters/subunit-filter',
         'filters/subunit-ls',
         'filters/subunit-notify',
+        'filters/subunit-output',
         'filters/subunit-stats',
         'filters/subunit-tags',
+        'filters/subunit2gtk',
+        'filters/subunit2junitxml',
+        'filters/subunit2pyunit',
         'filters/tap2subunit',
     ],
     **extra

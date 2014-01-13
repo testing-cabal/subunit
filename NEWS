@@ -5,6 +5,12 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+IMPROVMENTS
+~~~~~~~~~~~
+
+* Add ``subunit-output`` tool that can generate a Subunit v2 bytestream from
+  arguments passed on the command line. (Thomi Richards, #1252084)
+
 0.0.16
 ------
 
