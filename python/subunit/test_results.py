@@ -20,7 +20,6 @@ import csv
 import datetime
 
 import testtools
-from testtools.compat import all
 from testtools.content import (
     text_content,
     TracebackContent,

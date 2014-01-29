@@ -5,6 +5,16 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+0.0.18
+------
+
+IMPROVMENTS
+~~~~~~~~~~~
+
+* Fix compatibility with testtools 0.9.35 which dropped the 'all' compat
+  symbol. This breaks support for Python versions lower than 2.6.
+  (Robert Collins, #1274056)
+
 0.0.17
 ------
 
