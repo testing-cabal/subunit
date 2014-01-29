@@ -463,6 +463,7 @@ Releases
 
 * Update versions in configure.ac and python/subunit/__init__.py.
 * Update Makefile in the root or do an inplace configure to get an updated Makefile.
+* Update NEWS.
 * Make PyPI and regular tarball releases. Upload the regular one to LP, the
   PyPI one to PyPI.
 * Push a tagged commit.
