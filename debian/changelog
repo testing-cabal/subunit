@@ -1,0 +1,284 @@
+subunit (0.0.18-1) unstable; urgency=medium
+
+  [ James Page ]
+  * d/rules: Avoid dh_python3 processing of subunit package so that shebangs
+    don't get incorrectly changed to python3 versions.
+
+  [ Thomas Goirand ]
+  * NMU with previous agreement from Robert Collins.
+  * Adds python-testscenarios & python3-testscenarios as build-depends.
+  * Removed explicit Depends: python in the subunit package, and leave this to
+    dh_python2 to do its work.
+  * debian/rules: Removed clean of .pyc, .pyo and __pycache__, since
+    dh_python{2,3} does it all automatically.
+  * Fixed debian/rules to use dh $@ and not dh $*, which was weird to me!
+  * debian/rules: Added missing set -e in for loops.
+  * Removed obsolete X-Python-Version: >= 2.4.
+  * Standards-Version: is now 3.9.5.
+  * Added extend-diff-ignore = "^[^/]*[.]egg-info/" in debian/source/options.
+  * Imported from Ubuntu package:
+    - debian/rules: Remove moving around of Perl modules, upstream build system
+    DTRT now.
+    - debian/libsubunit-perl.install: Install Perl module directly from source
+    tree, the upstream build system forgets to install it with separate build
+    trees.
+
+ -- Thomas Goirand <zigo@debian.org>  Tue, 11 Feb 2014 17:39:22 +0800
+
+subunit (0.0.15-2) unstable; urgency=low
+
+  * Remove extra 'done' in debian/rules. Closes: #725635
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Wed, 16 Oct 2013 23:05:55 -0700
+
+subunit (0.0.15-1) unstable; urgency=low
+
+  [ Jelmer Vernooij]
+  * Use dh-autoreconf.
+
+  [ Scott Kitterman ]
+  * Switch python{3}-all-dev build-depends to python{3}-all because there
+    is no architecture specific python{3} content in the package.
+    Closes: #709540
+  * Drop unneeded python{3}:Provides - not generally useful and specifically
+    not appropriate for arch all packages
+
+  [ Jelmer Vernooij ]
+  * Drop unnecessary dependency on python-dev.
+  * New upstream release.
+  * Bump standards version to 3.9.4 (no changes).
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Wed, 11 Sep 2013 21:14:31 +0100
+
+subunit (0.0.10-2) unstable; urgency=low
+
+  * Uploading to unstable.
+
+ -- Thomas Goirand <zigo@debian.org>  Sat, 11 May 2013 07:57:41 +0000
+
+subunit (0.0.10-1) experimental; urgency=low
+
+  * Non-maintainer upload, with authorization from Robert Collins.
+  * New upstream release (Closes: #701226).
+  * Removed now useless FTBFS patch.
+  * Allows the unit tests to fail (because they do).
+  * Deletes correctly the python_subunit.egg-info, build folders, also use a
+    backup folder of upstream files which are generated on-the-fly (config.*,
+    .m4 files, Makefile and the like...).
+
+ -- Thomas Goirand <zigo@debian.org>  Sat, 23 Feb 2013 07:08:17 +0000
+
+subunit (0.0.8+bzr176-2) experimental; urgency=low
+
+  [ Dmitrijs Ledkovs ]
+  * Sort remaining iterators over dictionary keys.
+  * Run Python tests with all supported Python versions.
+  * Use OrderedDict in test-suite to prevent hash randomisation failing
+    test suites. LP: #1025392, Closes: #692378
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Tue, 22 May 2012 10:42:37 +0200
+
+subunit (0.0.8+bzr175-1) unstable; urgency=low
+
+  * Fix path for iso8501 in copyright file.
+  * New upstream snapshot.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Wed, 09 May 2012 11:39:10 +0200
+
+subunit (0.0.7+bzr162-1) unstable; urgency=low
+
+  * New upstream snapshot.
+   + Fixes compatibility with current versions of testtools. Closes: #669491
+  * Support installation for multiple python versions.
+  * Include egg-info for python-subunit. LP: #893620
+  * Add python3-subunit package.
+  * Bump standards version to 3.9.3 (no changes).
+  * Use machine parseable format for copyright file.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Sun, 08 Apr 2012 21:44:01 +0200
+
+subunit (0.0.7-1) unstable; urgency=low
+
+  * New upstream release.
+  * Add support for multi-arch.
+   + Switch to debhelper >= 8.1.3, compat level 9.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 31 Oct 2011 02:02:11 -0700
+
+subunit (0.0.6-3) unstable; urgency=low
+
+  * Add recommends for python-junitxml (used by subunit2junitxml). LP: #525886
+  * Add missing python dependency for 'subunit' binary package.
+  * python-subunit: No longer ship .pyo files.
+  * Bump standards version to 3.9.2 (no changes).
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Sat, 18 Jun 2011 19:38:14 +0200
+
+subunit (0.0.6-2) unstable; urgency=low
+
+  * Add watch file.
+  * Bump standards version to 3.9.1.
+   + debian/copyright: Include BSD-3 license in rather than referring to
+     deprecated file in /usr/share/common-licenses.
+  * Switch to dh_python2. Closes: #617074
+  * Switch to source format v3.
+  * libsubunit-perl: Install non-architecture dependent perl files into
+    /usr/share.
+  * python-subunit: Prevent shipping .pyc files.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 21 Mar 2011 11:45:52 +0100
+
+subunit (0.0.6-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Robert Collins <robertc@robertcollins.net>  Sun, 04 Jul 2010 21:24:12 +1000
+
+subunit (0.0.5-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Robert Collins <robertc@robertcollins.net>  Wed, 20 Jan 2010 10:15:48 +1100
+
+subunit (0.0.4-4) unstable; urgency=low
+
+  * Upstream bugfix for FTBFS on test_child.c.
+
+ -- Robert Collins <robertc@robertcollins.net>  Sun, 20 Dec 2009 16:33:29 +1100
+
+subunit (0.0.4-3) unstable; urgency=low
+
+  * Build-depend on cppunit-dev. Closes: #561549.
+  * Install libcppunit-subunit0.so.0.0.0. Closes: #561555.
+
+ -- Robert Collins <robertc@robertcollins.net>  Sun, 20 Dec 2009 12:12:49 +1100
+
+subunit (0.0.4-2) unstable; urgency=low
+
+  * Drop python-gtk2 dep to a recommends, its not needed for most filters.
+
+ -- Robert Collins <robertc@robertcollins.net>  Sun, 20 Dec 2009 10:30:19 +1100
+
+subunit (0.0.4-1) unstable; urgency=low
+
+  * New upstream release. Closes: #560532.
+
+ -- Robert Collins <robertc@robertcollins.net>  Fri, 18 Dec 2009 09:37:28 +1100
+
+subunit (0.0.3-2) unstable; urgency=low
+
+  * Fixup debian/copyright somewhat. 
+
+ -- Robert Collins <robertc@robertcollins.net>  Thu, 17 Dec 2009 22:33:29 +1100
+
+subunit (0.0.3-1) unstable; urgency=low
+
+  * New upstream release.
+  * Project relicensed to BSD/Apache 2.
+  * New binary packages for libcppunit-subunit.
+
+ -- Robert Collins <robertc@robertcollins.net>  Sun, 04 Oct 2009 12:22:12 +1100
+
+subunit (0.0.2-1) unstable; urgency=low
+
+  * New upstream release, merge upstream PPA packaging changes. 
+
+ -- Robert Collins <robertc@robertcollins.net>  Sun, 20 Sep 2009 12:09:00 +1000
+
+subunit (0.0.2-0ubuntu2) unstable; urgency=low
+
+  * Set INSTALLDIRS=vendor and install perl modules.
+
+ -- Robert Collins <robertc@robertcollins.net>  Sun, 20 Sep 2009 09:38:52 +1000
+
+subunit (0.0.2-0ubuntu1) karmic; urgency=low
+
+  * New upstream release.
+
+ -- Robert Collins <robertc@robertcollins.net>  Sat, 19 Sep 2009 17:45:58 +1000
+
+subunit (0.0.2~bzr78-0ubuntu4) karmic; urgency=low
+
+  * Fix typo in Makefile.am - duplicate entries causing installation errors.
+
+ -- Robert Collins <robertc@robertcollins.net>  Sun, 30 Aug 2009 10:08:59 +1000
+
+subunit (0.0.2~bzr78-0ubuntu3) karmic; urgency=low
+
+  * Fix typo in new versioned dependency of subunit -> subunit-python. 
+
+ -- Robert Collins <robertc@robertcollins.net>  Sun, 30 Aug 2009 09:46:45 +1000
+
+subunit (0.0.2~bzr78-0ubuntu2) karmic; urgency=low
+
+  * Distribute progress_model.py. 
+
+ -- Robert Collins <robertc@robertcollins.net>  Sun, 30 Aug 2009 09:42:57 +1000
+
+subunit (0.0.2~bzr78-0ubuntu1) karmic; urgency=low
+
+  * Change to use bzr in the version to sort above official packages.
+  * Depend on newer python-subunit in subunit.
+
+ -- Robert Collins <robertc@robertcollins.net>  Sun, 30 Aug 2009 09:35:46 +1000
+
+subunit (0.0.2~78-0ubuntu1) karmic; urgency=low
+
+  * Newer subunit snapshot; progress bars, GTK gui.
+
+ -- Robert Collins <robertc@robertcollins.net>  Sat, 29 Aug 2009 20:49:07 +1000
+
+subunit (0.0.2~77-0ubuntu2) karmic; urgency=low
+
+  * shouldStop fix.
+
+ -- Robert Collins <robertc@robertcollins.net>  Thu, 23 Jul 2009 09:26:05 +1000
+
+subunit (0.0.2~77-0ubuntu1) karmic; urgency=low
+
+  * First 0.0.2 series upload, with timing support in python.
+
+ -- Robert Collins <robertc@robertcollins.net>  Wed, 22 Jul 2009 20:16:50 +1000
+
+subunit (0.0.2~bzr68-1) unstable; urgency=low
+
+  * New upstream snapshot.
+  * Bump standards version to 3.8.2.
+  * Only build against Python 2.4 or later, since decorators are used.
+    Closes: #537481.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Sat, 18 Jul 2009 22:41:46 +0200
+
+subunit (0.0.2~bzr66-2) unstable; urgency=low
+
+  * Actually include libraries and headers in libsubunit0 and
+    libsubunit-dev. Closes: #531656
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Wed, 03 Jun 2009 15:45:33 +0200
+
+subunit (0.0.2~bzr66-1) unstable; urgency=low
+
+  * Use different versioning scheme compatible with bzr-builddeb.
+  * First Debian upload. (Closes: #480982)
+   + Set myself as maintainer, Robert as co-maintainer.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Thu, 21 May 2009 16:38:03 +0200
+
+subunit (0.0.1-65-10) jaunty; urgency=low
+
+  * Really fix depends for libsubunit-dev.
+
+ -- Robert Collins <robertc@ubuntu.com>  Sat, 09 May 2009 12:31:24 +1000
+
+subunit (0.0.1-65-9) jaunty; urgency=low
+
+  * Fix dependencies for libsubunit-dev.
+
+ -- Robert Collins <robertc@ubuntu.com>  Sat, 09 May 2009 09:35:47 +1000
+
+subunit (0.0.1-65-7) jaunty; urgency=low
+
+  * Initial packaging (Closes: #480982).
+
+ -- Robert Collins <robert@ubuntu.com>  Thu, 07 May 2009 18:21:00 +1000
+

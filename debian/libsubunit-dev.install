@@ -1,0 +1,4 @@
+usr/include/subunit/child.h
+usr/lib/*/libsubunit.so
+usr/lib/*/libsubunit.a
+usr/lib/*/pkgconfig/libsubunit.pc

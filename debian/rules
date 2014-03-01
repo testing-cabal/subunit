@@ -1,0 +1,52 @@
+#!/usr/bin/make -f
+
+# Get the supported Python versions
+PYVERS = $(shell pyversions -vr)
+PY3VERS = $(shell py3versions -vr)
+
+export INSTALLDIRS=vendor
+
+override_dh_auto_clean:
+	rm -rf build python_subunit.egg-info
+	rm -rf debian/tmp
+	rm -f perl/MYMETA.yml
+	cp -rf debian/upstream-orig-files/* .
+	rm -rf .libs perl/blib c++/.dirstamp perl/pm_to_blib c/lib/.dirstamp c/tests/.dirstamp c/tests/.libs
+	find . -iname '*.pyc' -delete
+	find . -iname '*.o' -delete
+	rm -f Makefile \
+		c++/SubunitTestProgressListener.lo \
+		c/lib/child.lo \
+		c/tests/test_child \
+		config.h \
+		config.log \
+		config.status \
+		libcppunit_subunit.la \
+		libcppunit_subunit.pc \
+		libsubunit.la \
+		libsubunit.pc \
+		libtool \
+		perl/Makefile \
+		perl/Makefile.PL \
+		stamp-h1
+
+override_dh_auto_test:
+	dh_auto_test || true
+	for vers in $(PYVERS) $(PY3VERS); do \
+		SHELL_SHARE='./shell/share/' PYTHONPATH=./python${PYTHONPATH:+:$PYTHONPATH} python$$vers runtests.py || true; \
+	done
+
+override_dh_auto_install:
+	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
+	find debian/tmp/ -name "*.pyc" | xargs rm -f
+	find debian/tmp/ -name "__pycache__" | xargs rm -f
+	find debian/tmp/ -name "*.pyo" | xargs rm -f
+	for vers in $(PY3VERS); do \
+		python$$vers setup.py install --install-layout=deb --root=$(CURDIR)/debian/tmp; \
+	done
+	for vers in $(PYVERS); do \
+		python$$vers setup.py install --install-layout=deb --single-version-externally-managed --root=$(CURDIR)/debian/tmp; \
+	done
+
+%:
+	dh $* --with python2,python3,autoreconf

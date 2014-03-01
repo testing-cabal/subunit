@@ -1,0 +1,9 @@
+# We supply a direct dependency on python-subunit, and that depends on python.
+python-script-but-no-python-dep ./usr/bin/subunit-filter
+python-script-but-no-python-dep ./usr/bin/subunit-ls
+python-script-but-no-python-dep ./usr/bin/subunit-stats
+python-script-but-no-python-dep ./usr/bin/subunit-tags
+python-script-but-no-python-dep ./usr/bin/subunit2pyunit
+python-script-but-no-python-dep ./usr/bin/tap2subunit
+python-script-but-no-python-dep ./usr/bin/subunit2gtk
+python-script-but-no-python-dep ./usr/bin/subunit2junitxml
