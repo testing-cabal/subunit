@@ -1,0 +1,399 @@
+--- check-0.9.3.orig/src/check_impl.h
++++ check-0.9.3/src/check_impl.h
+@@ -86,6 +86,7 @@
+   CLSTART_S,
+   CLEND_SR,
+   CLEND_S,
++  CLSTART_T, /* A test case is about to run */
+   CLEND_T
+ };
+ 
+--- check-0.9.3.orig/src/check_log.c
++++ check-0.9.3/src/check_log.c
+@@ -25,12 +25,14 @@
+ #include <sys/time.h>
+ #include <time.h>
+ #include <check.h>
++#include <subunit/child.h>
+ 
+ #include "check_error.h"
+ #include "check_list.h"
+ #include "check_impl.h"
+ #include "check_log.h"
+ #include "check_print.h"
++#include "check_str.h"
+ 
+ 
+ static void srunner_send_evt (SRunner *sr, void *obj, enum cl_event evt);
+@@ -107,6 +109,13 @@
+   srunner_send_evt (sr, s, CLEND_S);
+ }
+ 
++void log_test_start (SRunner *sr, TCase * tc, TF * tfun)
++{
++  char buffer[100];
++  snprintf(buffer, 99, "%s:%s", tc->name, tfun->name);
++  srunner_send_evt (sr, buffer, CLSTART_T);
++}
++
+ void log_test_end (SRunner *sr, TestResult *tr)
+ {
+   srunner_send_evt (sr, tr, CLEND_T);
+@@ -128,7 +137,6 @@
+ void stdout_lfun (SRunner *sr, FILE *file, enum print_output printmode,
+ 		  void *obj, enum cl_event evt)
+ {
+-  TestResult *tr;
+   Suite *s;
+   
+   if (printmode == CK_ENV) {
+@@ -160,8 +168,9 @@
+   case CLEND_S:
+     s = obj;
+     break;
++  case CLSTART_T:
++    break;
+   case CLEND_T:
+-    tr = obj;
+     break;
+   default:
+     eprintf("Bad event type received in stdout_lfun", __FILE__, __LINE__);
+@@ -194,12 +203,14 @@
+   case CLEND_S:
+     s = obj;
+     break;
++  case CLSTART_T:
++    break;
+   case CLEND_T:
+     tr = obj;
+     tr_fprint(file, tr, CK_VERBOSE);
+     break;
+   default:
+-    eprintf("Bad event type received in stdout_lfun", __FILE__, __LINE__);
++    eprintf("Bad event type received in lfile_lfun", __FILE__, __LINE__);
+   }
+ 
+   
+@@ -247,6 +258,8 @@
+     fprintf(file, "  </suite>\n");
+     s = obj;
+     break;
++  case CLSTART_T:
++    break;
+   case CLEND_T:
+     tr = obj;
+     tr_xmlprint(file, tr, CK_VERBOSE);
+@@ -258,6 +271,66 @@
+ }
+ 
+ 
++void subunit_lfun (SRunner *sr, FILE *file, enum print_output printmode,
++		  void *obj, enum cl_event evt)
++{
++  TestResult *tr;
++  Suite *s;
++  char const * name;
++  
++  /* assert(printmode == CK_SUBUNIT); */
++
++  switch (evt) {
++  case CLINITLOG_SR:
++    break;
++  case CLENDLOG_SR:
++    break;
++  case CLSTART_SR:
++    break;
++  case CLSTART_S:
++    s = obj;
++    break;
++  case CLEND_SR:
++    if (printmode > CK_SILENT) {
++      fprintf (file, "\n");
++      srunner_fprint (file, sr, printmode);
++    }
++    break;
++  case CLEND_S:
++    s = obj;
++    break;
++  case CLSTART_T:
++    name = obj;
++    subunit_test_start(name);
++    break;
++  case CLEND_T:
++    tr = obj;
++    {
++      char *name = ck_strdup_printf ("%s:%s", tr->tcname, tr->tname);
++      char *msg = tr_short_str (tr);
++      switch (tr->rtype) {
++	case CK_PASS:
++	  subunit_test_pass(name);
++	  break;
++	case CK_FAILURE:
++	  subunit_test_fail(name, msg);
++	  break;
++	case CK_ERROR:
++	  subunit_test_error(name, msg);
++	  break;
++	default:
++	  eprintf("Bad result type in subunit_lfun", __FILE__, __LINE__);
++        free(name);
++        free(msg);
++      }
++    }
++    break;
++  default:
++    eprintf("Bad event type received in subunit_lfun", __FILE__, __LINE__);
++  }
++}
++
++
+ FILE *srunner_open_lfile (SRunner *sr)
+ {
+   FILE *f = NULL;
+@@ -286,7 +359,10 @@
+ {
+   FILE *f;
+   sr->loglst = check_list_create();
+-  srunner_register_lfun (sr, stdout, 0, stdout_lfun, print_mode);
++  if (print_mode != CK_SUBUNIT)
++      srunner_register_lfun (sr, stdout, 0, stdout_lfun, print_mode);
++  else
++      srunner_register_lfun (sr, stdout, 0, subunit_lfun, print_mode);
+   f = srunner_open_lfile (sr);
+   if (f) {
+     srunner_register_lfun (sr, f, 1, lfile_lfun, print_mode);
+--- check-0.9.3.orig/src/check_log.h
++++ check-0.9.3/src/check_log.h
+@@ -26,6 +26,7 @@
+ void log_suite_start (SRunner *sr, Suite *s);
+ void log_suite_end (SRunner *sr, Suite *s);
+ void log_test_end (SRunner *sr, TestResult *tr);
++void log_test_start (SRunner *sr, TCase *tc, TF *tfun);
+ 
+ void stdout_lfun (SRunner *sr, FILE *file, enum print_output,
+ 		  void *obj, enum cl_event evt);
+@@ -36,6 +37,9 @@
+ void xml_lfun (SRunner *sr, FILE *file, enum print_output,
+ 		  void *obj, enum cl_event evt);
+ 
++void subunit_lfun (SRunner *sr, FILE *file, enum print_output,
++		  void *obj, enum cl_event evt);
++
+ void srunner_register_lfun (SRunner *sr, FILE *lfile, int close,
+ 			    LFun lfun, enum print_output);
+ 
+--- check-0.9.3.orig/src/check_run.c
++++ check-0.9.3/src/check_run.c
+@@ -181,6 +181,7 @@
+   
+   for (list_front(tfl); !list_at_end (tfl); list_advance (tfl)) {
+     tfun = list_val (tfl);
++    log_test_start (sr, tc, tfun);
+     switch (srunner_fork_status(sr)) {
+     case CK_FORK:
+       tr = tcase_run_tfun_fork (sr, tc, tfun);
+--- check-0.9.3.orig/src/check_str.c
++++ check-0.9.3/src/check_str.c
+@@ -47,6 +47,20 @@
+   return rstr;
+ }
+ 
++char *tr_short_str (TestResult *tr) 
++{
++  const char *exact_msg;
++  char *rstr;
++  
++  exact_msg = (tr->rtype == CK_ERROR) ? "(after this point) ": "";
++  
++  rstr = ck_strdup_printf ("%s:%d: %s%s",
++                           tr->file, tr->line,
++                           exact_msg, tr->msg);
++
++  return rstr;
++}
++
+ char *sr_stat_str (SRunner *sr)
+ {
+   char *str;
+--- check-0.9.3.orig/src/check_str.h
++++ check-0.9.3/src/check_str.h
+@@ -25,6 +25,12 @@
+    value has been malloc'd, and must be freed by the caller */
+ char *tr_str (TestResult *tr);
+ 
++/* Return a string representation of the given TestResult message
++   without the test id or result type. This is suitable for separate
++   formatting of the test and the message. Return value has been 
++   malloc'd, and must be freed by the caller */
++char *tr_short_str (TestResult *tr);
++
+ /* Return a string representation of the given SRunner's run
+    statistics (% passed, num run, passed, errors, failures). Return
+    value has been malloc'd, and must be freed by the caller
+--- check-0.9.3.orig/src/check.h.in
++++ check-0.9.3/src/check.h.in
+@@ -212,6 +212,7 @@
+   CK_NORMAL, /* All failed tests */
+   CK_VERBOSE, /* All tests */
+   CK_ENV, /* Look at environment var */
++  CK_SUBUNIT, /* Run as a subunit child process */
+   CK_LAST
+ };
+ 
+--- check-0.9.3.orig/src/check_print.c
++++ check-0.9.3/src/check_print.c
+@@ -54,7 +54,7 @@
+ static void srunner_fprint_summary (FILE *file, SRunner *sr,
+ 				    enum print_output print_mode)
+ {
+-  if (print_mode >= CK_MINIMAL) {
++  if (print_mode >= CK_MINIMAL && print_mode != CK_SUBUNIT) {
+     char *str;
+ 
+     str = sr_stat_str (sr);
+@@ -68,6 +68,9 @@
+ 				    enum print_output print_mode)
+ {
+   List *resultlst;
++
++  if (print_mode == CK_SUBUNIT)
++      return;
+   
+   resultlst = sr->resultlst;
+   
+--- check-0.9.3.orig/tests/ex_output.c
++++ check-0.9.3/tests/ex_output.c
+@@ -51,7 +51,7 @@
+ {
+   
+   if (argc != 2) {
+-    printf ("Usage: ex_output (CK_SILENT | CK_MINIMAL | CK_NORMAL | CK_VERBOSE)\n");
++    printf ("Usage: ex_output (CK_SILENT | CK_MINIMAL | CK_NORMAL | CK_VERBOSE | CK_SUBUNIT)\n");
+     return EXIT_FAILURE;
+   }
+ 
+@@ -63,8 +63,10 @@
+     run_tests(CK_NORMAL);
+   else if (strcmp (argv[1], "CK_VERBOSE") == 0)
+     run_tests(CK_VERBOSE);
++  else if (strcmp (argv[1], "CK_SUBUNIT") == 0)
++    run_tests(CK_SUBUNIT);
+   else {
+-    printf ("Usage: ex_output (CK_SILENT | CK_MINIMAL | CK_NORMAL | CK_VERBOSE)\n");
++    printf ("Usage: ex_output (CK_SILENT | CK_MINIMAL | CK_NORMAL | CK_VERBOSE | CK_SUBUNIT)\n");
+     return EXIT_FAILURE;
+   }    
+     
+--- check-0.9.3.orig/tests/check_check_log.c
++++ check-0.9.3/tests/check_check_log.c
+@@ -2,6 +2,9 @@
+ #include <stdlib.h>
+ #include <string.h>
+ #include <check.h>
++#include <check_list.h>
++#include <check_impl.h>
++#include <check_log.h>
+ #include "check_check.h"
+ 
+ 
+@@ -78,15 +81,40 @@
+ }
+ END_TEST
+ 
++
++START_TEST(test_init_logging_subunit)
++{
++  /* init_logging with CK_SUBUNIT sets stdout 
++   * to a subunit function, not any log.
++   */
++  Log * first_log = NULL;
++  Suite *s = suite_create("Suite");
++  SRunner *sr = srunner_create(s);
++  srunner_init_logging(sr, CK_SUBUNIT);
++  list_front (sr->loglst);
++  fail_if (list_at_end(sr->loglst), "No entries in log list");
++  first_log = list_val(sr->loglst);
++  fail_if (first_log == NULL, "log is NULL");
++  list_advance(sr->loglst);
++  fail_unless(list_at_end(sr->loglst), "More than one entry in log list");
++  fail_unless(first_log->lfun == subunit_lfun,
++              "Log function is not the subunit lfun.");
++  srunner_end_logging(sr);
++  srunner_free(sr);
++}
++END_TEST
++
++
+ Suite *make_log_suite(void)
+ {
+ 
+   Suite *s;
+-  TCase *tc_core, *tc_core_xml;
++  TCase *tc_core, *tc_core_xml, *tc_core_subunit;
+ 
+   s = suite_create("Log");
+   tc_core = tcase_create("Core");
+   tc_core_xml = tcase_create("Core XML");
++  tc_core_subunit = tcase_create("Core SubUnit");
+ 
+   suite_add_tcase(s, tc_core);
+   tcase_add_test(tc_core, test_set_log);
+@@ -98,6 +126,9 @@
+   tcase_add_test(tc_core_xml, test_no_set_xml);
+   tcase_add_test(tc_core_xml, test_double_set_xml);
+ 
++  suite_add_tcase(s, tc_core_subunit);
++  tcase_add_test(tc_core_subunit, test_init_logging_subunit);
++  
+   return s;
+ }
+ 
+--- check-0.9.3.orig/tests/test_output.sh
++++ check-0.9.3/tests/test_output.sh
+@@ -18,11 +18,22 @@
+ ${lsrc}ex_output.c:8:P:Core:test_pass: Passed
+ ${lsrc}ex_output.c:14:F:Core:test_fail: Failure
+ ${lsrc}ex_output.c:18:E:Core:test_exit: (after this point) Early exit with return value 1"
++t4="xtest: Core:test_pass
++success: Core:test_pass
++test: Core:test_fail
++failure: Core:test_fail [
++${lsrc}ex_output.c:14: Failure
++]
++test: Core:test_exit
++error: Core:test_exit [
++${lsrc}ex_output.c:18: (after this point) Early exit with return value 1
++]"
+ 
+ op0=`./ex_output CK_SILENT`
+ op1=`./ex_output CK_MINIMAL`
+ op2=`./ex_output CK_NORMAL`
+ op3=`./ex_output CK_VERBOSE`
++op4=`./ex_output CK_SUBUNIT`
+ 
+ 
+ test_output ( ) {
+@@ -41,4 +52,5 @@
+ test_output "$t1" x"$op1" "CK_MINIMAL";
+ test_output "$t2" x"$op2" "CK_NORMAL";
+ test_output "$t3" x"$op3" "CK_VERBOSE";
++test_output "$t4" x"$op4" "CK_SUBUNIT";
+ exit 0
+--- check-0.9.3.orig/configure.in
++++ check-0.9.3/configure.in
+@@ -44,6 +44,7 @@
+ AC_HEADER_SYS_WAIT
+ AC_CHECK_HEADERS(unistd.h)
+ AC_CHECK_HEADERS(stdint.h)
++AC_CHECK_HEADERS(subunit/child.h)
+ 
+ dnl Checks for typedefs, structures, and compiler characteristics.
+ AC_C_CONST
+@@ -55,6 +56,7 @@
+ AC_CHECK_SIZEOF(long, 4)
+ 
+ dnl Checks for library functions.
++AC_CHECK_LIB(subunit, subunit_test_start)
+ dnl AC_FUNC_FORK
+ dnl AC_FUNC_MALLOC
+ AC_FUNC_VPRINTF

@@ -1,0 +1,21 @@
+use ExtUtils::MakeMaker;
+WriteMakefile(
+    'PREFIX' => '@prefix@',
+    'NAME'	=> 'Subunit',
+    'VERSION' => '@SUBUNIT_VERSION@',
+    'test' => { 'TESTS' => 'tests/*.pl' },
+    'PMLIBDIRS' => [ 'lib' ],
+    'EXE_FILES' => [ '@abs_srcdir@/subunit-diff' ],
+);
+sub MY::postamble {
+<<'EOT';
+check: # test
+
+uninstall_distcheck:
+	find $(DESTDIR)$(INSTALLSITEARCH) -type f -exec rm {} \; 
+	rm MYMETA.yml
+
+VPATH = @srcdir@
+.PHONY: uninstall_distcheck
+EOT
+}
