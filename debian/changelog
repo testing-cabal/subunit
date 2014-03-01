@@ -16,6 +16,7 @@ subunit (0.0.18-1) unstable; urgency=medium
   * debian/rules: Added missing set -e in for loops.
   * Removed obsolete X-Python-Version: >= 2.4.
   * Standards-Version: is now 3.9.5.
+  * Ran wrap-and-sort.
   * Added extend-diff-ignore = "^[^/]*[.]egg-info/" in debian/source/options.
   * Imported from Ubuntu package:
     - debian/rules: Remove moving around of Perl modules, upstream build system

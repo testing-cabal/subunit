@@ -1,5 +1,5 @@
-usr/include/subunit/SubunitTestProgressListener.h
-usr/lib/*/libcppunit_subunit.so
-usr/lib/*/libcppunit_subunit.a
-usr/lib/*/pkgconfig/libcppunit_subunit.pc
 
+usr/include/subunit/SubunitTestProgressListener.h
+usr/lib/*/libcppunit_subunit.a
+usr/lib/*/libcppunit_subunit.so
+usr/lib/*/pkgconfig/libcppunit_subunit.pc
