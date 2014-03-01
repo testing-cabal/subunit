@@ -5,7 +5,8 @@ subunit (0.0.18-1) unstable; urgency=medium
     don't get incorrectly changed to python3 versions.
 
   [ Thomas Goirand ]
-  * NMU with previous agreement from Robert Collins.
+  * Switches the package to the OpenStack PKG team, with previous agreement
+    from Robert Collins (updated Uploaders, Maintainers, and VCS fields).
   * Adds python-testscenarios & python3-testscenarios as build-depends.
   * Removed explicit Depends: python in the subunit package, and leave this to
     dh_python2 to do its work.

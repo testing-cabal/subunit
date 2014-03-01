@@ -1,8 +1,11 @@
 Source: subunit
 Section: devel
 Priority: optional
-Maintainer: Jelmer Vernooij <jelmer@debian.org>
-Uploaders: Robert Collins <robertc@robertcollins.net>
+Maintainer: PKG OpenStack <openstack-devel@lists.alioth.debian.org>
+Uploaders: Julien Danjou <acid@debian.org>,
+           Thomas Goirand <zigo@debian.org>,
+           Gonéri Le bouder <goneri@debian.org>,
+           Robert Collins <robertc@robertcollins.net>
 Build-Depends: debhelper (>= 9),
     python-all (>= 2.6.6-3),
     python3-all,
@@ -20,8 +23,8 @@ Build-Depends: debhelper (>= 9),
     dh-autoreconf
 Build-Depends-Indep: perl
 Standards-Version: 3.9.5
-Vcs-Bzr: http://anonscm.debian.org/bzr/collab-maint/subunit/unstable
-Vcs-Browser: http://anonscm.debian.org/loggerhead/collab-maint/subunit/unstable
+Vcs-Git: git://anonscm.debian.org/openstack/subunit.git
+Vcs-Browser: http://anonscm.debian.org/gitweb/?p=openstack/subunit.git;a=summary
 Homepage: http://code.launchpad.net/subunit
 
 Package: subunit
