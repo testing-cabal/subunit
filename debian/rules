@@ -51,9 +51,8 @@ override_dh_auto_install:
 		python$$vers setup.py install --install-layout=deb --single-version-externally-managed --root=$(CURDIR)/debian/tmp; \
 	done
 
-override_dh_install:
-	dh_install
+override_dh_python3:
+	dh_python3
 	set -e && for i in $(CURDIR)/debian/subunit/usr/bin/* ; do \
-		sed -i 's|#!/usr/bin/python3.*|#!/usr/bin/env python|' $$i ; \
+		sed -i 's|#![ ]*/usr/bin/python.*|#!/usr/bin/env python|' $$i ; \
 	done
-
