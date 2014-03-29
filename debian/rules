@@ -4,6 +4,9 @@
 PYVERS = $(shell pyversions -vr)
 PY3VERS = $(shell py3versions -vr)
 
+%:
+	dh $@ --with python2,python3,autoreconf
+
 export INSTALLDIRS=vendor
 
 override_dh_auto_clean:
@@ -48,5 +51,9 @@ override_dh_auto_install:
 		python$$vers setup.py install --install-layout=deb --single-version-externally-managed --root=$(CURDIR)/debian/tmp; \
 	done
 
-%:
-	dh $* --with python2,python3,autoreconf
+override_dh_install:
+	dh_install
+	set -e && for i in $(CURDIR)/debian/subunit/usr/bin/* ; do \
+		sed -i 's|#!/usr/bin/python3.*|#!/usr/bin/env python|' $$i ; \
+	done
+

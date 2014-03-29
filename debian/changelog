@@ -1,3 +1,9 @@
+subunit (0.0.18-2) unstable; urgency=medium
+
+  * Ensure we have the correct shebang in the subunit deb.
+
+ -- Thomas Goirand <zigo@debian.org>  Sat, 29 Mar 2014 19:47:03 +0800
+
 subunit (0.0.18-1) unstable; urgency=medium
 
   [ James Page ]
