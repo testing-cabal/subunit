@@ -1,3 +1,9 @@
+subunit (0.0.18-3) unstable; urgency=medium
+
+  * Rebuilt with up-to-date env (Closes: #743717).
+
+ -- Thomas Goirand <zigo@debian.org>  Sat, 05 Apr 2014 15:47:25 +0000
+
 subunit (0.0.18-2) unstable; urgency=medium
 
   * Ensure we have the correct shebang in the subunit deb. (Closes: #743442)
