@@ -51,20 +51,20 @@ override_dh_auto_test:
 		SHELL_SHARE='./shell/share/' PYTHONPATH=./python${PYTHONPATH:+:$PYTHONPATH} python$$vers runtests.py || true; \
 	done
 
-override_dh_auto_install:
+override_dh_auto_install-arch:
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
 	find debian/tmp/ -name "*.pyc" | xargs rm -f
 	find debian/tmp/ -name "__pycache__" | xargs rm -f
 	find debian/tmp/ -name "*.pyo" | xargs rm -f
+
+
+override_dh_auto_install-indep:
 	for vers in $(PY3VERS); do \
 		python$$vers setup.py install --install-layout=deb --root=$(CURDIR)/debian/tmp; \
 	done
 	for vers in $(PYVERS); do \
 		python$$vers setup.py install --install-layout=deb --single-version-externally-managed --root=$(CURDIR)/debian/tmp; \
 	done
-
-override_dh_python3:
-	dh_python3
-	set -e && for i in $(CURDIR)/debian/subunit/usr/bin/* ; do \
+	set -e && for i in $(CURDIR)/debian/tmp/usr/bin/* ; do \
 		sed -i 's|#![ ]*/usr/bin/python.*|#!/usr/bin/env python|' $$i ; \
 	done
