@@ -1,3 +1,9 @@
+subunit (0.0.18-4) unstable; urgency=medium
+
+  * control: Fix a minor typo in my name
+
+ -- Gonéri Le Bouder <goneri@debian.org>  Sun, 20 Apr 2014 15:22:43 +0200
+
 subunit (0.0.18-3) unstable; urgency=medium
 
   * Rebuilt with up-to-date env (Closes: #743717).
