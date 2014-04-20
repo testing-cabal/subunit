@@ -1,6 +1,7 @@
 subunit (0.0.18-4) unstable; urgency=medium
 
   * control: Fix a minor typo in my name
+  * Fix the clean target to be sure we can can do two build in a raw
 
  -- Gonéri Le Bouder <goneri@debian.org>  Sun, 20 Apr 2014 15:22:43 +0200
 

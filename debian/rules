@@ -14,7 +14,15 @@ override_dh_auto_clean:
 	rm -rf debian/tmp
 	rm -f perl/MYMETA.yml
 	cp -rf debian/upstream-orig-files/* .
-	rm -rf .libs perl/blib c++/.dirstamp perl/pm_to_blib c/lib/.dirstamp c/tests/.dirstamp c/tests/.libs
+	rm -rf .libs perl/blib \
+		c++/.dirstamp \
+		perl/pm_to_blib \
+		c/lib/.dirstamp \
+		c/tests/.dirstamp \
+		c/tests/.libs \
+		c++/.deps \
+		c/lib/.deps \
+		c/tests/.deps
 	find . -iname '*.pyc' -delete
 	find . -iname '*.o' -delete
 	rm -f Makefile \
@@ -31,7 +39,11 @@ override_dh_auto_clean:
 		libtool \
 		perl/Makefile \
 		perl/Makefile.PL \
-		stamp-h1
+		stamp-h1 \
+		c/tests/test_child.log \
+		c/tests/test_child.trs \
+		perl/MYMETA.json \
+		test-suite.log
 
 override_dh_auto_test:
 	dh_auto_test || true
