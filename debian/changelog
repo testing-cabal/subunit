@@ -1,3 +1,9 @@
+subunit (0.0.18-5) UNRELEASED; urgency=low
+
+  * Re-add Jelmer Vernooij <jelmer@debian.org> in the Uploaders.
+
+ -- Thomas Goirand <zigo@debian.org>  Tue, 22 Apr 2014 01:14:54 +0800
+
 subunit (0.0.18-4) unstable; urgency=medium
 
   * control: Fix a minor typo in my name
