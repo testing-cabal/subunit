@@ -22,7 +22,6 @@ py-compile
 *.lo
 libsubunit.la
 libcppunit_subunit.la
-subunit-0.0.1.tar.gz
 libtool
 stamp-h1
 libsubunit.pc
@@ -43,6 +42,11 @@ debian/*.substvars
 ./perl/blib
 ./perl/pm_to_blib
 subunit-*.tar.gz
+subunit-*.tar.gz.asc
 perl/Makefile.PL
 ./.testrepository
 __pycache__
+perl/MYMETA.yml
+./build/
+./dist/
+./*.egg-info/
