@@ -11,9 +11,11 @@ else:
     extra = {
         'install_requires': [
             'extras',
-            'testscenarios',
             'testtools>=0.9.34',
-        ]
+        ],
+        'tests_require': [
+            'testscenarios',
+        ],
     }
 
 

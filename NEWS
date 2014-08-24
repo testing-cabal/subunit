@@ -5,6 +5,12 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+BUGFIXES
+~~~~~~~~
+
+* testscenarios is now a test dependency, not an install dependency.
+  (Arfrever Frehtes Taifersar Arahesis, #1292757)
+
 0.0.19
 ------
 
