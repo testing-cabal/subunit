@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import os.path
 try:
     # If the user has setuptools / distribute installed, use it
     from setuptools import setup
@@ -33,6 +34,7 @@ VERSION = (
     or "0.0")
 
 
+os.chdir(os.path.dirname(__file__))
 setup(
     name='python-subunit',
     version=VERSION,
