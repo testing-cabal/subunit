@@ -5,11 +5,22 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+0.0.19
+------
+
+IMPROVEMENTS
+~~~~~~~~~~~~
+
+* ``subunit.run`` in Python will now exit 0 as long as the test stream has
+  been generated correctly - this has always been the intent but API friction
+  with testtools had prevented it working.
+  (Robert Collins)
+
 0.0.18
 ------
 
-IMPROVMENTS
-~~~~~~~~~~~
+IMPROVEMENTS
+~~~~~~~~~~~~
 
 * Fix compatibility with testtools 0.9.35 which dropped the 'all' compat
   symbol. This breaks support for Python versions lower than 2.6.
@@ -18,8 +29,8 @@ IMPROVMENTS
 0.0.17
 ------
 
-IMPROVMENTS
-~~~~~~~~~~~
+IMPROVEMENTS
+~~~~~~~~~~~~
 
 * Add ``subunit-output`` tool that can generate a Subunit v2 bytestream from
   arguments passed on the command line. (Thomi Richards, #1252084)

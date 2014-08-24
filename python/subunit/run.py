@@ -40,15 +40,21 @@ from testtools.run import (
 
 
 class SubunitTestRunner(object):
-    def __init__(self, verbosity=None, failfast=None, buffer=None, stream=None):
+    def __init__(self, verbosity=None, failfast=None, buffer=None, stream=None,
+        stdout=None):
         """Create a TestToolsTestRunner.
 
         :param verbosity: Ignored.
         :param failfast: Stop running tests at the first failure.
         :param buffer: Ignored.
+        :param stream: Upstream unittest stream parameter.
+        :param stdout: Testtools stream parameter.
+
+        Either stream or stdout can be supplied, and stream will take
+        precedence.
         """
         self.failfast = failfast
-        self.stream = stream or sys.stdout
+        self.stream = stream or stdout or sys.stdout
 
     def run(self, test):
         "Run the given test case or test suite."
@@ -112,19 +118,27 @@ class SubunitTestProgram(TestProgram):
         sys.exit(2)
 
 
-def main():
-    # Disable the default buffering, for Python 2.x where pdb doesn't do it
-    # on non-ttys.
-    stream = get_default_formatter()
+def main(argv=None, stdout=None):
+    if argv is None:
+        argv = sys.argv
     runner = SubunitTestRunner
-    # Patch stdout to be unbuffered, so that pdb works well on 2.6/2.7.
-    binstdout = io.open(sys.stdout.fileno(), 'wb', 0)
-    if sys.version_info[0] > 2:
-        sys.stdout = io.TextIOWrapper(binstdout, encoding=sys.stdout.encoding)
-    else:
-        sys.stdout = binstdout
-    SubunitTestProgram(module=None, argv=sys.argv, testRunner=runner,
-        stdout=sys.stdout)
+    # stdout is None except in unit tests.
+    if stdout is None:
+        stdout = sys.stdout
+        # XXX: This is broken code- SUBUNIT_FORMATTER is not being honoured.
+        stream = get_default_formatter()
+        # Disable the default buffering, for Python 2.x where pdb doesn't do it
+        # on non-ttys.
+        if hasattr(stdout, 'fileno'):
+            # Patch stdout to be unbuffered, so that pdb works well on 2.6/2.7.
+            binstdout = io.open(stdout.fileno(), 'wb', 0)
+            if sys.version_info[0] > 2:
+                sys.stdout = io.TextIOWrapper(binstdout, encoding=sys.stdout.encoding)
+            else:
+                sys.stdout = binstdout
+            stdout = sys.stdout
+    SubunitTestProgram(module=None, argv=argv, testRunner=runner,
+        stdout=stdout, exit=False)
 
 
 if __name__ == '__main__':
