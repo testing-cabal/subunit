@@ -8,6 +8,9 @@ NEXT (In development)
 BUGFIXES
 ~~~~~~~~
 
+* subunit2csv is now installed when using pip.
+  (Robert Collins, #1279669)
+
 * testscenarios is now a test dependency, not an install dependency.
   (Arfrever Frehtes Taifersar Arahesis, #1292757)
 
