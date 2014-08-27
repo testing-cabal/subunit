@@ -65,7 +65,7 @@ setup(
         'filters/subunit-output',
         'filters/subunit-stats',
         'filters/subunit-tags',
-        'filters/subunit2cvs',
+        'filters/subunit2csv',
         'filters/subunit2gtk',
         'filters/subunit2junitxml',
         'filters/subunit2pyunit',

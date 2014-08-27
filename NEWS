@@ -5,6 +5,15 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+0.0.21
+------
+
+BUGFIXES
+~~~~~~~~
+
+* Brown bag bugfix - 0.0.20's setup.py referenced cvs not csv.
+  (Robert Collins, #1361924)
+
 0.0.20
 ------
 
