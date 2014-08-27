@@ -36,7 +36,9 @@ VERSION = (
     or "0.0")
 
 
-os.chdir(os.path.dirname(__file__))
+relpath = os.path.dirname(__file__)
+if relpath:
+    os.chdir(relpath)
 setup(
     name='python-subunit',
     version=VERSION,

@@ -5,6 +5,9 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+0.0.20
+------
+
 BUGFIXES
 ~~~~~~~~
 
@@ -13,6 +16,9 @@ BUGFIXES
 
 * testscenarios is now a test dependency, not an install dependency.
   (Arfrever Frehtes Taifersar Arahesis, #1292757)
+
+* The python-subunit tarball can now have setup run from the current
+  directory. (Robert Collins, #1361857)
 
 0.0.19
 ------
