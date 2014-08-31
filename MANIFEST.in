@@ -1,4 +1,4 @@
-exclude .bzrignore
+exclude .gitignore
 exclude aclocal.m4
 prune autom4te.cache
 prune c
