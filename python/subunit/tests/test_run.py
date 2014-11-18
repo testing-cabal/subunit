@@ -65,6 +65,18 @@ class TestSubunitTestRunner(TestCase):
         exc = self.assertRaises(SystemExit, runner.list, None)
         self.assertEqual((2,), exc.args)
 
+    def test_list_includes_loader_errors(self):
+        bytestream = io.BytesIO()
+        runner = SubunitTestRunner(stream=bytestream)
+        def list_test(test):
+            return [], []
+        class Loader(object):
+            errors = ['failed import']
+        loader = Loader()
+        self.patch(run, 'list_test', list_test)
+        exc = self.assertRaises(SystemExit, runner.list, None, loader=loader)
+        self.assertEqual((2,), exc.args)
+
     class FailingTest(TestCase):
         def test_fail(self):
             1/0

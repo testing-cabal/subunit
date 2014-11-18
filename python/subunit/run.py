@@ -70,9 +70,13 @@ class SubunitTestRunner(object):
             result.stopTestRun()
         return result
 
-    def list(self, test):
+    def list(self, test, loader=None):
         "List the test."
         result, errors = self._list(test)
+        if loader is not None:
+            # We were called with the updated API by testtools.run, so look for
+            # errors on the loader, not the test list result.
+            errors = loader.errors
         if errors:
             failed_descr = '\n'.join(errors).encode('utf8')
             result.status(file_name="import errors", runnable=False,

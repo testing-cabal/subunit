@@ -11,6 +11,12 @@ BUGFIXES
 * Tests have been fixed with testtools 1.2.0 and above.
   (Robert Collins)
 
+IMPROVEMENTS
+~~~~~~~~~~~~
+
+* With testtools 1.4.0 and above import errors are now
+  shown in detail by ``subunit.run``. (Robert Collins)
+
 0.0.21
 ------
 
