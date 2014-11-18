@@ -5,6 +5,12 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+BUGFIXES
+~~~~~~~~
+
+* Tests have been fixed with testtools 1.2.0 and above.
+  (Robert Collins)
+
 0.0.21
 ------
 

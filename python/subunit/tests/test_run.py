@@ -80,9 +80,14 @@ class TestSubunitTestRunner(TestCase):
             self.fail("SystemExit raised")
         self.assertThat(bytestream.getvalue(), StartsWith(_b('\xb3')))
 
+    class ExitingTest(TestCase):
+        def test_exit(self):
+            raise SystemExit(0)
+
     def test_exits_nonzero_when_execution_errors(self):
         bytestream = io.BytesIO()
         stream = io.TextIOWrapper(bytestream, encoding="utf8")
-        exc = self.assertRaises(Exception, run.main,
-                argv=["progName", "subunit.tests.test_run.TestSubunitTestRunner.MissingTest"],
+        exc = self.assertRaises(SystemExit, run.main,
+                argv=["progName", "subunit.tests.test_run.TestSubunitTestRunner.ExitingTest"],
                 stdout=stream)
+        self.assertEqual(0, exc.args[0])
