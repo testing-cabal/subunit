@@ -1,5 +1,5 @@
 EXTRA_DIST =  \
-	.bzrignore \
+	.gitignore \
 	Apache-2.0 \
 	BSD \
 	INSTALL \
