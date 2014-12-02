@@ -26,7 +26,7 @@ import sys
 
 from testtools import ExtendedToStreamDecorator
 
-from subunit import StreamResultToBytes, get_default_formatter
+from subunit import StreamResultToBytes
 from subunit.test_results import AutoTimingTestResultDecorator
 from testtools.run import (
     BUFFEROUTPUT,
@@ -128,8 +128,6 @@ def main(argv=None, stdout=None):
     # stdout is None except in unit tests.
     if stdout is None:
         stdout = sys.stdout
-        # XXX: This is broken code- SUBUNIT_FORMATTER is not being honoured.
-        stream = get_default_formatter()
         # Disable the default buffering, for Python 2.x where pdb doesn't do it
         # on non-ttys.
         if hasattr(stdout, 'fileno'):

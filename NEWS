@@ -5,6 +5,12 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+BUGFIXES
+~~~~~~~~
+
+* SUBUNIT_FORMATTER which has not been honoured for years is now removed from 
+  the codebase. (Jelmer Vernooij)
+
 1.0.0
 -----
 
