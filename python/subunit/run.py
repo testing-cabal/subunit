@@ -25,7 +25,6 @@ import os
 import sys
 
 from testtools import ExtendedToStreamDecorator
-from testtools.testsuite import iterate_tests
 
 from subunit import StreamResultToBytes, get_default_formatter
 from subunit.test_results import AutoTimingTestResultDecorator
