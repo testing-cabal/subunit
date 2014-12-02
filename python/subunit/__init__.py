@@ -1250,22 +1250,6 @@ class TestResultStats(testresult.TestResult):
         return self.failed_tests == 0
 
 
-def get_default_formatter():
-    """Obtain the default formatter to write to.
-
-    :return: A file-like object.
-    """
-    formatter = os.getenv("SUBUNIT_FORMATTER")
-    if formatter:
-        return os.popen(formatter, "w")
-    else:
-        stream = sys.stdout
-        if sys.version_info > (3, 0):
-            if safe_hasattr(stream, 'buffer'):
-                stream = stream.buffer
-        return stream
-
-
 def read_test_list(path):
     """Read a list of test ids from a file on disk.
 
