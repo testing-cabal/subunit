@@ -8,6 +8,9 @@ NEXT (In development)
 BUGFIXES
 ~~~~~~~~
 
+* Unencapsulated strings and encapsulated stdout will be forwarded by
+  subunit-2to1. (Robert Collins, #1400519)
+
 * SUBUNIT_FORMATTER which has not been honoured for years is now removed from 
   the codebase. (Jelmer Vernooij)
 
