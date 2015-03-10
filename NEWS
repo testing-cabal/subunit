@@ -14,6 +14,12 @@ BUGFIXES
 * SUBUNIT_FORMATTER which has not been honoured for years is now removed from 
   the codebase. (Jelmer Vernooij)
 
+IMPROVEMENTS
+~~~~~~~~~~~~
+
+* ``subunit.run`` now supports ``--locals`` to show local variables in
+  tracebacks. (Robert Collins)
+
 1.0.0
 -----
 

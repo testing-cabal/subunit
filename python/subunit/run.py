@@ -40,7 +40,7 @@ from testtools.run import (
 
 class SubunitTestRunner(object):
     def __init__(self, verbosity=None, failfast=None, buffer=None, stream=None,
-        stdout=None):
+        stdout=None, tb_locals=False):
         """Create a TestToolsTestRunner.
 
         :param verbosity: Ignored.
@@ -48,12 +48,14 @@ class SubunitTestRunner(object):
         :param buffer: Ignored.
         :param stream: Upstream unittest stream parameter.
         :param stdout: Testtools stream parameter.
+        :param tb_locals: Testtools traceback in locals parameter.
 
         Either stream or stdout can be supplied, and stream will take
         precedence.
         """
         self.failfast = failfast
         self.stream = stream or stdout or sys.stdout
+        self.tb_locals = tb_locals
 
     def run(self, test):
         "Run the given test case or test suite."
@@ -62,6 +64,7 @@ class SubunitTestRunner(object):
         result = AutoTimingTestResultDecorator(result)
         if self.failfast is not None:
             result.failfast = self.failfast
+            result.tb_locals = self.tb_locals
         result.startTestRun()
         try:
             test(result)
