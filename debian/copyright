@@ -6,100 +6,21 @@ Debianized-By: Robert Collins <robert@ubuntu.com>
 Debianized-Date: Thu, 07 May 2009.
 
 Files: debian/*
-Copyright:
-  Robert Collins <robert@ubuntu.com>
-  Jelmer Vernooij <jelmer@debian.org>
-License: Apache-2 or BSD-3-clause
- Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
- license at the users choice. A copy of both licenses are available in the
- project source as Apache-2.0 and BSD. You may not use this file except in
- compliance with one of these two licences.
- .
- Unless required by applicable law or agreed to in writing, software
- distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
- WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
- license you chose for the specific language governing permissions and
- limitations under that license.
- .
- BSD 3-clause license:
- .
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions
- are met:
- 1. Redistributions of source code must retain the above copyright
-    notice, this list of conditions and the following disclaimer.
- 2. Redistributions in binary form must reproduce the above copyright
-    notice, this list of conditions and the following disclaimer in the
-    documentation and/or other materials provided with the distribution.
- 3. Neither the name of Robert Collins nor the names of Subunit contributors
-    may be used to endorse or promote products derived from this software
-    without specific prior written permission.
- .
- THIS SOFTWARE IS PROVIDED BY ROBERT COLLINS AND SUBUNIT CONTRIBUTORS ``AS IS''
- AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
- FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- SUCH DAMAGE.
- .
- On Debian/Ubuntu systems, the complete text of the Apache 2.0 license can be
- found in `/usr/share/common-licenses/Apache-2.0`.
-
+Copyright: (c) 2009-2010, Robert Collins <robert@ubuntu.com>
+           (c) 2011-2013,  Jelmer Vernooij <jelmer@debian.org>
+           (c) 2014, Gonéri Le Bouder <goneri@debian.org>
+           (c) 2013-2015, Thomas Goirand <zigo@debian.org>
+License: Apache-2-or-BSD-3-clause
 
 Files: *
-Copyright:
- 2005, 2006, 2008, 2009 Robert Collins <robertc@robertcollins.net>
- 2004 Canonical Limited
- Martin Pool
-License: Apache-2 or BSD-3-clause
- Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
- license at the users choice. A copy of both licenses are available in the
- project source as Apache-2.0 and BSD. You may not use this file except in
- compliance with one of these two licences.
- .
- Unless required by applicable law or agreed to in writing, software
- distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
- WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
- license you chose for the specific language governing permissions and
- limitations under that license.
- .
- BSD 3-clause license:
- .
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions
- are met:
- 1. Redistributions of source code must retain the above copyright
-    notice, this list of conditions and the following disclaimer.
- 2. Redistributions in binary form must reproduce the above copyright
-    notice, this list of conditions and the following disclaimer in the
-    documentation and/or other materials provided with the distribution.
- 3. Neither the name of Robert Collins nor the names of Subunit contributors
-    may be used to endorse or promote products derived from this software
-    without specific prior written permission.
- .
- THIS SOFTWARE IS PROVIDED BY ROBERT COLLINS AND SUBUNIT CONTRIBUTORS ``AS IS''
- AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
- FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- SUCH DAMAGE.
- .
- On Debian/Ubuntu systems, the complete text of the Apache 2.0 license can be
- found in `/usr/share/common-licenses/Apache-2.0`.
+Copyright: (c) 2005-2015 Robert Collins <robertc@robertcollins.net>
+           (c) 2004 Canonical Limited
+           (c) Martin Pool
+License: Apache-2-or-BSD-3-clause
 
-Files: python/iso8501/*
+Files: python/iso8601/*
 Copyright: 2007 Michael Twomey
-License:
+License: Expat
  Permission is hereby granted, free of charge, to any person obtaining a
  copy of this software and associated documentation files (the
  "Software"), to deal in the Software without restriction, including
@@ -118,3 +39,44 @@ License:
  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+License: Apache-2-or-BSD-3-clause
+ Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
+ license at the users choice. A copy of both licenses are available in the
+ project source as Apache-2.0 and BSD. You may not use this file except in
+ compliance with one of these two licences.
+ .
+ Unless required by applicable law or agreed to in writing, software
+ distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
+ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ license you chose for the specific language governing permissions and
+ limitations under that license.
+ .
+ BSD 3-clause license:
+ .
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+ 3. Neither the name of Robert Collins nor the names of Subunit contributors
+    may be used to endorse or promote products derived from this software
+    without specific prior written permission.
+ .
+ THIS SOFTWARE IS PROVIDED BY ROBERT COLLINS AND SUBUNIT CONTRIBUTORS ``AS IS''
+ AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+ FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ SUCH DAMAGE.
+ .
+ On Debian/Ubuntu systems, the complete text of the Apache 2.0 license can be
+ found in `/usr/share/common-licenses/Apache-2.0`.

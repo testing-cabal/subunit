@@ -8,8 +8,10 @@ subunit (1.1.0-1) experimental; urgency=low
   * Now using git tag based workflow.
   * Cleans better.
   * Removed debian/pycompat.
+  * Updated debian/copyright years and copyright holders, fixed double
+    defined license.
 
- -- Thomas Goirand <zigo@debian.org>  Tue, 22 Apr 2014 01:14:54 +0800
+ -- Thomas Goirand <zigo@debian.org>  Thu, 09 Jul 2015 14:38:45 +0000
 
 subunit (0.0.18-4) unstable; urgency=medium
 
@@ -317,4 +319,3 @@ subunit (0.0.1-65-7) jaunty; urgency=low
   * Initial packaging (Closes: #480982).
 
  -- Robert Collins <robert@ubuntu.com>  Thu, 07 May 2009 18:21:00 +1000
-
