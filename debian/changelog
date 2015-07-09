@@ -7,6 +7,7 @@ subunit (1.1.0-1) experimental; urgency=low
   * Added python-extras as dependency.
   * Now using git tag based workflow.
   * Cleans better.
+  * Removed debian/pycompat.
 
  -- Thomas Goirand <zigo@debian.org>  Tue, 22 Apr 2014 01:14:54 +0800
 
