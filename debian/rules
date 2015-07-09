@@ -48,6 +48,17 @@ override_dh_auto_clean:
 		c/tests/test_child.trs \
 		perl/MYMETA.json \
 		test-suite.log
+	rm -f Makefile.in \
+		aclocal.m4 \
+		compile \
+		config.guess \
+		config.sub \
+		depcomp \
+		install-sh \
+		ltmain.sh \
+		missing \
+		py-compile
+	rm -rf m4
 
 override_dh_auto_test:
 	dh_auto_test || true

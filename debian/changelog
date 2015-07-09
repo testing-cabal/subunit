@@ -1,6 +1,12 @@
-subunit (0.0.18-5) UNRELEASED; urgency=low
+subunit (1.1.0-1) experimental; urgency=low
 
+  * New upstream release.
   * Re-add Jelmer Vernooij <jelmer@debian.org> in the Uploaders.
+  * Ran wrap-and-sort.
+  * The subunit package now also depends on the Python3 package.
+  * Added python-extras as dependency.
+  * Now using git tag based workflow.
+  * Cleans better.
 
  -- Thomas Goirand <zigo@debian.org>  Tue, 22 Apr 2014 01:14:54 +0800
 
