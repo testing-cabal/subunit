@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import os.path
 try:
     # If the user has setuptools / distribute installed, use it
     from setuptools import setup
@@ -10,9 +11,11 @@ else:
     extra = {
         'install_requires': [
             'extras',
-            'testscenarios',
             'testtools>=0.9.34',
-        ]
+        ],
+        'tests_require': [
+            'testscenarios',
+        ],
     }
 
 
@@ -33,6 +36,9 @@ VERSION = (
     or "0.0")
 
 
+relpath = os.path.dirname(__file__)
+if relpath:
+    os.chdir(relpath)
 setup(
     name='python-subunit',
     version=VERSION,
@@ -59,6 +65,7 @@ setup(
         'filters/subunit-output',
         'filters/subunit-stats',
         'filters/subunit-tags',
+        'filters/subunit2csv',
         'filters/subunit2gtk',
         'filters/subunit2junitxml',
         'filters/subunit2pyunit',

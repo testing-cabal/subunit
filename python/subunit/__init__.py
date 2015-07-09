@@ -153,7 +153,7 @@ from subunit.v2 import ByteStreamToStreamResult, StreamResultToBytes
 # If the releaselevel is 'final', then the tarball will be major.minor.micro.
 # Otherwise it is major.minor.micro~$(revno).
 
-__version__ = (0, 0, 18, 'final', 0)
+__version__ = (1, 1, 0, 'final', 0)
 
 PROGRESS_SET = 0
 PROGRESS_CUR = 1
@@ -1248,22 +1248,6 @@ class TestResultStats(testresult.TestResult):
     def wasSuccessful(self):
         """Tells whether or not this result was a success"""
         return self.failed_tests == 0
-
-
-def get_default_formatter():
-    """Obtain the default formatter to write to.
-
-    :return: A file-like object.
-    """
-    formatter = os.getenv("SUBUNIT_FORMATTER")
-    if formatter:
-        return os.popen(formatter, "w")
-    else:
-        stream = sys.stdout
-        if sys.version_info > (3, 0):
-            if safe_hasattr(stream, 'buffer'):
-                stream = stream.buffer
-        return stream
 
 
 def read_test_list(path):

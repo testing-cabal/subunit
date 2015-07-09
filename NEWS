@@ -5,11 +5,76 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+BUGFIXES
+~~~~~~~~
+
+* Unencapsulated strings and encapsulated stdout will be forwarded by
+  subunit-2to1. (Robert Collins, #1400519)
+
+* SUBUNIT_FORMATTER which has not been honoured for years is now removed from 
+  the codebase. (Jelmer Vernooij)
+
+IMPROVEMENTS
+~~~~~~~~~~~~
+
+* ``subunit.run`` now supports ``--locals`` to show local variables in
+  tracebacks. (Robert Collins)
+
+1.0.0
+-----
+
+BUGFIXES
+~~~~~~~~
+
+* Tests have been fixed with testtools 1.2.0 and above.
+  (Robert Collins)
+
+IMPROVEMENTS
+~~~~~~~~~~~~
+
+* With testtools 1.4.0 and above import errors are now
+  shown in detail by ``subunit.run``. (Robert Collins)
+
+0.0.21
+------
+
+BUGFIXES
+~~~~~~~~
+
+* Brown bag bugfix - 0.0.20's setup.py referenced cvs not csv.
+  (Robert Collins, #1361924)
+
+0.0.20
+------
+
+BUGFIXES
+~~~~~~~~
+
+* subunit2csv is now installed when using pip.
+  (Robert Collins, #1279669)
+
+* testscenarios is now a test dependency, not an install dependency.
+  (Arfrever Frehtes Taifersar Arahesis, #1292757)
+
+* The python-subunit tarball can now have setup run from the current
+  directory. (Robert Collins, #1361857)
+
+0.0.19
+------
+
+IMPROVEMENTS
+~~~~~~~~~~~~
+
+* ``subunit.run`` in Python will now exit 0 as long as the test stream has
+  been generated correctly - this has always been the intent but API friction
+  with testtools had prevented it working.
+  (Robert Collins)
+
 0.0.18
 ------
 
-IMPROVMENTS
-~~~~~~~~~~~
+IMPROVEMENTS
+~~~~~~~~~~~~
 
 * Fix compatibility with testtools 0.9.35 which dropped the 'all' compat
   symbol. This breaks support for Python versions lower than 2.6.
@@ -18,8 +83,8 @@ IMPROVMENTS
 0.0.17
 ------
 
-IMPROVMENTS
-~~~~~~~~~~~
+IMPROVEMENTS
+~~~~~~~~~~~~
 
 * Add ``subunit-output`` tool that can generate a Subunit v2 bytestream from
   arguments passed on the command line. (Thomi Richards, #1252084)

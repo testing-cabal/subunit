@@ -25,9 +25,8 @@ import os
 import sys
 
 from testtools import ExtendedToStreamDecorator
-from testtools.testsuite import iterate_tests
 
-from subunit import StreamResultToBytes, get_default_formatter
+from subunit import StreamResultToBytes
 from subunit.test_results import AutoTimingTestResultDecorator
 from testtools.run import (
     BUFFEROUTPUT,
@@ -40,15 +39,23 @@ from testtools.run import (
 
 
 class SubunitTestRunner(object):
-    def __init__(self, verbosity=None, failfast=None, buffer=None, stream=None):
+    def __init__(self, verbosity=None, failfast=None, buffer=None, stream=None,
+        stdout=None, tb_locals=False):
         """Create a TestToolsTestRunner.
 
         :param verbosity: Ignored.
         :param failfast: Stop running tests at the first failure.
         :param buffer: Ignored.
+        :param stream: Upstream unittest stream parameter.
+        :param stdout: Testtools stream parameter.
+        :param tb_locals: Testtools traceback in locals parameter.
+
+        Either stream or stdout can be supplied, and stream will take
+        precedence.
         """
         self.failfast = failfast
-        self.stream = stream or sys.stdout
+        self.stream = stream or stdout or sys.stdout
+        self.tb_locals = tb_locals
 
     def run(self, test):
         "Run the given test case or test suite."
@@ -57,6 +64,7 @@ class SubunitTestRunner(object):
         result = AutoTimingTestResultDecorator(result)
         if self.failfast is not None:
             result.failfast = self.failfast
+            result.tb_locals = self.tb_locals
         result.startTestRun()
         try:
             test(result)
@@ -64,9 +72,13 @@ class SubunitTestRunner(object):
             result.stopTestRun()
         return result
 
-    def list(self, test):
+    def list(self, test, loader=None):
         "List the test."
         result, errors = self._list(test)
+        if loader is not None:
+            # We were called with the updated API by testtools.run, so look for
+            # errors on the loader, not the test list result.
+            errors = loader.errors
         if errors:
             failed_descr = '\n'.join(errors).encode('utf8')
             result.status(file_name="import errors", runnable=False,
@@ -112,19 +124,25 @@ class SubunitTestProgram(TestProgram):
         sys.exit(2)
 
 
-def main():
-    # Disable the default buffering, for Python 2.x where pdb doesn't do it
-    # on non-ttys.
-    stream = get_default_formatter()
+def main(argv=None, stdout=None):
+    if argv is None:
+        argv = sys.argv
     runner = SubunitTestRunner
-    # Patch stdout to be unbuffered, so that pdb works well on 2.6/2.7.
-    binstdout = io.open(sys.stdout.fileno(), 'wb', 0)
-    if sys.version_info[0] > 2:
-        sys.stdout = io.TextIOWrapper(binstdout, encoding=sys.stdout.encoding)
-    else:
-        sys.stdout = binstdout
-    SubunitTestProgram(module=None, argv=sys.argv, testRunner=runner,
-        stdout=sys.stdout)
+    # stdout is None except in unit tests.
+    if stdout is None:
+        stdout = sys.stdout
+        # Disable the default buffering, for Python 2.x where pdb doesn't do it
+        # on non-ttys.
+        if hasattr(stdout, 'fileno'):
+            # Patch stdout to be unbuffered, so that pdb works well on 2.6/2.7.
+            binstdout = io.open(stdout.fileno(), 'wb', 0)
+            if sys.version_info[0] > 2:
+                sys.stdout = io.TextIOWrapper(binstdout, encoding=sys.stdout.encoding)
+            else:
+                sys.stdout = binstdout
+            stdout = sys.stdout
+    SubunitTestProgram(module=None, argv=argv, testRunner=runner,
+        stdout=stdout, exit=False)
 
 
 if __name__ == '__main__':

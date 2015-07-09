@@ -19,10 +19,14 @@
 from optparse import OptionParser
 import sys
 
-from testtools import StreamToExtendedDecorator
+from testtools import (
+    StreamToExtendedDecorator,
+    StreamResultRouter,
+    )
 
 from subunit import ByteStreamToStreamResult, TestProtocolClient
 from subunit.filters import find_stream, run_tests_from_stream
+from subunit.test_results import CatFiles
 
 
 def make_options(description):
@@ -36,7 +40,9 @@ def main():
     case = ByteStreamToStreamResult(
         find_stream(sys.stdin, args), non_subunit_name='stdout')
     result = StreamToExtendedDecorator(TestProtocolClient(sys.stdout))
-    # What about stdout chunks?
+    result = StreamResultRouter(result)
+    cat = CatFiles(sys.stdout)
+    result.add_rule(cat, 'test_id', test_id=None)
     result.startTestRun()
     case.run(result)
     result.stopTestRun()
