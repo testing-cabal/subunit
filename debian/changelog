@@ -10,6 +10,7 @@ subunit (1.1.0-1) experimental; urgency=low
   * Removed debian/pycompat.
   * Updated debian/copyright years and copyright holders, fixed double
     defined license.
+  * Standards-Version is now 3.9.6 (no change needed).
 
  -- Thomas Goirand <zigo@debian.org>  Thu, 09 Jul 2015 14:38:45 +0000
 
