@@ -198,13 +198,17 @@ This encoding can encode values from 0 to 2**30-1, enough to encode a
 nanosecond. Numbers that are not variable length encoded are still stored in
 MSB order.
 
- prefix   octets   max       max
-+-------+--------+---------+------------+
-| 00    |      1 |  2**6-1 |         63 |
-| 01    |      2 | 2**14-1 |      16383 |
-| 10    |      3 | 2**22-1 |    4194303 |
-| 11    |      4 | 2**30-1 | 1073741823 |
-+-------+--------+---------+------------+
++--------+--------+---------+------------+
+| prefix | octets | max     | max        |
++========+========+=========+============+
+| 00     |      1 |  2**6-1 |         63 |
++--------+--------+---------+------------+
+| 01     |      2 | 2**14-1 |      16383 |
++--------+--------+---------+------------+
+| 10     |      3 | 2**22-1 |    4194303 |
++--------+--------+---------+------------+
+| 11     |      4 | 2**30-1 | 1073741823 |
++--------+--------+---------+------------+
 
 All variable length elements of the packet are stored with a length prefix
 number allowing them to be skipped over for consumers that don't need to
@@ -215,8 +219,9 @@ UTF-8 strings are with no terminating NUL and should not have any embedded NULs
 some remedial action (such as discarding the packet as corrupt).
 
 In short the structure of a packet is:
-PACKET := SIGNATURE FLAGS PACKET_LENGTH TIMESTAMP? TESTID? TAGS? MIME?
-          FILECONTENT? ROUTING_CODE? CRC32
+
+  PACKET := SIGNATURE FLAGS PACKET_LENGTH TIMESTAMP? TESTID? TAGS? MIME?
+            FILECONTENT? ROUTING_CODE? CRC32
 
 In more detail...
 
@@ -244,11 +249,14 @@ is encountered : and even then it may still be false, failing after passing
 the version check due to coincidence.
 
 Flags are stored in network byte order too.
-+-------------------------+------------------------+
-| High byte               | Low byte               |
-| 15 14 13 12 11 10  9  8 | 7  6  5  4  3  2  1  0 |
-| VERSION    |feature bits|                        |
+
 +------------+------------+------------------------+
+| High byte               | Low byte               |
++------------+------------+------------------------+
+| 15 14 13 12 11 10  9  8 | 7  6  5  4  3  2  1  0 |
++------------+------------+------------------------+
+| VERSION    |      feature bits                   |
++------------+-------------------------------------+
 
 Valid version values are:
 0x2 - version 2
@@ -349,6 +357,7 @@ Sample subunit wire contents
 ----------------------------
 
 The following::
+
   test: test foo works
   success: test foo works.
   test: tar a file.
@@ -360,6 +369,7 @@ The following::
   a writeln to stdout
 
 When run through subunit2pyunit::
+
   .F
   a writeln to stdout
 
@@ -371,43 +381,43 @@ When run through subunit2pyunit::
   foo.c:34 WARNING foo is not defined.
 
 
-Subunit protocol description
-============================
+Subunit v1 protocol description
+===============================
 
 This description is being ported to an EBNF style. Currently its only partly in
 that style, but should be fairly clear all the same. When in doubt, refer the
 source (and ideally help fix up the description!). Generally the protocol is
 line orientated and consists of either directives and their parameters, or
 when outside a DETAILS region unexpected lines which are not interpreted by
-the parser - they should be forwarded unaltered.
+the parser - they should be forwarded unaltered::
 
-test|testing|test:|testing: test LABEL
-success|success:|successful|successful: test LABEL
-success|success:|successful|successful: test LABEL DETAILS
-failure: test LABEL
-failure: test LABEL DETAILS
-error: test LABEL
-error: test LABEL DETAILS
-skip[:] test LABEL
-skip[:] test LABEL DETAILS
-xfail[:] test LABEL
-xfail[:] test LABEL DETAILS
-uxsuccess[:] test LABEL
-uxsuccess[:] test LABEL DETAILS
-progress: [+|-]X
-progress: push
-progress: pop
-tags: [-]TAG ...
-time: YYYY-MM-DD HH:MM:SSZ
+    test|testing|test:|testing: test LABEL
+    success|success:|successful|successful: test LABEL
+    success|success:|successful|successful: test LABEL DETAILS
+    failure: test LABEL
+    failure: test LABEL DETAILS
+    error: test LABEL
+    error: test LABEL DETAILS
+    skip[:] test LABEL
+    skip[:] test LABEL DETAILS
+    xfail[:] test LABEL
+    xfail[:] test LABEL DETAILS
+    uxsuccess[:] test LABEL
+    uxsuccess[:] test LABEL DETAILS
+    progress: [+|-]X
+    progress: push
+    progress: pop
+    tags: [-]TAG ...
+    time: YYYY-MM-DD HH:MM:SSZ
 
-LABEL: UTF8*
-NAME: UTF8*
-DETAILS ::= BRACKETED | MULTIPART
-BRACKETED ::= '[' CR UTF8-lines ']' CR
-MULTIPART ::= '[ multipart' CR PART* ']' CR
-PART ::= PART_TYPE CR NAME CR PART_BYTES CR
-PART_TYPE ::= Content-Type: type/sub-type(;parameter=value,parameter=value)
-PART_BYTES ::= (DIGITS CR LF BYTE{DIGITS})* '0' CR LF
+    LABEL: UTF8*
+    NAME: UTF8*
+    DETAILS ::= BRACKETED | MULTIPART
+    BRACKETED ::= '[' CR UTF8-lines ']' CR
+    MULTIPART ::= '[ multipart' CR PART* ']' CR
+    PART ::= PART_TYPE CR NAME CR PART_BYTES CR
+    PART_TYPE ::= Content-Type: type/sub-type(;parameter=value,parameter=value)
+    PART_BYTES ::= (DIGITS CR LF BYTE{DIGITS})* '0' CR LF
 
 unexpected output on stdout -> stdout.
 exit w/0 or last test completing -> error

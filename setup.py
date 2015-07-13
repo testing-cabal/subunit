@@ -16,6 +16,10 @@ else:
         'tests_require': [
             'testscenarios',
         ],
+        'extras_require': {
+            'docs': ['docutils'],
+            'test': ['testscenarios'],
+        },
     }
 
 
