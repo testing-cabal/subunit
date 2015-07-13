@@ -5,6 +5,15 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+IMPROVEMENTS
+~~~~~~~~~~~~
+
+* Added subunit2disk, which explodes a stream out to files on disk.
+  (Robert Collins)
+
+1.1.0
+-----
+
 BUGFIXES
 ~~~~~~~~
 

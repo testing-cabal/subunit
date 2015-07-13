@@ -18,7 +18,7 @@ else:
         ],
         'extras_require': {
             'docs': ['docutils'],
-            'test': ['testscenarios'],
+            'test': ['fixtures', 'testscenarios'],
         },
     }
 

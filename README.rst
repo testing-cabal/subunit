@@ -62,6 +62,7 @@ A number of useful things can be done easily with subunit:
 Subunit supplies the following filters:
  * tap2subunit - convert perl's TestAnythingProtocol to subunit.
  * subunit2csv - convert a subunit stream to csv.
+ * subunit2disk - export a subunit stream to files on disk.
  * subunit2pyunit - convert a subunit stream to pyunit test results.
  * subunit2gtk - show a subunit stream in GTK.
  * subunit2junitxml - convert a subunit stream to JUnit's XML format.
