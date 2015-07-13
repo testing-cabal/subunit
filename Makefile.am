@@ -5,7 +5,7 @@ EXTRA_DIST =  \
 	INSTALL \
 	Makefile.am \
 	NEWS \
-	README \
+	README.rst \
 	all_tests.py \
 	c++/README \
 	c/README \

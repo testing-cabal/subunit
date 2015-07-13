@@ -43,7 +43,7 @@ setup(
     name='python-subunit',
     version=VERSION,
     description=('Python implementation of subunit test streaming protocol'),
-    long_description=open('README').read(),
+    long_description=open('README.rst').read(),
     classifiers=[
         'Intended Audience :: Developers',
         'Programming Language :: Python :: 3',
