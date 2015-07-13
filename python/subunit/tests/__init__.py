@@ -22,10 +22,7 @@ from testscenarios import generate_scenarios
 
 # Before the test module imports to avoid circularity.
 # For testing: different pythons have different str() implementations.
-if (3,1) < sys.version_info < (3, 4):
-    _remote_exception_repr = "testtools.testresult.real._StringException"
-else:
-    _remote_exception_repr = "_StringException"
+_remote_exception_repr = "testtools.testresult.real._StringException"
 _remote_exception_str = "Traceback (most recent call last):\ntesttools.testresult.real._StringException"
 _remote_exception_str_chunked = "57\r\n" + _remote_exception_str + ": boo qux\n0\r\n"
 
