@@ -14,11 +14,13 @@ else:
             'testtools>=0.9.34',
         ],
         'tests_require': [
+            'fixtures',
+            'hypothesis',
             'testscenarios',
         ],
         'extras_require': {
             'docs': ['docutils'],
-            'test': ['fixtures', 'testscenarios'],
+            'test': ['fixtures', 'hypothesis', 'testscenarios'],
         },
     }
 
