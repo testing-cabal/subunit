@@ -124,8 +124,10 @@ clean-local:
 
 # Remove perl dir for VPATH builds.
 distclean-local:
-	-rmdir perl > /dev/null
 	-rm perl/Makefile.PL > /dev/null
+	-rm perl/MYMETA.json > /dev/null
+	-rmdir perl > /dev/null
+	-rm -r .hypothesis > /dev/null
 
 install-exec-local: perl/Makefile
 	$(MAKE) -C perl install

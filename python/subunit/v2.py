@@ -386,7 +386,11 @@ class ByteStreamToStreamResult(object):
     def _parse(self, packet, result):
             # 2 bytes flags, at most 3 bytes length.
             packet.append(self.source.read(5))
-            flags = struct.unpack(FMT_16, packet[-1][:2])[0]
+            if len(packet[-1]) != 5:
+                raise ParseError(
+                    'Short read - got %d bytes, wanted 5' % len(packet[-1]))
+            flag_bytes = packet[-1][:2]
+            flags = struct.unpack(FMT_16, flag_bytes)[0]
             length, consumed = self._parse_varint(
                 packet[-1], 2, max_3_bytes=True)
             remainder = self.source.read(length - 6)

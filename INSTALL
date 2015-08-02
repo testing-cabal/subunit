@@ -20,6 +20,8 @@ Dependencies
 * 'testscenarios' (On Debian and Ubuntu systems the 'python-testscenarios'
   package, the 'testscenarios' package on pypi, or
   https://launchpad.net/testscenarios) for running some of the python unit tests.
+* 'fixtures' for running the Python tests
+* 'hypothesis' for running the Python tests.
 * A C compiler for the C bindings
 * Perl for the Perl tools (including subunit-diff)
 * Check to run the subunit test suite.
