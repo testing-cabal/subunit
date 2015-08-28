@@ -61,10 +61,12 @@ override_dh_auto_clean:
 	rm -rf m4
 
 override_dh_auto_test:
+ifeq (,$(findstring nocheck, $(DEB_BUILD_OPTIONS)))
 	dh_auto_test || true
 	for vers in $(PYVERS) $(PY3VERS); do \
 		SHELL_SHARE='./shell/share/' PYTHONPATH=./python${PYTHONPATH:+:$PYTHONPATH} python$$vers runtests.py || true; \
 	done
+endif
 
 override_dh_auto_install-arch:
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
