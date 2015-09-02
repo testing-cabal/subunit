@@ -556,7 +556,7 @@ class TestProtocolServer(object):
     def _handleTime(self, offset, line):
         # Accept it, but do not do anything with it yet.
         try:
-            event_time = iso8601.parse_date(line[offset:-1])
+            event_time = iso8601.parse_date(line[offset:-1].decode('utf8'))
         except TypeError:
             raise TypeError(_u("Failed to parse %r, got %r")
                 % (line, sys.exec_info[1]))
