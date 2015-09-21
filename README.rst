@@ -360,7 +360,7 @@ Sample subunit wire contents
 The following::
 
   test: test foo works
-  success: test foo works.
+  success: test foo works
   test: tar a file.
   failure: tar a file. [
   ..
