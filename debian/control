@@ -2,9 +2,7 @@ Source: subunit
 Section: devel
 Priority: optional
 Maintainer: PKG OpenStack <openstack-devel@lists.alioth.debian.org>
-Uploaders: Julien Danjou <acid@debian.org>,
-           Thomas Goirand <zigo@debian.org>,
-           Gonéri Le Bouder <goneri@debian.org>,
+Uploaders: Thomas Goirand <zigo@debian.org>,
            Robert Collins <robertc@robertcollins.net>,
            Jelmer Vernooij <jelmer@debian.org>,
 Build-Depends: autoconf (>= 2.59),

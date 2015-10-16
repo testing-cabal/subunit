@@ -1,3 +1,9 @@
+subunit (1.1.0-3) unstable; urgency=medium
+
+  * Uploading to unstable.
+
+ -- Thomas Goirand <zigo@debian.org>  Fri, 16 Oct 2015 12:10:24 +0000
+
 subunit (1.1.0-2) experimental; urgency=medium
 
   * Added support for DEB_BUILD_OPTIONS=nocheck (Closes: #797006).
