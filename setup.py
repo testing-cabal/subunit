@@ -20,7 +20,8 @@ else:
         ],
         'extras_require': {
             'docs': ['docutils'],
-            'test': ['fixtures', 'hypothesis', 'testscenarios'],
+            'test': ['fixtures', 'testscenarios'],
+            'test:python_version!="3.2"': ['hypothesis'],
         },
     }
 
