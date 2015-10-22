@@ -303,7 +303,7 @@ the length encoding to take up a new byte (which will only happen to packets
 less than or equal to 16KiB in length) - large packets are very efficient to
 route.
 
-Timestamp when present is a 32 bit unsigned integer for secnods, and a variable
+Timestamp when present is a 32 bit unsigned integer for seconds, and a variable
 length number for nanoseconds, representing UTC time since Unix Epoch in
 seconds and nanoseconds.
 
