@@ -73,6 +73,7 @@ setup(
         'filters/subunit-stats',
         'filters/subunit-tags',
         'filters/subunit2csv',
+        'filters/subunit2disk',
         'filters/subunit2gtk',
         'filters/subunit2junitxml',
         'filters/subunit2pyunit',
