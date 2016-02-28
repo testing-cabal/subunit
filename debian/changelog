@@ -1,3 +1,9 @@
+subunit (1.1.0-4) UNRELEASED; urgency=medium
+
+  * Fixed VCS URLs (https).
+
+ -- Ondřej Nový <novy@ondrej.org>  Sun, 28 Feb 2016 15:58:01 +0100
+
 subunit (1.1.0-3) unstable; urgency=medium
 
   * Uploading to unstable.

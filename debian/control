@@ -24,8 +24,8 @@ Build-Depends: autoconf (>= 2.59),
                python3-testtools (>= 0.9.35),
 Build-Depends-Indep: perl,
 Standards-Version: 3.9.6
-Vcs-Git: git://anonscm.debian.org/openstack/subunit.git
-Vcs-Browser: http://anonscm.debian.org/gitweb/?p=openstack/subunit.git;a=summary
+Vcs-Git: https://anonscm.debian.org/git/openstack/subunit.git
+Vcs-Browser: https://anonscm.debian.org/cgit/openstack/subunit.git/
 Homepage: http://code.launchpad.net/subunit
 
 Package: subunit
