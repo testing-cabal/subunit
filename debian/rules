@@ -6,7 +6,7 @@ PY3VERS = $(shell py3versions -vr)
 
 include /usr/share/openstack-pkg-tools/pkgos.make
 export OSLO_PACKAGE_VERSION=$(VERSION)
-UPSTREAM_GIT=git://github.com/testing-cabal/subunit.git
+UPSTREAM_GIT := https://github.com/testing-cabal/subunit.git
 
 %:
 	dh $@ --with python2,python3,autoreconf
