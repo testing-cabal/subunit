@@ -1295,7 +1295,7 @@ def _unwrap_text(stream):
         # Read streams
         if type(stream.read(0)) is unicode_type:
             return stream.buffer
-    except (_UnsupportedOperation, IOError):
+    except (_UnsupportedOperation, IOError, ValueError):
         # Cannot read from the stream: try via writes
         try:
             stream.write(_b(''))
