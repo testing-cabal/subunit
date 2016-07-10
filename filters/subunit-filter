@@ -69,9 +69,9 @@ def make_options(description):
     parser.add_option("--no-skip", action="store_true",
         help="exclude skips", dest="skip")
     parser.add_option("--xfail", action="store_false",
-        help="include expected falures", default=True, dest="xfail")
+        help="include expected failures", default=True, dest="xfail")
     parser.add_option("--no-xfail", action="store_true",
-        help="exclude expected falures", default=True, dest="xfail")
+        help="exclude expected failures", default=True, dest="xfail")
     parser.add_option(
         "--with-tag", type=str,
         help="include tests with these tags", action="append", dest="with_tags")
