@@ -582,7 +582,10 @@ class TestProtocolServer(object):
         :param pipe: A file-like object supporting readlines().
         :return: None.
         """
-        for line in pipe.readlines():
+        while True:
+            line = pipe.readline()
+            if not line:
+                break
             self.lineReceived(line)
         self.lostConnection()
 
