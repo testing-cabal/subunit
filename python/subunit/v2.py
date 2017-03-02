@@ -309,6 +309,11 @@ class ByteStreamToStreamResult(object):
             # annoying).
             buffered = [content]
             while len(buffered[-1]):
+                # Note: Windows does not support passing a file descriptor to
+                # select.select. fallback to one-byte-at-a-time.
+                if sys.platform == 'win32':
+                    break
+
                 try:
                     self.source.fileno()
                 except:
