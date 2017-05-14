@@ -21,6 +21,7 @@ import datetime
 import sys
 
 from subunit.iso8601 import UTC
+
 from subunit.v2 import StreamResultToBytes
 
 STATUS_CODES = frozenset([
@@ -77,8 +78,5 @@ def write_test(output, test_id, test_status, metadatas, test_time):
 def create_timestamp():
     return datetime.datetime.now(UTC)
 
-
 if __name__ == '__main__':
     sys.exit(xunit2subunit(sys.stdin, sys.stdout))
-
-
