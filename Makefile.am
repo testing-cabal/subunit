@@ -63,8 +63,7 @@ dist_bin_SCRIPTS = \
 	filters/subunit2gtk \
 	filters/subunit2junitxml \
 	filters/subunit2pyunit \
-	filters/tap2subunit \
-	filters/xunit2subunit
+	filters/tap2subunit
 
 TESTS = $(check_PROGRAMS)
 

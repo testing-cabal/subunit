@@ -78,7 +78,6 @@ setup(
         'filters/subunit2junitxml',
         'filters/subunit2pyunit',
         'filters/tap2subunit',
-        'filters/xunit2subunit',
     ],
     **extra
 )
