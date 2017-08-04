@@ -6,6 +6,7 @@ subunit (1.1.0-4) UNRELEASED; urgency=medium
 
   [ Daniel Baumann ]
   * Updating vcs fields.
+  * Updating copyright format url.
 
  -- Ondřej Nový <novy@ondrej.org>  Sun, 28 Feb 2016 15:58:01 +0100
 

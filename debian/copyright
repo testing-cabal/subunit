@@ -1,4 +1,4 @@
-Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: subunit
 Upstream-Contact: Robert Collins <robertc@robertcollins.net>
 Source: http://bazaar.launchpad.net/~subunit/subunit/trunk.
