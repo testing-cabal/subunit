@@ -1,7 +1,7 @@
 Source: subunit
 Section: devel
 Priority: optional
-Maintainer: PKG OpenStack <openstack-devel@lists.alioth.debian.org>
+Maintainer: Debian OpenStack <openstack-devel@lists.alioth.debian.org>
 Uploaders: Thomas Goirand <zigo@debian.org>,
            Robert Collins <robertc@robertcollins.net>,
            Jelmer Vernooij <jelmer@debian.org>,
