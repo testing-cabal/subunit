@@ -1,7 +1,11 @@
 subunit (1.1.0-4) UNRELEASED; urgency=medium
 
+  [ Ondřej Nový ]
   * Fixed VCS URLs (https).
   * d/rules: Changed UPSTREAM_GIT protocol to https
+
+  [ Daniel Baumann ]
+  * Updating vcs fields.
 
  -- Ondřej Nový <novy@ondrej.org>  Sun, 28 Feb 2016 15:58:01 +0100
 
