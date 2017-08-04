@@ -2,56 +2,84 @@ Source: subunit
 Section: devel
 Priority: optional
 Maintainer: Debian OpenStack <openstack-devel@lists.alioth.debian.org>
-Uploaders: Thomas Goirand <zigo@debian.org>,
-           Robert Collins <robertc@robertcollins.net>,
-           Jelmer Vernooij <jelmer@debian.org>,
-Build-Depends: autoconf (>= 2.59),
-               automake,
-               check,
-               debhelper (>= 9),
-               dh-autoreconf,
-               dh-python,
-               libcppunit-dev,
-               libtool,
-               openstack-pkg-tools,
-               pkg-config,
-               python-all,
-               python-setuptools,
-               python-testscenarios,
-               python-testtools (>= 0.9.35),
-               python3-all,
-               python3-testscenarios,
-               python3-testtools (>= 0.9.35),
-Build-Depends-Indep: perl,
+Uploaders:
+ Thomas Goirand <zigo@debian.org>,
+ Robert Collins <robertc@robertcollins.net>,
+ Jelmer Vernooij <jelmer@debian.org>,
+Build-Depends:
+ autoconf (>= 2.59),
+ automake,
+ check,
+ debhelper (>= 9),
+ dh-autoreconf,
+ dh-python,
+ libcppunit-dev,
+ libtool,
+ openstack-pkg-tools,
+ pkg-config,
+ python-all,
+ python-setuptools,
+ python-testscenarios,
+ python-testtools (>= 0.9.35),
+ python3-all,
+ python3-testscenarios,
+ python3-testtools (>= 0.9.35),
+Build-Depends-Indep:
+ perl,
 Standards-Version: 3.9.6
 Vcs-Git: https://anonscm.debian.org/git/openstack/python/subunit.git
 Vcs-Browser: https://anonscm.debian.org/cgit/openstack/python/subunit.git
 Homepage: http://code.launchpad.net/subunit
 
-Package: subunit
-Architecture: all
-Depends: libsubunit-perl (>= ${source:Version}),
-         python-subunit (>= ${source:Version}),
-         python3-subunit (>= ${source:Version}),
-         ${misc:Depends},
-         ${perl:Depends},
-         ${python:Depends},
-Recommends: python-gtk2,
-            python-junitxml,
-Description: command line tools for processing Subunit streams
- subunit is a protocol for test activity serialisation deserialisation. This
- permits executing tests remotely, or saving the result of test runs for later
- introspection.
+Package: libcppunit-subunit-dev
+Section: libdevel
+Architecture: any
+Depends:
+ libcppunit-subunit0 (=${binary:Version}),
+ ${misc:Depends},
+ ${shlibs:Depends},
+Description: SubunitTestProgressListener for CPPUnit - Development headers
+ subunit is a protocol for test activity reporting. The
+ SubunitTestProgressListener permits outputting Subunit from  a CPPUnit test
+ suite.
  .
- The subunit package includes the subunit command line tools:
- subunit-diff, subunit-filter subunit-stats tap2subunit subunit2pyunit
- subunit-ls subunit-tags, subunit2gtk
+ The libcppunit-subunit-dev package contains the C++ development headers,
+ pkgconfig data file and a static version of the library.
+
+Package: libcppunit-subunit0
+Pre-Depends:
+ ${misc:Pre-Depends},
+Multi-Arch: same
+Architecture: any
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
+Description: SubunitTestProgressListener for CPPUnit - C++ shared library
+ subunit is a protocol for test activity reporting. The
+ SubunitTestProgressListener permits outputting Subunit from a CPPUnit test
+ suite.
+
+Package: libsubunit-dev
+Section: libdevel
+Architecture: any
+Depends:
+ libsubunit0 (=${binary:Version}),
+ ${misc:Depends},
+ ${shlibs:Depends},
+Description: Unit testing protocol - Development headers and static library for libsubunit
+ subunit is a protocol for test activity reporting. This permits executing
+ tests remotely, or saving the result of test runs for later introspection.
+ .
+ The libsubunit-dev package contains the C development headers,
+ pkgconfig data file and a static version of the library.
 
 Package: libsubunit-perl
 Architecture: all
-Provides: libsubunit-diff-perl,
-Depends: ${misc:Depends},
-         ${perl:Depends},
+Provides:
+ libsubunit-diff-perl,
+Depends:
+ ${misc:Depends},
+ ${perl:Depends},
 Section: perl
 Description: perl parser and diff for Subunit streams
  subunit is a protocol for test activity serialisation deserialisation. This
@@ -60,12 +88,27 @@ Description: perl parser and diff for Subunit streams
  .
  The libsubunit-perl package contains the Perl language support for Subunit.
 
+Package: libsubunit0
+Pre-Depends:
+ ${misc:Pre-Depends},
+Multi-Arch: same
+Architecture: any
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
+Description: Unit testing protocol - C/C++ shared library
+ subunit is a protocol for test activity reporting. This permits executing
+ tests remotely, or saving the result of test runs for later introspection.
+ .
+ The libsubunit0 package contains the C shared library.
+
 Package: python-subunit
 Architecture: all
-Depends: python-extras,
-         python-testtools (>= 0.9.4),
-         ${misc:Depends},
-         ${python:Depends},
+Depends:
+ python-extras,
+ python-testtools (>= 0.9.4),
+ ${misc:Depends},
+ ${python:Depends},
 Section: python
 Description: unit testing protocol - Python bindings to generate and consume streams
  subunit is a protocol for test activity serialisation deserialisation. This
@@ -76,10 +119,11 @@ Description: unit testing protocol - Python bindings to generate and consume str
 
 Package: python3-subunit
 Architecture: all
-Depends: python3-extras,
-         python3-testtools (>= 0.9.4),
-         ${misc:Depends},
-         ${python3:Depends},
+Depends:
+ python3-extras,
+ python3-testtools (>= 0.9.4),
+ ${misc:Depends},
+ ${python3:Depends},
 Section: python
 Description: unit testing protocol - Python3 bindings to generate and consume streams
  subunit is a protocol for test activity serialisation deserialisation. This
@@ -88,52 +132,23 @@ Description: unit testing protocol - Python3 bindings to generate and consume st
  .
  The python3-subunit package includes the Python version 3 language bindings.
 
-Package: libsubunit0
-Pre-Depends: ${misc:Pre-Depends},
-Multi-Arch: same
-Architecture: any
-Depends: ${misc:Depends},
-         ${shlibs:Depends},
-Description: Unit testing protocol - C/C++ shared library
- subunit is a protocol for test activity reporting. This permits executing
- tests remotely, or saving the result of test runs for later introspection.
+Package: subunit
+Architecture: all
+Depends:
+ libsubunit-perl (>= ${source:Version}),
+ python-subunit (>= ${source:Version}),
+ python3-subunit (>= ${source:Version}),
+ ${misc:Depends},
+ ${perl:Depends},
+ ${python:Depends},
+Recommends:
+ python-gtk2,
+ python-junitxml,
+Description: command line tools for processing Subunit streams
+ subunit is a protocol for test activity serialisation deserialisation. This
+ permits executing tests remotely, or saving the result of test runs for later
+ introspection.
  .
- The libsubunit0 package contains the C shared library.
-
-Package: libsubunit-dev
-Section: libdevel
-Architecture: any
-Depends: libsubunit0 (=${binary:Version}),
-         ${misc:Depends},
-         ${shlibs:Depends},
-Description: Unit testing protocol - Development headers and static library for libsubunit
- subunit is a protocol for test activity reporting. This permits executing
- tests remotely, or saving the result of test runs for later introspection.
- .
- The libsubunit-dev package contains the C development headers,
- pkgconfig data file and a static version of the library.
-
-Package: libcppunit-subunit0
-Pre-Depends: ${misc:Pre-Depends},
-Multi-Arch: same
-Architecture: any
-Depends: ${misc:Depends},
-         ${shlibs:Depends},
-Description: SubunitTestProgressListener for CPPUnit - C++ shared library
- subunit is a protocol for test activity reporting. The
- SubunitTestProgressListener permits outputting Subunit from a CPPUnit test
- suite.
-
-Package: libcppunit-subunit-dev
-Section: libdevel
-Architecture: any
-Depends: libcppunit-subunit0 (=${binary:Version}),
-         ${misc:Depends},
-         ${shlibs:Depends},
-Description: SubunitTestProgressListener for CPPUnit - Development headers
- subunit is a protocol for test activity reporting. The
- SubunitTestProgressListener permits outputting Subunit from  a CPPUnit test
- suite.
- .
- The libcppunit-subunit-dev package contains the C++ development headers,
- pkgconfig data file and a static version of the library.
+ The subunit package includes the subunit command line tools:
+ subunit-diff, subunit-filter subunit-stats tap2subunit subunit2pyunit
+ subunit-ls subunit-tags, subunit2gtk

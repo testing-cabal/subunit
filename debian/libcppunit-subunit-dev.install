@@ -1,4 +1,3 @@
-
 usr/include/subunit/SubunitTestProgressListener.h
 usr/lib/*/libcppunit_subunit.a
 usr/lib/*/libcppunit_subunit.so
