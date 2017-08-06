@@ -12,6 +12,7 @@ subunit (1.1.0-4) UNRELEASED; urgency=medium
   * Updating standards version to 4.0.0.
   * Removing gbp.conf, not used anymore or should be specified in the
     developers dotfiles.
+  * Updating standards version to 4.0.1.
 
  -- Ondřej Nový <novy@ondrej.org>  Sun, 28 Feb 2016 15:58:01 +0100
 
