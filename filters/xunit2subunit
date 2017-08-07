@@ -19,10 +19,12 @@
 
 import datetime
 import sys
+import math
 
 from subunit.iso8601 import UTC
-
 from subunit.v2 import StreamResultToBytes
+from datetime import timedelta
+from xml.etree import ElementTree as ET
 
 STATUS_CODES = frozenset([
     'exists',
@@ -33,31 +35,23 @@ STATUS_CODES = frozenset([
     'xfail',
 ])
 
-try:
-    import xunitparser
-except ImportError:
-    sys.stderr.write("xunitparser (https://pypi.python.org/pypi/xunitparser)"
-                     "is required for this filter.")
-    raise
 
 def xunit2subunit(xunitxml_input=sys.stdin, output=sys.stdout):
     output = StreamResultToBytes(output)
-    output.startTestRun()
-    ts, tr = xunitparser.parse(xunitxml_input)
-    for tc in ts:
-        test_id = tc.methodname
+    tree = ET.parse(xunitxml_input)
+    for testcase in tree.findall('.//testcase'):
+        test_id = testcase.attrib.get('name')
         test_metadata = None
         test_status = None
-        test_time = tc.time
-        if tc.good:
-            if tc.result == "skipped":
-                test_status = "skip"
-            else:
-                test_status = "success"
-        else:
-            test_status = "fail"
+        skipped = None
+        failure = None
+        test_time = to_timedelta(testcase.attrib.get('time'))
+        skipped = testcase.find('.//skipped')
+        failure = testcase.find('.//failure')
+        if skipped is not None : test_status = "skip"
+        elif failure is not None :test_status = "fail"
+        else : test_status = "success"
         write_test(output, test_id, test_status, test_metadata, test_time)
-    output.stopTestRun()
 
 def write_test(output, test_id, test_status, metadatas, test_time):
     write_status = output.status
@@ -74,6 +68,14 @@ def write_test(output, test_id, test_status, metadatas, test_time):
     kwargs['timestamp'] = create_timestamp()
     write_status(**kwargs)
     kwargs['timestamp'] = create_timestamp() + test_time
+
+def to_timedelta(value):
+    if value is None:
+        return None
+    sec = float(value)
+    if math.isnan(sec):
+        return None
+    return timedelta(seconds=sec)
 
 def create_timestamp():
     return datetime.datetime.now(UTC)
