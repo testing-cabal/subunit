@@ -15,8 +15,11 @@
 #
 
 import datetime
+import io
 import unittest2 as unittest
 import os
+import sys
+import tempfile
 
 from testtools import PlaceHolder, skipIf, TestCase, TestResult
 from testtools.compat import _b, _u, BytesIO
@@ -50,6 +53,44 @@ tb_prelude = "Traceback (most recent call last):\n"
 
 def details_to_str(details):
     return TestResult()._err_details_to_string(None, details=details)
+
+
+class TestHelpers(TestCase):
+    def test__unwrap_text_file_read_mode(self):
+        fd, file_path = tempfile.mkstemp()
+        self.addCleanup(os.remove, file_path)
+        fake_file = os.fdopen(fd, 'r')
+        if sys.version_info > (3, 0):
+            self.assertEqual(fake_file.buffer,
+                             subunit._unwrap_text(fake_file))
+        else:
+            self.assertEqual(fake_file, subunit._unwrap_text(fake_file))
+
+    def test__unwrap_text_file_write_mode(self):
+        fd, file_path = tempfile.mkstemp()
+        self.addCleanup(os.remove, file_path)
+        fake_file = os.fdopen(fd, 'w')
+        if sys.version_info > (3, 0):
+            self.assertEqual(fake_file.buffer,
+                             subunit._unwrap_text(fake_file))
+        else:
+            self.assertEqual(fake_file, subunit._unwrap_text(fake_file))
+
+    def test__unwrap_text_fileIO_read_mode(self):
+        fd, file_path = tempfile.mkstemp()
+        self.addCleanup(os.remove, file_path)
+        fake_file = io.FileIO(file_path, 'r')
+        self.assertEqual(fake_file, subunit._unwrap_text(fake_file))
+
+    def test__unwrap_text_fileIO_write_mode(self):
+        fd, file_path = tempfile.mkstemp()
+        self.addCleanup(os.remove, file_path)
+        fake_file = io.FileIO(file_path, 'w')
+        self.assertEqual(fake_file, subunit._unwrap_text(fake_file))
+
+    def test__unwrap_text_BytesIO(self):
+        fake_stream = io.BytesIO()
+        self.assertEqual(fake_stream, subunit._unwrap_text(fake_stream))
 
 
 class TestTestImports(unittest.TestCase):
