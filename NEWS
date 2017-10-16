@@ -2,8 +2,18 @@
 subunit release notes
 ---------------------
 
-NEXT (In development)
----------------------
+1.2.0
+-----
+
+BUGFIXES
+~~~~~~~~
+
+* Fix make_stream_binary with FileIO object inputs.
+  (Matthew Treinish)
+
+* Fix v2 run() on windows platforms.
+  (Claudiu Belu)
+
 
 IMPROVEMENTS
 ~~~~~~~~~~~~
