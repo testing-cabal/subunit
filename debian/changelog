@@ -6,6 +6,7 @@ subunit (1.1.0-4) UNRELEASED; urgency=medium
   * Mark -dev packages as multi-arch: same (Closes: #873614)
   * Updating standards version to 4.1.1.
   * Bump debhelper compat level to 10
+  * d/copyright: Reorder
 
   [ Daniel Baumann ]
   * Updating vcs fields.

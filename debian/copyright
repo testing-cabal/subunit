@@ -5,17 +5,17 @@ Source: http://bazaar.launchpad.net/~subunit/subunit/trunk.
 Debianized-By: Robert Collins <robert@ubuntu.com>
 Debianized-Date: Thu, 07 May 2009.
 
+Files: *
+Copyright: (c) 2005-2015 Robert Collins <robertc@robertcollins.net>
+           (c) 2004 Canonical Limited
+           (c) Martin Pool
+License: Apache-2-or-BSD-3-clause
+
 Files: debian/*
 Copyright: (c) 2009-2010, Robert Collins <robert@ubuntu.com>
            (c) 2011-2013,  Jelmer Vernooij <jelmer@debian.org>
            (c) 2014, Gonéri Le Bouder <goneri@debian.org>
            (c) 2013-2015, Thomas Goirand <zigo@debian.org>
-License: Apache-2-or-BSD-3-clause
-
-Files: *
-Copyright: (c) 2005-2015 Robert Collins <robertc@robertcollins.net>
-           (c) 2004 Canonical Limited
-           (c) Martin Pool
 License: Apache-2-or-BSD-3-clause
 
 Files: python/iso8601/*
