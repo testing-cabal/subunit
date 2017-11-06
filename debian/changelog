@@ -5,6 +5,7 @@ subunit (1.1.0-4) UNRELEASED; urgency=medium
   * d/rules: Changed UPSTREAM_GIT protocol to https
   * Mark -dev packages as multi-arch: same (Closes: #873614)
   * Updating standards version to 4.1.1.
+  * Bump debhelper compat level to 10
 
   [ Daniel Baumann ]
   * Updating vcs fields.
