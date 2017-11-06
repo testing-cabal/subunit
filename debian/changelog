@@ -7,6 +7,7 @@ subunit (1.1.0-4) UNRELEASED; urgency=medium
   * Updating standards version to 4.1.1.
   * Bump debhelper compat level to 10
   * d/copyright: Reorder
+  * d/subunit.lintian-overrides: Removed, not needed
 
   [ Daniel Baumann ]
   * Updating vcs fields.
