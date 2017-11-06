@@ -3,6 +3,7 @@ subunit (1.1.0-4) UNRELEASED; urgency=medium
   [ Ondřej Nový ]
   * Fixed VCS URLs (https).
   * d/rules: Changed UPSTREAM_GIT protocol to https
+  * Mark -dev packages as multi-arch: same (Closes: #873614)
 
   [ Daniel Baumann ]
   * Updating vcs fields.

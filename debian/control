@@ -33,6 +33,7 @@ Homepage: http://code.launchpad.net/subunit
 
 Package: libcppunit-subunit-dev
 Section: libdevel
+Multi-Arch: same
 Architecture: any
 Depends:
  libcppunit-subunit0 (=${binary:Version}),
@@ -61,6 +62,7 @@ Description: SubunitTestProgressListener for CPPUnit - C++ shared library
 
 Package: libsubunit-dev
 Section: libdevel
+Multi-Arch: same
 Architecture: any
 Depends:
  libsubunit0 (=${binary:Version}),
