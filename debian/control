@@ -47,6 +47,7 @@ Description: SubunitTestProgressListener for CPPUnit - Development headers
  pkgconfig data file and a static version of the library.
 
 Package: libcppunit-subunit0
+Section: libs
 Pre-Depends:
  ${misc:Pre-Depends},
 Multi-Arch: same
@@ -90,6 +91,7 @@ Description: perl parser and diff for Subunit streams
  The libsubunit-perl package contains the Perl language support for Subunit.
 
 Package: libsubunit0
+Section: libs
 Pre-Depends:
  ${misc:Pre-Depends},
 Multi-Arch: same

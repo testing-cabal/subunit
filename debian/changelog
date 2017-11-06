@@ -8,6 +8,7 @@ subunit (1.1.0-4) UNRELEASED; urgency=medium
   * Bump debhelper compat level to 10
   * d/copyright: Reorder
   * d/subunit.lintian-overrides: Removed, not needed
+  * d/control: Change section of libs to 'libs'
 
   [ Daniel Baumann ]
   * Updating vcs fields.
