@@ -1,4 +1,6 @@
-subunit (1.1.0-4) UNRELEASED; urgency=medium
+subunit (1.1.0-4) unstable; urgency=medium
+
+  * Team upload.
 
   [ Ondřej Nový ]
   * Fixed VCS URLs (https).
@@ -18,7 +20,7 @@ subunit (1.1.0-4) UNRELEASED; urgency=medium
   * Removing gbp.conf, not used anymore or should be specified in the
     developers dotfiles.
 
- -- Ondřej Nový <novy@ondrej.org>  Sun, 28 Feb 2016 15:58:01 +0100
+ -- Ondřej Nový <onovy@debian.org>  Mon, 06 Nov 2017 18:33:03 +0100
 
 subunit (1.1.0-3) unstable; urgency=medium
 
