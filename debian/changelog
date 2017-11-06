@@ -240,7 +240,7 @@ subunit (0.0.4-1) unstable; urgency=low
 
 subunit (0.0.3-2) unstable; urgency=low
 
-  * Fixup debian/copyright somewhat. 
+  * Fixup debian/copyright somewhat.
 
  -- Robert Collins <robertc@robertcollins.net>  Thu, 17 Dec 2009 22:33:29 +1100
 
@@ -254,7 +254,7 @@ subunit (0.0.3-1) unstable; urgency=low
 
 subunit (0.0.2-1) unstable; urgency=low
 
-  * New upstream release, merge upstream PPA packaging changes. 
+  * New upstream release, merge upstream PPA packaging changes.
 
  -- Robert Collins <robertc@robertcollins.net>  Sun, 20 Sep 2009 12:09:00 +1000
 
@@ -278,13 +278,13 @@ subunit (0.0.2~bzr78-0ubuntu4) karmic; urgency=low
 
 subunit (0.0.2~bzr78-0ubuntu3) karmic; urgency=low
 
-  * Fix typo in new versioned dependency of subunit -> subunit-python. 
+  * Fix typo in new versioned dependency of subunit -> subunit-python.
 
  -- Robert Collins <robertc@robertcollins.net>  Sun, 30 Aug 2009 09:46:45 +1000
 
 subunit (0.0.2~bzr78-0ubuntu2) karmic; urgency=low
 
-  * Distribute progress_model.py. 
+  * Distribute progress_model.py.
 
  -- Robert Collins <robertc@robertcollins.net>  Sun, 30 Aug 2009 09:42:57 +1000
 
