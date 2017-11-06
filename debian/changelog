@@ -4,17 +4,15 @@ subunit (1.1.0-4) UNRELEASED; urgency=medium
   * Fixed VCS URLs (https).
   * d/rules: Changed UPSTREAM_GIT protocol to https
   * Mark -dev packages as multi-arch: same (Closes: #873614)
+  * Updating standards version to 4.1.1.
 
   [ Daniel Baumann ]
   * Updating vcs fields.
   * Updating copyright format url.
   * Updating maintainer field.
   * Running wrap-and-sort -bast.
-  * Updating standards version to 4.0.0.
   * Removing gbp.conf, not used anymore or should be specified in the
     developers dotfiles.
-  * Updating standards version to 4.0.1.
-  * Updating standards version to 4.1.0.
 
  -- Ondřej Nový <novy@ondrej.org>  Sun, 28 Feb 2016 15:58:01 +0100
 
