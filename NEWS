@@ -2,7 +2,10 @@
 subunit release notes
 ---------------------
 
-1.2.0
+NEXT (In development)
+---------------------
+
+1.3.0
 -----
 
 BUGFIXES
@@ -14,6 +17,8 @@ BUGFIXES
 * Fix v2 run() on windows platforms.
   (Claudiu Belu)
 
+1.2.0
+-----
 
 IMPROVEMENTS
 ~~~~~~~~~~~~

@@ -478,4 +478,4 @@ Releases
 * Do a PyPI release: PYTHONPATH=../../python python ../../setup.py sdist bdist_wheel upload -s
 * Upload the regular one to LP.
 * Push a tagged commit.
-
+  git push -t origin master:master
