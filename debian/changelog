@@ -1,3 +1,9 @@
+subunit (1.1.0-5) unstable; urgency=medium
+
+  * Do not recommends: python-gtk2 (Closes: #885512).
+
+ -- Thomas Goirand <zigo@debian.org>  Fri, 26 Jan 2018 15:55:24 +0100
+
 subunit (1.1.0-4) unstable; urgency=medium
 
   * Team upload.

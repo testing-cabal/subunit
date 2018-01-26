@@ -145,7 +145,6 @@ Depends:
  ${perl:Depends},
  ${python:Depends},
 Recommends:
- python-gtk2,
  python-junitxml,
 Description: command line tools for processing Subunit streams
  subunit is a protocol for test activity serialisation deserialisation. This
