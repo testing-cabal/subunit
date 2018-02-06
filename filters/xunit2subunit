@@ -66,8 +66,11 @@ def write_test(output, test_id, test_status, metadatas, test_time):
     if test_status in STATUS_CODES:
         kwargs['test_status'] = test_status
     kwargs['timestamp'] = create_timestamp()
+    kwargs['test_status'] = "inprogress"
     write_status(**kwargs)
     kwargs['timestamp'] = create_timestamp() + test_time
+    kwargs['test_status'] = test_status
+    write_status(**kwargs)
 
 def to_timedelta(value):
     if value is None:
