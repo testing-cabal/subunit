@@ -8,6 +8,12 @@ NEXT (In development)
 1.3.0
 -----
 
+IMPROVEMENTS
+~~~~~~~~~~~~
+
+* Add a --rename flag to subunit-filter.
+  (Jelmer Vernooĳ, #1758522)
+
 BUGFIXES
 ~~~~~~~~
 

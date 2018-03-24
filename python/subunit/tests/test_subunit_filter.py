@@ -280,6 +280,22 @@ xfail todo
              ('addSkip', foo, {}),
              ('stopTest', foo), ], result._events)
 
+    def test_renames(self):
+        def rename(name):
+            return name + " - renamed"
+        result = ExtendedTestResult()
+        result_filter = TestResultFilter(
+            result, filter_success=False, rename=rename)
+        input_stream = _b(
+            "test: foo\n"
+            "successful: foo\n")
+        self.run_tests(result_filter, input_stream)
+        self.assertEquals(
+            [('startTest', 'foo - renamed'),
+             ('addSuccess', 'foo - renamed'),
+             ('stopTest', 'foo - renamed')],
+            [(ev[0], ev[1].id()) for ev in result._events])
+
     if sys.version_info < (2, 7):
         # These tests require Python >=2.7.
         del test_fixup_expected_failures, test_fixup_expected_errors, test_fixup_unexpected_success
