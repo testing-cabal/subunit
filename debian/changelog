@@ -1,3 +1,10 @@
+subunit (1.1.0-5.1) UNRELEASED; urgency=medium
+
+  * Non-maintainer upload.
+  * New upstream release.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 13 Jun 2018 23:39:35 +0100
+
 subunit (1.1.0-5) unstable; urgency=medium
 
   * Do not recommends: python-gtk2 (Closes: #885512).
