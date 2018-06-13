@@ -2,6 +2,7 @@ subunit (1.1.0-5) UNRELEASED; urgency=medium
 
   * New upstream release.
   * Unicodify my surname in debian/control.
+  * Bump standards version to 4.1.4 (no changes).
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 13 Jun 2018 23:39:35 +0100
 
