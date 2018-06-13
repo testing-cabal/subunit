@@ -153,7 +153,7 @@ from subunit.v2 import ByteStreamToStreamResult, StreamResultToBytes
 # If the releaselevel is 'final', then the tarball will be major.minor.micro.
 # Otherwise it is major.minor.micro~$(revno).
 
-__version__ = (1, 1, 0, 'final', 0)
+__version__ = (1, 3, 0, 'final', 0)
 
 PROGRESS_SET = 0
 PROGRESS_CUR = 1
@@ -1287,15 +1287,17 @@ def _make_binary_on_windows(fileno):
 
 def _unwrap_text(stream):
     """Unwrap stream if it is a text stream to get the original buffer."""
+    exceptions = (_UnsupportedOperation, IOError)
     if sys.version_info > (3, 0):
         unicode_type = str
     else:
         unicode_type = unicode
+        exceptions += (ValueError,)
     try:
         # Read streams
         if type(stream.read(0)) is unicode_type:
             return stream.buffer
-    except (_UnsupportedOperation, IOError):
+    except exceptions:
         # Cannot read from the stream: try via writes
         try:
             stream.write(_b(''))

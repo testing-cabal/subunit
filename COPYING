@@ -32,5 +32,5 @@ A known list of such code is maintained here:
 * The python/iso8601 module by Michael Twomey, distributed under an MIT style
   licence - see python/iso8601/LICENSE for details.
 * The runtests.py and python/subunit/tests/TestUtil.py module are GPL test
-  support modules. There are not installed by Subunit - they are only ever
+  support modules. They are not installed by Subunit - they are only ever
   used on the build machine.  Copyright 2004 Canonical Limited.

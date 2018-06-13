@@ -14,8 +14,15 @@ else:
             'testtools>=0.9.34',
         ],
         'tests_require': [
+            'fixtures',
+            'hypothesis',
             'testscenarios',
         ],
+        'extras_require': {
+            'docs': ['docutils'],
+            'test': ['fixtures', 'testscenarios'],
+            'test:python_version!="3.2"': ['hypothesis'],
+        },
     }
 
 
@@ -43,7 +50,7 @@ setup(
     name='python-subunit',
     version=VERSION,
     description=('Python implementation of subunit test streaming protocol'),
-    long_description=open('README').read(),
+    long_description=open('README.rst').read(),
     classifiers=[
         'Intended Audience :: Developers',
         'Programming Language :: Python :: 3',
@@ -66,6 +73,7 @@ setup(
         'filters/subunit-stats',
         'filters/subunit-tags',
         'filters/subunit2csv',
+        'filters/subunit2disk',
         'filters/subunit2gtk',
         'filters/subunit2junitxml',
         'filters/subunit2pyunit',

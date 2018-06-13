@@ -17,6 +17,15 @@
 from io import BytesIO
 import datetime
 
+try:
+    from hypothesis import given
+# To debug hypothesis
+# from hypothesis import Settings, Verbosity
+# Settings.default.verbosity = Verbosity.verbose
+    import hypothesis.strategies as st
+except ImportError:
+    given = None
+    st = None
 from testtools import TestCase
 from testtools.matchers import Contains, HasLength
 from testtools.tests.test_testresult import TestStreamResultContract
@@ -434,3 +443,13 @@ class TestByteStreamToStreamResult(TestCase):
             file_bytes=b'foo')
         self.check_event(content.getvalue(), test_id=None, file_name='bar',
             route_code='0', mime_type='text/plain', file_bytes=b'foo')
+
+    if st is not None:
+        @given(st.binary())
+        def test_hypothesis_decoding(self, code_bytes):
+            source = BytesIO(code_bytes)
+            result = StreamResult()
+            stream = subunit.ByteStreamToStreamResult(
+                source, non_subunit_name="stdout")
+            stream.run(result)
+            self.assertEqual(b'', source.read())

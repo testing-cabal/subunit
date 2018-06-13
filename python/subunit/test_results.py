@@ -25,6 +25,7 @@ from testtools.content import (
     TracebackContent,
     )
 from testtools import StreamResult
+from testtools.testcase import PlaceHolder
 
 from subunit import iso8601
 import subunit
@@ -450,7 +451,8 @@ class TestResultFilter(TestResultDecorator):
 
     def __init__(self, result, filter_error=False, filter_failure=False,
         filter_success=True, filter_skip=False, filter_xfail=False,
-        filter_predicate=None, fixup_expected_failures=None):
+        filter_predicate=None, fixup_expected_failures=None,
+        rename=None):
         """Create a FilterResult object filtering to result.
 
         :param filter_error: Filter out errors.
@@ -467,6 +469,7 @@ class TestResultFilter(TestResultDecorator):
             parameter for efficiency.
         :param fixup_expected_failures: Set of test ids to consider known
             failing.
+        :param rename: Optional function to rename test ids
         """
         predicates = []
         if filter_error:
@@ -500,8 +503,10 @@ class TestResultFilter(TestResultDecorator):
             self._fixup_expected_failures = frozenset()
         else:
             self._fixup_expected_failures = fixup_expected_failures
+        self._rename_fn = rename
 
     def addError(self, test, err=None, details=None):
+        test = self._apply_renames(test)
         if self._failure_expected(test):
             self.addExpectedFailure(test, err=err, details=details)
         else:
@@ -509,6 +514,7 @@ class TestResultFilter(TestResultDecorator):
                 test, err=err, details=details)
 
     def addFailure(self, test, err=None, details=None):
+        test = self._apply_renames(test)
         if self._failure_expected(test):
             self.addExpectedFailure(test, err=err, details=details)
         else:
@@ -516,6 +522,7 @@ class TestResultFilter(TestResultDecorator):
                 test, err=err, details=details)
 
     def addSuccess(self, test, details=None):
+        test = self._apply_renames(test)
         if self._failure_expected(test):
             self.addUnexpectedSuccess(test, details=details)
         else:
@@ -523,6 +530,14 @@ class TestResultFilter(TestResultDecorator):
 
     def _failure_expected(self, test):
         return (test.id() in self._fixup_expected_failures)
+
+    def _apply_renames(self, test):
+        if self._rename_fn is None:
+            return test
+        new_id = self._rename_fn(test.id())
+        # TODO(jelmer): Isn't there a cleaner way of doing this?
+        setattr(test, "id", lambda: new_id)
+        return test
 
 
 class TestIdPrintingResult(testtools.TestResult):

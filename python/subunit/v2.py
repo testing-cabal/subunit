@@ -21,6 +21,7 @@ from io import UnsupportedOperation
 import os
 import select
 import struct
+import sys
 import zlib
 
 from extras import safe_hasattr, try_imports
@@ -52,6 +53,7 @@ EPOCH = datetime.datetime.utcfromtimestamp(0).replace(tzinfo=iso8601.Utc())
 NUL_ELEMENT = b'\0'[0]
 # Contains True for types for which 'nul in thing' falsely returns false.
 _nul_test_broken = {}
+_PY3 = (sys.version_info >= (3,))
 
 
 def has_nul(buffer_or_bytes):
@@ -206,12 +208,24 @@ class StreamResultToBytes(object):
             raise ValueError("Length too long: %r" % base_length)
         packet[2:3] = self._encode_number(base_length + length_length)
         # We could either do a partial application of crc32 over each chunk
-        # or a single join to a temp variable then a final join 
+        # or a single join to a temp variable then a final join
         # or two writes (that python might then split).
         # For now, simplest code: join, crc32, join, output
         content = b''.join(packet)
-        self.output_stream.write(content + struct.pack(
-            FMT_32, zlib.crc32(content) & 0xffffffff))
+        data = content + struct.pack(FMT_32, zlib.crc32(content) & 0xffffffff)
+        if _PY3:
+            # On eventlet 0.17.3, GreenIO.write() can make partial write.
+            # Use a loop to ensure that all bytes are written.
+            # See also the eventlet issue:
+            # https://github.com/eventlet/eventlet/issues/248
+            view = memoryview(data)
+            datalen = len(data)
+            offset = 0
+            while offset < datalen:
+                written = self.output_stream.write(view[offset:])
+                offset += written
+        else:
+            self.output_stream.write(data)
         self.output_stream.flush()
 
 
@@ -295,6 +309,11 @@ class ByteStreamToStreamResult(object):
             # annoying).
             buffered = [content]
             while len(buffered[-1]):
+                # Note: Windows does not support passing a file descriptor to
+                # select.select. fallback to one-byte-at-a-time.
+                if sys.platform == 'win32':
+                    break
+
                 try:
                     self.source.fileno()
                 except:
@@ -386,7 +405,11 @@ class ByteStreamToStreamResult(object):
     def _parse(self, packet, result):
             # 2 bytes flags, at most 3 bytes length.
             packet.append(self.source.read(5))
-            flags = struct.unpack(FMT_16, packet[-1][:2])[0]
+            if len(packet[-1]) != 5:
+                raise ParseError(
+                    'Short read - got %d bytes, wanted 5' % len(packet[-1]))
+            flag_bytes = packet[-1][:2]
+            flags = struct.unpack(FMT_16, flag_bytes)[0]
             length, consumed = self._parse_varint(
                 packet[-1], 2, max_3_bytes=True)
             remainder = self.source.read(length - 6)

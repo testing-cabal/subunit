@@ -5,6 +5,39 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+1.3.0
+-----
+
+IMPROVEMENTS
+~~~~~~~~~~~~
+
+* Add a --rename flag to subunit-filter.
+  (Jelmer Vernooĳ, #1758522)
+
+BUGFIXES
+~~~~~~~~
+
+* Fix make_stream_binary with FileIO object inputs.
+  (Matthew Treinish)
+
+* Fix v2 run() on windows platforms.
+  (Claudiu Belu)
+
+1.2.0
+-----
+
+IMPROVEMENTS
+~~~~~~~~~~~~
+
+* Fixed handling of incomplete writes with eventlet on Python3.
+  (Victor Stinner)
+
+* Added subunit2disk, which explodes a stream out to files on disk.
+  (Robert Collins)
+
+1.1.0
+-----
+
 BUGFIXES
 ~~~~~~~~
 

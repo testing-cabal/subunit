@@ -69,9 +69,9 @@ def make_options(description):
     parser.add_option("--no-skip", action="store_true",
         help="exclude skips", dest="skip")
     parser.add_option("--xfail", action="store_false",
-        help="include expected falures", default=True, dest="xfail")
+        help="include expected failures", default=True, dest="xfail")
     parser.add_option("--no-xfail", action="store_true",
-        help="exclude expected falures", default=True, dest="xfail")
+        help="exclude expected failures", default=True, dest="xfail")
     parser.add_option(
         "--with-tag", type=str,
         help="include tests with these tags", action="append", dest="with_tags")
@@ -91,6 +91,9 @@ def make_options(description):
     parser.add_option("-F", "--only-genuine-failures", action="callback",
         callback=only_genuine_failures_callback,
         help="Only pass through failures and exceptions.")
+    parser.add_option("--rename", action="append", nargs=2,
+        help="Apply specified regex subsitutions to test names.",
+        dest="renames", default=[])
     return parser
 
 
@@ -125,6 +128,14 @@ def _make_regexp_filter(with_regexps, without_regexps):
     return check_regexps
 
 
+def _compile_rename(patterns):
+    def rename(name):
+        for (from_pattern, to_pattern) in patterns:
+            name = re.sub(from_pattern, to_pattern, name)
+        return name
+    return rename
+
+
 def _make_result(output, options, predicate):
     """Make the result that we'll send the test outcomes to."""
     fixup_expected_failures = set()
@@ -139,7 +150,8 @@ def _make_result(output, options, predicate):
         filter_skip=options.skip,
         filter_xfail=options.xfail,
         filter_predicate=predicate,
-        fixup_expected_failures=fixup_expected_failures))
+        fixup_expected_failures=fixup_expected_failures,
+        rename=_compile_rename(options.renames)))
 
 
 def main():
