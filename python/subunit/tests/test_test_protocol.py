@@ -15,7 +15,7 @@
 #
 
 import datetime
-import unittest
+import unittest2 as unittest
 import os
 
 from testtools import PlaceHolder, skipIf, TestCase, TestResult
@@ -43,6 +43,9 @@ from subunit.tests import (
     _remote_exception_str_chunked,
     )
 import subunit.iso8601 as iso8601
+
+
+tb_prelude = "Traceback (most recent call last):\n" 
 
 
 def details_to_str(details):
@@ -108,11 +111,12 @@ class TestTestProtocolServerPipe(unittest.TestCase):
         protocol.readFrom(pipe)
         bing = subunit.RemotedTestCase("bing crosby")
         an_error = subunit.RemotedTestCase("an error")
-        self.assertEqual(client.errors,
-                         [(an_error, _remote_exception_repr + '\n')])
+        self.assertEqual(
+            client.errors,
+            [(an_error, tb_prelude + _remote_exception_repr + '\n')])
         self.assertEqual(
             client.failures,
-            [(bing, _remote_exception_repr + ": "
+            [(bing, tb_prelude + _remote_exception_repr + ": "
               + details_to_str({'traceback': text_content(traceback)}) + "\n")])
         self.assertEqual(client.testsRun, 3)
 
@@ -967,7 +971,7 @@ class TestRemotedTestCase(unittest.TestCase):
                          "'A test description'>", "%r" % test)
         result = unittest.TestResult()
         test.run(result)
-        self.assertEqual([(test, _remote_exception_repr + ": "
+        self.assertEqual([(test, tb_prelude + _remote_exception_repr + ": "
                                  "Cannot run RemotedTestCases.\n\n")],
                          result.errors)
         self.assertEqual(1, result.testsRun)

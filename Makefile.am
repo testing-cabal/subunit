@@ -5,7 +5,7 @@ EXTRA_DIST =  \
 	INSTALL \
 	Makefile.am \
 	NEWS \
-	README \
+	README.rst \
 	all_tests.py \
 	c++/README \
 	c/README \
@@ -27,6 +27,7 @@ EXTRA_DIST =  \
 	python/subunit/tests/test_chunked.py \
 	python/subunit/tests/test_details.py \
 	python/subunit/tests/test_filters.py \
+	python/subunit/tests/test_filter_to_disk.py \
 	python/subunit/tests/test_output_filter.py \
 	python/subunit/tests/test_progress_model.py \
 	python/subunit/tests/test_run.py \
@@ -58,6 +59,7 @@ dist_bin_SCRIPTS = \
 	filters/subunit-stats \
 	filters/subunit-tags \
 	filters/subunit2csv \
+	filters/subunit2disk \
 	filters/subunit2gtk \
 	filters/subunit2junitxml \
 	filters/subunit2pyunit \
@@ -81,7 +83,8 @@ pkgpython_PYTHON = \
 	python/subunit/run.py \
 	python/subunit/v2.py \
 	python/subunit/test_results.py \
-	python/subunit/_output.py
+	python/subunit/_output.py \
+	python/subunit/_to_disk.py
 
 lib_LTLIBRARIES = libsubunit.la
 lib_LTLIBRARIES +=  libcppunit_subunit.la
@@ -121,8 +124,10 @@ clean-local:
 
 # Remove perl dir for VPATH builds.
 distclean-local:
-	-rmdir perl > /dev/null
 	-rm perl/Makefile.PL > /dev/null
+	-rm perl/MYMETA.json > /dev/null
+	-rmdir perl > /dev/null
+	-rm -r .hypothesis > /dev/null
 
 install-exec-local: perl/Makefile
 	$(MAKE) -C perl install
