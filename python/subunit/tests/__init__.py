@@ -22,10 +22,7 @@ from testscenarios import generate_scenarios
 
 # Before the test module imports to avoid circularity.
 # For testing: different pythons have different str() implementations.
-if (3,1) < sys.version_info < (3, 4):
-    _remote_exception_repr = "testtools.testresult.real._StringException"
-else:
-    _remote_exception_repr = "_StringException"
+_remote_exception_repr = "testtools.testresult.real._StringException"
 _remote_exception_str = "Traceback (most recent call last):\ntesttools.testresult.real._StringException"
 _remote_exception_str_chunked = "57\r\n" + _remote_exception_str + ": boo qux\n0\r\n"
 
@@ -34,6 +31,7 @@ from subunit.tests import (
     test_chunked,
     test_details,
     test_filters,
+    test_filter_to_disk,
     test_output_filter,
     test_progress_model,
     test_run,
@@ -57,6 +55,7 @@ def test_suite():
     result.addTest(loader.loadTestsFromModule(test_test_protocol))
     result.addTest(loader.loadTestsFromModule(test_test_protocol2))
     result.addTest(loader.loadTestsFromModule(test_tap2subunit))
+    result.addTest(loader.loadTestsFromModule(test_filter_to_disk))
     result.addTest(loader.loadTestsFromModule(test_subunit_filter))
     result.addTest(loader.loadTestsFromModule(test_subunit_tags))
     result.addTest(loader.loadTestsFromModule(test_subunit_stats))

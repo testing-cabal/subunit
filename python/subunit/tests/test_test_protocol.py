@@ -15,8 +15,11 @@
 #
 
 import datetime
-import unittest
+import io
+import unittest2 as unittest
 import os
+import sys
+import tempfile
 
 from testtools import PlaceHolder, skipIf, TestCase, TestResult
 from testtools.compat import _b, _u, BytesIO
@@ -45,8 +48,49 @@ from subunit.tests import (
 import subunit.iso8601 as iso8601
 
 
+tb_prelude = "Traceback (most recent call last):\n" 
+
+
 def details_to_str(details):
     return TestResult()._err_details_to_string(None, details=details)
+
+
+class TestHelpers(TestCase):
+    def test__unwrap_text_file_read_mode(self):
+        fd, file_path = tempfile.mkstemp()
+        self.addCleanup(os.remove, file_path)
+        fake_file = os.fdopen(fd, 'r')
+        if sys.version_info > (3, 0):
+            self.assertEqual(fake_file.buffer,
+                             subunit._unwrap_text(fake_file))
+        else:
+            self.assertEqual(fake_file, subunit._unwrap_text(fake_file))
+
+    def test__unwrap_text_file_write_mode(self):
+        fd, file_path = tempfile.mkstemp()
+        self.addCleanup(os.remove, file_path)
+        fake_file = os.fdopen(fd, 'w')
+        if sys.version_info > (3, 0):
+            self.assertEqual(fake_file.buffer,
+                             subunit._unwrap_text(fake_file))
+        else:
+            self.assertEqual(fake_file, subunit._unwrap_text(fake_file))
+
+    def test__unwrap_text_fileIO_read_mode(self):
+        fd, file_path = tempfile.mkstemp()
+        self.addCleanup(os.remove, file_path)
+        fake_file = io.FileIO(file_path, 'r')
+        self.assertEqual(fake_file, subunit._unwrap_text(fake_file))
+
+    def test__unwrap_text_fileIO_write_mode(self):
+        fd, file_path = tempfile.mkstemp()
+        self.addCleanup(os.remove, file_path)
+        fake_file = io.FileIO(file_path, 'w')
+        self.assertEqual(fake_file, subunit._unwrap_text(fake_file))
+
+    def test__unwrap_text_BytesIO(self):
+        fake_stream = io.BytesIO()
+        self.assertEqual(fake_stream, subunit._unwrap_text(fake_stream))
 
 
 class TestTestImports(unittest.TestCase):
@@ -108,11 +152,12 @@ class TestTestProtocolServerPipe(unittest.TestCase):
         protocol.readFrom(pipe)
         bing = subunit.RemotedTestCase("bing crosby")
         an_error = subunit.RemotedTestCase("an error")
-        self.assertEqual(client.errors,
-                         [(an_error, _remote_exception_repr + '\n')])
+        self.assertEqual(
+            client.errors,
+            [(an_error, tb_prelude + _remote_exception_repr + '\n')])
         self.assertEqual(
             client.failures,
-            [(bing, _remote_exception_repr + ": "
+            [(bing, tb_prelude + _remote_exception_repr + ": "
               + details_to_str({'traceback': text_content(traceback)}) + "\n")])
         self.assertEqual(client.testsRun, 3)
 
@@ -967,7 +1012,7 @@ class TestRemotedTestCase(unittest.TestCase):
                          "'A test description'>", "%r" % test)
         result = unittest.TestResult()
         test.run(result)
-        self.assertEqual([(test, _remote_exception_repr + ": "
+        self.assertEqual([(test, tb_prelude + _remote_exception_repr + ": "
                                  "Cannot run RemotedTestCases.\n\n")],
                          result.errors)
         self.assertEqual(1, result.testsRun)
