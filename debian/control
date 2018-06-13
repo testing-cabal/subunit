@@ -5,7 +5,7 @@ Maintainer: Debian OpenStack <openstack-devel@lists.alioth.debian.org>
 Uploaders:
  Thomas Goirand <zigo@debian.org>,
  Robert Collins <robertc@robertcollins.net>,
- Jelmer Vernooij <jelmer@debian.org>,
+ Jelmer Vernooĳ <jelmer@debian.org>,
 Build-Depends:
  autoconf (>= 2.59),
  automake,

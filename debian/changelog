@@ -1,7 +1,7 @@
-subunit (1.1.0-5.1) UNRELEASED; urgency=medium
+subunit (1.1.0-5) UNRELEASED; urgency=medium
 
-  * Non-maintainer upload.
   * New upstream release.
+  * Unicodify my surname in debian/control.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 13 Jun 2018 23:39:35 +0100
 
