@@ -263,26 +263,38 @@ Valid version values are:
 0x2 - version 2
 
 Feature bits:
-Bit 11 - mask 0x0800 - Test id present.
-Bit 10 - mask 0x0400 - Routing code present.
-Bit  9 - mask 0x0200 - Timestamp present.
-Bit  8 - mask 0x0100 - Test is 'runnable'.
-Bit  7 - mask 0x0080 - Tags are present.
-Bit  6 - mask 0x0040 - File content is present.
-Bit  5 - mask 0x0020 - File MIME type is present.
-Bit  4 - mask 0x0010 - EOF marker.
-Bit  3 - mask 0x0008 - Must be zero in version 2.
+
++---------+-------------+---------------------------+
+| Bit 11  | mask 0x0800 | Test id present.          |
++---------+-------------+---------------------------+
+| Bit 10  | mask 0x0400 | Routing code present.     |
++---------+-------------+---------------------------+
+| Bit  9  | mask 0x0200 | Timestamp present.        |
++---------+-------------+---------------------------+
+| Bit  8  | mask 0x0100 | Test is 'runnable'.       |
++---------+-------------+---------------------------+
+| Bit  7  | mask 0x0080 | Tags are present.         |
++---------+-------------+---------------------------+
+| Bit  6  | mask 0x0040 | File content is present.  |
++---------+-------------+---------------------------+
+| Bit  5  | mask 0x0020 | File MIME type is present.|
++---------+-------------+---------------------------+
+| Bit  4  | mask 0x0010 | EOF marker.               |
++---------+-------------+---------------------------+
+| Bit  3  | mask 0x0008 | Must be zero in version 2.|
++---------+-------------+---------------------------+
 
 Test status gets three bits:
 Bit 2 | Bit 1 | Bit 0 - mask 0x0007 - A test status enum lookup:
-000 - undefined / no test
-001 - Enumeration / existence
-002 - In progress
-003 - Success
-004 - Unexpected Success
-005 - Skipped
-006 - Failed
-007 - Expected failure
+
+* 000 - undefined / no test
+* 001 - Enumeration / existence
+* 002 - In progress
+* 003 - Success
+* 004 - Unexpected Success
+* 005 - Skipped
+* 006 - Failed
+* 007 - Expected failure
 
 After the flags field is a number field giving the length in bytes for the
 entire packet including the signature and the checksum. This length must
