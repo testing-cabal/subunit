@@ -579,10 +579,10 @@ class TestProtocolServer(object):
     def readFrom(self, pipe):
         """Blocking convenience API to parse an entire stream.
 
-        :param pipe: A file-like object supporting readlines().
+        :param pipe: A file-like object supporting __iter__.
         :return: None.
         """
-        for line in pipe.readlines():
+        for line in pipe:
             self.lineReceived(line)
         self.lostConnection()
 
