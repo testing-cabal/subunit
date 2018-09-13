@@ -16,10 +16,10 @@
 
 import datetime
 import io
-import unittest2 as unittest
 import os
 import sys
 import tempfile
+import unittest
 
 from testtools import PlaceHolder, skipIf, TestCase, TestResult
 from testtools.compat import _b, _u, BytesIO
@@ -152,13 +152,20 @@ class TestTestProtocolServerPipe(unittest.TestCase):
         protocol.readFrom(pipe)
         bing = subunit.RemotedTestCase("bing crosby")
         an_error = subunit.RemotedTestCase("an error")
-        self.assertEqual(
-            client.errors,
-            [(an_error, tb_prelude + _remote_exception_repr + '\n')])
-        self.assertEqual(
-            client.failures,
-            [(bing, tb_prelude + _remote_exception_repr + ": "
-              + details_to_str({'traceback': text_content(traceback)}) + "\n")])
+        if sys.version_info[0] >= 3:
+            self.assertEqual(client.errors,
+                             [(an_error, _remote_exception_repr + '\n')])
+            self.assertEqual(
+                client.failures,
+                [(bing, _remote_exception_repr + ": "
+                  + details_to_str({'traceback': text_content(traceback)}) + "\n")])
+        else:
+            self.assertEqual(client.errors,
+                             [(an_error, '_StringException\n')])
+            self.assertEqual(
+                client.failures,
+                [(bing, "_StringException: "
+                  + details_to_str({'traceback': text_content(traceback)}) + "\n")])
         self.assertEqual(client.testsRun, 3)
 
     def test_non_test_characters_forwarded_immediately(self):
@@ -1012,9 +1019,14 @@ class TestRemotedTestCase(unittest.TestCase):
                          "'A test description'>", "%r" % test)
         result = unittest.TestResult()
         test.run(result)
-        self.assertEqual([(test, tb_prelude + _remote_exception_repr + ": "
-                                 "Cannot run RemotedTestCases.\n\n")],
-                         result.errors)
+        if sys.version_info[0] >= 3:
+            self.assertEqual([(test, _remote_exception_repr + ': ' +
+                                     "Cannot run RemotedTestCases.\n\n")],
+                             result.errors)
+        else:
+            self.assertEqual([(test, "_StringException: " +
+                                     "Cannot run RemotedTestCases.\n\n")],
+                             result.errors)
         self.assertEqual(1, result.testsRun)
         another_test = subunit.RemotedTestCase("A test description")
         self.assertEqual(test, another_test)
