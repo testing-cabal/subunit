@@ -14,14 +14,20 @@
 #  limitations under that license.
 #
 
-"""A filter to change tags on a subunit stream.
+"""A filter that reads a TAP stream and outputs a subunit stream.
 
-subunit-tags foo -> adds foo
-subunit-tags foo -bar -> adds foo and removes bar
+More information on TAP is available at
+http://testanything.org/wiki/index.php/Main_Page.
 """
 
 import sys
 
-from subunit import tag_stream
+from subunit import TAP2SubUnit
 
-sys.exit(tag_stream(sys.stdin, sys.stdout, sys.argv[1:]))
+
+def main():
+    sys.exit(TAP2SubUnit(sys.stdin, sys.stdout))
+
+
+if __name__ == '__main__':
+    main()

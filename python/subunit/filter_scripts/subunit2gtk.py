@@ -218,23 +218,29 @@ class GTKTestResult(unittest.TestResult):
         self.ok_label.set_text(str(self.testsRun - bad))
         self.not_ok_label.set_text(str(bad))
 
-GObject.threads_init()
-result = StreamToExtendedDecorator(GTKTestResult())
-test = ByteStreamToStreamResult(sys.stdin, non_subunit_name='stdout')
-# Get setup
-while Gtk.events_pending():
-  Gtk.main_iteration()
-# Start IO
-def run_and_finish():
-    test.run(result)
-    result.stopTestRun()
-t = threading.Thread(target=run_and_finish)
-t.daemon = True
-result.startTestRun()
-t.start()
-Gtk.main()
-if result.decorated.wasSuccessful():
-    exit_code = 0
-else:
-    exit_code = 1
-sys.exit(exit_code)
+
+def main():
+    GObject.threads_init()
+    result = StreamToExtendedDecorator(GTKTestResult())
+    test = ByteStreamToStreamResult(sys.stdin, non_subunit_name='stdout')
+    # Get setup
+    while Gtk.events_pending():
+      Gtk.main_iteration()
+    # Start IO
+    def run_and_finish():
+        test.run(result)
+        result.stopTestRun()
+    t = threading.Thread(target=run_and_finish)
+    t.daemon = True
+    result.startTestRun()
+    t.start()
+    Gtk.main()
+    if result.decorated.wasSuccessful():
+        exit_code = 0
+    else:
+        exit_code = 1
+    sys.exit(exit_code)
+
+
+if __name__ == '__main__':
+    main()

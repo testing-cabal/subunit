@@ -1,29 +1,6 @@
 #!/usr/bin/env python
 import os.path
-try:
-    # If the user has setuptools / distribute installed, use it
-    from setuptools import setup
-except ImportError:
-    # Otherwise, fall back to distutils.
-    from distutils.core import setup
-    extra = {}
-else:
-    extra = {
-        'install_requires': [
-            'extras',
-            'testtools>=0.9.34',
-        ],
-        'tests_require': [
-            'fixtures',
-            'hypothesis',
-            'testscenarios',
-        ],
-        'extras_require': {
-            'docs': ['docutils'],
-            'test': ['fixtures', 'testscenarios'],
-            'test:python_version!="3.2"': ['hypothesis'],
-        },
-    }
+from setuptools import setup
 
 
 def _get_version_from_file(filename, start_of_line, split_marker):
@@ -63,21 +40,38 @@ setup(
     url='http://launchpad.net/subunit',
     packages=['subunit', 'subunit.tests'],
     package_dir={'subunit': 'python/subunit'},
-    scripts = [
-        'filters/subunit-1to2',
-        'filters/subunit-2to1',
-        'filters/subunit-filter',
-        'filters/subunit-ls',
-        'filters/subunit-notify',
-        'filters/subunit-output',
-        'filters/subunit-stats',
-        'filters/subunit-tags',
-        'filters/subunit2csv',
-        'filters/subunit2disk',
-        'filters/subunit2gtk',
-        'filters/subunit2junitxml',
-        'filters/subunit2pyunit',
-        'filters/tap2subunit',
-    ],
-    **extra
+    entry_points={
+        'console_scripts': [
+            'subunit-1to2=subunit.filter_scripts.subunit_1to2:main',
+            'subunit-2to1=subunit.filter_scripts.subunit_2to1:main',
+            'subunit-filter=subunit.filter_scripts.subunit_filter:main',
+            'subunit-ls=subunit.filter_scripts.subunit_ls:main',
+            'subunit-notify=subunit.filter_scripts.subunit_notify:main',
+            'subunit-output=subunit.filter_scripts.subunit_output:main',
+            'subunit-stats=subunit.filter_scripts.subunit_stats:main',
+            'subunit-tags=subunit.filter_scripts.subunit_tags:main',
+            'subunit2csv=subunit.filter_scripts.subunit2csv:main',
+            'subunit2disk=subunit.filter_scripts.subunit2disk:main',
+            'subunit2gtk=subunit.filter_scripts.subunit2gtk:main',
+            'subunit2junitxml=subunit.filter_scripts.subunit2junitxml:main',
+            'subunit2pyunit=subunit.filter_scripts.subunit2pyunit:main',
+            'tap2subunit=subunit.filter_scripts.tap2subunit:main',
+        ]
+    },
+    extras={
+        'install_requires': [
+            'extras',
+            'testtools>=0.9.34',
+        ],
+        'tests_require': [
+            'fixtures',
+            'hypothesis',
+            'testscenarios',
+        ],
+        'extras_require': {
+            'docs': ['docutils'],
+            'test': ['fixtures', 'testscenarios'],
+            'test:python_version!="3.2"': ['hypothesis'],
+        },
+    }
 )
