@@ -16,11 +16,13 @@
 
 """Export a stream to files and directories on disk."""
 
+import sys
+
 from subunit._to_disk import to_disk
 
 
 def main():
-    exit(to_disk())
+    sys.exit(to_disk())
 
 
 if __name__ == '__main__':
