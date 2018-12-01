@@ -16,15 +16,15 @@
 
 """Notify the user of a finished test run."""
 
-import pygtk
-pygtk.require('2.0')
-import pynotify
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Notify
 from testtools import StreamToExtendedDecorator
 
 from subunit import TestResultStats
 from subunit.filters import run_filter_script
 
-if not pynotify.init("Subunit-notify"):
+if not Notify.init("Subunit-notify"):
     sys.exit(1)
 
 
@@ -39,7 +39,7 @@ def notify_of_result(result):
         result.passed_tests,
         result.failed_tests,
     )
-    nw = pynotify.Notification(summary, body)
+    nw = Notify.Notification(summary, body)
     nw.show()
 
 

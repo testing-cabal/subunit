@@ -49,9 +49,9 @@ import sys
 import threading
 import unittest
 
-import pygtk
-pygtk.require('2.0')
-import gtk, gtk.gdk, gobject
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk, GObject
 
 from testtools import StreamToExtendedDecorator
 
@@ -75,64 +75,64 @@ class GTKTestResult(unittest.TestResult):
         self.not_ok_label = None
         self.total_tests = None
 
-        self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        self.window = Gtk.Window(Gtk.WindowType.TOPLEVEL)
         self.window.set_resizable(True)
 
-        self.window.connect("destroy", gtk.main_quit)
+        self.window.connect("destroy", Gtk.main_quit)
         self.window.set_title("Tests...")
         self.window.set_border_width(0)
 
-        vbox = gtk.VBox(False, 5)
+        vbox = Gtk.VBox(False, 5)
         vbox.set_border_width(10)
         self.window.add(vbox)
         vbox.show()
 
         # Create a centering alignment object
-        align = gtk.Alignment(0.5, 0.5, 0, 0)
+        align = Gtk.Alignment.new(0.5, 0.5, 0, 0)
         vbox.pack_start(align, False, False, 5)
         align.show()
 
         # Create the ProgressBar
-        self.pbar = gtk.ProgressBar()
+        self.pbar = Gtk.ProgressBar()
         align.add(self.pbar)
         self.pbar.set_text("Running")
         self.pbar.show()
         self.progress_model = ProgressModel()
 
-        separator = gtk.HSeparator()
+        separator = Gtk.HSeparator()
         vbox.pack_start(separator, False, False, 0)
         separator.show()
 
         # rows, columns, homogeneous
-        table = gtk.Table(2, 3, False)
+        table = Gtk.Table(2, 3, False)
         vbox.pack_start(table, False, True, 0)
         table.show()
         # Show summary details about the run. Could use an expander.
-        label = gtk.Label("Run:")
-        table.attach(label, 0, 1, 1, 2, gtk.EXPAND | gtk.FILL,
-            gtk.EXPAND | gtk.FILL, 5, 5)
+        label = Gtk.Label(label="Run:")
+        table.attach(label, 0, 1, 1, 2, Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL,
+            Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL, 5, 5)
         label.show()
-        self.run_label = gtk.Label("N/A")
-        table.attach(self.run_label, 1, 2, 1, 2, gtk.EXPAND | gtk.FILL,
-            gtk.EXPAND | gtk.FILL, 5, 5)
+        self.run_label = Gtk.Label(label="N/A")
+        table.attach(self.run_label, 1, 2, 1, 2, Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL,
+            Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL, 5, 5)
         self.run_label.show()
 
-        label = gtk.Label("OK:")
-        table.attach(label, 0, 1, 2, 3, gtk.EXPAND | gtk.FILL,
-            gtk.EXPAND | gtk.FILL, 5, 5)
+        label = Gtk.Label(label="OK:")
+        table.attach(label, 0, 1, 2, 3, Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL,
+            Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL, 5, 5)
         label.show()
-        self.ok_label = gtk.Label("N/A")
-        table.attach(self.ok_label, 1, 2, 2, 3, gtk.EXPAND | gtk.FILL,
-            gtk.EXPAND | gtk.FILL, 5, 5)
+        self.ok_label = Gtk.Label(label="N/A")
+        table.attach(self.ok_label, 1, 2, 2, 3, Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL,
+            Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL, 5, 5)
         self.ok_label.show()
 
-        label = gtk.Label("Not OK:")
-        table.attach(label, 0, 1, 3, 4, gtk.EXPAND | gtk.FILL,
-            gtk.EXPAND | gtk.FILL, 5, 5)
+        label = Gtk.Label(label="Not OK:")
+        table.attach(label, 0, 1, 3, 4, Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL,
+            Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL, 5, 5)
         label.show()
-        self.not_ok_label = gtk.Label("N/A")
-        table.attach(self.not_ok_label, 1, 2, 3, 4, gtk.EXPAND | gtk.FILL,
-            gtk.EXPAND | gtk.FILL, 5, 5)
+        self.not_ok_label = Gtk.Label(label="N/A")
+        table.attach(self.not_ok_label, 1, 2, 3, 4, Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL,
+            Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL, 5, 5)
         self.not_ok_label.show()
 
         self.window.show()
@@ -142,7 +142,7 @@ class GTKTestResult(unittest.TestResult):
 
     def stopTest(self, test):
         super(GTKTestResult, self).stopTest(test)
-        gobject.idle_add(self._stopTest)
+        GObject.idle_add(self._stopTest)
 
     def _stopTest(self):
         self.progress_model.advance()
@@ -159,26 +159,26 @@ class GTKTestResult(unittest.TestResult):
             super(GTKTestResult, self).stopTestRun()
         except AttributeError:
             pass
-        gobject.idle_add(self.pbar.set_text, 'Finished')
+        GObject.idle_add(self.pbar.set_text, 'Finished')
 
     def addError(self, test, err):
         super(GTKTestResult, self).addError(test, err)
-        gobject.idle_add(self.update_counts)
+        GObject.idle_add(self.update_counts)
 
     def addFailure(self, test, err):
         super(GTKTestResult, self).addFailure(test, err)
-        gobject.idle_add(self.update_counts)
+        GObject.idle_add(self.update_counts)
 
     def addSuccess(self, test):
         super(GTKTestResult, self).addSuccess(test)
-        gobject.idle_add(self.update_counts)
+        GObject.idle_add(self.update_counts)
 
     def addSkip(self, test, reason):
         # addSkip is new in Python 2.7/3.1
         addSkip = getattr(super(GTKTestResult, self), 'addSkip', None)
         if callable(addSkip):
             addSkip(test, reason)
-        gobject.idle_add(self.update_counts)
+        GObject.idle_add(self.update_counts)
 
     def addExpectedFailure(self, test, err):
         # addExpectedFailure is new in Python 2.7/3.1
@@ -186,7 +186,7 @@ class GTKTestResult(unittest.TestResult):
             'addExpectedFailure', None)
         if callable(addExpectedFailure):
             addExpectedFailure(test, err)
-        gobject.idle_add(self.update_counts)
+        GObject.idle_add(self.update_counts)
 
     def addUnexpectedSuccess(self, test):
         # addUnexpectedSuccess is new in Python 2.7/3.1
@@ -194,7 +194,7 @@ class GTKTestResult(unittest.TestResult):
             'addUnexpectedSuccess', None)
         if callable(addUnexpectedSuccess):
             addUnexpectedSuccess(test)
-        gobject.idle_add(self.update_counts)
+        GObject.idle_add(self.update_counts)
 
     def progress(self, offset, whence):
         if whence == PROGRESS_PUSH:
@@ -218,12 +218,12 @@ class GTKTestResult(unittest.TestResult):
         self.ok_label.set_text(str(self.testsRun - bad))
         self.not_ok_label.set_text(str(bad))
 
-gobject.threads_init()
+GObject.threads_init()
 result = StreamToExtendedDecorator(GTKTestResult())
 test = ByteStreamToStreamResult(sys.stdin, non_subunit_name='stdout')
 # Get setup
-while gtk.events_pending():
-  gtk.main_iteration()
+while Gtk.events_pending():
+  Gtk.main_iteration()
 # Start IO
 def run_and_finish():
     test.run(result)
@@ -232,7 +232,7 @@ t = threading.Thread(target=run_and_finish)
 t.daemon = True
 result.startTestRun()
 t.start()
-gtk.main()
+Gtk.main()
 if result.decorated.wasSuccessful():
     exit_code = 0
 else:
