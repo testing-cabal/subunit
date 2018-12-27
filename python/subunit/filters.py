@@ -5,7 +5,7 @@
 #  license at the users choice. A copy of both licenses are available in the
 #  project source as Apache-2.0 and BSD. You may not use this file except in
 #  compliance with one of these two licences.
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 #  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -143,7 +143,7 @@ def filter_by_result(result_factory, output_path, passthrough, forward,
     if output_path is None:
         output_to = sys.stdout
     else:
-        output_to = file(output_path, 'wb')
+        output_to = open(output_path, 'w')
 
     try:
         result = result_factory(output_to)
