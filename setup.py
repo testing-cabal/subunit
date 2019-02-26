@@ -38,7 +38,7 @@ setup(
     author='Robert Collins',
     author_email='subunit-dev@lists.launchpad.net',
     url='http://launchpad.net/subunit',
-    packages=['subunit', 'subunit.tests'],
+    packages=['subunit', 'subunit.tests', 'subunit.filter_scripts'],
     package_dir={'subunit': 'python/subunit'},
     entry_points={
         'console_scripts': [
