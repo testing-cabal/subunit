@@ -67,7 +67,7 @@ setup(
         'hypothesis',
         'testscenarios',
     ],
-    extras_requires={
+    extras_require={
         'docs': ['docutils'],
         'test': ['fixtures', 'testscenarios'],
         'test:python_version!="3.2"': ['hypothesis'],
