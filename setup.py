@@ -58,20 +58,18 @@ setup(
             'tap2subunit=subunit.filter_scripts.tap2subunit:main',
         ]
     },
-    extras={
-        'install_requires': [
-            'extras',
-            'testtools>=0.9.34',
-        ],
-        'tests_require': [
-            'fixtures',
-            'hypothesis',
-            'testscenarios',
-        ],
-        'extras_require': {
-            'docs': ['docutils'],
-            'test': ['fixtures', 'testscenarios'],
-            'test:python_version!="3.2"': ['hypothesis'],
-        },
+    install_requires=[
+        'extras',
+        'testtools>=0.9.34',
+    ],
+    tests_require=[
+        'fixtures',
+        'hypothesis',
+        'testscenarios',
+    ],
+    extras_requires={
+        'docs': ['docutils'],
+        'test': ['fixtures', 'testscenarios'],
+        'test:python_version!="3.2"': ['hypothesis'],
     }
 )
