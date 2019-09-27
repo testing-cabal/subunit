@@ -223,6 +223,8 @@ class StreamResultToBytes(object):
             offset = 0
             while offset < datalen:
                 written = self.output_stream.write(view[offset:])
+                if written is None:
+                    break
                 offset += written
         else:
             self.output_stream.write(data)
