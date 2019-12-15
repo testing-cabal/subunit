@@ -7,7 +7,7 @@
 #  license at the users choice. A copy of both licenses are available in the
 #  project source as Apache-2.0 and BSD. You may not use this file except in
 #  compliance with one of these two licences.
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 #  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -33,8 +33,6 @@ import re
 from testtools import ExtendedToStreamDecorator, StreamToExtendedDecorator
 
 from subunit import (
-    DiscardStream,
-    ProtocolTestCase,
     StreamResultToBytes,
     read_test_list,
     )
@@ -143,7 +141,7 @@ def _make_result(output, options, predicate):
         fixup_expected_failures.update(read_test_list(path))
     return StreamToExtendedDecorator(TestResultFilter(
         ExtendedToStreamDecorator(
-        StreamResultToBytes(output)),
+            StreamResultToBytes(output)),
         filter_error=options.error,
         filter_failure=options.failure,
         filter_success=options.success,

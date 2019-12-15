@@ -21,7 +21,7 @@ import sys
 from subunit._output import output_main
 
 def main():
-    sys.exit(output_main()
+    sys.exit(output_main())
 
 
 if __name__ == '__main__':

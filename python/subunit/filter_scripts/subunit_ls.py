@@ -6,7 +6,7 @@
 #  license at the users choice. A copy of both licenses are available in the
 #  project source as Apache-2.0 and BSD. You may not use this file except in
 #  compliance with one of these two licences.
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 #  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -20,11 +20,11 @@ from optparse import OptionParser
 import sys
 
 from testtools import (
-    CopyStreamResult, StreamToExtendedDecorator, StreamResultRouter,
+    CopyStreamResult, StreamResultRouter,
     StreamSummary)
 
 from subunit import ByteStreamToStreamResult
-from subunit.filters import find_stream, run_tests_from_stream
+from subunit.filters import find_stream
 from subunit.test_results import (
     CatFiles,
     TestIdPrintingResult,
@@ -60,5 +60,6 @@ def main():
         exit_code = 1
     sys.exit(exit_code)
 
-if __name__ = '__main__':
+
+if __name__ == '__main__':
     main()

@@ -22,8 +22,8 @@ from subunit.filters import run_filter_script
 from subunit.test_results import CsvResult
 
 
-def main()
-    run_filter_script(lambda output:StreamToExtendedDecorator(
+def main():
+    run_filter_script(lambda output: StreamToExtendedDecorator(
         CsvResult(output)), __doc__, protocol_version=2)
 
 
