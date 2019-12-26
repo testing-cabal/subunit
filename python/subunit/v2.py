@@ -405,95 +405,111 @@ class ByteStreamToStreamResult(object):
             return result, 4
 
     def _parse(self, packet, result):
-            # 2 bytes flags, at most 3 bytes length.
-            packet.append(self.source.read(5))
-            if len(packet[-1]) != 5:
-                raise ParseError(
-                    'Short read - got %d bytes, wanted 5' % len(packet[-1]))
-            flag_bytes = packet[-1][:2]
-            flags = struct.unpack(FMT_16, flag_bytes)[0]
-            length, consumed = self._parse_varint(
-                packet[-1], 2, max_3_bytes=True)
-            remainder = self.source.read(length - 6)
-            if len(remainder) != length - 6:
-                raise ParseError(
-                    'Short read - got %d bytes, wanted %d bytes' % (
+        # 2 bytes flags, at most 3 bytes length.
+        packet.append(self.source.read(5))
+        if len(packet[-1]) != 5:
+            raise ParseError(
+                'Short read - got %d bytes, wanted 5' % len(packet[-1]))
+
+        flag_bytes = packet[-1][:2]
+        flags = struct.unpack(FMT_16, flag_bytes)[0]
+        length, consumed = self._parse_varint(
+            packet[-1], 2, max_3_bytes=True)
+        remainder = self.source.read(length - 6)
+        if len(remainder) != length - 6:
+            raise ParseError(
+                'Short read - got %d bytes, wanted %d bytes' % (
                     len(remainder), length - 6))
-            if consumed != 3:
-                # Avoid having to parse torn values
-                packet[-1] += remainder
-                pos = 2 + consumed
-            else:
-                # Avoid copying potentially lots of data.
-                packet.append(remainder)
-                pos = 0
-            crc = zlib.crc32(packet[0])
-            for fragment in packet[1:-1]:
-                crc = zlib.crc32(fragment, crc)
-            crc = zlib.crc32(packet[-1][:-4], crc) & 0xffffffff
-            packet_crc = struct.unpack(FMT_32, packet[-1][-4:])[0]
-            if crc != packet_crc:
-                # Bad CRC, report it and stop parsing the packet.
-                raise ParseError(
-                    'Bad checksum - calculated (0x%x), stored (0x%x)'
-                        % (crc, packet_crc))
-            if safe_hasattr(builtins, 'memoryview'):
-                body = memoryview(packet[-1])
-            else:
-                body = packet[-1]
-            # Discard CRC-32
-            body = body[:-4]
-            # One packet could have both file and status data; the Python API
-            # presents these separately (perhaps it shouldn't?)
-            if flags & FLAG_TIMESTAMP:
-                seconds = struct.unpack(FMT_32, self._to_bytes(body, pos, 4))[0]
-                nanoseconds, consumed = self._parse_varint(body, pos+4)
-                pos = pos + 4 + consumed
-                timestamp = EPOCH + datetime.timedelta(
-                    seconds=seconds, microseconds=nanoseconds/1000)
-            else:
-                timestamp = None
-            if flags & FLAG_TEST_ID:
-                test_id, pos = self._read_utf8(body, pos)
-            else:
-                test_id = None
-            if flags & FLAG_TAGS:
-                tag_count, consumed = self._parse_varint(body, pos)
-                pos += consumed
-                test_tags = set()
-                for _ in range(tag_count):
-                    tag, pos = self._read_utf8(body, pos)
-                    test_tags.add(tag)
-            else:
-                test_tags = None
-            if flags & FLAG_MIME_TYPE:
-                mime_type, pos = self._read_utf8(body, pos)
-            else:
-                mime_type = None
-            if flags & FLAG_FILE_CONTENT:
-                file_name, pos = self._read_utf8(body, pos)
-                content_length, consumed = self._parse_varint(body, pos)
-                pos += consumed
-                file_bytes = self._to_bytes(body, pos, content_length)
-                if len(file_bytes) != content_length:
-                    raise ParseError('File content extends past end of packet: '
-                        'claimed %d bytes, %d available' % (
-                        content_length, len(file_bytes)))
-                pos += content_length
-            else:
-                file_name = None
-                file_bytes = None
-            if flags & FLAG_ROUTE_CODE:
-                route_code, pos = self._read_utf8(body, pos)
-            else:
-                route_code = None
-            runnable = bool(flags & FLAG_RUNNABLE)
-            eof = bool(flags & FLAG_EOF)
-            test_status = self.status_lookup[flags & 0x0007]
-            result.status(test_id=test_id, test_status=test_status,
-                test_tags=test_tags, runnable=runnable, mime_type=mime_type,
-                eof=eof, file_name=file_name, file_bytes=file_bytes,
-                route_code=route_code, timestamp=timestamp)
+
+        if consumed != 3:
+            # Avoid having to parse torn values
+            packet[-1] += remainder
+            pos = 2 + consumed
+        else:
+            # Avoid copying potentially lots of data.
+            packet.append(remainder)
+            pos = 0
+
+        crc = zlib.crc32(packet[0])
+        for fragment in packet[1:-1]:
+            crc = zlib.crc32(fragment, crc)
+
+        crc = zlib.crc32(packet[-1][:-4], crc) & 0xffffffff
+        packet_crc = struct.unpack(FMT_32, packet[-1][-4:])[0]
+
+        if crc != packet_crc:
+            # Bad CRC, report it and stop parsing the packet.
+            raise ParseError(
+                'Bad checksum - calculated (0x%x), stored (0x%x)' % (
+                    crc, packet_crc))
+
+        if safe_hasattr(builtins, 'memoryview'):
+            body = memoryview(packet[-1])
+        else:
+            body = packet[-1]
+
+        # Discard CRC-32
+        body = body[:-4]
+
+        # One packet could have both file and status data; the Python API
+        # presents these separately (perhaps it shouldn't?)
+        if flags & FLAG_TIMESTAMP:
+            seconds = struct.unpack(FMT_32, self._to_bytes(body, pos, 4))[0]
+            nanoseconds, consumed = self._parse_varint(body, pos+4)
+            pos = pos + 4 + consumed
+            timestamp = EPOCH + datetime.timedelta(
+                seconds=seconds, microseconds=nanoseconds/1000)
+        else:
+            timestamp = None
+
+        if flags & FLAG_TEST_ID:
+            test_id, pos = self._read_utf8(body, pos)
+        else:
+            test_id = None
+
+        if flags & FLAG_TAGS:
+            tag_count, consumed = self._parse_varint(body, pos)
+            pos += consumed
+            test_tags = set()
+            for _ in range(tag_count):
+                tag, pos = self._read_utf8(body, pos)
+                test_tags.add(tag)
+        else:
+            test_tags = None
+
+        if flags & FLAG_MIME_TYPE:
+            mime_type, pos = self._read_utf8(body, pos)
+        else:
+            mime_type = None
+
+        if flags & FLAG_FILE_CONTENT:
+            file_name, pos = self._read_utf8(body, pos)
+            content_length, consumed = self._parse_varint(body, pos)
+            pos += consumed
+            file_bytes = self._to_bytes(body, pos, content_length)
+            if len(file_bytes) != content_length:
+                raise ParseError('File content extends past end of packet: '
+                                 'claimed %d bytes, %d available' % (
+                                     content_length, len(file_bytes)))
+            pos += content_length
+        else:
+            file_name = None
+            file_bytes = None
+
+        if flags & FLAG_ROUTE_CODE:
+            route_code, pos = self._read_utf8(body, pos)
+        else:
+            route_code = None
+
+        runnable = bool(flags & FLAG_RUNNABLE)
+        eof = bool(flags & FLAG_EOF)
+        test_status = self.status_lookup[flags & 0x0007]
+        result.status(
+            test_id=test_id, test_status=test_status,
+            test_tags=test_tags, runnable=runnable, mime_type=mime_type,
+            eof=eof, file_name=file_name, file_bytes=file_bytes,
+            route_code=route_code, timestamp=timestamp)
+
     __call__ = run
 
     def _read_utf8(self, buf, pos):
