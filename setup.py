@@ -67,6 +67,7 @@ setup(
     author='Robert Collins',
     author_email='subunit-dev@lists.launchpad.net',
     url='http://launchpad.net/subunit',
+    license='Apache-2.0 or BSD',
     project_urls={
         "Bug Tracker": "https://bugs.launchpad.net/subunit",
         "Source Code": "https://github.com/testing-cabal/subunit/",
