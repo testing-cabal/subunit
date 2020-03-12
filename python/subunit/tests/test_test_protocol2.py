@@ -356,7 +356,7 @@ class TestByteStreamToStreamResult(TestCase):
         packet_data = b'\xb3!@\xc0\x00\x11'
         self.check_events(packet_data, [
             self._event(test_id="subunit.parser", eof=True,
-                file_name="Packet data", file_bytes=b'\xb3',
+                file_name="Packet data", file_bytes=packet_data,
                 mime_type="application/octet-stream"),
             self._event(test_id="subunit.parser", test_status="fail", eof=True,
                 file_name="Parser Error",

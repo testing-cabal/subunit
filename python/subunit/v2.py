@@ -83,7 +83,7 @@ def read_exactly(stream, size):
     remaining = size
     while remaining:
         read = stream.read(remaining)
-        if not len(read):
+        if len(read) == 0:
             raise ParseError('Short read - got %d bytes, wanted %d bytes' % (
                 len(data), size))
         data += read
@@ -426,9 +426,9 @@ class ByteStreamToStreamResult(object):
     def _parse(self, packet, result):
         # 2 bytes flags, at most 3 bytes length.
         header = read_exactly(self.source, 5)
+        packet.append(header)
         flags = struct.unpack(FMT_16, header[:2])[0]
         length, consumed = self._parse_varint(header, 2, max_3_bytes=True)
-        packet.append(header)
 
         remainder = read_exactly(self.source, length - 6)
         if consumed != 3:
