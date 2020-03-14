@@ -5,6 +5,31 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+1.4.0
+-----
+
+1.4.0 is the last release with support for Python 2.7 and Python 3.4 (both of
+which are end of life by the upstream CPython project). Additionally, 1.4.0 no
+longer supports Python 2.6.
+
+IMPROVEMENTS
+~~~~~~~~~~~~
+* Migrate Gtk interface for subunit2grk and subunit-notify to GObject
+  introspection.
+  (Haikel Guemar, #34)
+* Rely on file.__iter__ rather than file.readlines for improved performance
+  (Jelmer Vernooĳ, #30)
+
+BUGFIXES
+~~~~~~~~
+
+* Fix open usage for python3 in filters
+  (Quique Llorente, #1809809)
+* Handle None return fro write() calls
+  (Federico Ressi, #1845631)
+* Correctly handle py3 RawIOBase read()
+  (Stephen Finucane, #40)
+
 1.3.0
 -----
 
