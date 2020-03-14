@@ -480,7 +480,7 @@ class TimeStampTests(TestCase):
     _dummy_timestamp = datetime.datetime(1914, 6, 28, 10, 45, 2, 0, UTC)
 
     def setUp(self):
-        super(StatusStreamResultTests, self).setUp()
+        super(TimeStampTests, self).setUp()
         self.patch(_o, 'create_timestamp', lambda: self._dummy_timestamp)
         self.test_id = self.getUniqueString()
 
