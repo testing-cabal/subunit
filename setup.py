@@ -49,7 +49,6 @@ setup(
         "Bug Tracker": "https://bugs.launchpad.net/subunit",
         "Source Code": "https://github.com/testing-cabal/subunit/",
     },
-    packages=['subunit', 'subunit.tests'],
     packages=['subunit', 'subunit.tests', 'subunit.filter_scripts'],
 
     package_dir={'subunit': 'python/subunit'},
