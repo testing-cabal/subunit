@@ -19,9 +19,9 @@ import io
 import os
 import sys
 import tempfile
-import unittest
 
 from testtools import PlaceHolder, skipIf, TestCase, TestResult
+from testtools.testcase import six, unittest
 from testtools.compat import _b, _u, BytesIO
 from testtools.content import Content, TracebackContent, text_content
 from testtools.content_type import ContentType
@@ -60,7 +60,7 @@ class TestHelpers(TestCase):
         fd, file_path = tempfile.mkstemp()
         self.addCleanup(os.remove, file_path)
         fake_file = os.fdopen(fd, 'r')
-        if sys.version_info > (3, 0):
+        if six.PY3:
             self.assertEqual(fake_file.buffer,
                              subunit._unwrap_text(fake_file))
         else:
@@ -70,7 +70,7 @@ class TestHelpers(TestCase):
         fd, file_path = tempfile.mkstemp()
         self.addCleanup(os.remove, file_path)
         fake_file = os.fdopen(fd, 'w')
-        if sys.version_info > (3, 0):
+        if six.PY3:
             self.assertEqual(fake_file.buffer,
                              subunit._unwrap_text(fake_file))
         else:
@@ -152,7 +152,7 @@ class TestTestProtocolServerPipe(unittest.TestCase):
         protocol.readFrom(pipe)
         bing = subunit.RemotedTestCase("bing crosby")
         an_error = subunit.RemotedTestCase("an error")
-        if sys.version_info[0] >= 3:
+        if six.PY3:
             self.assertEqual(client.errors,
                              [(an_error, _remote_exception_repr + '\n')])
             self.assertEqual(
@@ -1019,7 +1019,7 @@ class TestRemotedTestCase(unittest.TestCase):
                          "'A test description'>", "%r" % test)
         result = unittest.TestResult()
         test.run(result)
-        if sys.version_info[0] >= 3:
+        if six.PY3:
             self.assertEqual([(test, _remote_exception_repr + ': ' +
                                      "Cannot run RemotedTestCases.\n\n")],
                              result.errors)
