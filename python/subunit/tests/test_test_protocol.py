@@ -17,11 +17,10 @@
 import datetime
 import io
 import os
-import sys
 import tempfile
+import unittest
 
 from testtools import PlaceHolder, skipIf, TestCase, TestResult
-from testtools.testcase import six, unittest
 from testtools.compat import _b, _u, BytesIO
 from testtools.content import Content, TracebackContent, text_content
 from testtools.content_type import ContentType
@@ -38,6 +37,7 @@ except ImportError:
         ExtendedTestResult,
         )
 from testtools.matchers import Contains
+from testtools.testcase import six
 
 import subunit
 from subunit.tests import (
@@ -48,7 +48,7 @@ from subunit.tests import (
 import subunit.iso8601 as iso8601
 
 
-tb_prelude = "Traceback (most recent call last):\n" 
+tb_prelude = "Traceback (most recent call last):\n"
 
 
 def details_to_str(details):
