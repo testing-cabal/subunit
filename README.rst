@@ -1,3 +1,8 @@
+This project is current unmaintained.
+
+About
+-----
+
 
   subunit: A streaming protocol for test results
   Copyright (C) 2005-2013 Robert Collins <robertc@robertcollins.net>
