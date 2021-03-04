@@ -11,8 +11,11 @@ python:
   - "3.6"
   - "3.7"
   - "3.8"
+  - "3.9"
   - pypy
   - pypy3.5
+  - pypy3.6
+  - pypy3.7
 matrix:
   include:
 # Travis nightly look to be 3.5.0a4, b3 is out and the error we see
