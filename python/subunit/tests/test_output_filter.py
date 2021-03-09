@@ -472,6 +472,69 @@ class StatusStreamResultTests(TestCase):
                 ])
             )
 
+class TimeStampTests(TestCase):
+    scenarios = [
+        (s, dict(status=s, option='--' + s)) for s in _FINAL_ACTIONS
+    ]
+
+    _dummy_timestamp = datetime.datetime(1914, 6, 28, 10, 45, 2, 0, UTC)
+
+    def setUp(self):
+        super(TimeStampTests, self).setUp()
+        self.patch(_o, 'create_timestamp', lambda: self._dummy_timestamp)
+        self.test_id = self.getUniqueString()
+
+    def test_no_timestamps(self):
+        result = get_result_for([self.option, self.test_id, f.name])
+        self.assertThat(
+            result._events,
+            MatchesListwise([
+                MatchesStatusCall(call='startTestRun'),
+                MatchesStatusCall(test_id=self.test_id, timestamp=self._dummy_timestamp),
+                MatchesStatusCall(test_id=self.test_id, timestamp=None),
+                MatchesStatusCall(call='stopTestRun'),
+            ]))
+
+    def test_only_start_timestamp(self):
+        timestamp = datetime.datetime.utcnow()
+        result = get_result_for([self.option, self.test_id, f.name,
+                                 '--start-time', timestamp.isoformat()])
+        self.assertThat(
+            result._events,
+            MatchesListwise([
+                MatchesStatusCall(call='startTestRun'),
+                MatchesStatusCall(test_id=self.test_id, timestamp=timestamp),
+                MatchesStatusCall(test_id=self.test_id, timestamp=None),
+                MatchesStatusCall(call='stopTestRun'),
+            ]))
+
+    def test_only_stop_timestamp(self):
+        timestamp = datetime.datetime.utcnow()
+        result = get_result_for([self.option, self.test_id, f.name,
+                                 '--stop-time', timestamp.isoformat()])
+        self.assertThat(
+            result._events,
+            MatchesListwise([
+                MatchesStatusCall(call='startTestRun'),
+                MatchesStatusCall(test_id=self.test_id, timestamp=self._dummy_timestamp),
+                MatchesStatusCall(test_id=self.test_id, timestamp=timestamp),
+                MatchesStatusCall(call='stopTestRun'),
+            ]))
+
+    def test_start_and_stop_timestamp(self):
+        timestamp_start = datetime.datetime.utcnow()
+        timestamp_stop = timestamp_start + datetime.timedelta(minutes=5)
+        result = get_result_for([self.option, self.test_id, f.name,
+                                 '--start-time', timestamp_start.isoformat(),
+                                 '--stop-time', timestamp_stop.isoformat()])
+        self.assertThat(
+            result._events,
+            MatchesListwise([
+                MatchesStatusCall(call='startTestRun'),
+                MatchesStatusCall(test_id=self.test_id, timestamp=timestamp_start),
+                MatchesStatusCall(test_id=self.test_id, timestamp=timestamp_stop),
+                MatchesStatusCall(call='stopTestRun'),
+            ]))
 
 class FileDataTests(TestCase):
 

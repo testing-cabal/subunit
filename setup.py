@@ -12,6 +12,7 @@ else:
         'install_requires': [
             'extras',
             'testtools>=0.9.34',
+            'python-dateutil>=2.4.2',
         ],
         'tests_require': [
             'fixtures',
