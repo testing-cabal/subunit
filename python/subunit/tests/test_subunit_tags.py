@@ -56,6 +56,8 @@ class TestSubUnitTags(testtools.TestCase):
                 b'\x83\x1b\x04test\x03\x03bar\x03foo\x04quux\xd2\x18\x1bC',
             b'\xb3)\x82\x17\x04test\x02\x03foo\x04quux\xa6\xe1\xde\xec\xb3)'
                 b'\x83\x1b\x04test\x03\x03foo\x03bar\x04quux:\x05e\x80',
+            b'\xb3)\x82\x17\x04test\x02\x03foo\x04quux\xa6\xe1\xde\xec\xb3)'
+                b'\x83\x1b\x04test\x03\x04quux\x03foo\x03bar\xaf\xbd\x9d\xd6',
             ]
         stream = subunit.StreamResultToBytes(self.original)
         stream.status(

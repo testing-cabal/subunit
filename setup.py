@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os.path
+
 from setuptools import setup
 
 
@@ -38,6 +39,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
         'Topic :: Software Development :: Testing',
     ],
     keywords='python test streaming',
@@ -84,4 +86,5 @@ setup(
         'test': ['fixtures', 'testscenarios'],
         'test:python_version!="3.2"': ['hypothesis'],
     }
+    python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*",
 )
