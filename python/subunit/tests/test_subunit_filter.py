@@ -24,7 +24,11 @@ from subunit import iso8601
 import unittest
 
 from testtools import TestCase
-from testtools.compat import _b, BytesIO
+from testtools.compat import _b
+try:
+    from testtools.compat import BytesIO
+except ImportError:
+    from io import BytesIO
 from testtools.testresult.doubles import ExtendedTestResult, StreamResult
 
 import subunit
