@@ -22,8 +22,6 @@ from optparse import (
 )
 import sys
 
-from dateutil import parser as date_parser
-
 from subunit import make_stream_binary
 from subunit.iso8601 import UTC
 from subunit.v2 import StreamResultToBytes
@@ -123,18 +121,6 @@ def parse_arguments(args=None, ParserClass=OptionParser):
         dest="tags",
         default=[]
     )
-    parser.add_option(
-        "--start-time",
-        help="Specify a time for the test to start",
-        dest="start_time",
-        default=None
-    )
-    parser.add_option(
-        "--stop-time",
-        help="Specify a time for the test to finish executing",
-        dest="stop_time",
-        default=None
-    )
 
     (options, args) = parser.parse_args(args)
     if options.mimetype and not options.attach_file:
@@ -166,14 +152,6 @@ def set_status_cb(option, opt_str, value, parser, status_name):
 
 
 def generate_stream_results(args, output_writer):
-    if args.start_time:
-        start_time = date_parser.parse(args.start_time)
-    else:
-        start_time = None
-    if args.stop_time:
-        stop_time = date_parser.parse(args.stop_time)
-    else:
-        stop_time = None
     output_writer.startTestRun()
 
     if args.attach_file:
@@ -192,7 +170,6 @@ def generate_stream_results(args, output_writer):
                     write_status = partial(write_status, mime_type=args.mimetype)
             if args.tags:
                 write_status = partial(write_status, test_tags=set(args.tags))
-            timestamp = start_time or create_timestamp()
             write_status = partial(write_status, timestamp=create_timestamp())
             if args.action not in _FINAL_ACTIONS:
                 write_status = partial(write_status, test_status=args.action)
@@ -215,11 +192,7 @@ def generate_stream_results(args, output_writer):
 
         if is_last_packet:
             if args.action in _FINAL_ACTIONS:
-                if stop_time:
-                    write_status = partial(write_status, test_status=args.action,
-                                           timestamp=stop_time)
-                else:
-                    write_status = partial(write_status, test_status=args.action)
+                write_status = partial(write_status, test_status=args.action)
 
         write_status()
 
