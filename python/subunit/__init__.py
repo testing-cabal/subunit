@@ -129,7 +129,7 @@ except ImportError:
 from extras import safe_hasattr
 from testtools import content, content_type, ExtendedToOriginalDecorator
 from testtools.content import TracebackContent
-from testtools.compat import _b, _u, 
+from testtools.compat import _b, _u
 try:
     from testtools.compat import BytesIO, StringIO
 except ImportError:
