@@ -1,0 +1,32 @@
+name: Tests
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+jobs:
+  tests:
+    name: tests-python${{ matrix.python-version }}-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [2.7, 3.5, 3.6, 3.7, 3.8, 3.9, 'pypy3']
+        os: ["ubuntu-latest"]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Deps
+        run:  sudo apt-get install check libcppunit-dev
+      - name: Install package
+        run: python -m pip install -U '.[test,docs]'
+      - name: Build
+        run: autoreconf -fi && ./configure && make
+      - name: Run make check
+        run: make check
+      - name: Run make distcheck
+        run: make distcheck
+      - name: Docs build
+        run: rst2html.py README.rst README.html

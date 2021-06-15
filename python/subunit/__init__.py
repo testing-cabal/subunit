@@ -1033,7 +1033,7 @@ def TAP2SubUnit(tap, output_stream):
             file_name=file_name, runnable=False)
     for line in tap:
         if state == BEFORE_PLAN:
-            match = re.match("(\d+)\.\.(\d+)\s*(?:\#\s+(.*))?\n", line)
+            match = re.match(r"(\d+)\.\.(\d+)\s*(?:\#\s+(.*))?\n", line)
             if match:
                 state = AFTER_PLAN
                 _, plan_stop, comment = match.groups()
@@ -1046,7 +1046,7 @@ def TAP2SubUnit(tap, output_stream):
                         file_name='tap comment')
                 continue
         # not a plan line, or have seen one before
-        match = re.match("(ok|not ok)(?:\s+(\d+)?)?(?:\s+([^#]*[^#\s]+)\s*)?(?:\s+#\s+(TODO|SKIP|skip|todo)(?:\s+(.*))?)?\n", line)
+        match = re.match(r"(ok|not ok)(?:\s+(\d+)?)?(?:\s+([^#]*[^#\s]+)\s*)?(?:\s+#\s+(TODO|SKIP|skip|todo)(?:\s+(.*))?)?\n", line)
         if match:
             # new test, emit current one.
             _emit_test()
@@ -1074,7 +1074,7 @@ def TAP2SubUnit(tap, output_stream):
             test_name = "test %d%s" % (plan_start, description)
             plan_start += 1
             continue
-        match = re.match("Bail out\!(?:\s*(.*))?\n", line)
+        match = re.match(r"Bail out\!(?:\s*(.*))?\n", line)
         if match:
             reason, = match.groups()
             if reason is None:
@@ -1086,7 +1086,7 @@ def TAP2SubUnit(tap, output_stream):
             result = "fail"
             state = SKIP_STREAM
             continue
-        match = re.match("\#.*\n", line)
+        match = re.match(r"\#.*\n", line)
         if match:
             log.append(line[:-1])
             continue
