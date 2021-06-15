@@ -17,7 +17,11 @@
 
 import unittest
 
-from testtools.compat import _b, BytesIO
+from testtools.compat import _b
+try:
+    from testtools.compat import BytesIO
+except ImportError:
+    from io import BytesIO
 
 import subunit.chunked
 

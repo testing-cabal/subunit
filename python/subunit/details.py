@@ -17,7 +17,11 @@
 """Handlers for outcome details."""
 
 from testtools import content, content_type
-from testtools.compat import _b, BytesIO
+from testtools.compat import _b
+try:
+    from testtools.compat import BytesIO, StringIO
+except ImportError:
+    from io import BytesIO, StringIO
 
 from subunit import chunked
 

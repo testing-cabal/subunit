@@ -16,7 +16,11 @@
 
 import unittest
 
-from testtools.compat import _b, StringIO
+from testtools.compat import _b
+try:
+    from testtools.compat import StringIO
+except ImportError:
+    from io import StringIO
 
 import subunit.tests
 from subunit import content, content_type, details

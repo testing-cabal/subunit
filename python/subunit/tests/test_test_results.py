@@ -20,7 +20,10 @@ import sys
 import unittest
 
 from testtools import TestCase
-from testtools.compat import StringIO
+try:
+    from testtools.compat import StringIO
+except ImportError:
+    from io import StringIO
 from testtools.content import (
     text_content,
     TracebackContent,

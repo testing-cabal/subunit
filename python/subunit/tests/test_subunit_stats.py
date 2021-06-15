@@ -18,7 +18,11 @@
 
 import unittest
 
-from testtools.compat import _b, BytesIO, StringIO
+from testtools.compat import _b
+try:
+    from testtools.compat import BytesIO, StringIO
+except ImportError:
+    from io import BytesIO, StringIO
 
 import subunit
 
