@@ -20,6 +20,7 @@ import os
 import tempfile
 import unittest
 
+import six
 from testtools import PlaceHolder, skipIf, TestCase, TestResult
 from testtools.compat import _b, _u
 try:
@@ -41,7 +42,6 @@ except ImportError:
         ExtendedTestResult,
         )
 from testtools.matchers import Contains
-from testtools.testcase import six
 
 import subunit
 from subunit.tests import (
