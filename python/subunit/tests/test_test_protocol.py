@@ -1258,23 +1258,15 @@ class TestTestProtocolClient(TestCase):
         """Test addFailure on a TestProtocolClient with details."""
         self.protocol.addFailure(
             self.test, details=self.sample_tb_details)
-        self.assertThat([
+        self.assertEqual(
+            self.io.getvalue(),
             _b(("failure: %s [ multipart\n"
             "Content-Type: text/plain\n"
             "something\n"
             "F\r\nserialised\nform0\r\n"
             "Content-Type: text/x-traceback;charset=utf8,language=python\n"
             "traceback\n" + _remote_exception_str_chunked +
-            "]\n") % self.test.id()),
-            _b(("failure: %s [ multipart\n"
-            "Content-Type: text/plain\n"
-            "something\n"
-            "F\r\nserialised\nform0\r\n"
-            "Content-Type: text/x-traceback;language=python,charset=utf8\n"
-            "traceback\n" + _remote_exception_str_chunked +
-            "]\n") % self.test.id()),
-            ],
-            Contains(self.io.getvalue())),
+            "]\n") % self.test.id()))
 
     def test_add_error(self):
         """Test stopTest on a TestProtocolClient."""
@@ -1290,23 +1282,15 @@ class TestTestProtocolClient(TestCase):
         """Test stopTest on a TestProtocolClient with details."""
         self.protocol.addError(
             self.test, details=self.sample_tb_details)
-        self.assertThat([
+        self.assertEqual(
+            self.io.getvalue(),
             _b(("error: %s [ multipart\n"
             "Content-Type: text/plain\n"
             "something\n"
             "F\r\nserialised\nform0\r\n"
             "Content-Type: text/x-traceback;charset=utf8,language=python\n"
             "traceback\n" + _remote_exception_str_chunked +
-            "]\n") % self.test.id()),
-            _b(("error: %s [ multipart\n"
-            "Content-Type: text/plain\n"
-            "something\n"
-            "F\r\nserialised\nform0\r\n"
-            "Content-Type: text/x-traceback;language=python,charset=utf8\n"
-            "traceback\n" + _remote_exception_str_chunked +
-            "]\n") % self.test.id()),
-            ],
-            Contains(self.io.getvalue())),
+            "]\n") % self.test.id()))
 
     def test_add_expected_failure(self):
         """Test addExpectedFailure on a TestProtocolClient."""
@@ -1322,23 +1306,15 @@ class TestTestProtocolClient(TestCase):
         """Test addExpectedFailure on a TestProtocolClient with details."""
         self.protocol.addExpectedFailure(
             self.test, details=self.sample_tb_details)
-        self.assertThat([
+        self.assertEqual(
+            self.io.getvalue(),
             _b(("xfail: %s [ multipart\n"
             "Content-Type: text/plain\n"
             "something\n"
             "F\r\nserialised\nform0\r\n"
             "Content-Type: text/x-traceback;charset=utf8,language=python\n"
             "traceback\n" + _remote_exception_str_chunked +
-            "]\n") % self.test.id()),
-            _b(("xfail: %s [ multipart\n"
-            "Content-Type: text/plain\n"
-            "something\n"
-            "F\r\nserialised\nform0\r\n"
-            "Content-Type: text/x-traceback;language=python,charset=utf8\n"
-            "traceback\n" + _remote_exception_str_chunked +
-            "]\n") % self.test.id()),
-            ],
-            Contains(self.io.getvalue())),
+            "]\n") % self.test.id()))
 
     def test_add_skip(self):
         """Test addSkip on a TestProtocolClient."""

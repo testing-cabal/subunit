@@ -821,7 +821,7 @@ class TestProtocolClient(testresult.TestResult):
             if parameters:
                 self._stream.write(_b(";"))
                 param_strs = []
-                for param, value in parameters.items():
+                for param, value in sorted(parameters.items()):
                     param_strs.append("%s=%s" % (param, value))
                 self._stream.write(_b(",".join(param_strs)))
             self._stream.write(_b("\n%s\n" % name))
