@@ -5,6 +5,12 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+BUGFIXES
+~~~~~~~~
+
+* Fix tests with testtools >= 2.5.0.
+  (Colin Watson)
+
 1.4.0
 -----
 
