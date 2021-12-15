@@ -8,6 +8,12 @@ NEXT (In development)
 IMPROVEMENTS
 ~~~~~~~~~~~~
 
+* Add support for Python 3.9
+  (Thomas Grainger)
+
+* Add support for Python 3.10
+  (Stephen Finucane)
+
 * Drop support for Python 2.7, 3.4, and 3.5
   (Stephen Finucane)
 
