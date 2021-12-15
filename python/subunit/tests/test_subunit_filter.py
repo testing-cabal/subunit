@@ -300,10 +300,6 @@ xfail todo
              ('stopTest', 'foo - renamed')],
             [(ev[0], ev[1].id()) for ev in result._events])
 
-    if sys.version_info < (2, 7):
-        # These tests require Python >=2.7.
-        del test_fixup_expected_failures, test_fixup_expected_errors, test_fixup_unexpected_success
-
 
 class TestFilterCommand(TestCase):
 

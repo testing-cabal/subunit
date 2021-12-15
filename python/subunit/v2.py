@@ -15,10 +15,7 @@
 #
 
 import codecs
-utf_8_decode = codecs.utf_8_decode
 import datetime
-from io import UnsupportedOperation
-import os
 import select
 import struct
 import sys
@@ -29,6 +26,8 @@ builtins = try_imports(['__builtin__', 'builtins'])
 
 import subunit
 import subunit.iso8601 as iso8601
+
+utf_8_decode = codecs.utf_8_decode
 
 __all__ = [
     'ByteStreamToStreamResult',
@@ -53,7 +52,6 @@ EPOCH = datetime.datetime.utcfromtimestamp(0).replace(tzinfo=iso8601.Utc())
 NUL_ELEMENT = b'\0'[0]
 # Contains True for types for which 'nul in thing' falsely returns false.
 _nul_test_broken = {}
-_PY3 = (sys.version_info >= (3,))
 
 
 def has_nul(buffer_or_bytes):
@@ -232,21 +230,18 @@ class StreamResultToBytes(object):
         # For now, simplest code: join, crc32, join, output
         content = b''.join(packet)
         data = content + struct.pack(FMT_32, zlib.crc32(content) & 0xffffffff)
-        if _PY3:
-            # On eventlet 0.17.3, GreenIO.write() can make partial write.
-            # Use a loop to ensure that all bytes are written.
-            # See also the eventlet issue:
-            # https://github.com/eventlet/eventlet/issues/248
-            view = memoryview(data)
-            datalen = len(data)
-            offset = 0
-            while offset < datalen:
-                written = self.output_stream.write(view[offset:])
-                if written is None:
-                    break
-                offset += written
-        else:
-            self.output_stream.write(data)
+        # On eventlet 0.17.3, GreenIO.write() can make partial write.
+        # Use a loop to ensure that all bytes are written.
+        # See also the eventlet issue:
+        # https://github.com/eventlet/eventlet/issues/248
+        view = memoryview(data)
+        datalen = len(data)
+        offset = 0
+        while offset < datalen:
+            written = self.output_stream.write(view[offset:])
+            if written is None:
+                break
+            offset += written
         self.output_stream.flush()
 
 

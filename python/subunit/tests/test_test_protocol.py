@@ -20,7 +20,6 @@ import os
 import tempfile
 import unittest
 
-import six
 from testtools import PlaceHolder, skipIf, TestCase, TestResult
 from testtools.compat import _b, _u
 try:
@@ -65,21 +64,13 @@ class TestHelpers(TestCase):
         fd, file_path = tempfile.mkstemp()
         self.addCleanup(os.remove, file_path)
         fake_file = os.fdopen(fd, 'r')
-        if six.PY3:
-            self.assertEqual(fake_file.buffer,
-                             subunit._unwrap_text(fake_file))
-        else:
-            self.assertEqual(fake_file, subunit._unwrap_text(fake_file))
+        self.assertEqual(fake_file.buffer, subunit._unwrap_text(fake_file))
 
     def test__unwrap_text_file_write_mode(self):
         fd, file_path = tempfile.mkstemp()
         self.addCleanup(os.remove, file_path)
         fake_file = os.fdopen(fd, 'w')
-        if six.PY3:
-            self.assertEqual(fake_file.buffer,
-                             subunit._unwrap_text(fake_file))
-        else:
-            self.assertEqual(fake_file, subunit._unwrap_text(fake_file))
+        self.assertEqual(fake_file.buffer, subunit._unwrap_text(fake_file))
 
     def test__unwrap_text_fileIO_read_mode(self):
         fd, file_path = tempfile.mkstemp()
@@ -157,20 +148,14 @@ class TestTestProtocolServerPipe(unittest.TestCase):
         protocol.readFrom(pipe)
         bing = subunit.RemotedTestCase("bing crosby")
         an_error = subunit.RemotedTestCase("an error")
-        if six.PY3:
-            self.assertEqual(client.errors,
-                             [(an_error, _remote_exception_repr + '\n')])
-            self.assertEqual(
-                client.failures,
-                [(bing, _remote_exception_repr + ": "
-                  + details_to_str({'traceback': text_content(traceback)}) + "\n")])
-        else:
-            self.assertEqual(client.errors,
-                             [(an_error, '_StringException\n')])
-            self.assertEqual(
-                client.failures,
-                [(bing, "_StringException: "
-                  + details_to_str({'traceback': text_content(traceback)}) + "\n")])
+        self.assertEqual(
+            client.errors, [(an_error, _remote_exception_repr + '\n')],
+        )
+        self.assertEqual(
+            client.failures,
+            [(bing, _remote_exception_repr + ": "
+              + details_to_str({'traceback': text_content(traceback)}) + "\n")],
+        )
         self.assertEqual(client.testsRun, 3)
 
     def test_non_test_characters_forwarded_immediately(self):
@@ -1024,14 +1009,9 @@ class TestRemotedTestCase(unittest.TestCase):
                          "'A test description'>", "%r" % test)
         result = unittest.TestResult()
         test.run(result)
-        if six.PY3:
-            self.assertEqual([(test, _remote_exception_repr + ': ' +
-                                     "Cannot run RemotedTestCases.\n\n")],
-                             result.errors)
-        else:
-            self.assertEqual([(test, "_StringException: " +
-                                     "Cannot run RemotedTestCases.\n\n")],
-                             result.errors)
+        self.assertEqual([(test, _remote_exception_repr + ': ' +
+                           "Cannot run RemotedTestCases.\n\n")],
+                         result.errors)
         self.assertEqual(1, result.testsRun)
         another_test = subunit.RemotedTestCase("A test description")
         self.assertEqual(test, another_test)

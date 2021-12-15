@@ -174,26 +174,15 @@ class GTKTestResult(unittest.TestResult):
         GObject.idle_add(self.update_counts)
 
     def addSkip(self, test, reason):
-        # addSkip is new in Python 2.7/3.1
-        addSkip = getattr(super(GTKTestResult, self), 'addSkip', None)
-        if callable(addSkip):
-            addSkip(test, reason)
+        super(GTKTestResult, self).addSkip(test, reason)
         GObject.idle_add(self.update_counts)
 
     def addExpectedFailure(self, test, err):
-        # addExpectedFailure is new in Python 2.7/3.1
-        addExpectedFailure = getattr(super(GTKTestResult, self),
-            'addExpectedFailure', None)
-        if callable(addExpectedFailure):
-            addExpectedFailure(test, err)
+        super(GTKTestResult, self).addExpectedFailure(test, err)
         GObject.idle_add(self.update_counts)
 
     def addUnexpectedSuccess(self, test):
-        # addUnexpectedSuccess is new in Python 2.7/3.1
-        addUnexpectedSuccess = getattr(super(GTKTestResult, self),
-            'addUnexpectedSuccess', None)
-        if callable(addUnexpectedSuccess):
-            addUnexpectedSuccess(test)
+        super(GTKTestResult, self).addUnexpectedSuccess(test)
         GObject.idle_add(self.update_counts)
 
     def progress(self, offset, whence):
@@ -218,16 +207,21 @@ class GTKTestResult(unittest.TestResult):
         self.ok_label.set_text(str(self.testsRun - bad))
         self.not_ok_label.set_text(str(bad))
 
+
 GObject.threads_init()
 result = StreamToExtendedDecorator(GTKTestResult())
 test = ByteStreamToStreamResult(sys.stdin, non_subunit_name='stdout')
 # Get setup
 while Gtk.events_pending():
-  Gtk.main_iteration()
+    Gtk.main_iteration()
+
+
 # Start IO
 def run_and_finish():
     test.run(result)
     result.stopTestRun()
+
+
 t = threading.Thread(target=run_and_finish)
 t.daemon = True
 result.startTestRun()

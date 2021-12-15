@@ -136,10 +136,7 @@ def main(argv=None, stdout=None):
         if hasattr(stdout, 'fileno'):
             # Patch stdout to be unbuffered, so that pdb works well on 2.6/2.7.
             binstdout = io.open(stdout.fileno(), 'wb', 0)
-            if sys.version_info[0] > 2:
-                sys.stdout = io.TextIOWrapper(binstdout, encoding=sys.stdout.encoding)
-            else:
-                sys.stdout = binstdout
+            sys.stdout = io.TextIOWrapper(binstdout, encoding=sys.stdout.encoding)
             stdout = sys.stdout
     SubunitTestProgram(module=None, argv=argv, testRunner=runner,
         stdout=stdout, exit=False)

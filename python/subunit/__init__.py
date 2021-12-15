@@ -42,8 +42,7 @@ Twisted. See the ``TestProtocolServer`` parser class for more details.
 Subunit includes extensions to the Python ``TestResult`` protocol. These are
 all done in a compatible manner: ``TestResult`` objects that do not implement
 the extension methods will not cause errors to be raised, instead the extension
-will either lose fidelity (for instance, folding expected failures to success
-in Python versions < 2.7 or 3.1), or discard the extended data (for extra
+will either lose fidelity, or discard the extended data (for extra
 details, tags, timestamping and progress markers).
 
 The test outcome methods ``addSuccess``, ``addError``, ``addExpectedFailure``,
@@ -513,9 +512,7 @@ class TestProtocolServer(object):
         """
         self.client = ExtendedToOriginalDecorator(client)
         if stream is None:
-            stream = sys.stdout
-            if sys.version_info > (3, 0):
-                stream = stream.buffer
+            stream = sys.stdout.buffer
         self._stream = stream
         self._forward_stream = forward_stream or DiscardStream()
         # state objects we can switch too
@@ -1292,11 +1289,7 @@ def _make_binary_on_windows(fileno):
 def _unwrap_text(stream):
     """Unwrap stream if it is a text stream to get the original buffer."""
     exceptions = (_UnsupportedOperation, IOError)
-    if sys.version_info > (3, 0):
-        unicode_type = str
-    else:
-        unicode_type = unicode
-        exceptions += (ValueError,)
+    unicode_type = str
     try:
         # Read streams
         if type(stream.read(0)) is unicode_type:
