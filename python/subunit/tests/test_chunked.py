@@ -7,7 +7,7 @@
 #  license at the users choice. A copy of both licenses are available in the
 #  project source as Apache-2.0 and BSD. You may not use this file except in
 #  compliance with one of these two licences.
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 #  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -15,13 +15,10 @@
 #  limitations under that license.
 #
 
+from io import BytesIO
 import unittest
 
 from testtools.compat import _b
-try:
-    from testtools.compat import BytesIO
-except ImportError:
-    from io import BytesIO
 
 import subunit.chunked
 

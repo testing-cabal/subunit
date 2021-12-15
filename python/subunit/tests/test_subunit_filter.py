@@ -17,21 +17,18 @@
 """Tests for subunit.TestResultFilter."""
 
 from datetime import datetime
+from io import BytesIO
 import os
 import subprocess
 import sys
-from subunit import iso8601
 import unittest
 
-from testtools import TestCase
 from testtools.compat import _b
-try:
-    from testtools.compat import BytesIO
-except ImportError:
-    from io import BytesIO
+from testtools import TestCase
 from testtools.testresult.doubles import ExtendedTestResult, StreamResult
 
 import subunit
+from subunit import iso8601
 from subunit.test_results import make_tag_filter, TestResultFilter
 from subunit import ByteStreamToStreamResult, StreamResultToBytes
 

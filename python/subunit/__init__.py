@@ -115,24 +115,19 @@ Utility modules
 * subunit.test_results contains TestResult helper classes.
 """
 
+from io import BytesIO
+from io import StringIO
+from io import UnsupportedOperation as _UnsupportedOperation
 import os
 import re
 import subprocess
 import sys
 import unittest
-try:
-    from io import UnsupportedOperation as _UnsupportedOperation
-except ImportError:
-    _UnsupportedOperation = AttributeError
 
 from extras import safe_hasattr
 from testtools import content, content_type, ExtendedToOriginalDecorator
 from testtools.content import TracebackContent
 from testtools.compat import _b, _u
-try:
-    from testtools.compat import BytesIO, StringIO
-except ImportError:
-    from io import BytesIO, StringIO
 try:
     from testtools.testresult.real import _StringException
     RemoteException = _StringException

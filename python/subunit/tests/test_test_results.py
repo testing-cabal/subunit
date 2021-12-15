@@ -16,18 +16,15 @@
 
 import csv
 import datetime
+from io import StringIO
 import sys
 import unittest
 
 from testtools import TestCase
-try:
-    from testtools.compat import StringIO
-except ImportError:
-    from io import StringIO
 from testtools.content import (
     text_content,
     TracebackContent,
-    )
+)
 from testtools.testresult.doubles import ExtendedTestResult
 
 import subunit

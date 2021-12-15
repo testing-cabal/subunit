@@ -16,16 +16,14 @@
 
 import datetime
 import io
+from io import BytesIO
+from io import StringIO
 import os
 import tempfile
 import unittest
 
 from testtools import PlaceHolder, skipIf, TestCase, TestResult
 from testtools.compat import _b, _u
-try:
-    from testtools.compat import BytesIO, StringIO
-except ImportError:
-    from io import BytesIO, StringIO
 from testtools.content import Content, TracebackContent, text_content
 from testtools.content_type import ContentType
 try:
