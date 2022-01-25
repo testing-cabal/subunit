@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
 print("test old mcdonald")
 print("success old mcdonald")

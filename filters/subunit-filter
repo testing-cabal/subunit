@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #  subunit: extensions to python unittest to get test results from subprocesses.
 #  Copyright (C) 200-2013  Robert Collins <robertc@robertcollins.net>
 #            (C) 2009  Martin Pool
