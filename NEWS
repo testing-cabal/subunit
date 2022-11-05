@@ -8,6 +8,15 @@ NEXT (In development)
 IMPROVEMENTS
 ~~~~~~~~~~~~
 
+BUG FIXES
+~~~~~~~~~
+
+
+1.4.1
+
+IMPROVEMENTS
+~~~~~~~~~~~~
+
 * Add support for Python 3.9
   (Thomas Grainger)
 
@@ -17,11 +26,26 @@ IMPROVEMENTS
 * Drop support for Python 2.7, 3.4, and 3.5
   (Stephen Finucane)
 
+* Convert python scripts to entry_points.
+  (Matthew Treinish)
+
+* Migrate CI from travis to GitHub actions.
+  (Matthew Treinish)
+
+* Add options to output filter to set timestamps.
+  (Matthew Treinish)
+
+* Remove dependency on unittest2.
+  (Matěj Cepl)
+
 BUGFIXES
 ~~~~~~~~
 
 * Fix tests with testtools >= 2.5.0.
   (Colin Watson)
+
+* Mark rawstrings as such, fixing warnings.
+  (Stephen Finucane)
 
 1.4.0
 -----
