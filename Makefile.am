@@ -122,16 +122,16 @@ clean-local:
 	rm -f perl/Makefile
 
 # The default for MakeMaker; can be overridden by exporting
-INSTALLDIRS ?= site
+PERL_INSTALLDIRS ?= site
 
 # Remove perl dir for VPATH builds.
 distclean-local:
-	-rm perl/Makefile.PL > /dev/null
+	-rm perl/Makefile.PL || true
 	-rmdir perl > /dev/null
 	-rm -r .hypothesis > /dev/null
 
 install-exec-local: perl/Makefile
-	$(MAKE) -C perl install INSTALLDIRS=${INSTALLDIRS}
+	$(MAKE) -C perl install INSTALLDIRS=${PERL_INSTALLDIRS} DESTDIR=$(DESTDIR) INSTALL_BASE=$(prefix) INSTALLSITEBIN=$(bindir)
 
 mostlyclean-local:
 	rm -rf perl/blib
@@ -139,9 +139,4 @@ mostlyclean-local:
 
 # 'uninstall' perl files during distcheck
 uninstall-local: perl/Makefile
-	$(MAKE) -C perl uninstall_distcheck INSTALLDIRS=${INSTALLDIRS}
-
-perl/Makefile: perl/Makefile.PL
-	mkdir -p perl
-	cd perl && perl Makefile.PL INSTALLDIRS=${INSTALLDIRS} PREFIX=
-	-rm perl/Makefile.old > /dev/null
+	$(MAKE) -C perl uninstall_distcheck INSTALLDIRS=${PERL_INSTALLDIRS} DESTDIR=$(DESTDIR) INSTALLSITEBIN=$(bindir)

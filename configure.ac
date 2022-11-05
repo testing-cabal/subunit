@@ -68,6 +68,8 @@ PKG_CHECK_MODULES([CPPUNIT], [cppunit])
 # Output files
 AC_CONFIG_HEADERS([config.h])
 
+AC_CONFIG_COMMANDS([perl], [cd perl && perl Makefile.PL && cd ..], [])
+
 AC_CONFIG_FILES([libsubunit.pc
 		 libcppunit_subunit.pc
                  Makefile
