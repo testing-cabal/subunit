@@ -14,14 +14,25 @@
 #  limitations under that license.
 #
 
-"""A filter to change tags on a subunit stream.
-
-subunit-tags foo -> adds foo
-subunit-tags foo -bar -> adds foo and removes bar
-"""
+"""Filter a subunit stream to get aggregate statistics."""
 
 import sys
 
-from subunit import tag_stream
+from testtools import StreamToExtendedDecorator
 
-sys.exit(tag_stream(sys.stdin, sys.stdout, sys.argv[1:]))
+from subunit import TestResultStats
+from subunit.filters import run_filter_script
+
+
+def main():
+    result = TestResultStats(sys.stdout)
+
+    def show_stats(r):
+        r.decorated.formatStats()
+    
+    run_filter_script(
+        lambda output:StreamToExtendedDecorator(result),
+        __doc__, show_stats, protocol_version=2, passthrough_subunit=False)
+
+if __name__ == '__main__':
+    main()

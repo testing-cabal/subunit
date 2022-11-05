@@ -16,29 +16,6 @@ EXTRA_DIST =  \
 	perl/lib/Subunit.pm \
 	perl/lib/Subunit/Diff.pm \
 	perl/subunit-diff \
-	python/iso8601/LICENSE \
-	python/iso8601/README \
-	python/iso8601/README.subunit \
-	python/iso8601/setup.py \
-	python/iso8601/test_iso8601.py \
-	python/subunit/tests/__init__.py \
-	python/subunit/tests/sample-script.py \
-	python/subunit/tests/sample-two-script.py \
-	python/subunit/tests/test_chunked.py \
-	python/subunit/tests/test_details.py \
-	python/subunit/tests/test_filters.py \
-	python/subunit/tests/test_filter_to_disk.py \
-	python/subunit/tests/test_output_filter.py \
-	python/subunit/tests/test_progress_model.py \
-	python/subunit/tests/test_run.py \
-	python/subunit/tests/test_subunit_filter.py \
-	python/subunit/tests/test_subunit_stats.py \
-	python/subunit/tests/test_subunit_tags.py \
-	python/subunit/tests/test_tap2subunit.py \
-	python/subunit/tests/test_test_protocol.py \
-	python/subunit/tests/test_test_protocol2.py \
-	python/subunit/tests/test_test_results.py \
-	setup.py \
 	shell/README \
 	shell/share/subunit.sh \
 	shell/subunit-ui.patch \
@@ -49,22 +26,6 @@ ACLOCAL_AMFLAGS = -I m4
 
 include_subunitdir = $(includedir)/subunit
 
-dist_bin_SCRIPTS = \
-	filters/subunit-1to2 \
-	filters/subunit-2to1 \
-	filters/subunit-filter \
-	filters/subunit-ls \
-	filters/subunit-notify \
-	filters/subunit-output \
-	filters/subunit-stats \
-	filters/subunit-tags \
-	filters/subunit2csv \
-	filters/subunit2disk \
-	filters/subunit2gtk \
-	filters/subunit2junitxml \
-	filters/subunit2pyunit \
-	filters/tap2subunit
-
 TESTS = $(check_PROGRAMS)
 
 ## install libsubunit.pc
@@ -72,19 +33,6 @@ pcdatadir = $(libdir)/pkgconfig
 pcdata_DATA = \
 	libsubunit.pc \
 	libcppunit_subunit.pc
-
-pkgpython_PYTHON = \
-	python/subunit/__init__.py \
-	python/subunit/chunked.py \
-	python/subunit/details.py \
-	python/subunit/filters.py \
-	python/subunit/iso8601.py \
-	python/subunit/progress_model.py \
-	python/subunit/run.py \
-	python/subunit/v2.py \
-	python/subunit/test_results.py \
-	python/subunit/_output.py \
-	python/subunit/_to_disk.py
 
 lib_LTLIBRARIES = libsubunit.la
 lib_LTLIBRARIES +=  libcppunit_subunit.la

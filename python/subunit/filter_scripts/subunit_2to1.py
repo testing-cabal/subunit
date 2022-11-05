@@ -6,7 +6,7 @@
 #  license at the users choice. A copy of both licenses are available in the
 #  project source as Apache-2.0 and BSD. You may not use this file except in
 #  compliance with one of these two licences.
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 #  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -14,15 +14,19 @@
 #  limitations under that license.
 #
 
-"""Convert a version 1 subunit stream to version 2 stream."""
+"""Convert a version 2 subunit stream to a version 1 stream."""
 
 from optparse import OptionParser
 import sys
 
-from testtools import ExtendedToStreamDecorator
+from testtools import (
+    StreamToExtendedDecorator,
+    StreamResultRouter,
+    )
 
-from subunit import StreamResultToBytes
-from subunit.filters import find_stream, run_tests_from_stream
+from subunit import ByteStreamToStreamResult, TestProtocolClient
+from subunit.filters import find_stream
+from subunit.test_results import CatFiles
 
 
 def make_options(description):
@@ -33,8 +37,15 @@ def make_options(description):
 def main():
     parser = make_options(__doc__)
     (options, args) = parser.parse_args()
-    run_tests_from_stream(find_stream(sys.stdin, args),
-        ExtendedToStreamDecorator(StreamResultToBytes(sys.stdout)))
+    case = ByteStreamToStreamResult(
+        find_stream(sys.stdin, args), non_subunit_name='stdout')
+    result = StreamToExtendedDecorator(TestProtocolClient(sys.stdout))
+    result = StreamResultRouter(result)
+    cat = CatFiles(sys.stdout)
+    result.add_rule(cat, 'test_id', test_id=None)
+    result.startTestRun()
+    case.run(result)
+    result.stopTestRun()
     sys.exit(0)
 
 

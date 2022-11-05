@@ -16,8 +16,13 @@
 
 """A command-line tool to generate a subunit result byte-stream."""
 
+import sys
+
 from subunit._output import output_main
+
+def main():
+    sys.exit(output_main())
 
 
 if __name__ == '__main__':
-    exit(output_main())
+    main()

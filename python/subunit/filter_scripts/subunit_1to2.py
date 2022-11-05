@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #  subunit: extensions to python unittest to get test results from subprocesses.
-#  Copyright (C) 2013 Subunit Contributors
+#  Copyright (C) 2013  Robert Collins <robertc@robertcollins.net>
 #
 #  Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 #  license at the users choice. A copy of both licenses are available in the
@@ -12,12 +12,31 @@
 #  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
 #  license you chose for the specific language governing permissions and
 #  limitations under that license.
+#
+
+"""Convert a version 1 subunit stream to version 2 stream."""
+
+from optparse import OptionParser
+import sys
+
+from testtools import ExtendedToStreamDecorator
+
+from subunit import StreamResultToBytes
+from subunit.filters import find_stream, run_tests_from_stream
 
 
-"""Export a stream to files and directories on disk."""
+def make_options(description):
+    parser = OptionParser(description=__doc__)
+    return parser
 
-from subunit._to_disk import to_disk
+
+def main():
+    parser = make_options(__doc__)
+    (options, args) = parser.parse_args()
+    run_tests_from_stream(find_stream(sys.stdin, args),
+        ExtendedToStreamDecorator(StreamResultToBytes(sys.stdout)))
+    sys.exit(0)
 
 
 if __name__ == '__main__':
-    exit(to_disk())
+    main()

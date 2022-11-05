@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #  subunit: extensions to python unittest to get test results from subprocesses.
-#  Copyright (C) 2009  Robert Collins <robertc@robertcollins.net>
+#  Copyright (C) 2010 Jelmer Vernooij <jelmer@samba.org>
 #
 #  Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 #  license at the users choice. A copy of both licenses are available in the
@@ -14,19 +14,40 @@
 #  limitations under that license.
 #
 
-"""Filter a subunit stream to get aggregate statistics."""
+"""Notify the user of a finished test run."""
 
-import sys
-
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Notify
 from testtools import StreamToExtendedDecorator
 
 from subunit import TestResultStats
 from subunit.filters import run_filter_script
 
+if not Notify.init("Subunit-notify"):
+    sys.exit(1)
 
-result = TestResultStats(sys.stdout)
-def show_stats(r):
-    r.decorated.formatStats()
-run_filter_script(
-    lambda output:StreamToExtendedDecorator(result),
-    __doc__, show_stats, protocol_version=2, passthrough_subunit=False)
+
+def notify_of_result(result):
+    result = result.decorated
+    if result.failed_tests > 0:
+        summary = "Test run failed"
+    else:
+        summary = "Test run successful"
+    body = "Total tests: %d; Passed: %d; Failed: %d" % (
+        result.total_tests,
+        result.passed_tests,
+        result.failed_tests,
+    )
+    nw = Notify.Notification(summary, body)
+    nw.show()
+
+
+def main():
+    run_filter_script(
+        lambda output:StreamToExtendedDecorator(TestResultStats(output)),
+        __doc__, notify_of_result, protocol_version=2)
+
+
+if __name__ == '__main__':
+    main()

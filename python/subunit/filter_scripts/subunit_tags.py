@@ -14,23 +14,20 @@
 #  limitations under that license.
 #
 
-"""Filter a subunit stream to get aggregate statistics."""
+"""A filter to change tags on a subunit stream.
 
+subunit-tags foo -> adds foo
+subunit-tags foo -bar -> adds foo and removes bar
+"""
 
 import sys
 
-from testtools import StreamToExtendedDecorator
-
-from subunit.filters import run_filter_script
-
-try:
-    from junitxml import JUnitXmlResult
-except ImportError:
-    sys.stderr.write("python-junitxml (https://launchpad.net/pyjunitxml or "
-        "http://pypi.python.org/pypi/junitxml) is required for this filter.")
-    raise
+from subunit import tag_stream
 
 
-run_filter_script(
-    lambda output:StreamToExtendedDecorator(JUnitXmlResult(output)), __doc__,
-    protocol_version=2)
+def main():
+    sys.exit(tag_stream(sys.stdin, sys.stdout, sys.argv[1:]))
+
+
+if __name__ == '__main__':
+    main()

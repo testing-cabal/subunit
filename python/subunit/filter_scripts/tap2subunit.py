@@ -23,4 +23,11 @@ http://testanything.org/wiki/index.php/Main_Page.
 import sys
 
 from subunit import TAP2SubUnit
-sys.exit(TAP2SubUnit(sys.stdin, sys.stdout))
+
+
+def main():
+    sys.exit(TAP2SubUnit(sys.stdin, sys.stdout))
+
+
+if __name__ == '__main__':
+    main()

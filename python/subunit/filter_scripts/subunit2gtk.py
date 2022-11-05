@@ -6,7 +6,7 @@
 #  license at the users choice. A copy of both licenses are available in the
 #  project source as Apache-2.0 and BSD. You may not use this file except in
 #  compliance with one of these two licences.
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 #  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -16,28 +16,28 @@
 
 ### The GTK progress bar __init__ function is derived from the pygtk tutorial:
 # The PyGTK Tutorial is Copyright (C) 2001-2005 John Finlay.
-# 
+#
 # The GTK Tutorial is Copyright (C) 1997 Ian Main.
-# 
+#
 # Copyright (C) 1998-1999 Tony Gale.
-# 
+#
 # Permission is granted to make and distribute verbatim copies of this manual
 # provided the copyright notice and this permission notice are preserved on all
 # copies.
-# 
+#
 # Permission is granted to copy and distribute modified versions of this
 # document under the conditions for verbatim copying, provided that this
 # copyright notice is included exactly as in the original, and that the entire
 # resulting derived work is distributed under the terms of a permission notice
 # identical to this one.
-# 
+#
 # Permission is granted to copy and distribute translations of this document
 # into another language, under the above conditions for modified versions.
-# 
+#
 # If you are intending to incorporate this document into a published work,
 # please contact the maintainer, and we will make an effort to ensure that you
 # have the most up to date information available.
-# 
+#
 # There is no guarantee that this document lives up to its intended purpose.
 # This is simply provided as a free resource. As such, the authors and
 # maintainers of the information provided within can not make any guarantee
@@ -208,27 +208,29 @@ class GTKTestResult(unittest.TestResult):
         self.not_ok_label.set_text(str(bad))
 
 
-GObject.threads_init()
-result = StreamToExtendedDecorator(GTKTestResult())
-test = ByteStreamToStreamResult(sys.stdin, non_subunit_name='stdout')
-# Get setup
-while Gtk.events_pending():
-    Gtk.main_iteration()
+def main():
+    GObject.threads_init()
+    result = StreamToExtendedDecorator(GTKTestResult())
+    test = ByteStreamToStreamResult(sys.stdin, non_subunit_name='stdout')
+    # Get setup
+    while Gtk.events_pending():
+        Gtk.main_iteration()
+
+    # Start IO
+    def run_and_finish():
+        test.run(result)
+        result.stopTestRun()
+    t = threading.Thread(target=run_and_finish)
+    t.daemon = True
+    result.startTestRun()
+    t.start()
+    Gtk.main()
+    if result.decorated.wasSuccessful():
+        exit_code = 0
+    else:
+        exit_code = 1
+    sys.exit(exit_code)
 
 
-# Start IO
-def run_and_finish():
-    test.run(result)
-    result.stopTestRun()
-
-
-t = threading.Thread(target=run_and_finish)
-t.daemon = True
-result.startTestRun()
-t.start()
-Gtk.main()
-if result.decorated.wasSuccessful():
-    exit_code = 0
-else:
-    exit_code = 1
-sys.exit(exit_code)
+if __name__ == '__main__':
+    main()
