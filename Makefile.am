@@ -96,5 +96,5 @@ INSTALLDIRS ?= site
 
 perl/Makefile: perl/Makefile.PL
 	mkdir -p perl
-	cd perl && perl Makefile.PL INSTALLDIRS=${INSTALLDIRS}
+	cd perl && perl Makefile.PL INSTALLDIRS=${INSTALLDIRS} PREFIX=
 	-rm perl/Makefile.old > /dev/null
