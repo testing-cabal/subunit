@@ -13,7 +13,8 @@ check: # test
 
 uninstall_distcheck:
 	find $(DESTDIR)$(INSTALLSITEARCH) -type f -exec rm {} \; 
-	rm MYMETA.yml
+	rm -f MYMETA.yml MYMETA.json
+	rm -f $(DESTINSTALLBIN)/subunit-diff
 
 VPATH = @srcdir@
 .PHONY: uninstall_distcheck

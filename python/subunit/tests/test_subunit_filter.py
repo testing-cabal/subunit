@@ -301,7 +301,7 @@ xfail todo
 class TestFilterCommand(TestCase):
 
     def run_command(self, args, stream):
-        command = ['subunit-filter'] + list(args)
+        command = [sys.executable, '-m', 'subunit.filter_scripts.subunit_filter'] + list(args)
         ps = subprocess.Popen(
             command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
             stderr=subprocess.PIPE)
