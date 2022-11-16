@@ -1252,11 +1252,9 @@ def read_test_list(path):
     :param path: Path to the file
     :return: Sequence of test ids
     """
-    f = open(path, 'rb')
-    try:
-        return [l.rstrip("\n") for l in f.readlines()]
-    finally:
-        f.close()
+    with open(path, 'r') as f:
+        return [line.split('#')[0].rstrip() for line in f.readlines()
+                if line.split('#')[0]]
 
 
 def make_stream_binary(stream):
