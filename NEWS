@@ -11,6 +11,8 @@ IMPROVEMENTS
 BUG FIXES
 ~~~~~~~~~
 
+* Fix "subunit-filter --fixup-expected-failures"
+  on Python 3. (Jelmer Vernooĳ)
 
 1.4.1
 
