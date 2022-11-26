@@ -12,10 +12,6 @@ EXTRA_DIST =  \
 	c/check-subunit-0.9.3.patch \
 	c/check-subunit-0.9.5.patch \
 	c/check-subunit-0.9.6.patch \
-	perl/Makefile.PL.in \
-	perl/lib/Subunit.pm \
-	perl/lib/Subunit/Diff.pm \
-	perl/subunit-diff \
  	python/iso8601/LICENSE \
  	python/iso8601/README \
  	python/iso8601/README.subunit \
@@ -108,35 +104,13 @@ c_tests_test_child_CFLAGS = -I$(top_srcdir)/c/include $(SUBUNIT_CFLAGS) @CHECK_C
 c_tests_test_child_LDADD = $(tests_LDADD)
 
 
-all-local: perl/Makefile
-	$(MAKE) -C perl all
-
-check-local: perl/Makefile
-	$(MAKE) -C perl check
+check-local:
 	SHELL_SHARE='$(top_srcdir)/shell/share/' \
 	PYTHONPATH='$(abs_top_srcdir)/python':'$(abs_top_srcdir)':$${PYTHONPATH} \
 	$(PYTHON) -m testtools.run all_tests.test_suite
 
 clean-local:
 	find . -type f -name "*.pyc" -exec rm {} ';'
-	rm -f perl/Makefile
 
-# The default for MakeMaker; can be overridden by exporting
-PERL_INSTALLDIRS ?= site
-
-# Remove perl dir for VPATH builds.
 distclean-local:
-	-rm perl/Makefile.PL || true
-	-rmdir perl > /dev/null
 	-rm -r .hypothesis > /dev/null
-
-install-exec-local: perl/Makefile
-	$(MAKE) -C perl install INSTALLDIRS=${PERL_INSTALLDIRS} DESTDIR=$(DESTDIR) INSTALL_BASE=$(prefix) INSTALLSITEBIN=$(bindir)
-
-mostlyclean-local:
-	rm -rf perl/blib
-	rm -rf perl/pm_to_blib
-
-# 'uninstall' perl files during distcheck
-uninstall-local: perl/Makefile
-	$(MAKE) -C perl uninstall_distcheck INSTALLDIRS=${PERL_INSTALLDIRS} DESTDIR=$(DESTDIR) INSTALLSITEBIN=$(bindir)
