@@ -507,7 +507,11 @@ class TestProtocolServer(object):
         """
         self.client = ExtendedToOriginalDecorator(client)
         if stream is None:
-            stream = sys.stdout.buffer
+            if hasattr(sys.stdout, 'buffer'):
+                stream = sys.stdout.buffer
+            else:
+                stream = sys.stdout
+
         self._stream = stream
         self._forward_stream = forward_stream or DiscardStream()
         # state objects we can switch too
