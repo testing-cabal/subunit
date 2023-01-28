@@ -55,3 +55,4 @@ perl/MYMETA.yml
 .*.swp
 .*.swo
 perl/MYMETA.json
+.hypothesis
