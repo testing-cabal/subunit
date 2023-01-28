@@ -87,4 +87,8 @@ setup(
         'docs': ['docutils'],
         'test': ['fixtures', 'testscenarios', 'hypothesis'],
     },
+    project_urls={
+        'Source': 'https://github.com/testing-cabal/subunit/', 
+        'Bugs': 'https://bugs.launchpad.net/subunit/',
+    },
 )
