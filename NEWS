@@ -5,11 +5,14 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
-* Drop various compatibility wrappers for Python < 3.6.
+* Subunit now has a dependency on an external iso8601
+  module rather than shipping its own.
   (Jelmer Vernooĳ)
 
 IMPROVEMENTS
 ~~~~~~~~~~~~
+
+* Drop various compatibility wrappers for Python < 3.6.
 
 BUG FIXES
 ~~~~~~~~~
