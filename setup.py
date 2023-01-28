@@ -58,7 +58,6 @@ setup(
     package_dir={'subunit': 'python/subunit'},
     python_requires=">=3.7",
     install_requires=[
-        'extras',
         'testtools>=0.9.34',
     ],
     entry_points={

@@ -17,7 +17,6 @@
 from optparse import OptionParser
 import sys
 
-from extras import safe_hasattr
 from testtools import CopyStreamResult, StreamResult, StreamResultRouter
 
 from subunit import (
@@ -183,7 +182,7 @@ def run_filter_script(result_factory, description, post_run_hook=None,
         input_stream=find_stream(sys.stdin, args))
     if post_run_hook:
         post_run_hook(result)
-    if not safe_hasattr(result, 'wasSuccessful'):
+    if not hasattr(result, 'wasSuccessful'):
         result = result.decorated
     if result.wasSuccessful():
         sys.exit(0)

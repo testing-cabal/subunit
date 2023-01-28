@@ -14,15 +14,13 @@
 #  limitations under that license.
 #
 
+import builtins
 import codecs
 import datetime
 import select
 import struct
 import sys
 import zlib
-
-from extras import safe_hasattr, try_imports
-builtins = try_imports(['__builtin__', 'builtins'])
 
 import subunit
 import subunit.iso8601 as iso8601
@@ -448,7 +446,7 @@ class ByteStreamToStreamResult(object):
                 'Bad checksum - calculated (0x%x), stored (0x%x)' % (
                     crc, packet_crc))
 
-        if safe_hasattr(builtins, 'memoryview'):
+        if hasattr(builtins, 'memoryview'):
             body = memoryview(packet[-1])
         else:
             body = packet[-1]
