@@ -23,7 +23,7 @@ import sys
 import zlib
 
 import subunit
-import subunit.iso8601 as iso8601
+import iso8601
 
 utf_8_decode = codecs.utf_8_decode
 
@@ -46,7 +46,7 @@ FLAG_TAGS = 0x0080
 FLAG_MIME_TYPE = 0x0020
 FLAG_EOF = 0x0010
 FLAG_FILE_CONTENT = 0x0040
-EPOCH = datetime.datetime.utcfromtimestamp(0).replace(tzinfo=iso8601.Utc())
+EPOCH = datetime.datetime.utcfromtimestamp(0).replace(tzinfo=iso8601.UTC)
 NUL_ELEMENT = b'\0'[0]
 # Contains True for types for which 'nul in thing' falsely returns false.
 _nul_test_broken = {}

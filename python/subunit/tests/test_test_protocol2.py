@@ -32,7 +32,7 @@ from testtools.testresult.doubles import StreamResult
 from testtools.tests.test_testresult import TestStreamResultContract
 
 import subunit
-import subunit.iso8601 as iso8601
+import iso8601
 
 CONSTANT_ENUM = b'\xb3)\x01\x0c\x03foo\x08U_\x1b'
 CONSTANT_INPROGRESS = b'\xb3)\x02\x0c\x03foo\x8e\xc1-\xb5'
@@ -218,7 +218,7 @@ class TestStreamResultToBytes(TestCase):
 
     def test_timestamp(self):
         timestamp = datetime.datetime(2001, 12, 12, 12, 59, 59, 45,
-            iso8601.Utc())
+            iso8601.UTC)
         result, output = self._make_result()
         result.status(test_id="bar", test_status='success', timestamp=timestamp)
         self.assertEqual(CONSTANT_TIMESTAMP, output.getvalue())
@@ -382,7 +382,7 @@ class TestByteStreamToStreamResult(TestCase):
 
     def test_timestamp(self):
         timestamp = datetime.datetime(2001, 12, 12, 12, 59, 59, 45,
-            iso8601.Utc())
+            iso8601.UTC)
         self.check_event(CONSTANT_TIMESTAMP,
             'success', test_id='bar', timestamp=timestamp)
 

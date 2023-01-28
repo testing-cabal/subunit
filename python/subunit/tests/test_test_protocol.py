@@ -39,8 +39,9 @@ except ImportError:
 
 from testtools.matchers import Contains, Equals, MatchesAny
 
+import iso8601
+
 import subunit
-import subunit.iso8601 as iso8601
 from subunit.tests import (_remote_exception_repr,
                            _remote_exception_repr_chunked,
                            _remote_exception_str,
@@ -981,7 +982,7 @@ class TestTestProtocolServerStreamTime(unittest.TestCase):
         self.assertEqual(_b(""), self.stream.getvalue())
         self.assertEqual([
             ('time', datetime.datetime(2001, 12, 12, 12, 59, 59, 0,
-            iso8601.Utc()))
+            iso8601.UTC))
             ], self.result._events)
 
 
@@ -1386,7 +1387,7 @@ class TestTestProtocolClient(TestCase):
     def test_time(self):
         # Calling time() outputs a time signal immediately.
         self.protocol.time(
-            datetime.datetime(2009,10,11,12,13,14,15, iso8601.Utc()))
+            datetime.datetime(2009,10,11,12,13,14,15, iso8601.UTC))
         self.assertEqual(
             _b("time: 2009-10-11 12:13:14.000015Z\n"),
             self.io.getvalue())
