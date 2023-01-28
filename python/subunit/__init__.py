@@ -124,7 +124,6 @@ import subprocess
 import sys
 import unittest
 
-from extras import safe_hasattr
 from testtools import content, content_type, ExtendedToOriginalDecorator
 from testtools.content import TracebackContent
 from testtools.compat import _b, _u
