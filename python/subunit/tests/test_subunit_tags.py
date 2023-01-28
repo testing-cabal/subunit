@@ -67,7 +67,7 @@ class TestSubUnitTags(testtools.TestCase):
         self.original.seek(0)
         self.assertEqual(
             0, subunit.tag_stream(self.original, self.filtered, ["quux"]))
-        self.assertThat(reference, Contains(self.filtered.getvalue()))
+        self.assertThat(reference, Contains(bytes(self.filtered.getvalue())))
 
     def test_remove_tag(self):
         reference = BytesIO()

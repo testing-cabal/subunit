@@ -5,6 +5,9 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+* Drop various compatibility wrappers for Python < 3.6.
+  (Jelmer Vernooĳ)
+
 IMPROVEMENTS
 ~~~~~~~~~~~~
 
