@@ -172,7 +172,11 @@ def is_stdout_DuplicateWriter(sys_stdout):
     """
     xmlrunner_module = 'xmlrunner'
     if xmlrunner_module in sys.modules:
-        return isinstance(sys_stdout, sys.modules[xmlrunner_module].result._DuplicateWriter)
+        if hasattr(sys.modules[xmlrunner_module], 'result'):
+            if hasattr(sys.modules[xmlrunner_module].result, '_DuplicateWriter'):
+                return isinstance(sys_stdout, sys.modules[xmlrunner_module].result._DuplicateWriter)
+
+        return False
     else:
         return False
 
