@@ -158,6 +158,24 @@ PROGRESS_CUR = 1
 PROGRESS_PUSH = 2
 PROGRESS_POP = 3
 
+from typing import TYPE_CHECKING, Optional, Type
+
+
+def is_stdout_DuplicateWriter(sys_stdout):
+    """
+    Returns a boolean, type checking sys.stdout to see if it was overriden by the unittest-xml-reporting
+    module without importing, matching type xmlrunner.result._DuplicateWriter.
+
+    @param sys_stdout: The current sys.stdout object.
+
+    @return: (bool) True if of type xmlrunner.result._DuplicateWriter, else False.
+    """
+    xmlrunner_module = 'xmlrunner'
+    if xmlrunner_module in sys.modules:
+        return isinstance(sys_stdout, sys.modules[xmlrunner_module].result._DuplicateWriter)
+    else:
+        return False
+
 
 def test_suite():
     import subunit.tests
@@ -510,7 +528,9 @@ class TestProtocolServer(object):
             if hasattr(sys.stdout, 'buffer'):
                 stream = sys.stdout.buffer
             else:
-                stream = sys.stdout
+                # check if sys.stdout was overridden by unittest-xml-reporting module with no buffer
+                if is_stdout_DuplicateWriter(sys.stdout):
+                    stream = sys.stdout
 
         self._stream = stream
         self._forward_stream = forward_stream or DiscardStream()
