@@ -14,15 +14,13 @@
 #  limitations under that license.
 #
 
+import builtins
 import codecs
 import datetime
 import select
 import struct
 import sys
 import zlib
-
-from extras import safe_hasattr, try_imports
-builtins = try_imports(['__builtin__', 'builtins'])
 
 import subunit
 import subunit.iso8601 as iso8601
@@ -52,22 +50,6 @@ EPOCH = datetime.datetime.utcfromtimestamp(0).replace(tzinfo=iso8601.Utc())
 NUL_ELEMENT = b'\0'[0]
 # Contains True for types for which 'nul in thing' falsely returns false.
 _nul_test_broken = {}
-
-
-def has_nul(buffer_or_bytes):
-    """Return True if a null byte is present in buffer_or_bytes."""
-    # Simple "if NUL_ELEMENT in utf8_bytes:" fails on Python 3.1 and 3.2 with
-    # memoryviews. See https://bugs.launchpad.net/subunit/+bug/1216246
-    buffer_type = type(buffer_or_bytes)
-    broken = _nul_test_broken.get(buffer_type)
-    if broken is None:
-        reference = buffer_type(b'\0')
-        broken = not NUL_ELEMENT in reference
-        _nul_test_broken[buffer_type] = broken
-    if broken:
-        return b'\0' in buffer_or_bytes
-    else:
-        return NUL_ELEMENT in buffer_or_bytes
 
 
 def read_exactly(stream, size):
@@ -386,35 +368,26 @@ class ByteStreamToStreamResult(object):
                 file_bytes=(error.args[0]).encode('utf8'),
                 mime_type="text/plain;charset=utf8")
 
-    def _to_bytes(self, data, pos, length):
-        """Return a slice of data from pos for length as bytes."""
-        # memoryview in 2.7.3 and 3.2 isn't directly usable with struct :(.
-        # see https://bugs.launchpad.net/subunit/+bug/1216163
-        result = data[pos:pos+length]
-        if type(result) is not bytes:
-            return result.tobytes()
-        return result
-
     def _parse_varint(self, data, pos, max_3_bytes=False):
         # because the only incremental IO we do is at the start, and the 32 bit
         # CRC means we can always safely read enough to cover any varint, we
         # can be sure that there should be enough data - and if not it is an
         # error not a normal situation.
-        data_0 = struct.unpack(FMT_8, self._to_bytes(data, pos, 1))[0]
+        data_0 = struct.unpack(FMT_8, data[pos:pos+1])[0]
         typeenum = data_0 & 0xc0
         value_0 = data_0 & 0x3f
         if typeenum == 0x00:
             return value_0, 1
         elif typeenum == 0x40:
-            data_1 = struct.unpack(FMT_8, self._to_bytes(data, pos+1, 1))[0]
+            data_1 = struct.unpack(FMT_8, data[pos+1:pos+2])[0]
             return (value_0 << 8) | data_1, 2
         elif typeenum == 0x80:
-            data_1 = struct.unpack(FMT_16, self._to_bytes(data, pos+1, 2))[0]
+            data_1 = struct.unpack(FMT_16, data[pos+1:pos+3])[0]
             return (value_0 << 16) | data_1, 3
         else:
             if max_3_bytes:
                 raise ParseError('3 byte maximum given but 4 byte value found.')
-            data_1, data_2 = struct.unpack(FMT_24, self._to_bytes(data, pos+1, 3))
+            data_1, data_2 = struct.unpack(FMT_24, data[pos+1:pos+4])
             result = (value_0 << 24) | data_1 << 8 | data_2
             return result, 4
 
@@ -448,7 +421,7 @@ class ByteStreamToStreamResult(object):
                 'Bad checksum - calculated (0x%x), stored (0x%x)' % (
                     crc, packet_crc))
 
-        if safe_hasattr(builtins, 'memoryview'):
+        if hasattr(builtins, 'memoryview'):
             body = memoryview(packet[-1])
         else:
             body = packet[-1]
@@ -459,7 +432,7 @@ class ByteStreamToStreamResult(object):
         # One packet could have both file and status data; the Python API
         # presents these separately (perhaps it shouldn't?)
         if flags & FLAG_TIMESTAMP:
-            seconds = struct.unpack(FMT_32, self._to_bytes(body, pos, 4))[0]
+            seconds = struct.unpack(FMT_32, body[pos:pos+4])[0]
             nanoseconds, consumed = self._parse_varint(body, pos+4)
             pos = pos + 4 + consumed
             timestamp = EPOCH + datetime.timedelta(
@@ -491,7 +464,7 @@ class ByteStreamToStreamResult(object):
             file_name, pos = self._read_utf8(body, pos)
             content_length, consumed = self._parse_varint(body, pos)
             pos += consumed
-            file_bytes = self._to_bytes(body, pos, content_length)
+            file_bytes = body[pos:pos+content_length]
             if len(file_bytes) != content_length:
                 raise ParseError('File content extends past end of packet: '
                                  'claimed %d bytes, %d available' % (
@@ -526,7 +499,7 @@ class ByteStreamToStreamResult(object):
                 'UTF8 string at offset %d extends past end of packet: '
                 'claimed %d bytes, %d available' % (pos - 2, length,
                 len(utf8_bytes)))
-        if has_nul(utf8_bytes):
+        if NUL_ELEMENT in utf8_bytes:
             raise ParseError('UTF8 string at offset %d contains NUL byte' % (
                 pos-2,))
         try:
