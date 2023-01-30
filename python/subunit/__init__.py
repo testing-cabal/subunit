@@ -157,8 +157,6 @@ PROGRESS_CUR = 1
 PROGRESS_PUSH = 2
 PROGRESS_POP = 3
 
-from typing import TYPE_CHECKING, Optional, Type
-
 
 def is_stdout_DuplicateWriter(sys_stdout):
     """
