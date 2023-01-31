@@ -50,18 +50,14 @@ import threading
 import unittest
 
 import gi
-gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GObject
 
+gi.require_version('Gtk', '3.0')
+from gi.repository import GObject, Gtk
 from testtools import StreamToExtendedDecorator
 
-from subunit import (
-    PROGRESS_POP,
-    PROGRESS_PUSH,
-    PROGRESS_SET,
-    ByteStreamToStreamResult,
-    )
-from subunit.progress_model import  ProgressModel
+from subunit import (PROGRESS_POP, PROGRESS_PUSH, PROGRESS_SET,
+                     ByteStreamToStreamResult)
+from subunit.progress_model import ProgressModel
 
 
 class GTKTestResult(unittest.TestResult):

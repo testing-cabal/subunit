@@ -15,34 +15,24 @@
 #
 
 import datetime
-from functools import partial
-from io import BytesIO, StringIO, TextIOWrapper
 import optparse
 import sys
+from contextlib import contextmanager
+from functools import partial
+from io import BytesIO, StringIO, TextIOWrapper
 from tempfile import NamedTemporaryFile
 
-from contextlib import contextmanager
 from testtools import TestCase
 from testtools.compat import _u
-from testtools.matchers import (
-    Equals,
-    Matcher,
-    MatchesAny,
-    MatchesListwise,
-    Mismatch,
-    raises,
-)
+from testtools.matchers import (Equals, Matcher, MatchesAny, MatchesListwise,
+                                Mismatch, raises)
 from testtools.testresult.doubles import StreamResult
 
-from subunit.iso8601 import UTC
-from subunit.v2 import StreamResultToBytes, ByteStreamToStreamResult
-from subunit._output import (
-    _ALL_ACTIONS,
-    _FINAL_ACTIONS,
-    generate_stream_results,
-    parse_arguments,
-)
 import subunit._output as _o
+from subunit._output import (_ALL_ACTIONS, _FINAL_ACTIONS,
+                             generate_stream_results, parse_arguments)
+from subunit.iso8601 import UTC
+from subunit.v2 import ByteStreamToStreamResult, StreamResultToBytes
 
 
 class SafeOptionParser(optparse.OptionParser):

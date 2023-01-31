@@ -16,9 +16,8 @@
 
 """Tests for subunit.TestResultStats."""
 
-from io import BytesIO
-from io import StringIO
 import unittest
+from io import BytesIO, StringIO
 
 from testtools.compat import _b
 

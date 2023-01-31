@@ -18,12 +18,11 @@ import os.path
 
 from fixtures import TempDir
 from testtools import TestCase
-from testtools.matchers import (
-    FileContains
-    )
+from testtools.matchers import FileContains
 
 from subunit import _to_disk
 from subunit.v2 import StreamResultToBytes
+
 
 class SmokeTest(TestCase):
 

@@ -16,12 +16,13 @@
 
 """Display a subunit stream through python's unittest test runner."""
 
-from operator import methodcaller
-from optparse import OptionParser
 import sys
 import unittest
+from operator import methodcaller
+from optparse import OptionParser
 
-from testtools import StreamToExtendedDecorator, DecorateTestCaseResult, StreamResultRouter
+from testtools import (DecorateTestCaseResult, StreamResultRouter,
+                       StreamToExtendedDecorator)
 
 from subunit import ByteStreamToStreamResult
 from subunit.filters import find_stream
@@ -50,8 +51,8 @@ def main():
                                   before_run=methodcaller('startTestRun'),
                                   after_run=methodcaller('stopTestRun'))
     if options.progress:
-        from bzrlib.tests import TextTestRunner
         from bzrlib import ui
+        from bzrlib.tests import TextTestRunner
         ui.ui_factory = ui.make_ui_for_terminal(None, sys.stdout, sys.stderr)
         runner = TextTestRunner()
     else:

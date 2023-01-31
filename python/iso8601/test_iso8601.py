@@ -1,5 +1,6 @@
 import iso8601
 
+
 def test_iso8601_regex():
     assert iso8601.ISO8601_REGEX.match("2006-10-11T00:14:33Z")
 

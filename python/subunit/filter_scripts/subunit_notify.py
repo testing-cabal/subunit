@@ -17,6 +17,7 @@
 """Notify the user of a finished test run."""
 
 import gi
+
 gi.require_version('Gtk', '3.0')
 from gi.repository import Notify
 from testtools import StreamToExtendedDecorator

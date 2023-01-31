@@ -20,15 +20,12 @@ import csv
 import datetime
 
 import testtools
-from testtools.content import (
-    text_content,
-    TracebackContent,
-    )
 from testtools import StreamResult
+from testtools.content import TracebackContent, text_content
 from testtools.testcase import PlaceHolder
 
-from subunit import iso8601
 import subunit
+from subunit import iso8601
 
 
 # NOT a TestResult, because we are implementing the interface, not inheriting

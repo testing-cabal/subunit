@@ -14,18 +14,13 @@
 #
 
 import datetime
-from functools import partial
-from optparse import (
-    OptionGroup,
-    OptionParser,
-    OptionValueError,
-)
 import sys
+from functools import partial
+from optparse import OptionGroup, OptionParser, OptionValueError
 
 from subunit import make_stream_binary
 from subunit.iso8601 import UTC
 from subunit.v2 import StreamResultToBytes
-
 
 _FINAL_ACTIONS = frozenset([
     'exists',

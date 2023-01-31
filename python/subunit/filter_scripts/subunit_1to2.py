@@ -16,8 +16,8 @@
 
 """Convert a version 1 subunit stream to version 2 stream."""
 
-from optparse import OptionParser
 import sys
+from optparse import OptionParser
 
 from testtools import ExtendedToStreamDecorator
 
