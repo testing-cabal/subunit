@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 import sys
+
 if sys.platform == "win32":
-    import msvcrt, os
+    import msvcrt
+    import os
     msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
 if len(sys.argv) == 2:
     # subunit.tests.test_test_protocol.TestExecTestCase.test_sample_method_args 

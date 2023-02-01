@@ -25,17 +25,11 @@ import os
 import sys
 
 from testtools import ExtendedToStreamDecorator
+from testtools.run import (BUFFEROUTPUT, CATCHBREAK, FAILFAST, USAGE_AS_MAIN,
+                           TestProgram, list_test)
 
 from subunit import StreamResultToBytes
 from subunit.test_results import AutoTimingTestResultDecorator
-from testtools.run import (
-    BUFFEROUTPUT,
-    CATCHBREAK,
-    FAILFAST,
-    list_test,
-    TestProgram,
-    USAGE_AS_MAIN,
-    )
 
 
 class SubunitTestRunner(object):

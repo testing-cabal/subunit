@@ -16,13 +16,10 @@
 
 """Convert a version 2 subunit stream to a version 1 stream."""
 
-from optparse import OptionParser
 import sys
+from optparse import OptionParser
 
-from testtools import (
-    StreamToExtendedDecorator,
-    StreamResultRouter,
-    )
+from testtools import StreamResultRouter, StreamToExtendedDecorator
 
 from subunit import ByteStreamToStreamResult, TestProtocolClient
 from subunit.filters import find_stream

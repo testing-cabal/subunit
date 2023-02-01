@@ -12,12 +12,12 @@
 #  license you chose for the specific language governing permissions and
 #  limitations under that license.
 
-from errno import EEXIST
 import io
 import json
 import optparse
 import os.path
 import sys
+from errno import EEXIST
 from textwrap import dedent
 
 from testtools import StreamToDict

@@ -19,9 +19,8 @@ from tempfile import NamedTemporaryFile
 
 from testtools import TestCase
 
-from subunit.filters import find_stream
-
 from subunit import read_test_list
+from subunit.filters import find_stream
 
 
 class TestReadTestList(TestCase):

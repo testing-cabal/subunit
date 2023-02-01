@@ -19,7 +19,6 @@ from unittest import TestLoader
 
 from testscenarios import generate_scenarios
 
-
 # Before the test module imports to avoid circularity.
 # For testing: different pythons have different str() implementations.
 _remote_exception_repr = "testtools.testresult.real._StringException"
@@ -28,22 +27,12 @@ _remote_exception_str = "Traceback (most recent call last):\ntesttools.testresul
 _remote_exception_str_chunked = "57\r\n" + _remote_exception_str + ": boo qux\n0\r\n"
 
 
-from subunit.tests import (
-    test_chunked,
-    test_details,
-    test_filters,
-    test_filter_to_disk,
-    test_output_filter,
-    test_progress_model,
-    test_run,
-    test_subunit_filter,
-    test_subunit_stats,
-    test_subunit_tags,
-    test_tap2subunit,
-    test_test_protocol,
-    test_test_protocol2,
-    test_test_results,
-    )
+from subunit.tests import (test_chunked, test_details, test_filter_to_disk,
+                           test_filters, test_output_filter,
+                           test_progress_model, test_run, test_subunit_filter,
+                           test_subunit_stats, test_subunit_tags,
+                           test_tap2subunit, test_test_protocol,
+                           test_test_protocol2, test_test_results)
 
 
 def test_suite():

@@ -14,15 +14,13 @@
 #
 
 
-from optparse import OptionParser
 import sys
+from optparse import OptionParser
 
 from testtools import CopyStreamResult, StreamResult, StreamResultRouter
 
-from subunit import (
-    DiscardStream, ProtocolTestCase, ByteStreamToStreamResult,
-    StreamResultToBytes,
-    )
+from subunit import (ByteStreamToStreamResult, DiscardStream, ProtocolTestCase,
+                     StreamResultToBytes)
 from subunit.test_results import CatFiles
 
 

@@ -16,21 +16,20 @@
 
 """Tests for subunit.TestResultFilter."""
 
-from datetime import datetime
-from io import BytesIO
 import os
 import subprocess
 import sys
 import unittest
+from datetime import datetime
+from io import BytesIO
 
-from testtools.compat import _b
 from testtools import TestCase
+from testtools.compat import _b
 from testtools.testresult.doubles import ExtendedTestResult, StreamResult
 
 import subunit
-from subunit import iso8601
-from subunit.test_results import make_tag_filter, TestResultFilter
-from subunit import ByteStreamToStreamResult, StreamResultToBytes
+from subunit import ByteStreamToStreamResult, StreamResultToBytes, iso8601
+from subunit.test_results import TestResultFilter, make_tag_filter
 
 
 class TestTestResultFilter(TestCase):

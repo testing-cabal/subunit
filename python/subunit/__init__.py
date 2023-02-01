@@ -115,25 +115,25 @@ Utility modules
 * subunit.test_results contains TestResult helper classes.
 """
 
-from io import BytesIO
-from io import StringIO
-from io import UnsupportedOperation as _UnsupportedOperation
 import os
 import re
 import subprocess
 import sys
 import unittest
+from io import BytesIO, StringIO
+from io import UnsupportedOperation as _UnsupportedOperation
 
-from testtools import content, content_type, ExtendedToOriginalDecorator
-from testtools.content import TracebackContent
+from testtools import ExtendedToOriginalDecorator, content, content_type
 from testtools.compat import _b, _u
+from testtools.content import TracebackContent
+
 try:
     from testtools.testresult.real import _StringException
     RemoteException = _StringException
 except ImportError:
     raise ImportError ("testtools.testresult.real does not contain "
         "_StringException, check your version.")
-from testtools import testresult, CopyStreamResult
+from testtools import CopyStreamResult, testresult
 
 from subunit import chunked, details, iso8601, test_results
 from subunit.v2 import ByteStreamToStreamResult, StreamResultToBytes

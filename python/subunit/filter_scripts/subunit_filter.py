@@ -26,22 +26,16 @@ contains tests which match any of the --with expressions and none of the
 Remember to quote shell metacharacters.
 """
 
-from optparse import OptionParser
-import sys
 import re
+import sys
+from optparse import OptionParser
 
 from testtools import ExtendedToStreamDecorator, StreamToExtendedDecorator
 
-from subunit import (
-    StreamResultToBytes,
-    read_test_list,
-    )
+from subunit import StreamResultToBytes, read_test_list
 from subunit.filters import filter_by_result, find_stream
-from subunit.test_results import (
-    and_predicates,
-    make_tag_filter,
-    TestResultFilter,
-    )
+from subunit.test_results import (TestResultFilter, and_predicates,
+                                  make_tag_filter)
 
 
 def make_options(description):

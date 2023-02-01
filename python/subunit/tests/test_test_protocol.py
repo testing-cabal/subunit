@@ -16,39 +16,35 @@
 
 import datetime
 import io
-from io import BytesIO
-from io import StringIO
 import os
 import tempfile
 import unittest
+from io import BytesIO, StringIO
 
-from testtools import PlaceHolder, skipIf, TestCase, TestResult
+from testtools import PlaceHolder, TestCase, TestResult, skipIf
 from testtools.compat import _b, _u
 from testtools.content import Content, TracebackContent, text_content
 from testtools.content_type import ContentType
+
 try:
-    from testtools.testresult.doubles import (
-        Python26TestResult,
-        Python27TestResult,
-        ExtendedTestResult,
-        )
+    from testtools.testresult.doubles import (ExtendedTestResult,
+                                              Python26TestResult,
+                                              Python27TestResult)
 except ImportError:
     from testtools.tests.helpers import (
         Python26TestResult,
         Python27TestResult,
         ExtendedTestResult,
         )
+
 from testtools.matchers import Contains, Equals, MatchesAny
 
 import subunit
-from subunit.tests import (
-    _remote_exception_repr,
-    _remote_exception_repr_chunked,
-    _remote_exception_str,
-    _remote_exception_str_chunked,
-    )
 import subunit.iso8601 as iso8601
-
+from subunit.tests import (_remote_exception_repr,
+                           _remote_exception_repr_chunked,
+                           _remote_exception_str,
+                           _remote_exception_str_chunked)
 
 tb_prelude = "Traceback (most recent call last):\n"
 
@@ -90,14 +86,9 @@ class TestHelpers(TestCase):
 class TestTestImports(unittest.TestCase):
 
     def test_imports(self):
-        from subunit import DiscardStream
-        from subunit import TestProtocolServer
-        from subunit import RemotedTestCase
-        from subunit import RemoteError
-        from subunit import ExecTestCase
-        from subunit import IsolatedTestCase
-        from subunit import TestProtocolClient
-        from subunit import ProtocolTestCase
+        from subunit import (DiscardStream, ExecTestCase, IsolatedTestCase,
+                             ProtocolTestCase, RemotedTestCase, RemoteError,
+                             TestProtocolClient, TestProtocolServer)
 
 
 class TestDiscardStream(unittest.TestCase):

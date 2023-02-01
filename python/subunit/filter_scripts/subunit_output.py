@@ -20,6 +20,7 @@ import sys
 
 from subunit._output import output_main
 
+
 def main():
     sys.exit(output_main())
 

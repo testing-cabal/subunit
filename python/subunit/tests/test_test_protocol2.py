@@ -14,22 +14,22 @@
 #  limitations under that license.
 #
 
-from io import BytesIO
 import datetime
+from io import BytesIO
 
 try:
     from hypothesis import given
-# To debug hypothesis
-# from hypothesis import Settings, Verbosity
-# Settings.default.verbosity = Verbosity.verbose
+    # To debug hypothesis
+    # from hypothesis import Settings, Verbosity
+    # Settings.default.verbosity = Verbosity.verbose
     import hypothesis.strategies as st
 except ImportError:
     given = None
     st = None
 from testtools import TestCase
 from testtools.matchers import Contains, HasLength
-from testtools.tests.test_testresult import TestStreamResultContract
 from testtools.testresult.doubles import StreamResult
+from testtools.tests.test_testresult import TestStreamResultContract
 
 import subunit
 import subunit.iso8601 as iso8601

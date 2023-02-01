@@ -16,22 +16,18 @@
 
 import csv
 import datetime
-from io import StringIO
 import sys
 import unittest
+from io import StringIO
 
+import testtools
 from testtools import TestCase
-from testtools.content import (
-    text_content,
-    TracebackContent,
-)
+from testtools.content import TracebackContent, text_content
 from testtools.testresult.doubles import ExtendedTestResult
 
 import subunit
 import subunit.iso8601 as iso8601
 import subunit.test_results
-
-import testtools
 
 
 class LoggingDecorator(subunit.test_results.HookedTestResultDecorator):

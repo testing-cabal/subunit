@@ -15,8 +15,8 @@
 #  limitations under that license.
 #
 
-from io import BytesIO
 import unittest
+from io import BytesIO
 
 from testtools.compat import _b
 

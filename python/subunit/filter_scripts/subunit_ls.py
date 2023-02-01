@@ -16,19 +16,14 @@
 
 """List tests in a subunit stream."""
 
-from optparse import OptionParser
 import sys
+from optparse import OptionParser
 
-from testtools import (
-    CopyStreamResult, StreamResultRouter,
-    StreamSummary)
+from testtools import CopyStreamResult, StreamResultRouter, StreamSummary
 
 from subunit import ByteStreamToStreamResult
 from subunit.filters import find_stream
-from subunit.test_results import (
-    CatFiles,
-    TestIdPrintingResult,
-    )
+from subunit.test_results import CatFiles, TestIdPrintingResult
 
 
 def main():
