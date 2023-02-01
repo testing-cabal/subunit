@@ -438,8 +438,10 @@ class TestInTestMultipart(unittest.TestCase):
             None, self.protocol._reading_success_details)
         parser = self.protocol._reading_success_details.details_parser
         self.assertNotEqual(None, parser)
-        self.assertTrue(isinstance(parser,
-            subunit.details.MultipartDetailsParser))
+        self.assertIsInstance(
+            parser,
+            subunit.details.MultipartDetailsParser
+        )
 
 
 class TestTestProtocolServerAddError(unittest.TestCase):
