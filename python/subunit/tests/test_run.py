@@ -70,7 +70,7 @@ class TestSubunitTestRunner(TestCase):
         runner = SubunitTestRunner(stream=bytestream)
         def list_test(test):
             return [], []
-        class Loader(object):
+        class Loader:
             errors = ['failed import']
         loader = Loader()
         self.patch(run, 'list_test', list_test)

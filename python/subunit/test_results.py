@@ -30,7 +30,7 @@ from subunit import iso8601
 
 # NOT a TestResult, because we are implementing the interface, not inheriting
 # it.
-class TestResultDecorator(object):
+class TestResultDecorator:
     """General pass-through decorator.
 
     This provides a base that other TestResults can inherit from to
@@ -112,7 +112,7 @@ class HookedTestResultDecorator(TestResultDecorator):
     """A TestResult which calls a hook on every event."""
 
     def __init__(self, decorated):
-        self.super = super(HookedTestResultDecorator, self)
+        self.super = super()
         self.super.__init__(decorated)
 
     def startTest(self, test):
@@ -187,7 +187,7 @@ class AutoTimingTestResultDecorator(HookedTestResultDecorator):
 
     def __init__(self, decorated):
         self._time = None
-        super(AutoTimingTestResultDecorator, self).__init__(decorated)
+        super().__init__(decorated)
 
     def _before_event(self):
         time = self._time
@@ -215,7 +215,7 @@ class AutoTimingTestResultDecorator(HookedTestResultDecorator):
         return self.decorated.time(a_datetime)
 
 
-class TagsMixin(object):
+class TagsMixin:
 
     def __init__(self):
         self._clear_tags()
@@ -274,7 +274,7 @@ class TagCollapsingDecorator(HookedTestResultDecorator, TagsMixin):
     """Collapses many 'tags' calls into one where possible."""
 
     def __init__(self, result):
-        super(TagCollapsingDecorator, self).__init__(result)
+        super().__init__(result)
         self._clear_tags()
 
     def _before_event(self):
@@ -288,7 +288,7 @@ class TimeCollapsingDecorator(HookedTestResultDecorator):
     """Only pass on the first and last of a consecutive sequence of times."""
 
     def __init__(self, decorated):
-        super(TimeCollapsingDecorator, self).__init__(decorated)
+        super().__init__(decorated)
         self._last_received_time = None
         self._last_sent_time = None
 
@@ -334,7 +334,7 @@ def make_tag_filter(with_tags, without_tags):
 class _PredicateFilter(TestResultDecorator, TagsMixin):
 
     def __init__(self, result, predicate):
-        super(_PredicateFilter, self).__init__(result)
+        super().__init__(result)
         self._clear_tags()
         self.decorated = TimeCollapsingDecorator(
             TagCollapsingDecorator(self.decorated))
@@ -423,7 +423,7 @@ class _PredicateFilter(TestResultDecorator, TagsMixin):
         if self._current_test is not None:
             self._buffered_calls.append(('tags', [new_tags, gone_tags], {}))
         else:
-            return super(_PredicateFilter, self).tags(new_tags, gone_tags)
+            return super().tags(new_tags, gone_tags)
 
     def time(self, a_time):
         return self.decorated.time(a_time)
@@ -494,7 +494,7 @@ class TestResultFilter(TestResultDecorator):
                     return filter_predicate(test, outcome, error, details)
             predicates.append(compat)
         predicate = and_predicates(predicates)
-        super(TestResultFilter, self).__init__(
+        super().__init__(
             _PredicateFilter(result, predicate))
         if fixup_expected_failures is None:
             self._fixup_expected_failures = frozenset()
@@ -507,7 +507,7 @@ class TestResultFilter(TestResultDecorator):
         if self._failure_expected(test):
             self.addExpectedFailure(test, err=err, details=details)
         else:
-            super(TestResultFilter, self).addError(
+            super().addError(
                 test, err=err, details=details)
 
     def addFailure(self, test, err=None, details=None):
@@ -515,7 +515,7 @@ class TestResultFilter(TestResultDecorator):
         if self._failure_expected(test):
             self.addExpectedFailure(test, err=err, details=details)
         else:
-            super(TestResultFilter, self).addFailure(
+            super().addFailure(
                 test, err=err, details=details)
 
     def addSuccess(self, test, details=None):
@@ -523,7 +523,7 @@ class TestResultFilter(TestResultDecorator):
         if self._failure_expected(test):
             self.addUnexpectedSuccess(test, details=details)
         else:
-            super(TestResultFilter, self).addSuccess(test, details=details)
+            super().addSuccess(test, details=details)
 
     def _failure_expected(self, test):
         return (test.id() in self._fixup_expected_failures)
@@ -545,7 +545,7 @@ class TestIdPrintingResult(testtools.TestResult):
 
     def __init__(self, stream, show_times=False, show_exists=False):
         """Create a FilterResult object outputting to stream."""
-        super(TestIdPrintingResult, self).__init__()
+        super().__init__()
         self._stream = stream
         self.show_exists = show_exists
         self.show_times = show_times
@@ -647,11 +647,11 @@ class TestByTestResult(testtools.TestResult):
             and a details dict. Is called at the end of each test (i.e. on
             ``stopTest``) with the accumulated values for that test.
         """
-        super(TestByTestResult, self).__init__()
+        super().__init__()
         self._on_test = on_test
 
     def startTest(self, test):
-        super(TestByTestResult, self).startTest(test)
+        super().startTest(test)
         self._start_time = self._now()
         # There's no supported (i.e. tested) behaviour that relies on these
         # being set, but it makes me more comfortable all the same. -- jml
@@ -661,7 +661,7 @@ class TestByTestResult(testtools.TestResult):
 
     def stopTest(self, test):
         self._stop_time = self._now()
-        super(TestByTestResult, self).stopTest(test)
+        super().stopTest(test)
         self._on_test(
             test=test,
             status=self._status,
@@ -677,22 +677,22 @@ class TestByTestResult(testtools.TestResult):
         return {'traceback': TracebackContent(err, test)}
 
     def addSuccess(self, test, details=None):
-        super(TestByTestResult, self).addSuccess(test)
+        super().addSuccess(test)
         self._status = 'success'
         self._details = details
 
     def addFailure(self, test, err=None, details=None):
-        super(TestByTestResult, self).addFailure(test, err, details)
+        super().addFailure(test, err, details)
         self._status = 'failure'
         self._details = self._err_to_details(test, err, details)
 
     def addError(self, test, err=None, details=None):
-        super(TestByTestResult, self).addError(test, err, details)
+        super().addError(test, err, details)
         self._status = 'error'
         self._details = self._err_to_details(test, err, details)
 
     def addSkip(self, test, reason=None, details=None):
-        super(TestByTestResult, self).addSkip(test, reason, details)
+        super().addSkip(test, reason, details)
         self._status = 'skip'
         if details is None:
             details = {'reason': text_content(reason)}
@@ -702,12 +702,12 @@ class TestByTestResult(testtools.TestResult):
         self._details = details
 
     def addExpectedFailure(self, test, err=None, details=None):
-        super(TestByTestResult, self).addExpectedFailure(test, err, details)
+        super().addExpectedFailure(test, err, details)
         self._status = 'xfail'
         self._details = self._err_to_details(test, err, details)
 
     def addUnexpectedSuccess(self, test, details=None):
-        super(TestByTestResult, self).addUnexpectedSuccess(test, details)
+        super().addUnexpectedSuccess(test, details)
         self._status = 'success'
         self._details = details
 
@@ -715,14 +715,14 @@ class TestByTestResult(testtools.TestResult):
 class CsvResult(TestByTestResult):
 
     def __init__(self, stream):
-        super(CsvResult, self).__init__(self._on_test)
+        super().__init__(self._on_test)
         self._write_row = csv.writer(stream).writerow
 
     def _on_test(self, test, status, start_time, stop_time, tags, details):
         self._write_row([test.id(), status, start_time, stop_time])
 
     def startTestRun(self):
-        super(CsvResult, self).startTestRun()
+        super().startTestRun()
         self._write_row(['test', 'status', 'start_time', 'stop_time'])
 
 
