@@ -33,7 +33,7 @@ class SmokeTest(TestCase):
         writer = StreamResultToBytes(stdin)
         writer.startTestRun()
         writer.status(
-            'foo', 'success', set(['tag']), file_name='fred',
+            'foo', 'success', {'tag'}, file_name='fred',
             file_bytes=b'abcdefg', eof=True, mime_type='text/plain')
         writer.stopTestRun()
         stdin.seek(0)

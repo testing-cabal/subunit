@@ -356,7 +356,7 @@ class TestTestProtocolServerLostConnection(unittest.TestCase):
 
     def do_connection_lost(self, outcome, opening):
         self.protocol.lineReceived(_b("test old mcdonald\n"))
-        self.protocol.lineReceived(_b("%s old mcdonald %s" % (outcome, opening)))
+        self.protocol.lineReceived(_b("{} old mcdonald {}".format(outcome, opening)))
         self.protocol.lostConnection()
         failure = subunit.RemoteError(
             _u("lost connection during %s report of test 'old mcdonald'") %
@@ -933,13 +933,13 @@ class TestTestProtocolServerStreamTags(unittest.TestCase):
     def test_initial_tags(self):
         self.protocol.lineReceived(_b("tags: foo bar:baz  quux\n"))
         self.assertEqual([
-            ('tags', set(["foo", "bar:baz", "quux"]), set()),
+            ('tags', {"foo", "bar:baz", "quux"}, set()),
             ], self.client._events)
 
     def test_minus_removes_tags(self):
         self.protocol.lineReceived(_b("tags: -bar quux\n"))
         self.assertEqual([
-            ('tags', set(["quux"]), set(["bar"])),
+            ('tags', {"quux"}, {"bar"}),
             ], self.client._events)
 
     def test_tags_do_not_get_set_on_test(self):
@@ -1174,7 +1174,7 @@ class TestIsolatedTestSuite(TestCase):
 class TestTestProtocolClient(TestCase):
 
     def setUp(self):
-        super(TestTestProtocolClient, self).setUp()
+        super().setUp()
         self.io = BytesIO()
         self.protocol = subunit.TestProtocolClient(self.io)
         self.unicode_test = PlaceHolder(_u('\u2603'))
@@ -1411,15 +1411,15 @@ class TestTestProtocolClient(TestCase):
         self.assertEqual(_b(""), self.io.getvalue())
 
     def test_tags_add(self):
-        self.protocol.tags(set(['foo']), set())
+        self.protocol.tags({'foo'}, set())
         self.assertEqual(_b("tags: foo\n"), self.io.getvalue())
 
     def test_tags_both(self):
-        self.protocol.tags(set(['quux']), set(['bar']))
+        self.protocol.tags({'quux'}, {'bar'})
         self.assertThat(
             [b"tags: quux -bar\n", b"tags: -bar quux\n"],
             Contains(self.io.getvalue()))
 
     def test_tags_gone(self):
-        self.protocol.tags(set(), set(['bar']))
+        self.protocol.tags(set(), {'bar'})
         self.assertEqual(_b("tags: -bar\n"), self.io.getvalue())

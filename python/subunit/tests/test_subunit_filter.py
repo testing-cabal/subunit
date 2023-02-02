@@ -109,7 +109,7 @@ xfail todo
         foo = subunit.RemotedTestCase('foo')
         self.assertEqual(
             [('startTest', foo),
-             ('tags', set(['a']), set()),
+             ('tags', {'a'}, set()),
              ('addSuccess', foo),
              ('stopTest', foo),
              ],
@@ -130,7 +130,7 @@ xfail todo
     def test_fixup_expected_failures(self):
         filtered_result = unittest.TestResult()
         result_filter = TestResultFilter(filtered_result,
-            fixup_expected_failures=set(["failed"]))
+            fixup_expected_failures={"failed"})
         self.run_tests(result_filter)
         self.assertEqual(['failed', 'todo'],
             [failure[0].id() for failure in filtered_result.expectedFailures])
@@ -140,7 +140,7 @@ xfail todo
     def test_fixup_expected_errors(self):
         filtered_result = unittest.TestResult()
         result_filter = TestResultFilter(filtered_result,
-            fixup_expected_failures=set(["error"]))
+            fixup_expected_failures={"error"})
         self.run_tests(result_filter)
         self.assertEqual(['error', 'todo'],
             [failure[0].id() for failure in filtered_result.expectedFailures])
@@ -150,7 +150,7 @@ xfail todo
     def test_fixup_unexpected_success(self):
         filtered_result = unittest.TestResult()
         result_filter = TestResultFilter(filtered_result, filter_success=False,
-            fixup_expected_failures=set(["passed"]))
+            fixup_expected_failures={"passed"})
         self.run_tests(result_filter)
         self.assertEqual(['passed'],
             [passed.id() for passed in filtered_result.unexpectedSuccesses])
@@ -310,7 +310,7 @@ class TestFilterCommand(TestCase):
             stderr=subprocess.PIPE)
         out, err = ps.communicate(stream)
         if ps.returncode != 0:
-            raise RuntimeError("%s failed: %s" % (command, err))
+            raise RuntimeError("{} failed: {}".format(command, err))
         return out
 
     def test_default(self):
@@ -321,7 +321,7 @@ class TestFilterCommand(TestCase):
         output = self.run_command([], byte_stream.getvalue())
         events = StreamResult()
         ByteStreamToStreamResult(BytesIO(output)).run(events)
-        ids = set(event[1] for event in events._events)
+        ids = {event[1] for event in events._events}
         self.assertEqual([
             ('status', 'foo', 'inprogress'),
             ('status', 'foo', 'skip'),
@@ -331,21 +331,21 @@ class TestFilterCommand(TestCase):
         byte_stream = BytesIO()
         stream = StreamResultToBytes(byte_stream)
         stream.status(
-            test_id="foo", test_status="inprogress", test_tags=set(["a"]))
+            test_id="foo", test_status="inprogress", test_tags={"a"})
         stream.status(
-            test_id="foo", test_status="success", test_tags=set(["a"]))
+            test_id="foo", test_status="success", test_tags={"a"})
         stream.status(test_id="bar", test_status="inprogress")
         stream.status(test_id="bar", test_status="inprogress")
         stream.status(
-            test_id="baz", test_status="inprogress", test_tags=set(["a"]))
+            test_id="baz", test_status="inprogress", test_tags={"a"})
         stream.status(
-            test_id="baz", test_status="success", test_tags=set(["a"]))
+            test_id="baz", test_status="success", test_tags={"a"})
         output = self.run_command(
             ['-s', '--with-tag', 'a'], byte_stream.getvalue())
         events = StreamResult()
         ByteStreamToStreamResult(BytesIO(output)).run(events)
-        ids = set(event[1] for event in events._events)
-        self.assertEqual(set(['foo', 'baz']), ids)
+        ids = {event[1] for event in events._events}
+        self.assertEqual({'foo', 'baz'}, ids)
 
     def test_no_passthrough(self):
         output = self.run_command(['--no-passthrough'], b'hi thar')

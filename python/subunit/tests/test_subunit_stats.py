@@ -64,7 +64,7 @@ xfail todo
         self.assertEqual(2, self.result.passed_tests)
         self.assertEqual(2, self.result.failed_tests)
         self.assertEqual(1, self.result.skipped_tests)
-        self.assertEqual(set(["global", "local"]), self.result.seen_tags)
+        self.assertEqual({"global", "local"}, self.result.seen_tags)
 
     def test_stat_formatting(self):
         expected = ("""

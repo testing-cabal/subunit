@@ -213,7 +213,7 @@ class TestStreamResultToBytes(TestCase):
 
     def test_tags(self):
         result, output = self._make_result()
-        result.status(test_id="bar", test_tags=set(['foo', 'bar']))
+        result.status(test_id="bar", test_tags={'foo', 'bar'})
         self.assertThat(CONSTANT_TAGS, Contains(output.getvalue()))
 
     def test_timestamp(self):
@@ -378,7 +378,7 @@ class TestByteStreamToStreamResult(TestCase):
 
     def test_tags(self):
         self.check_event(CONSTANT_TAGS[0],
-            None, tags=set(['foo', 'bar']), test_id="bar")
+            None, tags={'foo', 'bar'}, test_id="bar")
 
     def test_timestamp(self):
         timestamp = datetime.datetime(2001, 12, 12, 12, 59, 59, 45,

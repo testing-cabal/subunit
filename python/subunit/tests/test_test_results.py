@@ -34,7 +34,7 @@ class LoggingDecorator(subunit.test_results.HookedTestResultDecorator):
 
     def __init__(self, decorated):
         self._calls = 0
-        super(LoggingDecorator, self).__init__(decorated)
+        super().__init__(decorated)
 
     def _before_event(self):
         self._calls += 1
@@ -45,17 +45,17 @@ class AssertBeforeTestResult(LoggingDecorator):
 
     def __init__(self, decorated, test):
         self.test = test
-        super(AssertBeforeTestResult, self).__init__(decorated)
+        super().__init__(decorated)
 
     def _before_event(self):
         self.test.assertEqual(1, self.earlier._calls)
-        super(AssertBeforeTestResult, self)._before_event()
+        super()._before_event()
 
 
 class TimeCapturingResult(unittest.TestResult):
 
     def __init__(self):
-        super(TimeCapturingResult, self).__init__()
+        super().__init__()
         self._calls = []
         self.failfast = False
 
@@ -206,11 +206,11 @@ class TestTagCollapsingDecorator(TestCase):
     def test_tags_collapsed_outside_of_tests(self):
         result = ExtendedTestResult()
         tag_collapser = subunit.test_results.TagCollapsingDecorator(result)
-        tag_collapser.tags(set(['a']), set())
-        tag_collapser.tags(set(['b']), set())
+        tag_collapser.tags({'a'}, set())
+        tag_collapser.tags({'b'}, set())
         tag_collapser.startTest(self)
         self.assertEqual(
-            [('tags', set(['a', 'b']), set([])),
+            [('tags', {'a', 'b'}, set()),
              ('startTest', self),
              ],
             result._events
@@ -220,15 +220,15 @@ class TestTagCollapsingDecorator(TestCase):
         result = ExtendedTestResult()
         tag_collapser = subunit.test_results.TagCollapsingDecorator(result)
         tag_collapser.startTestRun()
-        tag_collapser.tags(set(['a']), set())
-        tag_collapser.tags(set(['b']), set())
+        tag_collapser.tags({'a'}, set())
+        tag_collapser.tags({'b'}, set())
         tag_collapser.startTest(self)
         tag_collapser.addSuccess(self)
         tag_collapser.stopTest(self)
         tag_collapser.stopTestRun()
         self.assertEqual(
             [('startTestRun',),
-             ('tags', set(['a', 'b']), set([])),
+             ('tags', {'a', 'b'}, set()),
              ('startTest', self),
              ('addSuccess', self),
              ('stopTest', self),
@@ -245,14 +245,14 @@ class TestTagCollapsingDecorator(TestCase):
         tag_collapser.startTest(test)
         tag_collapser.addSuccess(test)
         tag_collapser.stopTest(test)
-        tag_collapser.tags(set(['a']), set(['b']))
+        tag_collapser.tags({'a'}, {'b'})
         tag_collapser.stopTestRun()
         self.assertEqual(
             [('startTestRun',),
              ('startTest', test),
              ('addSuccess', test),
              ('stopTest', test),
-             ('tags', set(['a']), set(['b'])),
+             ('tags', {'a'}, {'b'}),
              ('stopTestRun',),
              ],
             result._events)
@@ -262,13 +262,13 @@ class TestTagCollapsingDecorator(TestCase):
         tag_collapser = subunit.test_results.TagCollapsingDecorator(result)
         test = subunit.RemotedTestCase('foo')
         tag_collapser.startTest(test)
-        tag_collapser.tags(set(['a']), set())
-        tag_collapser.tags(set(['b']), set(['a']))
-        tag_collapser.tags(set(['c']), set())
+        tag_collapser.tags({'a'}, set())
+        tag_collapser.tags({'b'}, {'a'})
+        tag_collapser.tags({'c'}, set())
         tag_collapser.stopTest(test)
         self.assertEqual(
             [('startTest', test),
-             ('tags', set(['b', 'c']), set(['a'])),
+             ('tags', {'b', 'c'}, {'a'}),
              ('stopTest', test)],
             result._events
         )
@@ -278,13 +278,13 @@ class TestTagCollapsingDecorator(TestCase):
         tag_collapser = subunit.test_results.TagCollapsingDecorator(result)
         test = subunit.RemotedTestCase('foo')
         tag_collapser.startTest(test)
-        tag_collapser.tags(set(), set(['a']))
-        tag_collapser.tags(set(['a', 'b']), set())
-        tag_collapser.tags(set(['c']), set())
+        tag_collapser.tags(set(), {'a'})
+        tag_collapser.tags({'a', 'b'}, set())
+        tag_collapser.tags({'c'}, set())
         tag_collapser.stopTest(test)
         self.assertEqual(
             [('startTest', test),
-             ('tags', set(['a', 'b', 'c']), set()),
+             ('tags', {'a', 'b', 'c'}, set()),
              ('stopTest', test)],
             result._events
         )
@@ -298,12 +298,12 @@ class TestTagCollapsingDecorator(TestCase):
         tag_collapser = subunit.test_results.TagCollapsingDecorator(result)
         test = subunit.RemotedTestCase('foo')
         tag_collapser.startTest(test)
-        tag_collapser.tags(set(['a']), set())
+        tag_collapser.tags({'a'}, set())
         tag_collapser.addSuccess(test)
         tag_collapser.stopTest(test)
         self.assertEqual(
             [('startTest', test),
-             ('tags', set(['a']), set()),
+             ('tags', {'a'}, set()),
              ('addSuccess', test),
              ('stopTest', test)],
             result._events
@@ -381,7 +381,7 @@ class TestTimeCollapsingDecorator(TestCase):
 class TestByTestResultTests(testtools.TestCase):
 
     def setUp(self):
-        super(TestByTestResultTests, self).setUp()
+        super().setUp()
         self.log = []
         self.result = subunit.test_results.TestByTestResult(self.on_test)
         self.result._now = iter(range(5)).__next__
@@ -425,7 +425,7 @@ class TestByTestResultTests(testtools.TestCase):
         self.result.startTest(self)
         self.result.addSuccess(self)
         self.result.stopTest(self)
-        self.assertCalled(status='success', tags=set(['foo']))
+        self.assertCalled(status='success', tags={'foo'})
 
     def test_add_error(self):
         self.result.startTest(self)

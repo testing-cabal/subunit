@@ -197,7 +197,7 @@ class StatusStreamResultTests(TestCase):
     _dummy_timestamp = datetime.datetime(2013, 1, 1, 0, 0, 0, 0, UTC)
 
     def setUp(self):
-        super(StatusStreamResultTests, self).setUp()
+        super().setUp()
         self.patch(_o, 'create_timestamp', lambda: self._dummy_timestamp)
         self.test_id = self.getUniqueString()
 
@@ -220,7 +220,7 @@ class StatusStreamResultTests(TestCase):
         result = get_result_for([self.option, self.test_id, '--tag', 'hello', '--tag', 'world'])
         self.assertThat(
             result._events[1],
-            MatchesStatusCall(test_tags=set(['hello', 'world']))
+            MatchesStatusCall(test_tags={'hello', 'world'})
         )
 
     def test_all_commands_generate_timestamp(self):
@@ -375,7 +375,7 @@ class StatusStreamResultTests(TestCase):
                 result._events,
                 MatchesListwise([
                     MatchesStatusCall(call='startTestRun'),
-                    MatchesStatusCall(test_id=self.test_id, test_tags=set(['foo', 'bar'])),
+                    MatchesStatusCall(test_id=self.test_id, test_tags={'foo', 'bar'}),
                     MatchesStatusCall(test_id=self.test_id, test_tags=None),
                     MatchesStatusCall(call='stopTestRun'),
                 ])
@@ -540,7 +540,7 @@ class FileDataTests(TestCase):
             result._events,
             MatchesListwise([
                 MatchesStatusCall(call='startTestRun'),
-                MatchesStatusCall(test_tags=set(['foo'])),
+                MatchesStatusCall(test_tags={'foo'}),
                 MatchesStatusCall(call='stopTestRun'),
             ])
         )
@@ -577,7 +577,7 @@ class MatchesStatusCall(Matcher):
                 pos = self._position_lookup[k]
                 if call_tuple[pos] != v:
                     return Mismatch(
-                        "Value for key is %r, not %r" % (call_tuple[pos], v)
+                        "Value for key is {!r}, not {!r}".format(call_tuple[pos], v)
                     )
             except IndexError:
                 return Mismatch("Key %s is not present." % k)

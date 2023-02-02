@@ -28,7 +28,7 @@ import subunit.test_results
 class TestSubUnitTags(testtools.TestCase):
 
     def setUp(self):
-        super(TestSubUnitTags, self).setUp()
+        super().setUp()
         self.original = BytesIO()
         self.filtered = BytesIO()
 
@@ -61,9 +61,9 @@ class TestSubUnitTags(testtools.TestCase):
             ]
         stream = subunit.StreamResultToBytes(self.original)
         stream.status(
-            test_id='test', test_status='inprogress', test_tags=set(['foo']))
+            test_id='test', test_status='inprogress', test_tags={'foo'})
         stream.status(
-            test_id='test', test_status='success', test_tags=set(['foo', 'bar']))
+            test_id='test', test_status='success', test_tags={'foo', 'bar'})
         self.original.seek(0)
         self.assertEqual(
             0, subunit.tag_stream(self.original, self.filtered, ["quux"]))
@@ -73,14 +73,14 @@ class TestSubUnitTags(testtools.TestCase):
         reference = BytesIO()
         stream = subunit.StreamResultToBytes(reference)
         stream.status(
-            test_id='test', test_status='inprogress', test_tags=set(['foo']))
+            test_id='test', test_status='inprogress', test_tags={'foo'})
         stream.status(
-            test_id='test', test_status='success', test_tags=set(['foo']))
+            test_id='test', test_status='success', test_tags={'foo'})
         stream = subunit.StreamResultToBytes(self.original)
         stream.status(
-            test_id='test', test_status='inprogress', test_tags=set(['foo']))
+            test_id='test', test_status='inprogress', test_tags={'foo'})
         stream.status(
-            test_id='test', test_status='success', test_tags=set(['foo', 'bar']))
+            test_id='test', test_status='success', test_tags={'foo', 'bar'})
         self.original.seek(0)
         self.assertEqual(
             0, subunit.tag_stream(self.original, self.filtered, ["-bar"]))

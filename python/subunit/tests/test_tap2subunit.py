@@ -39,7 +39,7 @@ class TestTAP2SubUnit(TestCase):
     """
 
     def setUp(self):
-        super(TestTAP2SubUnit, self).setUp()
+        super().setUp()
         self.tap = StringIO()
         self.subunit = BytesIO()
 
