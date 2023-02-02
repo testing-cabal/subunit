@@ -209,10 +209,12 @@ class TestTagCollapsingDecorator(TestCase):
         tag_collapser.tags(set(['a']), set())
         tag_collapser.tags(set(['b']), set())
         tag_collapser.startTest(self)
-        self.assertEquals(
+        self.assertEqual(
             [('tags', set(['a', 'b']), set([])),
              ('startTest', self),
-             ], result._events)
+             ],
+            result._events
+        )
 
     def test_tags_collapsed_outside_of_tests_are_flushed(self):
         result = ExtendedTestResult()
@@ -224,14 +226,16 @@ class TestTagCollapsingDecorator(TestCase):
         tag_collapser.addSuccess(self)
         tag_collapser.stopTest(self)
         tag_collapser.stopTestRun()
-        self.assertEquals(
+        self.assertEqual(
             [('startTestRun',),
              ('tags', set(['a', 'b']), set([])),
              ('startTest', self),
              ('addSuccess', self),
              ('stopTest', self),
              ('stopTestRun',),
-             ], result._events)
+             ],
+            result._events
+        )
 
     def test_tags_forwarded_after_tests(self):
         test = subunit.RemotedTestCase('foo')
@@ -262,11 +266,12 @@ class TestTagCollapsingDecorator(TestCase):
         tag_collapser.tags(set(['b']), set(['a']))
         tag_collapser.tags(set(['c']), set())
         tag_collapser.stopTest(test)
-        self.assertEquals(
+        self.assertEqual(
             [('startTest', test),
              ('tags', set(['b', 'c']), set(['a'])),
              ('stopTest', test)],
-            result._events)
+            result._events
+        )
 
     def test_tags_collapsed_inside_of_tests_different_ordering(self):
         result = ExtendedTestResult()
@@ -277,11 +282,12 @@ class TestTagCollapsingDecorator(TestCase):
         tag_collapser.tags(set(['a', 'b']), set())
         tag_collapser.tags(set(['c']), set())
         tag_collapser.stopTest(test)
-        self.assertEquals(
+        self.assertEqual(
             [('startTest', test),
              ('tags', set(['a', 'b', 'c']), set()),
              ('stopTest', test)],
-            result._events)
+            result._events
+        )
 
     def test_tags_sent_before_result(self):
         # Because addSuccess and friends tend to send subunit output
@@ -295,12 +301,13 @@ class TestTagCollapsingDecorator(TestCase):
         tag_collapser.tags(set(['a']), set())
         tag_collapser.addSuccess(test)
         tag_collapser.stopTest(test)
-        self.assertEquals(
+        self.assertEqual(
             [('startTest', test),
              ('tags', set(['a']), set()),
              ('addSuccess', test),
              ('stopTest', test)],
-            result._events)
+            result._events
+        )
 
 
 class TestTimeCollapsingDecorator(TestCase):
@@ -316,7 +323,7 @@ class TestTimeCollapsingDecorator(TestCase):
         tag_collapser = subunit.test_results.TimeCollapsingDecorator(result)
         a_time = self.make_time()
         tag_collapser.time(a_time)
-        self.assertEquals([('time', a_time)], result._events)
+        self.assertEqual([('time', a_time)], result._events)
 
     def test_time_collapsed_to_first_and_last(self):
         # If there are many consecutive time events, only the first and last
@@ -327,8 +334,10 @@ class TestTimeCollapsingDecorator(TestCase):
         for a_time in times:
             tag_collapser.time(a_time)
         tag_collapser.startTest(subunit.RemotedTestCase('foo'))
-        self.assertEquals(
-            [('time', times[0]), ('time', times[-1])], result._events[:-1])
+        self.assertEqual(
+            [('time', times[0]), ('time', times[-1])],
+            result._events[:-1]
+        )
 
     def test_only_one_time_sent(self):
         # If we receive a single time event followed by a non-time event, we
@@ -338,7 +347,7 @@ class TestTimeCollapsingDecorator(TestCase):
         a_time = self.make_time()
         tag_collapser.time(a_time)
         tag_collapser.startTest(subunit.RemotedTestCase('foo'))
-        self.assertEquals([('time', a_time)], result._events[:-1])
+        self.assertEqual([('time', a_time)], result._events[:-1])
 
     def test_duplicate_times_not_sent(self):
         # Many time events with the exact same time are collapsed into one
@@ -349,7 +358,7 @@ class TestTimeCollapsingDecorator(TestCase):
         for i in range(5):
             tag_collapser.time(a_time)
         tag_collapser.startTest(subunit.RemotedTestCase('foo'))
-        self.assertEquals([('time', a_time)], result._events[:-1])
+        self.assertEqual([('time', a_time)], result._events[:-1])
 
     def test_no_times_inserted(self):
         result = ExtendedTestResult()
@@ -360,11 +369,13 @@ class TestTimeCollapsingDecorator(TestCase):
         tag_collapser.startTest(foo)
         tag_collapser.addSuccess(foo)
         tag_collapser.stopTest(foo)
-        self.assertEquals(
+        self.assertEqual(
             [('time', a_time),
              ('startTest', foo),
              ('addSuccess', foo),
-             ('stopTest', foo)], result._events)
+             ('stopTest', foo)],
+            result._events
+        )
 
 
 class TestByTestResultTests(testtools.TestCase):
