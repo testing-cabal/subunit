@@ -15,9 +15,6 @@
 
   See the COPYING file for full details on the licensing of Subunit.
 
-  subunit reuses iso8601 by Michael Twomey, distributed under an MIT style
-  licence - see python/iso8601/LICENSE for details.
-
 Subunit
 -------
 

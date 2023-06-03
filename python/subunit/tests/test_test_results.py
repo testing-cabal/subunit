@@ -26,7 +26,7 @@ from testtools.content import TracebackContent, text_content
 from testtools.testresult.doubles import ExtendedTestResult
 
 import subunit
-import subunit.iso8601 as iso8601
+import iso8601
 import subunit.test_results
 
 
@@ -174,7 +174,7 @@ class TestAutoTimingTestResultDecorator(unittest.TestCase):
     def test_calling_time_inhibits_automatic_time(self):
         # Calling time() outputs a time signal immediately and prevents
         # automatically adding one when other methods are called.
-        time = datetime.datetime(2009,10,11,12,13,14,15, iso8601.Utc())
+        time = datetime.datetime(2009,10,11,12,13,14,15, iso8601.UTC)
         self.result.time(time)
         self.result.startTest(self)
         self.result.stopTest(self)
@@ -182,7 +182,7 @@ class TestAutoTimingTestResultDecorator(unittest.TestCase):
         self.assertEqual(time, self.decorated._calls[0])
 
     def test_calling_time_None_enables_automatic_time(self):
-        time = datetime.datetime(2009,10,11,12,13,14,15, iso8601.Utc())
+        time = datetime.datetime(2009,10,11,12,13,14,15, iso8601.UTC)
         self.result.time(time)
         self.assertEqual(1, len(self.decorated._calls))
         self.assertEqual(time, self.decorated._calls[0])

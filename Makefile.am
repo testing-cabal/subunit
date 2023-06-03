@@ -12,11 +12,6 @@ EXTRA_DIST =  \
 	c/check-subunit-0.9.3.patch \
 	c/check-subunit-0.9.5.patch \
 	c/check-subunit-0.9.6.patch \
- 	python/iso8601/LICENSE \
- 	python/iso8601/README \
- 	python/iso8601/README.subunit \
- 	python/iso8601/setup.py \
- 	python/iso8601/test_iso8601.py \
  	python/subunit/tests/__init__.py \
  	python/subunit/tests/sample-script.py \
  	python/subunit/tests/sample-two-script.py \
@@ -73,7 +68,6 @@ pkgpython_PYTHON = \
 	python/subunit/chunked.py \
 	python/subunit/details.py \
 	python/subunit/filters.py \
-	python/subunit/iso8601.py \
 	python/subunit/progress_model.py \
 	python/subunit/run.py \
 	python/subunit/v2.py \
