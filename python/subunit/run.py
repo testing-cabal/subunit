@@ -104,11 +104,11 @@ class SubunitTestProgram(TestProgram):
             print (msg)
         usage = {'progName': self.progName, 'catchbreak': '', 'failfast': '',
                  'buffer': ''}
-        if self.failfast != False:
+        if self.failfast is not False:
             usage['failfast'] = FAILFAST
-        if self.catchbreak != False:
+        if self.catchbreak is not False:
             usage['catchbreak'] = CATCHBREAK
-        if self.buffer != False:
+        if self.buffer is not False:
             usage['buffer'] = BUFFEROUTPUT
         usage_text = self.USAGE % usage
         usage_lines = usage_text.split('\n')

@@ -16,7 +16,6 @@
 
 """Tests for TAP2SubUnit."""
 
-import unittest
 from io import BytesIO, StringIO
 
 from testtools import TestCase

@@ -14,7 +14,6 @@
 #  limitations under that license.
 #
 
-import sys
 from unittest import TestLoader
 
 from testscenarios import generate_scenarios

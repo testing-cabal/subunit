@@ -16,7 +16,6 @@
 
 """Tests for subunit.TestResultFilter."""
 
-import os
 import subprocess
 import sys
 import unittest
@@ -260,7 +259,7 @@ xfail todo
         result_filter.startTestRun()
         self.run_tests(result_filter, subunit_stream)
         result_filter.stopTestRun()
-        foo = subunit.RemotedTestCase('foo')
+        subunit.RemotedTestCase('foo')
         self.maxDiff = None
         self.assertEqual(
             [('startTestRun',),
@@ -322,7 +321,7 @@ class TestFilterCommand(TestCase):
         output = self.run_command([], byte_stream.getvalue())
         events = StreamResult()
         ByteStreamToStreamResult(BytesIO(output)).run(events)
-        ids = {event[1] for event in events._events}
+        {event[1] for event in events._events}
         self.assertEqual([
             ('status', 'foo', 'inprogress'),
             ('status', 'foo', 'skip'),

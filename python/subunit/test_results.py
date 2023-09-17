@@ -22,7 +22,6 @@ import datetime
 import testtools
 from testtools import StreamResult
 from testtools.content import TracebackContent, text_content
-from testtools.testcase import PlaceHolder
 
 import iso8601
 import subunit
