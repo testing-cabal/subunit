@@ -151,7 +151,7 @@ from subunit.v2 import ByteStreamToStreamResult, StreamResultToBytes
 # If the releaselevel is 'final', then the tarball will be major.minor.micro.
 # Otherwise it is major.minor.micro~$(revno).
 
-__version__ = (1, 4, 3, 'final', 0)
+__version__ = (1, 4, 4, 'dev', 0)
 
 __all__ = [
     'join_dir',
