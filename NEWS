@@ -2,7 +2,7 @@
 subunit release notes
 ---------------------
 
-NEXT (In development)
+1.4.3 (2023-09-17)
 ---------------------
 
 * Subunit now has a dependency on an external iso8601
