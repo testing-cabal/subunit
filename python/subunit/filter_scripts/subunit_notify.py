@@ -17,13 +17,14 @@
 """Notify the user of a finished test run."""
 
 import gi
+import sys
 
 gi.require_version('Gtk', '3.0')
-from gi.repository import Notify
-from testtools import StreamToExtendedDecorator
+from gi.repository import Notify  # noqa: E402
+from testtools import StreamToExtendedDecorator  # noqa: E402
 
-from subunit import TestResultStats
-from subunit.filters import run_filter_script
+from subunit import TestResultStats  # noqa: E402
+from subunit.filters import run_filter_script  # noqa: E402
 
 if not Notify.init("Subunit-notify"):
     sys.exit(1)

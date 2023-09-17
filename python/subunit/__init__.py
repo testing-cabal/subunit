@@ -826,7 +826,7 @@ class TestProtocolClient(testresult.TestResult):
         :param details: An extended details dict for a test outcome.
         """
         self._stream.write(_b(" [ multipart\n"))
-        for name, content in sorted(details.items()):
+        for name, content in sorted(details.items()):  # noqa: F402
             self._stream.write(_b("Content-Type: %s/%s" %
                 (content.content_type.type, content.content_type.subtype)))
             parameters = content.content_type.parameters
@@ -893,7 +893,8 @@ class RemotedTestCase(unittest.TestCase):
                (self._strclass(), self.__description)
 
     def run(self, result=None):
-        if result is None: result = self.defaultTestResult()
+        if result is None:
+            result = self.defaultTestResult()
         result.startTest(self)
         result.addError(self, RemoteError(_u("Cannot run RemotedTestCases.\n")))
         result.stopTest(self)
@@ -920,7 +921,8 @@ class ExecTestCase(unittest.TestCase):
         return 1
 
     def run(self, result=None):
-        if result is None: result = self.defaultTestResult()
+        if result is None:
+            result = self.defaultTestResult()
         self._run(result)
 
     def debug(self):
@@ -945,7 +947,8 @@ class IsolatedTestCase(unittest.TestCase):
     """
 
     def run(self, result=None):
-        if result is None: result = self.defaultTestResult()
+        if result is None:
+            result = self.defaultTestResult()
         run_isolated(unittest.TestCase, self, result)
 
 
@@ -959,7 +962,8 @@ class IsolatedTestSuite(unittest.TestSuite):
     """
 
     def run(self, result=None):
-        if result is None: result = testresult.TestResult()
+        if result is None:
+            result = testresult.TestResult()
         run_isolated(unittest.TestSuite, self, result)
 
 
@@ -1062,7 +1066,9 @@ def TAP2SubUnit(tap, output_stream):
                         file_name='tap comment')
                 continue
         # not a plan line, or have seen one before
-        match = re.match(r"(ok|not ok)(?:\s+(\d+)?)?(?:\s+([^#]*[^#\s]+)\s*)?(?:\s+#\s+(TODO|SKIP|skip|todo)(?:\s+(.*))?)?\n", line)
+        match = re.match(
+            r"(ok|not ok)(?:\s+(\d+)?)?(?:\s+([^#]*[^#\s]+)\s*)?"
+            r"(?:\s+#\s+(TODO|SKIP|skip|todo)(?:\s+(.*))?)?\n", line)
         if match:
             # new test, emit current one.
             _emit_test()

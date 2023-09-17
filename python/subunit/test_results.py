@@ -25,7 +25,6 @@ from testtools.content import TracebackContent, text_content
 
 import iso8601
 import subunit
-from subunit import iso8601
 
 
 # NOT a TestResult, because we are implementing the interface, not inheriting

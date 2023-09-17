@@ -96,8 +96,8 @@ def only_genuine_failures_callback(option, opt, value, parser):
     parser.rargs.insert(0, '--no-success')
 
 
-def _compile_re_from_list(l):
-    return re.compile("|".join(l), re.MULTILINE)
+def _compile_re_from_list(list):
+    return re.compile("|".join(list), re.MULTILINE)
 
 
 def _make_regexp_filter(with_regexps, without_regexps):

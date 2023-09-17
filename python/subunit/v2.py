@@ -314,7 +314,7 @@ class ByteStreamToStreamResult(object):
 
                 try:
                     self.source.fileno()
-                except:
+                except:  # noqa: E722
                     # Won't be able to select, fallback to
                     # one-byte-at-a-time.
                     break

@@ -52,12 +52,12 @@ import unittest
 import gi
 
 gi.require_version('Gtk', '3.0')
-from gi.repository import GObject, Gtk
-from testtools import StreamToExtendedDecorator
+from gi.repository import GObject, Gtk    # noqa: E402
+from testtools import StreamToExtendedDecorator  # noqa: E402
 
-from subunit import (PROGRESS_POP, PROGRESS_PUSH, PROGRESS_SET,
+from subunit import (PROGRESS_POP, PROGRESS_PUSH, PROGRESS_SET,  # noqa: E402
                      ByteStreamToStreamResult)
-from subunit.progress_model import ProgressModel
+from subunit.progress_model import ProgressModel  # noqa: E402
 
 
 class GTKTestResult(unittest.TestResult):
