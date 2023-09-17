@@ -16,7 +16,6 @@
 
 import unittest
 
-import subunit
 from subunit.progress_model import ProgressModel
 
 

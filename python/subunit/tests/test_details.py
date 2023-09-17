@@ -18,7 +18,6 @@ import unittest
 
 from testtools.compat import _b
 
-import subunit.tests
 from subunit import content, content_type, details
 
 
@@ -43,7 +42,6 @@ class TestSimpleDetails(unittest.TestCase):
 
     def test_get_details(self):
         parser = details.SimpleDetailsParser(None)
-        traceback = ""
         expected = {}
         expected['traceback'] = content.Content(
             content_type.ContentType("text", "x-traceback",
@@ -58,7 +56,6 @@ class TestSimpleDetails(unittest.TestCase):
 
     def test_get_details_skip(self):
         parser = details.SimpleDetailsParser(None)
-        traceback = ""
         expected = {}
         expected['reason'] = content.Content(
             content_type.ContentType("text", "plain"),
@@ -68,7 +65,6 @@ class TestSimpleDetails(unittest.TestCase):
 
     def test_get_details_success(self):
         parser = details.SimpleDetailsParser(None)
-        traceback = ""
         expected = {}
         expected['message'] = content.Content(
             content_type.ContentType("text", "plain"),

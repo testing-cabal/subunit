@@ -120,7 +120,7 @@ import re
 import subprocess
 import sys
 import unittest
-from io import BytesIO, StringIO
+from io import BytesIO
 from io import UnsupportedOperation as _UnsupportedOperation
 
 import iso8601
@@ -136,7 +136,7 @@ except ImportError:
         "_StringException, check your version.")
 from testtools import CopyStreamResult, testresult
 
-from subunit import chunked, details, test_results
+from subunit import chunked, details
 from subunit.v2 import ByteStreamToStreamResult, StreamResultToBytes
 
 # same format as sys.version_info: "A tuple containing the five components of
@@ -152,6 +152,26 @@ from subunit.v2 import ByteStreamToStreamResult, StreamResultToBytes
 # Otherwise it is major.minor.micro~$(revno).
 
 __version__ = (1, 4, 3, 'dev', 0)
+
+__all__ = [
+    'join_dir',
+    'tags_to_new_gone',
+    'content',
+    'content_type',
+    'TestProtocolServer',
+    'TestProtocolClient',
+    'RemoteError',
+    'RemotedTestCase',
+    'IsolatedTestCase',
+    'IsolatedTestSuite',
+    'run_isolated',
+    'TAP2SubUnit',
+    'tag_stream',
+    'ProtocolTestCase',
+    'make_stream_binary',
+    'read_test_list',
+    'TestResultStats',
+]
 
 PROGRESS_SET = 0
 PROGRESS_CUR = 1

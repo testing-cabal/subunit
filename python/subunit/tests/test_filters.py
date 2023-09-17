@@ -14,7 +14,6 @@
 #  limitations under that license.
 #
 
-import sys
 from tempfile import NamedTemporaryFile
 
 from testtools import TestCase

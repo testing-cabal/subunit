@@ -19,7 +19,7 @@ import io
 import os
 import tempfile
 import unittest
-from io import BytesIO, StringIO
+from io import BytesIO
 
 from testtools import PlaceHolder, TestCase, TestResult, skipIf
 from testtools.compat import _b, _u
@@ -87,9 +87,9 @@ class TestHelpers(TestCase):
 class TestTestImports(unittest.TestCase):
 
     def test_imports(self):
-        from subunit import (DiscardStream, ExecTestCase, IsolatedTestCase,
-                             ProtocolTestCase, RemotedTestCase, RemoteError,
-                             TestProtocolClient, TestProtocolServer)
+        from subunit import (DiscardStream, ExecTestCase, IsolatedTestCase,  # noqa: F401
+                             ProtocolTestCase, RemotedTestCase, RemoteError,  # noqa: F401
+                             TestProtocolClient, TestProtocolServer)  # noqa: F401
 
 
 class TestDiscardStream(unittest.TestCase):
