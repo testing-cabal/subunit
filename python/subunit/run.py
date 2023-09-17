@@ -83,7 +83,7 @@ class SubunitTestRunner(object):
         test_ids, errors = list_test(test)
         try:
             fileno = self.stream.fileno()
-        except:
+        except:  # noqa: E722
             fileno = None
         if fileno is not None:
             stream = os.fdopen(fileno, 'wb', 0)
