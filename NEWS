@@ -5,6 +5,9 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+* Removed use of deprecated "utc" and "utcfromtimestamp"
+  methods of "datetime.datetime".  (Jake Lishman)
+
 1.4.3 (2023-09-17)
 ---------------------
 
