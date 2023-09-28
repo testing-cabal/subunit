@@ -575,7 +575,7 @@ class TestProtocolServer(object):
             event_time = iso8601.parse_date(line[offset:-1].decode())
         except TypeError:
             raise TypeError(_u("Failed to parse %r, got %r")
-                % (line, sys.exec_info[1]))
+                % (line, sys.exc_info()[1]))
         self.client.time(event_time)
 
     def lineReceived(self, line):
