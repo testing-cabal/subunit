@@ -5,8 +5,23 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+1.4.4 (2023-11-17)
+------------------
+
+BUG FIXES
+~~~~~~~~~
+
 * Removed use of deprecated "utc" and "utcfromtimestamp"
   methods of "datetime.datetime".  (Jake Lishman)
+
+* Fix an issue with date parsing exception handling
+  (Colin Watson)
+
+IMPROVEMENTS
+~~~~~~~~~~~~
+
+* Add support for Python 3.12
+  (Matthew Treinish)
 
 1.4.3 (2023-09-17)
 ---------------------
