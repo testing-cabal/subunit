@@ -762,7 +762,7 @@ class TestProtocolClient(testresult.TestResult):
 
     def _test_id(self, test):
         result = test.id()
-        if type(result) is not bytes:
+        if not isinstance(result, bytes):
             result = result.encode('utf8')
         return result
 
