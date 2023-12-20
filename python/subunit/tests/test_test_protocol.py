@@ -86,13 +86,13 @@ class TestHelpers(TestCase):
 
 class TestTestImports(unittest.TestCase):
     def test_imports(self):
-        from subunit import (
+        from subunit import (  # noqa: F401
             DiscardStream,
             ExecTestCase,
-            IsolatedTestCase,  # noqa: F401
+            IsolatedTestCase,
             ProtocolTestCase,
             RemotedTestCase,
-            RemoteError,  # noqa: F401
+            RemoteError,
             TestProtocolClient,
             TestProtocolServer,
         )  # noqa: F401
