@@ -2,12 +2,12 @@
 #
 # Simple subunit testrunner for python
 # Copyright (C) Jelmer Vernooij <jelmer@samba.org> 2007
-#   
+#
 #  Licensed under either the Apache License, Version 2.0 or the BSD 3-clause
 #  license at the users choice. A copy of both licenses are available in the
 #  project source as Apache-2.0 and BSD. You may not use this file except in
 #  compliance with one of these two licences.
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 #  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -25,16 +25,14 @@ import os
 import sys
 
 from testtools import ExtendedToStreamDecorator
-from testtools.run import (BUFFEROUTPUT, CATCHBREAK, FAILFAST, USAGE_AS_MAIN,
-                           TestProgram, list_test)
+from testtools.run import BUFFEROUTPUT, CATCHBREAK, FAILFAST, USAGE_AS_MAIN, TestProgram, list_test
 
 from subunit import StreamResultToBytes
 from subunit.test_results import AutoTimingTestResultDecorator
 
 
 class SubunitTestRunner(object):
-    def __init__(self, verbosity=None, failfast=None, buffer=None, stream=None,
-        stdout=None, tb_locals=False):
+    def __init__(self, verbosity=None, failfast=None, buffer=None, stream=None, stdout=None, tb_locals=False):
         """Create a TestToolsTestRunner.
 
         :param verbosity: Ignored.
@@ -74,9 +72,10 @@ class SubunitTestRunner(object):
             # errors on the loader, not the test list result.
             errors = loader.errors
         if errors:
-            failed_descr = '\n'.join(errors).encode('utf8')
-            result.status(file_name="import errors", runnable=False,
-                file_bytes=failed_descr, mime_type="text/plain;charset=utf8")
+            failed_descr = "\n".join(errors).encode("utf8")
+            result.status(
+                file_name="import errors", runnable=False, file_bytes=failed_descr, mime_type="text/plain;charset=utf8"
+            )
             sys.exit(2)
 
     def _list(self, test):
@@ -86,35 +85,33 @@ class SubunitTestRunner(object):
         except:  # noqa: E722
             fileno = None
         if fileno is not None:
-            stream = os.fdopen(fileno, 'wb', 0)
+            stream = os.fdopen(fileno, "wb", 0)
         else:
             stream = self.stream
         result = StreamResultToBytes(stream)
         for test_id in test_ids:
-            result.status(test_id=test_id, test_status='exists')
+            result.status(test_id=test_id, test_status="exists")
         return result, errors
 
 
 class SubunitTestProgram(TestProgram):
-
     USAGE = USAGE_AS_MAIN
 
     def usageExit(self, msg=None):
         if msg:
-            print (msg)
-        usage = {'progName': self.progName, 'catchbreak': '', 'failfast': '',
-                 'buffer': ''}
+            print(msg)
+        usage = {"progName": self.progName, "catchbreak": "", "failfast": "", "buffer": ""}
         if self.failfast is not False:
-            usage['failfast'] = FAILFAST
+            usage["failfast"] = FAILFAST
         if self.catchbreak is not False:
-            usage['catchbreak'] = CATCHBREAK
+            usage["catchbreak"] = CATCHBREAK
         if self.buffer is not False:
-            usage['buffer'] = BUFFEROUTPUT
+            usage["buffer"] = BUFFEROUTPUT
         usage_text = self.USAGE % usage
-        usage_lines = usage_text.split('\n')
+        usage_lines = usage_text.split("\n")
         usage_lines.insert(2, "Run a test suite with a subunit reporter.")
         usage_lines.insert(3, "")
-        print('\n'.join(usage_lines))
+        print("\n".join(usage_lines))
         sys.exit(2)
 
 
@@ -127,14 +124,13 @@ def main(argv=None, stdout=None):
         stdout = sys.stdout
         # Disable the default buffering, for Python 2.x where pdb doesn't do it
         # on non-ttys.
-        if hasattr(stdout, 'fileno'):
+        if hasattr(stdout, "fileno"):
             # Patch stdout to be unbuffered, so that pdb works well on 2.6/2.7.
-            binstdout = io.open(stdout.fileno(), 'wb', 0)
+            binstdout = io.open(stdout.fileno(), "wb", 0)
             sys.stdout = io.TextIOWrapper(binstdout, encoding=sys.stdout.encoding)
             stdout = sys.stdout
-    SubunitTestProgram(module=None, argv=argv, testRunner=runner,
-        stdout=stdout, exit=False)
+    SubunitTestProgram(module=None, argv=argv, testRunner=runner, stdout=stdout, exit=False)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

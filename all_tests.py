@@ -20,7 +20,6 @@ import subunit
 
 
 class ShellTests(subunit.ExecTestCase):
-
     def test_sourcing(self):
         """./shell/tests/test_source_library.sh"""
 
@@ -31,6 +30,6 @@ class ShellTests(subunit.ExecTestCase):
 def test_suite():
     result = unittest.TestSuite()
     result.addTest(subunit.test_suite())
-    result.addTest(ShellTests('test_sourcing'))
-    result.addTest(ShellTests('test_functions'))
+    result.addTest(ShellTests("test_sourcing"))
+    result.addTest(ShellTests("test_functions"))
     return result

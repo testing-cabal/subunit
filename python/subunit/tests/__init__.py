@@ -26,12 +26,22 @@ _remote_exception_str = "Traceback (most recent call last):\ntesttools.testresul
 _remote_exception_str_chunked = "57\r\n" + _remote_exception_str + ": boo qux\n0\r\n"
 
 
-from subunit.tests import (test_chunked, test_details, test_filter_to_disk,  # noqa: E402
-                           test_filters, test_output_filter,
-                           test_progress_model, test_run, test_subunit_filter,
-                           test_subunit_stats, test_subunit_tags,
-                           test_tap2subunit, test_test_protocol,
-                           test_test_protocol2, test_test_results)
+from subunit.tests import (
+    test_chunked,
+    test_details,
+    test_filter_to_disk,  # noqa: E402
+    test_filters,
+    test_output_filter,
+    test_progress_model,
+    test_run,
+    test_subunit_filter,
+    test_subunit_stats,
+    test_subunit_tags,
+    test_tap2subunit,
+    test_test_protocol,
+    test_test_protocol2,
+    test_test_results,
+)
 
 
 def test_suite():
@@ -49,7 +59,5 @@ def test_suite():
     result.addTest(loader.loadTestsFromModule(test_subunit_tags))
     result.addTest(loader.loadTestsFromModule(test_subunit_stats))
     result.addTest(loader.loadTestsFromModule(test_run))
-    result.addTests(
-        generate_scenarios(loader.loadTestsFromModule(test_output_filter))
-    )
+    result.addTests(generate_scenarios(loader.loadTestsFromModule(test_output_filter)))
     return result

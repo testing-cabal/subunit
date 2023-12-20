@@ -77,10 +77,11 @@ class TestResultDecorator:
         return self.decorated.addUnexpectedSuccess(test, details=details)
 
     def _get_failfast(self):
-        return getattr(self.decorated, 'failfast', False)
+        return getattr(self.decorated, "failfast", False)
 
     def _set_failfast(self, value):
         self.decorated.failfast = value
+
     failfast = property(_get_failfast, _set_failfast)
 
     def progress(self, offset, whence):
@@ -215,7 +216,6 @@ class AutoTimingTestResultDecorator(HookedTestResultDecorator):
 
 
 class TagsMixin:
-
     def __init__(self):
         self._clear_tags()
 
@@ -331,12 +331,10 @@ def make_tag_filter(with_tags, without_tags):
 
 
 class _PredicateFilter(TestResultDecorator, TagsMixin):
-
     def __init__(self, result, predicate):
         super().__init__(result)
         self._clear_tags()
-        self.decorated = TimeCollapsingDecorator(
-            TagCollapsingDecorator(self.decorated))
+        self.decorated = TimeCollapsingDecorator(TagCollapsingDecorator(self.decorated))
         self._predicate = predicate
         # The current test (for filtering tags)
         self._current_test = None
@@ -346,45 +344,38 @@ class _PredicateFilter(TestResultDecorator, TagsMixin):
         self._buffered_calls = []
 
     def filter_predicate(self, test, outcome, error, details):
-        return self._predicate(
-            test, outcome, error, details, self._get_active_tags())
+        return self._predicate(test, outcome, error, details, self._get_active_tags())
 
     def addError(self, test, err=None, details=None):
-        if (self.filter_predicate(test, 'error', err, details)):
-            self._buffered_calls.append(
-                ('addError', [test, err], {'details': details}))
+        if self.filter_predicate(test, "error", err, details):
+            self._buffered_calls.append(("addError", [test, err], {"details": details}))
         else:
             self._filtered()
 
     def addFailure(self, test, err=None, details=None):
-        if (self.filter_predicate(test, 'failure', err, details)):
-            self._buffered_calls.append(
-                ('addFailure', [test, err], {'details': details}))
+        if self.filter_predicate(test, "failure", err, details):
+            self._buffered_calls.append(("addFailure", [test, err], {"details": details}))
         else:
             self._filtered()
 
     def addSkip(self, test, reason=None, details=None):
-        if (self.filter_predicate(test, 'skip', reason, details)):
-            self._buffered_calls.append(
-                ('addSkip', [test, reason], {'details': details}))
+        if self.filter_predicate(test, "skip", reason, details):
+            self._buffered_calls.append(("addSkip", [test, reason], {"details": details}))
         else:
             self._filtered()
 
     def addExpectedFailure(self, test, err=None, details=None):
-        if self.filter_predicate(test, 'expectedfailure', err, details):
-            self._buffered_calls.append(
-                ('addExpectedFailure', [test, err], {'details': details}))
+        if self.filter_predicate(test, "expectedfailure", err, details):
+            self._buffered_calls.append(("addExpectedFailure", [test, err], {"details": details}))
         else:
             self._filtered()
 
     def addUnexpectedSuccess(self, test, details=None):
-        self._buffered_calls.append(
-            ('addUnexpectedSuccess', [test], {'details': details}))
+        self._buffered_calls.append(("addUnexpectedSuccess", [test], {"details": details}))
 
     def addSuccess(self, test, details=None):
-        if (self.filter_predicate(test, 'success', None, details)):
-            self._buffered_calls.append(
-                ('addSuccess', [test], {'details': details}))
+        if self.filter_predicate(test, "success", None, details):
+            self._buffered_calls.append(("addSuccess", [test], {"details": details}))
         else:
             self._filtered()
 
@@ -400,7 +391,7 @@ class _PredicateFilter(TestResultDecorator, TagsMixin):
         TagsMixin.startTest(self, test)
         self._current_test = test
         self._current_test_filtered = False
-        self._buffered_calls.append(('startTest', [test], {}))
+        self._buffered_calls.append(("startTest", [test], {}))
 
     def stopTest(self, test):
         """Stop a test.
@@ -420,7 +411,7 @@ class _PredicateFilter(TestResultDecorator, TagsMixin):
     def tags(self, new_tags, gone_tags):
         TagsMixin.tags(self, new_tags, gone_tags)
         if self._current_test is not None:
-            self._buffered_calls.append(('tags', [new_tags, gone_tags], {}))
+            self._buffered_calls.append(("tags", [new_tags, gone_tags], {}))
         else:
             return super().tags(new_tags, gone_tags)
 
@@ -429,7 +420,7 @@ class _PredicateFilter(TestResultDecorator, TagsMixin):
 
     def id_to_orig_id(self, id):
         if id.startswith("subunit.RemotedTestCase."):
-            return id[len("subunit.RemotedTestCase."):]
+            return id[len("subunit.RemotedTestCase.") :]
         return id
 
 
@@ -445,10 +436,18 @@ class TestResultFilter(TestResultDecorator):
         a result.
     """
 
-    def __init__(self, result, filter_error=False, filter_failure=False,
-        filter_success=True, filter_skip=False, filter_xfail=False,
-        filter_predicate=None, fixup_expected_failures=None,
-        rename=None):
+    def __init__(
+        self,
+        result,
+        filter_error=False,
+        filter_failure=False,
+        filter_success=True,
+        filter_skip=False,
+        filter_xfail=False,
+        filter_predicate=None,
+        fixup_expected_failures=None,
+        rename=None,
+    ):
         """Create a FilterResult object filtering to result.
 
         :param filter_error: Filter out errors.
@@ -469,32 +468,27 @@ class TestResultFilter(TestResultDecorator):
         """
         predicates = []
         if filter_error:
-            predicates.append(
-                lambda t, outcome, e, d, tags: outcome != 'error')
+            predicates.append(lambda t, outcome, e, d, tags: outcome != "error")
         if filter_failure:
-            predicates.append(
-                lambda t, outcome, e, d, tags: outcome != 'failure')
+            predicates.append(lambda t, outcome, e, d, tags: outcome != "failure")
         if filter_success:
-            predicates.append(
-                lambda t, outcome, e, d, tags: outcome != 'success')
+            predicates.append(lambda t, outcome, e, d, tags: outcome != "success")
         if filter_skip:
-            predicates.append(
-                lambda t, outcome, e, d, tags: outcome != 'skip')
+            predicates.append(lambda t, outcome, e, d, tags: outcome != "skip")
         if filter_xfail:
-            predicates.append(
-                lambda t, outcome, e, d, tags: outcome != 'expectedfailure')
+            predicates.append(lambda t, outcome, e, d, tags: outcome != "expectedfailure")
         if filter_predicate is not None:
+
             def compat(test, outcome, error, details, tags):
                 # 0.0.7 and earlier did not support the 'tags' parameter.
                 try:
-                    return filter_predicate(
-                        test, outcome, error, details, tags)
+                    return filter_predicate(test, outcome, error, details, tags)
                 except TypeError:
                     return filter_predicate(test, outcome, error, details)
+
             predicates.append(compat)
         predicate = and_predicates(predicates)
-        super().__init__(
-            _PredicateFilter(result, predicate))
+        super().__init__(_PredicateFilter(result, predicate))
         if fixup_expected_failures is None:
             self._fixup_expected_failures = frozenset()
         else:
@@ -506,16 +500,14 @@ class TestResultFilter(TestResultDecorator):
         if self._failure_expected(test):
             self.addExpectedFailure(test, err=err, details=details)
         else:
-            super().addError(
-                test, err=err, details=details)
+            super().addError(test, err=err, details=details)
 
     def addFailure(self, test, err=None, details=None):
         test = self._apply_renames(test)
         if self._failure_expected(test):
             self.addExpectedFailure(test, err=err, details=details)
         else:
-            super().addFailure(
-                test, err=err, details=details)
+            super().addFailure(test, err=err, details=details)
 
     def addSuccess(self, test, details=None):
         test = self._apply_renames(test)
@@ -525,7 +517,7 @@ class TestResultFilter(TestResultDecorator):
             super().addSuccess(test, details=details)
 
     def _failure_expected(self, test):
-        return (test.id() in self._fixup_expected_failures)
+        return test.id() in self._fixup_expected_failures
 
     def _apply_renames(self, test):
         if self._rename_fn is None:
@@ -582,24 +574,34 @@ class TestIdPrintingResult(testtools.TestResult):
             seconds = duration.seconds
             seconds += duration.days * 3600 * 24
             seconds += duration.microseconds / 1000000.0
-            self._stream.write(test_id + ' %0.3f\n' % seconds)
+            self._stream.write(test_id + " %0.3f\n" % seconds)
         else:
-            self._stream.write(test_id + '\n')
+            self._stream.write(test_id + "\n")
 
     def startTest(self, test):
         self._start_time = self._time()
 
-    def status(self, test_id=None, test_status=None, test_tags=None,
-        runnable=True, file_name=None, file_bytes=None, eof=False,
-        mime_type=None, route_code=None, timestamp=None):
+    def status(
+        self,
+        test_id=None,
+        test_status=None,
+        test_tags=None,
+        runnable=True,
+        file_name=None,
+        file_bytes=None,
+        eof=False,
+        mime_type=None,
+        route_code=None,
+        timestamp=None,
+    ):
         if not test_id:
             return
         if timestamp is not None:
             self.time(timestamp)
-        if test_status=='exists':
+        if test_status == "exists":
             if self.show_exists:
                 self.reportTest(test_id, 0)
-        elif test_status in ('inprogress', None):
+        elif test_status in ("inprogress", None):
             self._active_tests[test_id] = self._time()
         else:
             self._end_test(test_id)
@@ -634,8 +636,8 @@ class TestIdPrintingResult(testtools.TestResult):
 class TestByTestResult(testtools.TestResult):
     """Call something every time a test completes."""
 
-# XXX: In testtools since lp:testtools r249.  Once that's released, just
-# import that.
+    # XXX: In testtools since lp:testtools r249.  Once that's released, just
+    # import that.
 
     def __init__(self, on_test):
         """Construct a ``TestByTestResult``.
@@ -667,52 +669,52 @@ class TestByTestResult(testtools.TestResult):
             start_time=self._start_time,
             stop_time=self._stop_time,
             # current_tags is new in testtools 0.9.13.
-            tags=getattr(self, 'current_tags', None),
-            details=self._details)
+            tags=getattr(self, "current_tags", None),
+            details=self._details,
+        )
 
     def _err_to_details(self, test, err, details):
         if details:
             return details
-        return {'traceback': TracebackContent(err, test)}
+        return {"traceback": TracebackContent(err, test)}
 
     def addSuccess(self, test, details=None):
         super().addSuccess(test)
-        self._status = 'success'
+        self._status = "success"
         self._details = details
 
     def addFailure(self, test, err=None, details=None):
         super().addFailure(test, err, details)
-        self._status = 'failure'
+        self._status = "failure"
         self._details = self._err_to_details(test, err, details)
 
     def addError(self, test, err=None, details=None):
         super().addError(test, err, details)
-        self._status = 'error'
+        self._status = "error"
         self._details = self._err_to_details(test, err, details)
 
     def addSkip(self, test, reason=None, details=None):
         super().addSkip(test, reason, details)
-        self._status = 'skip'
+        self._status = "skip"
         if details is None:
-            details = {'reason': text_content(reason)}
+            details = {"reason": text_content(reason)}
         elif reason:
             # XXX: What if details already has 'reason' key?
-            details['reason'] = text_content(reason)
+            details["reason"] = text_content(reason)
         self._details = details
 
     def addExpectedFailure(self, test, err=None, details=None):
         super().addExpectedFailure(test, err, details)
-        self._status = 'xfail'
+        self._status = "xfail"
         self._details = self._err_to_details(test, err, details)
 
     def addUnexpectedSuccess(self, test, details=None):
         super().addUnexpectedSuccess(test, details)
-        self._status = 'success'
+        self._status = "success"
         self._details = details
 
 
 class CsvResult(TestByTestResult):
-
     def __init__(self, stream):
         super().__init__(self._on_test)
         self._write_row = csv.writer(stream).writerow
@@ -722,7 +724,7 @@ class CsvResult(TestByTestResult):
 
     def startTestRun(self):
         super().startTestRun()
-        self._write_row(['test', 'status', 'start_time', 'stop_time'])
+        self._write_row(["test", "status", "start_time", "stop_time"])
 
 
 class CatFiles(StreamResult):
@@ -731,9 +733,19 @@ class CatFiles(StreamResult):
     def __init__(self, byte_stream):
         self.stream = subunit.make_stream_binary(byte_stream)
 
-    def status(self, test_id=None, test_status=None, test_tags=None,
-        runnable=True, file_name=None, file_bytes=None, eof=False,
-        mime_type=None, route_code=None, timestamp=None):
+    def status(
+        self,
+        test_id=None,
+        test_status=None,
+        test_tags=None,
+        runnable=True,
+        file_name=None,
+        file_bytes=None,
+        eof=False,
+        mime_type=None,
+        route_code=None,
+        timestamp=None,
+    ):
         if file_name is not None:
             self.stream.write(file_bytes)
             self.stream.flush()

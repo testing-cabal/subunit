@@ -23,22 +23,20 @@ from subunit.filters import find_stream
 
 
 class TestReadTestList(TestCase):
-
     def test_read_list(self):
         with NamedTemporaryFile() as f:
-            f.write(b'foo\nbar\n# comment\nother # comment\n')
+            f.write(b"foo\nbar\n# comment\nother # comment\n")
             f.flush()
-            self.assertEqual(read_test_list(f.name), ['foo', 'bar', 'other'])
+            self.assertEqual(read_test_list(f.name), ["foo", "bar", "other"])
 
 
 class TestFindStream(TestCase):
-
     def test_no_argv(self):
-        self.assertEqual('foo', find_stream('foo', []))
+        self.assertEqual("foo", find_stream("foo", []))
 
     def test_opens_file(self):
         f = NamedTemporaryFile()
-        f.write(b'foo')
+        f.write(b"foo")
         f.flush()
-        stream = find_stream('bar', [f.name])
-        self.assertEqual(b'foo', stream.read())
+        stream = find_stream("bar", [f.name])
+        self.assertEqual(b"foo", stream.read())

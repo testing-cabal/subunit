@@ -6,7 +6,7 @@
 #  license at the users choice. A copy of both licenses are available in the
 #  project source as Apache-2.0 and BSD. You may not use this file except in
 #  compliance with one of these two licences.
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 #  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -20,7 +20,6 @@ from subunit.progress_model import ProgressModel
 
 
 class TestProgressModel(unittest.TestCase):
-
     def assertProgressSummary(self, pos, total, progress):
         """Assert that a progress model has reached a particular point."""
         self.assertEqual(pos, progress.pos())

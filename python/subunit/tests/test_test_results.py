@@ -31,7 +31,6 @@ import subunit.test_results
 
 
 class LoggingDecorator(subunit.test_results.HookedTestResultDecorator):
-
     def __init__(self, decorated):
         self._calls = 0
         super().__init__(decorated)
@@ -53,7 +52,6 @@ class AssertBeforeTestResult(LoggingDecorator):
 
 
 class TimeCapturingResult(unittest.TestResult):
-
     def __init__(self):
         super().__init__()
         self._calls = []
@@ -64,7 +62,6 @@ class TimeCapturingResult(unittest.TestResult):
 
 
 class TestHookedTestResultDecorator(unittest.TestCase):
-
     def setUp(self):
         # An end to the chain
         terminal = unittest.TestResult()
@@ -148,13 +145,11 @@ class TestHookedTestResultDecorator(unittest.TestCase):
 
 
 class TestAutoTimingTestResultDecorator(unittest.TestCase):
-
     def setUp(self):
         # And end to the chain which captures time events.
         terminal = TimeCapturingResult()
         # The result object under test.
-        self.result = subunit.test_results.AutoTimingTestResultDecorator(
-            terminal)
+        self.result = subunit.test_results.AutoTimingTestResultDecorator(terminal)
         self.decorated = terminal
 
     def test_without_time_calls_time_is_called_and_not_None(self):
@@ -174,7 +169,7 @@ class TestAutoTimingTestResultDecorator(unittest.TestCase):
     def test_calling_time_inhibits_automatic_time(self):
         # Calling time() outputs a time signal immediately and prevents
         # automatically adding one when other methods are called.
-        time = datetime.datetime(2009,10,11,12,13,14,15, iso8601.UTC)
+        time = datetime.datetime(2009, 10, 11, 12, 13, 14, 15, iso8601.UTC)
         self.result.time(time)
         self.result.startTest(self)
         self.result.stopTest(self)
@@ -182,7 +177,7 @@ class TestAutoTimingTestResultDecorator(unittest.TestCase):
         self.assertEqual(time, self.decorated._calls[0])
 
     def test_calling_time_None_enables_automatic_time(self):
-        time = datetime.datetime(2009,10,11,12,13,14,15, iso8601.UTC)
+        time = datetime.datetime(2009, 10, 11, 12, 13, 14, 15, iso8601.UTC)
         self.result.time(time)
         self.assertEqual(1, len(self.decorated._calls))
         self.assertEqual(time, self.decorated._calls[0])
@@ -202,92 +197,85 @@ class TestAutoTimingTestResultDecorator(unittest.TestCase):
 
 
 class TestTagCollapsingDecorator(TestCase):
-
     def test_tags_collapsed_outside_of_tests(self):
         result = ExtendedTestResult()
         tag_collapser = subunit.test_results.TagCollapsingDecorator(result)
-        tag_collapser.tags({'a'}, set())
-        tag_collapser.tags({'b'}, set())
+        tag_collapser.tags({"a"}, set())
+        tag_collapser.tags({"b"}, set())
         tag_collapser.startTest(self)
         self.assertEqual(
-            [('tags', {'a', 'b'}, set()),
-             ('startTest', self),
-             ],
-            result._events
+            [
+                ("tags", {"a", "b"}, set()),
+                ("startTest", self),
+            ],
+            result._events,
         )
 
     def test_tags_collapsed_outside_of_tests_are_flushed(self):
         result = ExtendedTestResult()
         tag_collapser = subunit.test_results.TagCollapsingDecorator(result)
         tag_collapser.startTestRun()
-        tag_collapser.tags({'a'}, set())
-        tag_collapser.tags({'b'}, set())
+        tag_collapser.tags({"a"}, set())
+        tag_collapser.tags({"b"}, set())
         tag_collapser.startTest(self)
         tag_collapser.addSuccess(self)
         tag_collapser.stopTest(self)
         tag_collapser.stopTestRun()
         self.assertEqual(
-            [('startTestRun',),
-             ('tags', {'a', 'b'}, set()),
-             ('startTest', self),
-             ('addSuccess', self),
-             ('stopTest', self),
-             ('stopTestRun',),
-             ],
-            result._events
+            [
+                ("startTestRun",),
+                ("tags", {"a", "b"}, set()),
+                ("startTest", self),
+                ("addSuccess", self),
+                ("stopTest", self),
+                ("stopTestRun",),
+            ],
+            result._events,
         )
 
     def test_tags_forwarded_after_tests(self):
-        test = subunit.RemotedTestCase('foo')
+        test = subunit.RemotedTestCase("foo")
         result = ExtendedTestResult()
         tag_collapser = subunit.test_results.TagCollapsingDecorator(result)
         tag_collapser.startTestRun()
         tag_collapser.startTest(test)
         tag_collapser.addSuccess(test)
         tag_collapser.stopTest(test)
-        tag_collapser.tags({'a'}, {'b'})
+        tag_collapser.tags({"a"}, {"b"})
         tag_collapser.stopTestRun()
         self.assertEqual(
-            [('startTestRun',),
-             ('startTest', test),
-             ('addSuccess', test),
-             ('stopTest', test),
-             ('tags', {'a'}, {'b'}),
-             ('stopTestRun',),
-             ],
-            result._events)
+            [
+                ("startTestRun",),
+                ("startTest", test),
+                ("addSuccess", test),
+                ("stopTest", test),
+                ("tags", {"a"}, {"b"}),
+                ("stopTestRun",),
+            ],
+            result._events,
+        )
 
     def test_tags_collapsed_inside_of_tests(self):
         result = ExtendedTestResult()
         tag_collapser = subunit.test_results.TagCollapsingDecorator(result)
-        test = subunit.RemotedTestCase('foo')
+        test = subunit.RemotedTestCase("foo")
         tag_collapser.startTest(test)
-        tag_collapser.tags({'a'}, set())
-        tag_collapser.tags({'b'}, {'a'})
-        tag_collapser.tags({'c'}, set())
+        tag_collapser.tags({"a"}, set())
+        tag_collapser.tags({"b"}, {"a"})
+        tag_collapser.tags({"c"}, set())
         tag_collapser.stopTest(test)
-        self.assertEqual(
-            [('startTest', test),
-             ('tags', {'b', 'c'}, {'a'}),
-             ('stopTest', test)],
-            result._events
-        )
+        self.assertEqual([("startTest", test), ("tags", {"b", "c"}, {"a"}), ("stopTest", test)], result._events)
 
     def test_tags_collapsed_inside_of_tests_different_ordering(self):
         result = ExtendedTestResult()
         tag_collapser = subunit.test_results.TagCollapsingDecorator(result)
-        test = subunit.RemotedTestCase('foo')
+        test = subunit.RemotedTestCase("foo")
         tag_collapser.startTest(test)
-        tag_collapser.tags(set(), {'a'})
-        tag_collapser.tags({'a', 'b'}, set())
-        tag_collapser.tags({'c'}, set())
+        tag_collapser.tags(set(), {"a"})
+        tag_collapser.tags({"a", "b"}, set())
+        tag_collapser.tags({"c"}, set())
         tag_collapser.stopTest(test)
-        self.assertEqual(
-            [('startTest', test),
-             ('tags', {'a', 'b', 'c'}, set()),
-             ('stopTest', test)],
-            result._events
-        )
+        self.assertEqual([("startTest", test), ("tags", {"a", "b", "c"}, set()), ("stopTest", test)], result._events)
 
     def test_tags_sent_before_result(self):
         # Because addSuccess and friends tend to send subunit output
@@ -296,26 +284,20 @@ class TestTagCollapsingDecorator(TestCase):
         # sure that tags are emitted before 'addSuccess' (or whatever).
         result = ExtendedTestResult()
         tag_collapser = subunit.test_results.TagCollapsingDecorator(result)
-        test = subunit.RemotedTestCase('foo')
+        test = subunit.RemotedTestCase("foo")
         tag_collapser.startTest(test)
-        tag_collapser.tags({'a'}, set())
+        tag_collapser.tags({"a"}, set())
         tag_collapser.addSuccess(test)
         tag_collapser.stopTest(test)
         self.assertEqual(
-            [('startTest', test),
-             ('tags', {'a'}, set()),
-             ('addSuccess', test),
-             ('stopTest', test)],
-            result._events
+            [("startTest", test), ("tags", {"a"}, set()), ("addSuccess", test), ("stopTest", test)], result._events
         )
 
 
 class TestTimeCollapsingDecorator(TestCase):
-
     def make_time(self):
         # Heh heh.
-        return datetime.datetime(
-            2000, 1, self.getUniqueInteger(), tzinfo=iso8601.UTC)
+        return datetime.datetime(2000, 1, self.getUniqueInteger(), tzinfo=iso8601.UTC)
 
     def test_initial_time_forwarded(self):
         # We always forward the first time event we see.
@@ -323,7 +305,7 @@ class TestTimeCollapsingDecorator(TestCase):
         tag_collapser = subunit.test_results.TimeCollapsingDecorator(result)
         a_time = self.make_time()
         tag_collapser.time(a_time)
-        self.assertEqual([('time', a_time)], result._events)
+        self.assertEqual([("time", a_time)], result._events)
 
     def test_time_collapsed_to_first_and_last(self):
         # If there are many consecutive time events, only the first and last
@@ -333,11 +315,8 @@ class TestTimeCollapsingDecorator(TestCase):
         times = [self.make_time() for i in range(5)]
         for a_time in times:
             tag_collapser.time(a_time)
-        tag_collapser.startTest(subunit.RemotedTestCase('foo'))
-        self.assertEqual(
-            [('time', times[0]), ('time', times[-1])],
-            result._events[:-1]
-        )
+        tag_collapser.startTest(subunit.RemotedTestCase("foo"))
+        self.assertEqual([("time", times[0]), ("time", times[-1])], result._events[:-1])
 
     def test_only_one_time_sent(self):
         # If we receive a single time event followed by a non-time event, we
@@ -346,8 +325,8 @@ class TestTimeCollapsingDecorator(TestCase):
         tag_collapser = subunit.test_results.TimeCollapsingDecorator(result)
         a_time = self.make_time()
         tag_collapser.time(a_time)
-        tag_collapser.startTest(subunit.RemotedTestCase('foo'))
-        self.assertEqual([('time', a_time)], result._events[:-1])
+        tag_collapser.startTest(subunit.RemotedTestCase("foo"))
+        self.assertEqual([("time", a_time)], result._events[:-1])
 
     def test_duplicate_times_not_sent(self):
         # Many time events with the exact same time are collapsed into one
@@ -357,29 +336,22 @@ class TestTimeCollapsingDecorator(TestCase):
         a_time = self.make_time()
         for i in range(5):
             tag_collapser.time(a_time)
-        tag_collapser.startTest(subunit.RemotedTestCase('foo'))
-        self.assertEqual([('time', a_time)], result._events[:-1])
+        tag_collapser.startTest(subunit.RemotedTestCase("foo"))
+        self.assertEqual([("time", a_time)], result._events[:-1])
 
     def test_no_times_inserted(self):
         result = ExtendedTestResult()
         tag_collapser = subunit.test_results.TimeCollapsingDecorator(result)
         a_time = self.make_time()
         tag_collapser.time(a_time)
-        foo = subunit.RemotedTestCase('foo')
+        foo = subunit.RemotedTestCase("foo")
         tag_collapser.startTest(foo)
         tag_collapser.addSuccess(foo)
         tag_collapser.stopTest(foo)
-        self.assertEqual(
-            [('time', a_time),
-             ('startTest', foo),
-             ('addSuccess', foo),
-             ('stopTest', foo)],
-            result._events
-        )
+        self.assertEqual([("time", a_time), ("startTest", foo), ("addSuccess", foo), ("stopTest", foo)], result._events)
 
 
 class TestByTestResultTests(testtools.TestCase):
-
     def setUp(self):
         super().setUp()
         self.log = []
@@ -388,12 +360,12 @@ class TestByTestResultTests(testtools.TestCase):
 
     def assertCalled(self, **kwargs):
         defaults = {
-            'test': self,
-            'tags': set(),
-            'details': None,
-            'start_time': 0,
-            'stop_time': 1,
-            }
+            "test": self,
+            "tags": set(),
+            "details": None,
+            "start_time": 0,
+            "stop_time": 1,
+        }
         defaults.update(kwargs)
         self.assertEqual([defaults], self.log)
 
@@ -409,42 +381,40 @@ class TestByTestResultTests(testtools.TestCase):
         self.result.startTest(self)
         self.result.addSuccess(self)
         self.result.stopTest(self)
-        self.assertCalled(status='success')
+        self.assertCalled(status="success")
 
     def test_add_success_details(self):
         self.result.startTest(self)
-        details = {'foo': 'bar'}
+        details = {"foo": "bar"}
         self.result.addSuccess(self, details=details)
         self.result.stopTest(self)
-        self.assertCalled(status='success', details=details)
+        self.assertCalled(status="success", details=details)
 
     def test_tags(self):
-        if not getattr(self.result, 'tags', None):
+        if not getattr(self.result, "tags", None):
             self.skipTest("No tags in testtools")
-        self.result.tags(['foo'], [])
+        self.result.tags(["foo"], [])
         self.result.startTest(self)
         self.result.addSuccess(self)
         self.result.stopTest(self)
-        self.assertCalled(status='success', tags={'foo'})
+        self.assertCalled(status="success", tags={"foo"})
 
     def test_add_error(self):
         self.result.startTest(self)
         try:
-            1/0
+            1 / 0
         except ZeroDivisionError:
             error = sys.exc_info()
         self.result.addError(self, error)
         self.result.stopTest(self)
-        self.assertCalled(
-            status='error',
-            details={'traceback': TracebackContent(error, self)})
+        self.assertCalled(status="error", details={"traceback": TracebackContent(error, self)})
 
     def test_add_error_details(self):
         self.result.startTest(self)
         details = {"foo": text_content("bar")}
         self.result.addError(self, details=details)
         self.result.stopTest(self)
-        self.assertCalled(status='error', details=details)
+        self.assertCalled(status="error", details=details)
 
     def test_add_failure(self):
         self.result.startTest(self)
@@ -454,84 +424,77 @@ class TestByTestResultTests(testtools.TestCase):
             failure = sys.exc_info()
         self.result.addFailure(self, failure)
         self.result.stopTest(self)
-        self.assertCalled(
-            status='failure',
-            details={'traceback': TracebackContent(failure, self)})
+        self.assertCalled(status="failure", details={"traceback": TracebackContent(failure, self)})
 
     def test_add_failure_details(self):
         self.result.startTest(self)
         details = {"foo": text_content("bar")}
         self.result.addFailure(self, details=details)
         self.result.stopTest(self)
-        self.assertCalled(status='failure', details=details)
+        self.assertCalled(status="failure", details=details)
 
     def test_add_xfail(self):
         self.result.startTest(self)
         try:
-            1/0
+            1 / 0
         except ZeroDivisionError:
             error = sys.exc_info()
         self.result.addExpectedFailure(self, error)
         self.result.stopTest(self)
-        self.assertCalled(
-            status='xfail',
-            details={'traceback': TracebackContent(error, self)})
+        self.assertCalled(status="xfail", details={"traceback": TracebackContent(error, self)})
 
     def test_add_xfail_details(self):
         self.result.startTest(self)
         details = {"foo": text_content("bar")}
         self.result.addExpectedFailure(self, details=details)
         self.result.stopTest(self)
-        self.assertCalled(status='xfail', details=details)
+        self.assertCalled(status="xfail", details=details)
 
     def test_add_unexpected_success(self):
         self.result.startTest(self)
-        details = {'foo': 'bar'}
+        details = {"foo": "bar"}
         self.result.addUnexpectedSuccess(self, details=details)
         self.result.stopTest(self)
-        self.assertCalled(status='success', details=details)
+        self.assertCalled(status="success", details=details)
 
     def test_add_skip_reason(self):
         self.result.startTest(self)
         reason = self.getUniqueString()
         self.result.addSkip(self, reason)
         self.result.stopTest(self)
-        self.assertCalled(
-            status='skip', details={'reason': text_content(reason)})
+        self.assertCalled(status="skip", details={"reason": text_content(reason)})
 
     def test_add_skip_details(self):
         self.result.startTest(self)
-        details = {'foo': 'bar'}
+        details = {"foo": "bar"}
         self.result.addSkip(self, details=details)
         self.result.stopTest(self)
-        self.assertCalled(status='skip', details=details)
+        self.assertCalled(status="skip", details=details)
 
     def test_twice(self):
         self.result.startTest(self)
-        self.result.addSuccess(self, details={'foo': 'bar'})
+        self.result.addSuccess(self, details={"foo": "bar"})
         self.result.stopTest(self)
         self.result.startTest(self)
         self.result.addSuccess(self)
         self.result.stopTest(self)
         self.assertEqual(
-            [{'test': self,
-              'status': 'success',
-              'start_time': 0,
-              'stop_time': 1,
-              'tags': set(),
-              'details': {'foo': 'bar'}},
-             {'test': self,
-              'status': 'success',
-              'start_time': 2,
-              'stop_time': 3,
-              'tags': set(),
-              'details': None},
-             ],
-            self.log)
+            [
+                {
+                    "test": self,
+                    "status": "success",
+                    "start_time": 0,
+                    "stop_time": 1,
+                    "tags": set(),
+                    "details": {"foo": "bar"},
+                },
+                {"test": self, "status": "success", "start_time": 2, "stop_time": 3, "tags": set(), "details": None},
+            ],
+            self.log,
+        )
 
 
 class TestCsvResult(testtools.TestCase):
-
     def parse_stream(self, stream):
         stream.seek(0)
         reader = csv.reader(stream)
@@ -547,19 +510,19 @@ class TestCsvResult(testtools.TestCase):
         result.stopTest(self)
         result.stopTestRun()
         self.assertEqual(
-            [['test', 'status', 'start_time', 'stop_time'],
-             [self.id(), 'success', '0', '1'],
-             ],
-            self.parse_stream(stream))
+            [
+                ["test", "status", "start_time", "stop_time"],
+                [self.id(), "success", "0", "1"],
+            ],
+            self.parse_stream(stream),
+        )
 
     def test_just_header_when_no_tests(self):
         stream = StringIO()
         result = subunit.test_results.CsvResult(stream)
         result.startTestRun()
         result.stopTestRun()
-        self.assertEqual(
-            [['test', 'status', 'start_time', 'stop_time']],
-            self.parse_stream(stream))
+        self.assertEqual([["test", "status", "start_time", "stop_time"]], self.parse_stream(stream))
 
     def test_no_output_before_events(self):
         stream = StringIO()

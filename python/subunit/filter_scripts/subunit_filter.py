@@ -34,66 +34,85 @@ from testtools import ExtendedToStreamDecorator, StreamToExtendedDecorator
 
 from subunit import StreamResultToBytes, read_test_list
 from subunit.filters import filter_by_result, find_stream
-from subunit.test_results import (TestResultFilter, and_predicates,
-                                  make_tag_filter)
+from subunit.test_results import TestResultFilter, and_predicates, make_tag_filter
 
 
 def make_options(description):
     parser = OptionParser(description=__doc__)
-    parser.add_option("--error", action="store_false",
-        help="include errors", default=False, dest="error")
-    parser.add_option("-e", "--no-error", action="store_true",
-        help="exclude errors", dest="error")
-    parser.add_option("--failure", action="store_false",
-        help="include failures", default=False, dest="failure")
-    parser.add_option("-f", "--no-failure", action="store_true",
-        help="exclude failures", dest="failure")
-    parser.add_option("--passthrough", action="store_false",
-        help="Forward non-subunit input as 'stdout'.", default=False,
-        dest="no_passthrough")
-    parser.add_option("--no-passthrough", action="store_true",
-        help="Discard all non subunit input.", default=False,
-        dest="no_passthrough")
-    parser.add_option("-s", "--success", action="store_false",
-        help="include successes", dest="success")
-    parser.add_option("--no-success", action="store_true",
-        help="exclude successes", default=True, dest="success")
-    parser.add_option("--no-skip", action="store_true",
-        help="exclude skips", dest="skip")
-    parser.add_option("--xfail", action="store_false",
-        help="include expected failures", default=True, dest="xfail")
-    parser.add_option("--no-xfail", action="store_true",
-        help="exclude expected failures", default=True, dest="xfail")
+    parser.add_option("--error", action="store_false", help="include errors", default=False, dest="error")
+    parser.add_option("-e", "--no-error", action="store_true", help="exclude errors", dest="error")
+    parser.add_option("--failure", action="store_false", help="include failures", default=False, dest="failure")
+    parser.add_option("-f", "--no-failure", action="store_true", help="exclude failures", dest="failure")
     parser.add_option(
-        "--with-tag", type=str,
-        help="include tests with these tags", action="append", dest="with_tags")
+        "--passthrough",
+        action="store_false",
+        help="Forward non-subunit input as 'stdout'.",
+        default=False,
+        dest="no_passthrough",
+    )
     parser.add_option(
-        "--without-tag", type=str,
-        help="exclude tests with these tags", action="append", dest="without_tags")
-    parser.add_option("-m", "--with", type=str,
+        "--no-passthrough",
+        action="store_true",
+        help="Discard all non subunit input.",
+        default=False,
+        dest="no_passthrough",
+    )
+    parser.add_option("-s", "--success", action="store_false", help="include successes", dest="success")
+    parser.add_option("--no-success", action="store_true", help="exclude successes", default=True, dest="success")
+    parser.add_option("--no-skip", action="store_true", help="exclude skips", dest="skip")
+    parser.add_option("--xfail", action="store_false", help="include expected failures", default=True, dest="xfail")
+    parser.add_option("--no-xfail", action="store_true", help="exclude expected failures", default=True, dest="xfail")
+    parser.add_option("--with-tag", type=str, help="include tests with these tags", action="append", dest="with_tags")
+    parser.add_option(
+        "--without-tag", type=str, help="exclude tests with these tags", action="append", dest="without_tags"
+    )
+    parser.add_option(
+        "-m",
+        "--with",
+        type=str,
         help="regexp to include (case-sensitive by default)",
-        action="append", dest="with_regexps")
-    parser.add_option("--fixup-expected-failures", type=str,
+        action="append",
+        dest="with_regexps",
+    )
+    parser.add_option(
+        "--fixup-expected-failures",
+        type=str,
         help="File with list of test ids that are expected to fail; on failure "
-             "their result will be changed to xfail; on success they will be "
-             "changed to error.", dest="fixup_expected_failures", action="append")
-    parser.add_option("--without", type=str,
+        "their result will be changed to xfail; on success they will be "
+        "changed to error.",
+        dest="fixup_expected_failures",
+        action="append",
+    )
+    parser.add_option(
+        "--without",
+        type=str,
         help="regexp to exclude (case-sensitive by default)",
-        action="append", dest="without_regexps")
-    parser.add_option("-F", "--only-genuine-failures", action="callback",
+        action="append",
+        dest="without_regexps",
+    )
+    parser.add_option(
+        "-F",
+        "--only-genuine-failures",
+        action="callback",
         callback=only_genuine_failures_callback,
-        help="Only pass through failures and exceptions.")
-    parser.add_option("--rename", action="append", nargs=2,
+        help="Only pass through failures and exceptions.",
+    )
+    parser.add_option(
+        "--rename",
+        action="append",
+        nargs=2,
         help="Apply specified regex subsitutions to test names.",
-        dest="renames", default=[])
+        dest="renames",
+        default=[],
+    )
     return parser
 
 
 def only_genuine_failures_callback(option, opt, value, parser):
-    parser.rargs.insert(0, '--no-passthrough')
-    parser.rargs.insert(0, '--no-xfail')
-    parser.rargs.insert(0, '--no-skip')
-    parser.rargs.insert(0, '--no-success')
+    parser.rargs.insert(0, "--no-passthrough")
+    parser.rargs.insert(0, "--no-xfail")
+    parser.rargs.insert(0, "--no-skip")
+    parser.rargs.insert(0, "--no-success")
 
 
 def _compile_re_from_list(list):
@@ -117,14 +136,16 @@ def _make_regexp_filter(with_regexps, without_regexps):
         if without_re and without_re.search(test_str):
             return False
         return True
+
     return check_regexps
 
 
 def _compile_rename(patterns):
     def rename(name):
-        for (from_pattern, to_pattern) in patterns:
+        for from_pattern, to_pattern in patterns:
             name = re.sub(from_pattern, to_pattern, name)
         return name
+
     return rename
 
 
@@ -133,25 +154,26 @@ def _make_result(output, options, predicate):
     fixup_expected_failures = set()
     for path in options.fixup_expected_failures or ():
         fixup_expected_failures.update(read_test_list(path))
-    return StreamToExtendedDecorator(TestResultFilter(
-        ExtendedToStreamDecorator(
-            StreamResultToBytes(output)),
-        filter_error=options.error,
-        filter_failure=options.failure,
-        filter_success=options.success,
-        filter_skip=options.skip,
-        filter_xfail=options.xfail,
-        filter_predicate=predicate,
-        fixup_expected_failures=fixup_expected_failures,
-        rename=_compile_rename(options.renames)))
+    return StreamToExtendedDecorator(
+        TestResultFilter(
+            ExtendedToStreamDecorator(StreamResultToBytes(output)),
+            filter_error=options.error,
+            filter_failure=options.failure,
+            filter_success=options.success,
+            filter_skip=options.skip,
+            filter_xfail=options.xfail,
+            filter_predicate=predicate,
+            fixup_expected_failures=fixup_expected_failures,
+            rename=_compile_rename(options.renames),
+        )
+    )
 
 
 def main():
     parser = make_options(__doc__)
     (options, args) = parser.parse_args()
 
-    regexp_filter = _make_regexp_filter(
-        options.with_regexps, options.without_regexps)
+    regexp_filter = _make_regexp_filter(options.with_regexps, options.without_regexps)
     tag_filter = make_tag_filter(options.with_tags, options.without_tags)
     filter_predicate = and_predicates([regexp_filter, tag_filter])
 
@@ -161,9 +183,10 @@ def main():
         passthrough=(not options.no_passthrough),
         forward=False,
         protocol_version=2,
-        input_stream=find_stream(sys.stdin, args))
+        input_stream=find_stream(sys.stdin, args),
+    )
     sys.exit(0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

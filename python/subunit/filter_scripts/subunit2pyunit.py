@@ -21,8 +21,7 @@ import unittest
 from operator import methodcaller
 from optparse import OptionParser
 
-from testtools import (DecorateTestCaseResult, StreamResultRouter,
-                       StreamToExtendedDecorator)
+from testtools import DecorateTestCaseResult, StreamResultRouter, StreamToExtendedDecorator
 
 from subunit import ByteStreamToStreamResult
 from subunit.filters import find_stream
@@ -31,28 +30,33 @@ from subunit.test_results import CatFiles
 
 def main():
     parser = OptionParser(description=__doc__)
-    parser.add_option("--no-passthrough", action="store_true",
-                      help="Hide all non subunit input.",
-                      default=False, dest="no_passthrough")
-    parser.add_option("--progress", action="store_true",
-                      help="Use bzrlib's test reporter (requires bzrlib)",
-                      default=False)
+    parser.add_option(
+        "--no-passthrough",
+        action="store_true",
+        help="Hide all non subunit input.",
+        default=False,
+        dest="no_passthrough",
+    )
+    parser.add_option(
+        "--progress", action="store_true", help="Use bzrlib's test reporter (requires bzrlib)", default=False
+    )
     (options, args) = parser.parse_args()
-    test = ByteStreamToStreamResult(
-        find_stream(sys.stdin, args), non_subunit_name='stdout')
+    test = ByteStreamToStreamResult(find_stream(sys.stdin, args), non_subunit_name="stdout")
 
     def wrap_result(result):
         result = StreamToExtendedDecorator(result)
         if not options.no_passthrough:
             result = StreamResultRouter(result)
-            result.add_rule(CatFiles(sys.stdout), 'test_id', test_id=None)
+            result.add_rule(CatFiles(sys.stdout), "test_id", test_id=None)
         return result
-    test = DecorateTestCaseResult(test, wrap_result,
-                                  before_run=methodcaller('startTestRun'),
-                                  after_run=methodcaller('stopTestRun'))
+
+    test = DecorateTestCaseResult(
+        test, wrap_result, before_run=methodcaller("startTestRun"), after_run=methodcaller("stopTestRun")
+    )
     if options.progress:
         from bzrlib import ui
         from bzrlib.tests import TextTestRunner
+
         ui.ui_factory = ui.make_ui_for_terminal(None, sys.stdout, sys.stderr)
         runner = TextTestRunner()
     else:
@@ -64,5 +68,5 @@ def main():
     sys.exit(exit_code)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

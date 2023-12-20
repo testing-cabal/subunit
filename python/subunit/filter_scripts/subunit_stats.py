@@ -6,7 +6,7 @@
 #  license at the users choice. A copy of both licenses are available in the
 #  project source as Apache-2.0 and BSD. You may not use this file except in
 #  compliance with one of these two licences.
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 #  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -29,10 +29,15 @@ def main():
 
     def show_stats(r):
         r.decorated.formatStats()
-    
-    run_filter_script(
-        lambda output:StreamToExtendedDecorator(result),
-        __doc__, show_stats, protocol_version=2, passthrough_subunit=False)
 
-if __name__ == '__main__':
+    run_filter_script(
+        lambda output: StreamToExtendedDecorator(result),
+        __doc__,
+        show_stats,
+        protocol_version=2,
+        passthrough_subunit=False,
+    )
+
+
+if __name__ == "__main__":
     main()

@@ -6,7 +6,7 @@
 #  license at the users choice. A copy of both licenses are available in the
 #  project source as Apache-2.0 and BSD. You may not use this file except in
 #  compliance with one of these two licences.
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 #  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -24,7 +24,7 @@ from testtools.testresult.doubles import StreamResult
 
 import subunit
 
-UTF8_TEXT = 'text/plain; charset=UTF8'
+UTF8_TEXT = "text/plain; charset=UTF8"
 
 
 class TestTAP2SubUnit(TestCase):
@@ -50,9 +50,23 @@ class TestTAP2SubUnit(TestCase):
         self.tap.seek(0)
         result = subunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
-        self.check_events([('status', 'file skip', 'skip', None, True,
-            'tap comment', b'Skipped: entire file skipped', True, None, None,
-            None)])
+        self.check_events(
+            [
+                (
+                    "status",
+                    "file skip",
+                    "skip",
+                    None,
+                    True,
+                    "tap comment",
+                    b"Skipped: entire file skipped",
+                    True,
+                    None,
+                    None,
+                    None,
+                )
+            ]
+        )
 
     def test_ok_test_pass(self):
         # A file
@@ -64,8 +78,7 @@ class TestTAP2SubUnit(TestCase):
         self.tap.seek(0)
         result = subunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
-        self.check_events([('status', 'test 1', 'success', None, False, None,
-            None, True, None, None, None)])
+        self.check_events([("status", "test 1", "success", None, False, None, None, True, None, None, None)])
 
     def test_ok_test_number_pass(self):
         # A file
@@ -75,8 +88,7 @@ class TestTAP2SubUnit(TestCase):
         self.tap.seek(0)
         result = subunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
-        self.check_events([('status', 'test 1', 'success', None, False, None,
-            None, True, None, None, None)])
+        self.check_events([("status", "test 1", "success", None, False, None, None, True, None, None, None)])
 
     def test_ok_test_number_description_pass(self):
         # A file
@@ -86,8 +98,9 @@ class TestTAP2SubUnit(TestCase):
         self.tap.seek(0)
         result = subunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
-        self.check_events([('status', 'test 1 - There is a description',
-            'success', None, False, None, None, True, None, None, None)])
+        self.check_events(
+            [("status", "test 1 - There is a description", "success", None, False, None, None, True, None, None, None)]
+        )
 
     def test_ok_test_description_pass(self):
         # A file
@@ -97,8 +110,9 @@ class TestTAP2SubUnit(TestCase):
         self.tap.seek(0)
         result = subunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
-        self.check_events([('status', 'test 1 There is a description',
-            'success', None, False, None, None, True, None, None, None)])
+        self.check_events(
+            [("status", "test 1 There is a description", "success", None, False, None, None, True, None, None, None)]
+        )
 
     def test_ok_SKIP_skip(self):
         # A file
@@ -108,17 +122,30 @@ class TestTAP2SubUnit(TestCase):
         self.tap.seek(0)
         result = subunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
-        self.check_events([('status', 'test 1', 'skip', None, False, None,
-            None, True, None, None, None)])
+        self.check_events([("status", "test 1", "skip", None, False, None, None, True, None, None, None)])
 
     def test_ok_skip_number_comment_lowercase(self):
         self.tap.write(_u("ok 1 # skip no samba environment available, skipping compilation\n"))
         self.tap.seek(0)
         result = subunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
-        self.check_events([('status', 'test 1', 'skip', None, False, 'tap comment',
-            b'no samba environment available, skipping compilation', True,
-            'text/plain; charset=UTF8', None, None)])
+        self.check_events(
+            [
+                (
+                    "status",
+                    "test 1",
+                    "skip",
+                    None,
+                    False,
+                    "tap comment",
+                    b"no samba environment available, skipping compilation",
+                    True,
+                    "text/plain; charset=UTF8",
+                    None,
+                    None,
+                )
+            ]
+        )
 
     def test_ok_number_description_SKIP_skip_comment(self):
         # A file
@@ -129,9 +156,23 @@ class TestTAP2SubUnit(TestCase):
         self.tap.seek(0)
         result = subunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
-        self.check_events([('status', 'test 1 foo', 'skip', None, False,
-            'tap comment', b'Not done yet', True, 'text/plain; charset=UTF8',
-            None, None)])
+        self.check_events(
+            [
+                (
+                    "status",
+                    "test 1 foo",
+                    "skip",
+                    None,
+                    False,
+                    "tap comment",
+                    b"Not done yet",
+                    True,
+                    "text/plain; charset=UTF8",
+                    None,
+                    None,
+                )
+            ]
+        )
 
     def test_ok_SKIP_skip_comment(self):
         # A file
@@ -141,9 +182,23 @@ class TestTAP2SubUnit(TestCase):
         self.tap.seek(0)
         result = subunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
-        self.check_events([('status', 'test 1', 'skip', None, False,
-            'tap comment', b'Not done yet', True, 'text/plain; charset=UTF8',
-            None, None)])
+        self.check_events(
+            [
+                (
+                    "status",
+                    "test 1",
+                    "skip",
+                    None,
+                    False,
+                    "tap comment",
+                    b"Not done yet",
+                    True,
+                    "text/plain; charset=UTF8",
+                    None,
+                    None,
+                )
+            ]
+        )
 
     def test_ok_TODO_xfail(self):
         # A file
@@ -153,8 +208,7 @@ class TestTAP2SubUnit(TestCase):
         self.tap.seek(0)
         result = subunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
-        self.check_events([('status', 'test 1', 'xfail', None, False, None,
-            None, True, None, None, None)])
+        self.check_events([("status", "test 1", "xfail", None, False, None, None, True, None, None, None)])
 
     def test_ok_TODO_xfail_comment(self):
         # A file
@@ -164,9 +218,23 @@ class TestTAP2SubUnit(TestCase):
         self.tap.seek(0)
         result = subunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
-        self.check_events([('status', 'test 1', 'xfail', None, False,
-            'tap comment', b'Not done yet', True, 'text/plain; charset=UTF8',
-            None, None)])
+        self.check_events(
+            [
+                (
+                    "status",
+                    "test 1",
+                    "xfail",
+                    None,
+                    False,
+                    "tap comment",
+                    b"Not done yet",
+                    True,
+                    "text/plain; charset=UTF8",
+                    None,
+                    None,
+                )
+            ]
+        )
 
     def test_bail_out_errors(self):
         # A file with line in it
@@ -177,11 +245,12 @@ class TestTAP2SubUnit(TestCase):
         self.tap.seek(0)
         result = subunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
-        self.check_events([
-            ('status', 'test 1 foo', 'success', None, False, None, None, True,
-             None, None, None),
-            ('status', 'Bail out! Lifejacket engaged', 'fail', None, False,
-             None, None, True, None, None, None)])
+        self.check_events(
+            [
+                ("status", "test 1 foo", "success", None, False, None, None, True, None, None, None),
+                ("status", "Bail out! Lifejacket engaged", "fail", None, False, None, None, True, None, None, None),
+            ]
+        )
 
     def test_missing_test_at_end_with_plan_adds_error(self):
         # A file
@@ -189,20 +258,31 @@ class TestTAP2SubUnit(TestCase):
         # ok first test
         # not ok third test
         # results in three tests, with the third being created
-        self.tap.write(_u('1..3\n'))
-        self.tap.write(_u('ok first test\n'))
-        self.tap.write(_u('not ok second test\n'))
+        self.tap.write(_u("1..3\n"))
+        self.tap.write(_u("ok first test\n"))
+        self.tap.write(_u("not ok second test\n"))
         self.tap.seek(0)
         result = subunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
-        self.check_events([
-            ('status', 'test 1 first test', 'success', None, False, None,
-             None, True, None, None, None),
-            ('status', 'test 2 second test', 'fail', None, False, None, None,
-             True, None, None, None),
-            ('status', 'test 3', 'fail', None, False, 'tap meta',
-             b'test missing from TAP output', True, 'text/plain; charset=UTF8',
-             None, None)])
+        self.check_events(
+            [
+                ("status", "test 1 first test", "success", None, False, None, None, True, None, None, None),
+                ("status", "test 2 second test", "fail", None, False, None, None, True, None, None, None),
+                (
+                    "status",
+                    "test 3",
+                    "fail",
+                    None,
+                    False,
+                    "tap meta",
+                    b"test missing from TAP output",
+                    True,
+                    "text/plain; charset=UTF8",
+                    None,
+                    None,
+                ),
+            ]
+        )
 
     def test_missing_test_with_plan_adds_error(self):
         # A file
@@ -210,39 +290,61 @@ class TestTAP2SubUnit(TestCase):
         # ok first test
         # not ok 3 third test
         # results in three tests, with the second being created
-        self.tap.write(_u('1..3\n'))
-        self.tap.write(_u('ok first test\n'))
-        self.tap.write(_u('not ok 3 third test\n'))
+        self.tap.write(_u("1..3\n"))
+        self.tap.write(_u("ok first test\n"))
+        self.tap.write(_u("not ok 3 third test\n"))
         self.tap.seek(0)
         result = subunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
-        self.check_events([
-            ('status', 'test 1 first test', 'success', None, False, None, None,
-             True, None, None, None),
-            ('status', 'test 2', 'fail', None, False, 'tap meta',
-             b'test missing from TAP output', True, 'text/plain; charset=UTF8',
-             None, None),
-            ('status', 'test 3 third test', 'fail', None, False, None, None,
-             True, None, None, None)])
+        self.check_events(
+            [
+                ("status", "test 1 first test", "success", None, False, None, None, True, None, None, None),
+                (
+                    "status",
+                    "test 2",
+                    "fail",
+                    None,
+                    False,
+                    "tap meta",
+                    b"test missing from TAP output",
+                    True,
+                    "text/plain; charset=UTF8",
+                    None,
+                    None,
+                ),
+                ("status", "test 3 third test", "fail", None, False, None, None, True, None, None, None),
+            ]
+        )
 
     def test_missing_test_no_plan_adds_error(self):
         # A file
         # ok first test
         # not ok 3 third test
         # results in three tests, with the second being created
-        self.tap.write(_u('ok first test\n'))
-        self.tap.write(_u('not ok 3 third test\n'))
+        self.tap.write(_u("ok first test\n"))
+        self.tap.write(_u("not ok 3 third test\n"))
         self.tap.seek(0)
         result = subunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
-        self.check_events([
-            ('status', 'test 1 first test', 'success', None, False, None, None,
-             True, None, None, None),
-            ('status', 'test 2', 'fail', None, False, 'tap meta',
-             b'test missing from TAP output', True, 'text/plain; charset=UTF8',
-             None, None),
-            ('status', 'test 3 third test', 'fail', None, False, None, None,
-             True, None, None, None)])
+        self.check_events(
+            [
+                ("status", "test 1 first test", "success", None, False, None, None, True, None, None, None),
+                (
+                    "status",
+                    "test 2",
+                    "fail",
+                    None,
+                    False,
+                    "tap meta",
+                    b"test missing from TAP output",
+                    True,
+                    "text/plain; charset=UTF8",
+                    None,
+                    None,
+                ),
+                ("status", "test 3 third test", "fail", None, False, None, None, True, None, None, None),
+            ]
+        )
 
     def test_four_tests_in_a_row_trailing_plan(self):
         # A file
@@ -252,23 +354,34 @@ class TestTAP2SubUnit(TestCase):
         # not ok 4 - fourth
         # 1..4
         # results in four tests numbered and named
-        self.tap.write(_u('ok 1 - first test in a script with trailing plan\n'))
-        self.tap.write(_u('not ok 2 - second\n'))
-        self.tap.write(_u('ok 3 - third\n'))
-        self.tap.write(_u('not ok 4 - fourth\n'))
-        self.tap.write(_u('1..4\n'))
+        self.tap.write(_u("ok 1 - first test in a script with trailing plan\n"))
+        self.tap.write(_u("not ok 2 - second\n"))
+        self.tap.write(_u("ok 3 - third\n"))
+        self.tap.write(_u("not ok 4 - fourth\n"))
+        self.tap.write(_u("1..4\n"))
         self.tap.seek(0)
         result = subunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
-        self.check_events([
-            ('status', 'test 1 - first test in a script with trailing plan',
-             'success', None, False, None, None, True, None, None, None),
-            ('status', 'test 2 - second', 'fail', None, False, None, None,
-             True, None, None, None),
-            ('status', 'test 3 - third', 'success', None, False, None, None,
-             True, None, None, None),
-            ('status', 'test 4 - fourth', 'fail', None, False, None, None,
-             True, None, None, None)])
+        self.check_events(
+            [
+                (
+                    "status",
+                    "test 1 - first test in a script with trailing plan",
+                    "success",
+                    None,
+                    False,
+                    None,
+                    None,
+                    True,
+                    None,
+                    None,
+                    None,
+                ),
+                ("status", "test 2 - second", "fail", None, False, None, None, True, None, None, None),
+                ("status", "test 3 - third", "success", None, False, None, None, True, None, None, None),
+                ("status", "test 4 - fourth", "fail", None, False, None, None, True, None, None, None),
+            ]
+        )
 
     def test_four_tests_in_a_row_with_plan(self):
         # A file
@@ -278,23 +391,34 @@ class TestTAP2SubUnit(TestCase):
         # ok 3 - third
         # not ok 4 - fourth
         # results in four tests numbered and named
-        self.tap.write(_u('1..4\n'))
-        self.tap.write(_u('ok 1 - first test in a script with a plan\n'))
-        self.tap.write(_u('not ok 2 - second\n'))
-        self.tap.write(_u('ok 3 - third\n'))
-        self.tap.write(_u('not ok 4 - fourth\n'))
+        self.tap.write(_u("1..4\n"))
+        self.tap.write(_u("ok 1 - first test in a script with a plan\n"))
+        self.tap.write(_u("not ok 2 - second\n"))
+        self.tap.write(_u("ok 3 - third\n"))
+        self.tap.write(_u("not ok 4 - fourth\n"))
         self.tap.seek(0)
         result = subunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
-        self.check_events([
-            ('status', 'test 1 - first test in a script with a plan',
-             'success', None, False, None, None, True, None, None, None),
-            ('status', 'test 2 - second', 'fail', None, False, None, None,
-             True, None, None, None),
-            ('status', 'test 3 - third', 'success', None, False, None, None,
-             True, None, None, None),
-            ('status', 'test 4 - fourth', 'fail', None, False, None, None,
-             True, None, None, None)])
+        self.check_events(
+            [
+                (
+                    "status",
+                    "test 1 - first test in a script with a plan",
+                    "success",
+                    None,
+                    False,
+                    None,
+                    None,
+                    True,
+                    None,
+                    None,
+                    None,
+                ),
+                ("status", "test 2 - second", "fail", None, False, None, None, True, None, None, None),
+                ("status", "test 3 - third", "success", None, False, None, None, True, None, None, None),
+                ("status", "test 4 - fourth", "fail", None, False, None, None, True, None, None, None),
+            ]
+        )
 
     def test_four_tests_in_a_row_no_plan(self):
         # A file
@@ -303,22 +427,33 @@ class TestTAP2SubUnit(TestCase):
         # ok 3 - third
         # not ok 4 - fourth
         # results in four tests numbered and named
-        self.tap.write(_u('ok 1 - first test in a script with no plan at all\n'))
-        self.tap.write(_u('not ok 2 - second\n'))
-        self.tap.write(_u('ok 3 - third\n'))
-        self.tap.write(_u('not ok 4 - fourth\n'))
+        self.tap.write(_u("ok 1 - first test in a script with no plan at all\n"))
+        self.tap.write(_u("not ok 2 - second\n"))
+        self.tap.write(_u("ok 3 - third\n"))
+        self.tap.write(_u("not ok 4 - fourth\n"))
         self.tap.seek(0)
         result = subunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
-        self.check_events([
-            ('status', 'test 1 - first test in a script with no plan at all',
-             'success', None, False, None, None, True, None, None, None),
-            ('status', 'test 2 - second', 'fail', None, False, None, None,
-             True, None, None, None),
-            ('status', 'test 3 - third', 'success', None, False, None, None,
-             True, None, None, None),
-            ('status', 'test 4 - fourth', 'fail', None, False, None, None,
-             True, None, None, None)])
+        self.check_events(
+            [
+                (
+                    "status",
+                    "test 1 - first test in a script with no plan at all",
+                    "success",
+                    None,
+                    False,
+                    None,
+                    None,
+                    True,
+                    None,
+                    None,
+                    None,
+                ),
+                ("status", "test 2 - second", "fail", None, False, None, None, True, None, None, None),
+                ("status", "test 3 - third", "success", None, False, None, None, True, None, None, None),
+                ("status", "test 4 - fourth", "fail", None, False, None, None, True, None, None, None),
+            ]
+        )
 
     def test_todo_and_skip(self):
         # A file
@@ -333,18 +468,41 @@ class TestTAP2SubUnit(TestCase):
         self.subunit.seek(0)
         events = StreamResult()
         subunit.ByteStreamToStreamResult(self.subunit).run(events)
-        self.check_events([
-            ('status', 'test 1 - a fail but', 'xfail', None, False,
-             'tap comment', b'but is TODO', True, 'text/plain; charset=UTF8',
-             None, None),
-            ('status', 'test 2 - another fail', 'skip', None, False,
-             'tap comment', b'instead', True, 'text/plain; charset=UTF8',
-             None, None)])
+        self.check_events(
+            [
+                (
+                    "status",
+                    "test 1 - a fail but",
+                    "xfail",
+                    None,
+                    False,
+                    "tap comment",
+                    b"but is TODO",
+                    True,
+                    "text/plain; charset=UTF8",
+                    None,
+                    None,
+                ),
+                (
+                    "status",
+                    "test 2 - another fail",
+                    "skip",
+                    None,
+                    False,
+                    "tap comment",
+                    b"instead",
+                    True,
+                    "text/plain; charset=UTF8",
+                    None,
+                    None,
+                ),
+            ]
+        )
 
     def test_leading_comments_add_to_next_test_log(self):
         # A file
         # # comment
-        # ok 
+        # ok
         # ok
         # results in a single test with the comment included
         # in the first test and not the second.
@@ -354,12 +512,25 @@ class TestTAP2SubUnit(TestCase):
         self.tap.seek(0)
         result = subunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
-        self.check_events([
-            ('status', 'test 1', 'success', None, False, 'tap comment',
-             b'# comment', True, 'text/plain; charset=UTF8', None, None),
-            ('status', 'test 2', 'success', None, False, None, None, True,
-             None, None, None)])
-    
+        self.check_events(
+            [
+                (
+                    "status",
+                    "test 1",
+                    "success",
+                    None,
+                    False,
+                    "tap comment",
+                    b"# comment",
+                    True,
+                    "text/plain; charset=UTF8",
+                    None,
+                    None,
+                ),
+                ("status", "test 2", "success", None, False, None, None, True, None, None, None),
+            ]
+        )
+
     def test_trailing_comments_are_included_in_last_test_log(self):
         # A file
         # ok foo
@@ -373,11 +544,24 @@ class TestTAP2SubUnit(TestCase):
         self.tap.seek(0)
         result = subunit.TAP2SubUnit(self.tap, self.subunit)
         self.assertEqual(0, result)
-        self.check_events([
-            ('status', 'test 1', 'success', None, False, None, None, True,
-             None, None, None),
-            ('status', 'test 2', 'success', None, False, 'tap comment',
-             b'# comment', True, 'text/plain; charset=UTF8', None, None)])
+        self.check_events(
+            [
+                ("status", "test 1", "success", None, False, None, None, True, None, None, None),
+                (
+                    "status",
+                    "test 2",
+                    "success",
+                    None,
+                    False,
+                    "tap comment",
+                    b"# comment",
+                    True,
+                    "text/plain; charset=UTF8",
+                    None,
+                    None,
+                ),
+            ]
+        )
 
     def check_events(self, events):
         self.subunit.seek(0)

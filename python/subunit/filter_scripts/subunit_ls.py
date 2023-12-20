@@ -28,22 +28,29 @@ from subunit.test_results import CatFiles, TestIdPrintingResult
 
 def main():
     parser = OptionParser(description=__doc__)
-    parser.add_option("--times", action="store_true",
+    parser.add_option(
+        "--times",
+        action="store_true",
         help="list the time each test took (requires a timestamped stream)",
-            default=False)
-    parser.add_option("--exists", action="store_true",
-        help="list tests that are reported as existing (as well as ran)",
-            default=False)
-    parser.add_option("--no-passthrough", action="store_true",
-        help="Hide all non subunit input.", default=False, dest="no_passthrough")
+        default=False,
+    )
+    parser.add_option(
+        "--exists", action="store_true", help="list tests that are reported as existing (as well as ran)", default=False
+    )
+    parser.add_option(
+        "--no-passthrough",
+        action="store_true",
+        help="Hide all non subunit input.",
+        default=False,
+        dest="no_passthrough",
+    )
     (options, args) = parser.parse_args()
-    test = ByteStreamToStreamResult(
-        find_stream(sys.stdin, args), non_subunit_name="stdout")
+    test = ByteStreamToStreamResult(find_stream(sys.stdin, args), non_subunit_name="stdout")
     result = TestIdPrintingResult(sys.stdout, options.times, options.exists)
     if not options.no_passthrough:
         result = StreamResultRouter(result)
         cat = CatFiles(sys.stdout)
-        result.add_rule(cat, 'test_id', test_id=None)
+        result.add_rule(cat, "test_id", test_id=None)
     summary = StreamSummary()
     result = CopyStreamResult([result, summary])
     result.startTestRun()
@@ -56,5 +63,5 @@ def main():
     sys.exit(exit_code)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

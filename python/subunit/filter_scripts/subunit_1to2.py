@@ -33,10 +33,9 @@ def make_options(description):
 def main():
     parser = make_options(__doc__)
     (options, args) = parser.parse_args()
-    run_tests_from_stream(find_stream(sys.stdin, args),
-        ExtendedToStreamDecorator(StreamResultToBytes(sys.stdout)))
+    run_tests_from_stream(find_stream(sys.stdin, args), ExtendedToStreamDecorator(StreamResultToBytes(sys.stdout)))
     sys.exit(0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

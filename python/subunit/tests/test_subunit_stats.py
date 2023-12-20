@@ -41,7 +41,9 @@ class TestTestResultStats(unittest.TestCase):
         self.assertEqual(set(), self.result.seen_tags)
 
     def setUpUsedStream(self):
-        self.input_stream.write(_b("""tags: global
+        self.input_stream.write(
+            _b(
+                """tags: global
 test passed
 success passed
 test failed
@@ -53,10 +55,12 @@ test skipped
 skip skipped
 test todo
 xfail todo
-"""))
+"""
+            )
+        )
         self.input_stream.seek(0)
         self.test.run(self.result)
-    
+
     def test_stats_smoke_everything(self):
         # Statistics are calculated usefully.
         self.setUpUsedStream()
@@ -67,13 +71,15 @@ xfail todo
         self.assertEqual({"global", "local"}, self.result.seen_tags)
 
     def test_stat_formatting(self):
-        expected = ("""
+        expected = (
+            """
 Total tests:       5
 Passed tests:      2
 Failed tests:      2
 Skipped tests:     1
 Seen tags: global, local
-""")[1:]
+"""
+        )[1:]
         self.setUpUsedStream()
         self.result.formatStats()
         self.assertEqual(expected, self.output.getvalue())

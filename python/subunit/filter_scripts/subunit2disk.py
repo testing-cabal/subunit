@@ -25,5 +25,5 @@ def main():
     sys.exit(to_disk())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
