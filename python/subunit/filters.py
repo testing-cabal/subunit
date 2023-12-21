@@ -19,29 +19,34 @@ from optparse import OptionParser
 
 from testtools import CopyStreamResult, StreamResult, StreamResultRouter
 
-from subunit import (ByteStreamToStreamResult, DiscardStream, ProtocolTestCase,
-                     StreamResultToBytes)
+from subunit import ByteStreamToStreamResult, DiscardStream, ProtocolTestCase, StreamResultToBytes
 from subunit.test_results import CatFiles
 
 
 def make_options(description):
     parser = OptionParser(description=description)
     parser.add_option(
-        "--no-passthrough", action="store_true",
-        help="Hide all non subunit input.", default=False,
-        dest="no_passthrough")
+        "--no-passthrough",
+        action="store_true",
+        help="Hide all non subunit input.",
+        default=False,
+        dest="no_passthrough",
+    )
+    parser.add_option("-o", "--output-to", help="Send the output to this path rather than stdout.")
     parser.add_option(
-        "-o", "--output-to",
-        help="Send the output to this path rather than stdout.")
-    parser.add_option(
-        "-f", "--forward", action="store_true", default=False,
+        "-f",
+        "--forward",
+        action="store_true",
+        default=False,
         help="Forward subunit stream on stdout. When set, received "
-            "non-subunit output will be encapsulated in subunit.")
+        "non-subunit output will be encapsulated in subunit.",
+    )
     return parser
 
 
-def run_tests_from_stream(input_stream, result, passthrough_stream=None,
-    forward_stream=None, protocol_version=1, passthrough_subunit=True):
+def run_tests_from_stream(
+    input_stream, result, passthrough_stream=None, forward_stream=None, protocol_version=1, passthrough_subunit=True
+):
     """Run tests from a subunit input stream through 'result'.
 
     Non-test events - top level file attachments - are expected to be
@@ -66,11 +71,9 @@ def run_tests_from_stream(input_stream, result, passthrough_stream=None,
         (when forwarding as subunit non-subunit input is always turned into
         subunit)
     """
-    if 1==protocol_version:
-        test = ProtocolTestCase(
-            input_stream, passthrough=passthrough_stream,
-            forward=forward_stream)
-    elif 2==protocol_version:
+    if 1 == protocol_version:
+        test = ProtocolTestCase(input_stream, passthrough=passthrough_stream, forward=forward_stream)
+    elif 2 == protocol_version:
         # In all cases we encapsulate unknown inputs.
         if forward_stream is not None:
             # Send events to forward_stream as subunit.
@@ -79,7 +82,7 @@ def run_tests_from_stream(input_stream, result, passthrough_stream=None,
             if passthrough_stream is None:
                 # Not passing non-test events - split them off to nothing.
                 router = StreamResultRouter(forward_result)
-                router.add_rule(StreamResult(), 'test_id', test_id=None)
+                router.add_rule(StreamResult(), "test_id", test_id=None)
                 result = CopyStreamResult([router, result])
             else:
                 # otherwise, copy all events to forward_result
@@ -92,9 +95,8 @@ def run_tests_from_stream(input_stream, result, passthrough_stream=None,
             else:
                 passthrough_result = StreamResultToBytes(passthrough_stream)
             result = StreamResultRouter(result)
-            result.add_rule(passthrough_result, 'test_id', test_id=None)
-        test = ByteStreamToStreamResult(input_stream,
-            non_subunit_name='stdout')
+            result.add_rule(passthrough_result, "test_id", test_id=None)
+        test = ByteStreamToStreamResult(input_stream, non_subunit_name="stdout")
     else:
         raise Exception("Unknown protocol version.")
     result.startTestRun()
@@ -102,9 +104,15 @@ def run_tests_from_stream(input_stream, result, passthrough_stream=None,
     result.stopTestRun()
 
 
-def filter_by_result(result_factory, output_path, passthrough, forward,
-                     input_stream=sys.stdin, protocol_version=1,
-                     passthrough_subunit=True):
+def filter_by_result(
+    result_factory,
+    output_path,
+    passthrough,
+    forward,
+    input_stream=sys.stdin,
+    protocol_version=1,
+    passthrough_subunit=True,
+):
     """Filter an input stream using a test result.
 
     :param result_factory: A callable that when passed an output stream
@@ -125,14 +133,14 @@ def filter_by_result(result_factory, output_path, passthrough, forward,
     if passthrough:
         passthrough_stream = sys.stdout
     else:
-        if 1==protocol_version:
+        if 1 == protocol_version:
             passthrough_stream = DiscardStream()
         else:
             passthrough_stream = None
 
     if forward:
         forward_stream = sys.stdout
-    elif 1==protocol_version:
+    elif 1 == protocol_version:
         forward_stream = DiscardStream()
     else:
         forward_stream = None
@@ -140,22 +148,25 @@ def filter_by_result(result_factory, output_path, passthrough, forward,
     if output_path is None:
         output_to = sys.stdout
     else:
-        output_to = open(output_path, 'w')
+        output_to = open(output_path, "w")
 
     try:
         result = result_factory(output_to)
         run_tests_from_stream(
-            input_stream, result, passthrough_stream, forward_stream,
+            input_stream,
+            result,
+            passthrough_stream,
+            forward_stream,
             protocol_version=protocol_version,
-            passthrough_subunit=passthrough_subunit)
+            passthrough_subunit=passthrough_subunit,
+        )
     finally:
         if output_path:
             output_to.close()
     return result
 
 
-def run_filter_script(result_factory, description, post_run_hook=None,
-    protocol_version=1, passthrough_subunit=True):
+def run_filter_script(result_factory, description, post_run_hook=None, protocol_version=1, passthrough_subunit=True):
     """Main function for simple subunit filter scripts.
 
     Many subunit filter scripts take a stream of subunit input and use a
@@ -174,13 +185,17 @@ def run_filter_script(result_factory, description, post_run_hook=None,
     parser = make_options(description)
     (options, args) = parser.parse_args()
     result = filter_by_result(
-        result_factory, options.output_to, not options.no_passthrough,
-        options.forward, protocol_version=protocol_version,
+        result_factory,
+        options.output_to,
+        not options.no_passthrough,
+        options.forward,
+        protocol_version=protocol_version,
         passthrough_subunit=passthrough_subunit,
-        input_stream=find_stream(sys.stdin, args))
+        input_stream=find_stream(sys.stdin, args),
+    )
     if post_run_hook:
         post_run_hook(result)
-    if not hasattr(result, 'wasSuccessful'):
+    if not hasattr(result, "wasSuccessful"):
         result = result.decorated
     if result.wasSuccessful():
         sys.exit(0)
@@ -198,6 +213,6 @@ def find_stream(stdin, argv):
     """
     assert len(argv) < 2, "Too many filenames."
     if argv:
-        return open(argv[0], 'rb')
+        return open(argv[0], "rb")
     else:
         return stdin

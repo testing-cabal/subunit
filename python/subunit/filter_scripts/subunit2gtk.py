@@ -51,17 +51,20 @@ import unittest
 
 import gi
 
-gi.require_version('Gtk', '3.0')
-from gi.repository import GObject, Gtk    # noqa: E402
+gi.require_version("Gtk", "3.0")
+from gi.repository import GObject, Gtk  # noqa: E402
 from testtools import StreamToExtendedDecorator  # noqa: E402
 
-from subunit import (PROGRESS_POP, PROGRESS_PUSH, PROGRESS_SET,  # noqa: E402
-                     ByteStreamToStreamResult)
+from subunit import (  # noqa: E402
+    PROGRESS_POP,
+    PROGRESS_PUSH,
+    PROGRESS_SET,
+    ByteStreamToStreamResult,
+)
 from subunit.progress_model import ProgressModel  # noqa: E402
 
 
 class GTKTestResult(unittest.TestResult):
-
     def __init__(self):
         super(GTKTestResult, self).__init__()
         # Instance variables (in addition to TestResult)
@@ -105,30 +108,84 @@ class GTKTestResult(unittest.TestResult):
         table.show()
         # Show summary details about the run. Could use an expander.
         label = Gtk.Label(label="Run:")
-        table.attach(label, 0, 1, 1, 2, Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL,
-            Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL, 5, 5)
+        table.attach(
+            label,
+            0,
+            1,
+            1,
+            2,
+            Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL,
+            Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL,
+            5,
+            5,
+        )
         label.show()
         self.run_label = Gtk.Label(label="N/A")
-        table.attach(self.run_label, 1, 2, 1, 2, Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL,
-            Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL, 5, 5)
+        table.attach(
+            self.run_label,
+            1,
+            2,
+            1,
+            2,
+            Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL,
+            Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL,
+            5,
+            5,
+        )
         self.run_label.show()
 
         label = Gtk.Label(label="OK:")
-        table.attach(label, 0, 1, 2, 3, Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL,
-            Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL, 5, 5)
+        table.attach(
+            label,
+            0,
+            1,
+            2,
+            3,
+            Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL,
+            Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL,
+            5,
+            5,
+        )
         label.show()
         self.ok_label = Gtk.Label(label="N/A")
-        table.attach(self.ok_label, 1, 2, 2, 3, Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL,
-            Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL, 5, 5)
+        table.attach(
+            self.ok_label,
+            1,
+            2,
+            2,
+            3,
+            Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL,
+            Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL,
+            5,
+            5,
+        )
         self.ok_label.show()
 
         label = Gtk.Label(label="Not OK:")
-        table.attach(label, 0, 1, 3, 4, Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL,
-            Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL, 5, 5)
+        table.attach(
+            label,
+            0,
+            1,
+            3,
+            4,
+            Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL,
+            Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL,
+            5,
+            5,
+        )
         label.show()
         self.not_ok_label = Gtk.Label(label="N/A")
-        table.attach(self.not_ok_label, 1, 2, 3, 4, Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL,
-            Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL, 5, 5)
+        table.attach(
+            self.not_ok_label,
+            1,
+            2,
+            3,
+            4,
+            Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL,
+            Gtk.AttachOptions.EXPAND | Gtk.AttachOptions.FILL,
+            5,
+            5,
+        )
         self.not_ok_label.show()
 
         self.window.show()
@@ -147,7 +204,7 @@ class GTKTestResult(unittest.TestResult):
         else:
             pos = self.progress_model.pos()
             width = self.progress_model.width()
-            percentage = (pos / float(width))
+            percentage = pos / float(width)
             self.pbar.set_fraction(percentage)
 
     def stopTestRun(self):
@@ -155,7 +212,7 @@ class GTKTestResult(unittest.TestResult):
             super(GTKTestResult, self).stopTestRun()
         except AttributeError:
             pass
-        GObject.idle_add(self.pbar.set_text, 'Finished')
+        GObject.idle_add(self.pbar.set_text, "Finished")
 
     def addError(self, test, err):
         super(GTKTestResult, self).addError(test, err)
@@ -207,7 +264,7 @@ class GTKTestResult(unittest.TestResult):
 def main():
     GObject.threads_init()
     result = StreamToExtendedDecorator(GTKTestResult())
-    test = ByteStreamToStreamResult(sys.stdin, non_subunit_name='stdout')
+    test = ByteStreamToStreamResult(sys.stdin, non_subunit_name="stdout")
     # Get setup
     while Gtk.events_pending():
         Gtk.main_iteration()
@@ -216,6 +273,7 @@ def main():
     def run_and_finish():
         test.run(result)
         result.stopTestRun()
+
     t = threading.Thread(target=run_and_finish)
     t.daemon = True
     result.startTestRun()
@@ -228,5 +286,5 @@ def main():
     sys.exit(exit_code)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

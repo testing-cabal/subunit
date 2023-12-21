@@ -25,24 +25,23 @@ from subunit.v2 import StreamResultToBytes
 
 
 class SmokeTest(TestCase):
-
     def test_smoke(self):
-        output = os.path.join(self.useFixture(TempDir()).path, 'output')
+        output = os.path.join(self.useFixture(TempDir()).path, "output")
         stdin = io.BytesIO()
         stdout = io.StringIO()
         writer = StreamResultToBytes(stdin)
         writer.startTestRun()
         writer.status(
-            'foo', 'success', {'tag'}, file_name='fred',
-            file_bytes=b'abcdefg', eof=True, mime_type='text/plain')
+            "foo", "success", {"tag"}, file_name="fred", file_bytes=b"abcdefg", eof=True, mime_type="text/plain"
+        )
         writer.stopTestRun()
         stdin.seek(0)
-        _to_disk.to_disk(['-d', output], stdin=stdin, stdout=stdout)
+        _to_disk.to_disk(["-d", output], stdin=stdin, stdout=stdout)
         self.expectThat(
-            os.path.join(output, 'foo/test.json'),
+            os.path.join(output, "foo/test.json"),
             FileContains(
                 '{"details": ["fred"], "id": "foo", "start": null, '
-                '"status": "success", "stop": null, "tags": ["tag"]}'))
-        self.expectThat(
-            os.path.join(output, 'foo/fred'),
-            FileContains('abcdefg'))
+                '"status": "success", "stop": null, "tags": ["tag"]}'
+            ),
+        )
+        self.expectThat(os.path.join(output, "foo/fred"), FileContains("abcdefg"))

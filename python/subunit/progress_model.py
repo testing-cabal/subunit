@@ -6,7 +6,7 @@
 #  license at the users choice. A copy of both licenses are available in the
 #  project source as Apache-2.0 and BSD. You may not use this file except in
 #  compliance with one of these two licences.
-#  
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under these licenses is distributed on an "AS IS" BASIS, WITHOUT
 #  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
@@ -16,9 +16,10 @@
 
 """Support for dealing with progress state."""
 
+
 class ProgressModel(object):
     """A model of progress indicators as subunit defines it.
-    
+
     Instances of this class represent a single logical operation that is
     progressing. The operation may have many steps, and some of those steps may
     supply their own progress information. ProgressModel uses a nested concept
@@ -40,7 +41,7 @@ class ProgressModel(object):
 
     def __init__(self):
         """Create a ProgressModel.
-        
+
         The new model has no progress data at all - it will claim a summary
         width of zero and position of 0.
         """
@@ -103,4 +104,3 @@ class ProgressModel(object):
             return task[3] * (task[1] or 1)
         else:
             return task[1]
-

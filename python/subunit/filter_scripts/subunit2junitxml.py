@@ -26,16 +26,16 @@ from subunit.filters import run_filter_script
 try:
     from junitxml import JUnitXmlResult
 except ImportError:
-    sys.stderr.write("python-junitxml (https://launchpad.net/pyjunitxml or "
-        "http://pypi.python.org/pypi/junitxml) is required for this filter.")
+    sys.stderr.write(
+        "python-junitxml (https://launchpad.net/pyjunitxml or "
+        "http://pypi.python.org/pypi/junitxml) is required for this filter."
+    )
     raise
 
 
 def main():
-    run_filter_script(
-        lambda output: StreamToExtendedDecorator(
-            JUnitXmlResult(output)), __doc__, protocol_version=2)
+    run_filter_script(lambda output: StreamToExtendedDecorator(JUnitXmlResult(output)), __doc__, protocol_version=2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -23,9 +23,8 @@ from subunit.test_results import CsvResult
 
 
 def main():
-    run_filter_script(lambda output: StreamToExtendedDecorator(
-        CsvResult(output)), __doc__, protocol_version=2)
+    run_filter_script(lambda output: StreamToExtendedDecorator(CsvResult(output)), __doc__, protocol_version=2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

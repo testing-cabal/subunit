@@ -34,17 +34,16 @@ def make_options(description):
 def main():
     parser = make_options(__doc__)
     (options, args) = parser.parse_args()
-    case = ByteStreamToStreamResult(
-        find_stream(sys.stdin, args), non_subunit_name='stdout')
+    case = ByteStreamToStreamResult(find_stream(sys.stdin, args), non_subunit_name="stdout")
     result = StreamToExtendedDecorator(TestProtocolClient(sys.stdout))
     result = StreamResultRouter(result)
     cat = CatFiles(sys.stdout)
-    result.add_rule(cat, 'test_id', test_id=None)
+    result.add_rule(cat, "test_id", test_id=None)
     result.startTestRun()
     case.run(result)
     result.stopTestRun()
     sys.exit(0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

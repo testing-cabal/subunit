@@ -28,16 +28,16 @@ import iso8601
 utf_8_decode = codecs.utf_8_decode
 
 __all__ = [
-    'ByteStreamToStreamResult',
-    'StreamResultToBytes',
-    ]
+    "ByteStreamToStreamResult",
+    "StreamResultToBytes",
+]
 
-SIGNATURE = b'\xb3'
-FMT_8  = '>B'
-FMT_16 = '>H'
-FMT_24 = '>HB'
-FMT_32 = '>I'
-FMT_TIMESTAMP = '>II'
+SIGNATURE = b"\xb3"
+FMT_8 = ">B"
+FMT_16 = ">H"
+FMT_24 = ">HB"
+FMT_32 = ">I"
+FMT_TIMESTAMP = ">II"
 FLAG_TEST_ID = 0x0800
 FLAG_ROUTE_CODE = 0x0400
 FLAG_TIMESTAMP = 0x0200
@@ -47,7 +47,7 @@ FLAG_MIME_TYPE = 0x0020
 FLAG_EOF = 0x0010
 FLAG_FILE_CONTENT = 0x0040
 EPOCH = datetime.datetime.fromtimestamp(0, tz=iso8601.UTC)
-NUL_ELEMENT = b'\0'[0]
+NUL_ELEMENT = b"\0"[0]
 # Contains True for types for which 'nul in thing' falsely returns false.
 _nul_test_broken = {}
 
@@ -59,13 +59,12 @@ def read_exactly(stream, size):
         read(<count>) and return bytes.
     :param size: The number of bytes to retrieve.
     """
-    data = b''
+    data = b""
     remaining = size
     while remaining:
         read = stream.read(remaining)
         if len(read) == 0:
-            raise ParseError('Short read - got %d bytes, wanted %d bytes' % (
-                len(data), size))
+            raise ParseError("Short read - got %d bytes, wanted %d bytes" % (len(data), size))
         data += read
         remaining -= len(read)
     return data
@@ -83,16 +82,16 @@ class StreamResultToBytes(object):
 
     status_mask = {
         None: 0,
-        'exists': 0x1,
-        'inprogress': 0x2,
-        'success': 0x3,
-        'uxsuccess': 0x4,
-        'skip': 0x5,
-        'fail': 0x6,
-        'xfail': 0x7,
-        }
+        "exists": 0x1,
+        "inprogress": 0x2,
+        "success": 0x3,
+        "uxsuccess": 0x4,
+        "skip": 0x5,
+        "fail": 0x6,
+        "xfail": 0x7,
+    }
 
-    zero_b = b'\0'[0]
+    zero_b = b"\0"[0]
 
     def __init__(self, output_stream):
         """Create a StreamResultToBytes with output written to output_stream.
@@ -110,16 +109,34 @@ class StreamResultToBytes(object):
     def stopTestRun(self):
         pass
 
-    def status(self, test_id=None, test_status=None, test_tags=None,
-        runnable=True, file_name=None, file_bytes=None, eof=False,
-        mime_type=None, route_code=None, timestamp=None):
-        self._write_packet(test_id=test_id, test_status=test_status,
-            test_tags=test_tags, runnable=runnable, file_name=file_name,
-            file_bytes=file_bytes, eof=eof, mime_type=mime_type,
-            route_code=route_code, timestamp=timestamp)
+    def status(
+        self,
+        test_id=None,
+        test_status=None,
+        test_tags=None,
+        runnable=True,
+        file_name=None,
+        file_bytes=None,
+        eof=False,
+        mime_type=None,
+        route_code=None,
+        timestamp=None,
+    ):
+        self._write_packet(
+            test_id=test_id,
+            test_status=test_status,
+            test_tags=test_tags,
+            runnable=runnable,
+            file_name=file_name,
+            file_bytes=file_bytes,
+            eof=eof,
+            mime_type=mime_type,
+            route_code=route_code,
+            timestamp=timestamp,
+        )
 
     def _write_utf8(self, a_string, packet):
-        utf8 = a_string.encode('utf-8')
+        utf8 = a_string.encode("utf-8")
         self._write_number(len(utf8), packet)
         packet.append(utf8)
 
@@ -139,27 +156,36 @@ class StreamResultToBytes(object):
             return [struct.pack(FMT_16, value)]
         elif value < 4194304:
             value = value | 0x800000
-            return [struct.pack(FMT_16, value >> 8),
-                    struct.pack(FMT_8, value & 0xff)]
+            return [struct.pack(FMT_16, value >> 8), struct.pack(FMT_8, value & 0xFF)]
         elif value < 1073741824:
-            value = value | 0xc0000000
+            value = value | 0xC0000000
             return [struct.pack(FMT_32, value)]
         else:
-            raise ValueError('value too large to encode: %r' % (value,))
+            raise ValueError("value too large to encode: %r" % (value,))
 
-    def _write_packet(self, test_id=None, test_status=None, test_tags=None,
-        runnable=True, file_name=None, file_bytes=None, eof=False,
-        mime_type=None, route_code=None, timestamp=None):
+    def _write_packet(
+        self,
+        test_id=None,
+        test_status=None,
+        test_tags=None,
+        runnable=True,
+        file_name=None,
+        file_bytes=None,
+        eof=False,
+        mime_type=None,
+        route_code=None,
+        timestamp=None,
+    ):
         packet = [SIGNATURE]
-        packet.append(b'FF') # placeholder for flags
+        packet.append(b"FF")  # placeholder for flags
         # placeholder for length, but see below as length is variable.
-        packet.append(b'')
-        flags = 0x2000 # Version 0x2
+        packet.append(b"")
+        flags = 0x2000  # Version 0x2
         if timestamp is not None:
             flags = flags | FLAG_TIMESTAMP
             since_epoch = timestamp - EPOCH
             nanoseconds = since_epoch.microseconds * 1000
-            seconds = (since_epoch.seconds + since_epoch.days * 24 * 3600)
+            seconds = since_epoch.seconds + since_epoch.days * 24 * 3600
             packet.append(struct.pack(FMT_32, seconds))
             self._write_number(nanoseconds, packet)
         if test_id is not None:
@@ -180,8 +206,8 @@ class StreamResultToBytes(object):
             self._write_utf8(file_name, packet)
             self._write_number(len(file_bytes), packet)
             packet.append(file_bytes)
-        if eof: 
-           flags = flags | FLAG_EOF
+        if eof:
+            flags = flags | FLAG_EOF
         if route_code is not None:
             flags = flags | FLAG_ROUTE_CODE
             self._write_utf8(route_code, packet)
@@ -210,8 +236,8 @@ class StreamResultToBytes(object):
         # or a single join to a temp variable then a final join
         # or two writes (that python might then split).
         # For now, simplest code: join, crc32, join, output
-        content = b''.join(packet)
-        data = content + struct.pack(FMT_32, zlib.crc32(content) & 0xffffffff)
+        content = b"".join(packet)
+        data = content + struct.pack(FMT_32, zlib.crc32(content) & 0xFFFFFFFF)
         # On eventlet 0.17.3, GreenIO.write() can make partial write.
         # Use a loop to ensure that all bytes are written.
         # See also the eventlet issue:
@@ -246,14 +272,14 @@ class ByteStreamToStreamResult(object):
 
     status_lookup = {
         0x0: None,
-        0x1: 'exists',
-        0x2: 'inprogress',
-        0x3: 'success',
-        0x4: 'uxsuccess',
-        0x5: 'skip',
-        0x6: 'fail',
-        0x7: 'xfail',
-        }
+        0x1: "exists",
+        0x2: "inprogress",
+        0x3: "success",
+        0x4: "uxsuccess",
+        0x5: "skip",
+        0x6: "fail",
+        0x7: "xfail",
+    }
 
     def __init__(self, source, non_subunit_name=None):
         """Create a ByteStreamToStreamResult.
@@ -268,7 +294,7 @@ class ByteStreamToStreamResult(object):
         """
         self.non_subunit_name = non_subunit_name
         self.source = subunit.make_stream_binary(source)
-        self.codec = codecs.lookup('utf8').incrementaldecoder()
+        self.codec = codecs.lookup("utf8").incrementaldecoder()
 
     def run(self, result):
         """Parse source and emit events to result.
@@ -309,7 +335,7 @@ class ByteStreamToStreamResult(object):
             while len(buffered[-1]):
                 # Note: Windows does not support passing a file descriptor to
                 # select.select. fallback to one-byte-at-a-time.
-                if sys.platform == 'win32':
+                if sys.platform == "win32":
                     break
 
                 try:
@@ -347,9 +373,7 @@ class ByteStreamToStreamResult(object):
                 if not readable or len(buffered) >= 1048576:
                     # timeout or too much data, emit what we have.
                     break
-            result.status(
-                file_name=self.non_subunit_name,
-                file_bytes=b''.join(buffered))
+            result.status(file_name=self.non_subunit_name, file_bytes=b"".join(buffered))
             if mid_character or not len(content) or content[0] != SIGNATURE[0]:
                 continue
             # Otherwise, parse a data packet.
@@ -360,34 +384,42 @@ class ByteStreamToStreamResult(object):
             packet = [SIGNATURE]
             self._parse(packet, result)
         except ParseError as error:
-            result.status(test_id="subunit.parser", eof=True,
-                file_name="Packet data", file_bytes=b''.join(packet),
-                mime_type="application/octet-stream")
-            result.status(test_id="subunit.parser", test_status='fail',
-                eof=True, file_name="Parser Error",
-                file_bytes=(error.args[0]).encode('utf8'),
-                mime_type="text/plain;charset=utf8")
+            result.status(
+                test_id="subunit.parser",
+                eof=True,
+                file_name="Packet data",
+                file_bytes=b"".join(packet),
+                mime_type="application/octet-stream",
+            )
+            result.status(
+                test_id="subunit.parser",
+                test_status="fail",
+                eof=True,
+                file_name="Parser Error",
+                file_bytes=(error.args[0]).encode("utf8"),
+                mime_type="text/plain;charset=utf8",
+            )
 
     def _parse_varint(self, data, pos, max_3_bytes=False):
         # because the only incremental IO we do is at the start, and the 32 bit
         # CRC means we can always safely read enough to cover any varint, we
         # can be sure that there should be enough data - and if not it is an
         # error not a normal situation.
-        data_0 = struct.unpack(FMT_8, data[pos:pos+1])[0]
-        typeenum = data_0 & 0xc0
-        value_0 = data_0 & 0x3f
+        data_0 = struct.unpack(FMT_8, data[pos : pos + 1])[0]
+        typeenum = data_0 & 0xC0
+        value_0 = data_0 & 0x3F
         if typeenum == 0x00:
             return value_0, 1
         elif typeenum == 0x40:
-            data_1 = struct.unpack(FMT_8, data[pos+1:pos+2])[0]
+            data_1 = struct.unpack(FMT_8, data[pos + 1 : pos + 2])[0]
             return (value_0 << 8) | data_1, 2
         elif typeenum == 0x80:
-            data_1 = struct.unpack(FMT_16, data[pos+1:pos+3])[0]
+            data_1 = struct.unpack(FMT_16, data[pos + 1 : pos + 3])[0]
             return (value_0 << 16) | data_1, 3
         else:
             if max_3_bytes:
-                raise ParseError('3 byte maximum given but 4 byte value found.')
-            data_1, data_2 = struct.unpack(FMT_24, data[pos+1:pos+4])
+                raise ParseError("3 byte maximum given but 4 byte value found.")
+            data_1, data_2 = struct.unpack(FMT_24, data[pos + 1 : pos + 4])
             result = (value_0 << 24) | data_1 << 8 | data_2
             return result, 4
 
@@ -412,16 +444,14 @@ class ByteStreamToStreamResult(object):
         for fragment in packet[1:-1]:
             crc = zlib.crc32(fragment, crc)
 
-        crc = zlib.crc32(packet[-1][:-4], crc) & 0xffffffff
+        crc = zlib.crc32(packet[-1][:-4], crc) & 0xFFFFFFFF
         packet_crc = struct.unpack(FMT_32, packet[-1][-4:])[0]
 
         if crc != packet_crc:
             # Bad CRC, report it and stop parsing the packet.
-            raise ParseError(
-                'Bad checksum - calculated (0x%x), stored (0x%x)' % (
-                    crc, packet_crc))
+            raise ParseError("Bad checksum - calculated (0x%x), stored (0x%x)" % (crc, packet_crc))
 
-        if hasattr(builtins, 'memoryview'):
+        if hasattr(builtins, "memoryview"):
             body = memoryview(packet[-1])
         else:
             body = packet[-1]
@@ -432,11 +462,10 @@ class ByteStreamToStreamResult(object):
         # One packet could have both file and status data; the Python API
         # presents these separately (perhaps it shouldn't?)
         if flags & FLAG_TIMESTAMP:
-            seconds = struct.unpack(FMT_32, body[pos:pos+4])[0]
-            nanoseconds, consumed = self._parse_varint(body, pos+4)
+            seconds = struct.unpack(FMT_32, body[pos : pos + 4])[0]
+            nanoseconds, consumed = self._parse_varint(body, pos + 4)
             pos = pos + 4 + consumed
-            timestamp = EPOCH + datetime.timedelta(
-                seconds=seconds, microseconds=nanoseconds/1000)
+            timestamp = EPOCH + datetime.timedelta(seconds=seconds, microseconds=nanoseconds / 1000)
         else:
             timestamp = None
 
@@ -464,11 +493,12 @@ class ByteStreamToStreamResult(object):
             file_name, pos = self._read_utf8(body, pos)
             content_length, consumed = self._parse_varint(body, pos)
             pos += consumed
-            file_bytes = body[pos:pos+content_length]
+            file_bytes = body[pos : pos + content_length]
             if len(file_bytes) != content_length:
-                raise ParseError('File content extends past end of packet: '
-                                 'claimed %d bytes, %d available' % (
-                                     content_length, len(file_bytes)))
+                raise ParseError(
+                    "File content extends past end of packet: "
+                    "claimed %d bytes, %d available" % (content_length, len(file_bytes))
+                )
             pos += content_length
         else:
             file_name = None
@@ -483,31 +513,38 @@ class ByteStreamToStreamResult(object):
         eof = bool(flags & FLAG_EOF)
         test_status = self.status_lookup[flags & 0x0007]
         result.status(
-            test_id=test_id, test_status=test_status,
-            test_tags=test_tags, runnable=runnable, mime_type=mime_type,
-            eof=eof, file_name=file_name, file_bytes=file_bytes,
-            route_code=route_code, timestamp=timestamp)
+            test_id=test_id,
+            test_status=test_status,
+            test_tags=test_tags,
+            runnable=runnable,
+            mime_type=mime_type,
+            eof=eof,
+            file_name=file_name,
+            file_bytes=file_bytes,
+            route_code=route_code,
+            timestamp=timestamp,
+        )
 
     __call__ = run
 
     def _read_utf8(self, buf, pos):
         length, consumed = self._parse_varint(buf, pos)
         pos += consumed
-        utf8_bytes = buf[pos:pos+length]
+        utf8_bytes = buf[pos : pos + length]
         if length != len(utf8_bytes):
             raise ParseError(
-                'UTF8 string at offset %d extends past end of packet: '
-                'claimed %d bytes, %d available' % (pos - 2, length,
-                len(utf8_bytes)))
+                "UTF8 string at offset %d extends past end of packet: "
+                "claimed %d bytes, %d available" % (pos - 2, length, len(utf8_bytes))
+            )
         if NUL_ELEMENT in utf8_bytes:
-            raise ParseError('UTF8 string at offset %d contains NUL byte' % (
-                pos-2,))
+            raise ParseError("UTF8 string at offset %d contains NUL byte" % (pos - 2,))
         try:
             utf8, decoded_bytes = utf_8_decode(utf8_bytes)
             if decoded_bytes != length:
-                raise ParseError("Invalid (partially decodable) string at "
-                    "offset %d, %d undecoded bytes" % (
-                    pos-2, length - decoded_bytes))
-            return utf8, length+pos
+                raise ParseError(
+                    "Invalid (partially decodable) string at "
+                    "offset %d, %d undecoded bytes" % (pos - 2, length - decoded_bytes)
+                )
+            return utf8, length + pos
         except UnicodeDecodeError:
-            raise ParseError('UTF8 string at offset %d is not UTF8' % (pos-2,))
+            raise ParseError("UTF8 string at offset %d is not UTF8" % (pos - 2,))
