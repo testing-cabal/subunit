@@ -17,7 +17,7 @@
 
 """Run a unittest testcase reporting results as Subunit.
 
-  $ python -m subunit.run mylib.tests.test_suite
+$ python -m subunit.run mylib.tests.test_suite
 """
 
 import io
