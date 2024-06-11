@@ -37,3 +37,7 @@ jobs:
         run: make distcheck
       - name: Docs build
         run: rst2html.py README.rst README.html
+        if: "matrix.python-version == '3.8'"
+      - name: Docs build
+        run: rst2html README.rst README.html
+        if: "matrix.python-version != '3.8'"
