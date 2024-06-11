@@ -16,7 +16,6 @@
 
 """Filter a subunit stream to get aggregate statistics."""
 
-
 import sys
 
 from testtools import StreamToExtendedDecorator

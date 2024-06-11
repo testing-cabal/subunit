@@ -217,7 +217,7 @@ class StatusStreamResultTests(TestCase):
             )
 
     def test_can_read_binary_files(self):
-        with temp_file_contents(b"\xDE\xAD\xBE\xEF") as f:
+        with temp_file_contents(b"\xde\xad\xbe\xef") as f:
             result = get_result_for([self.option, self.test_id, "--attach-file", f.name])
 
             self.assertThat(
@@ -225,7 +225,7 @@ class StatusStreamResultTests(TestCase):
                 MatchesListwise(
                     [
                         MatchesStatusCall(call="startTestRun"),
-                        MatchesStatusCall(file_bytes=b"\xDE\xAD\xBE\xEF", eof=True),
+                        MatchesStatusCall(file_bytes=b"\xde\xad\xbe\xef", eof=True),
                         MatchesStatusCall(call="stopTestRun"),
                     ]
                 ),
@@ -247,7 +247,7 @@ class StatusStreamResultTests(TestCase):
             )
 
     def test_can_read_stdin(self):
-        self.patch(_o.sys, "stdin", TextIOWrapper(BytesIO(b"\xFE\xED\xFA\xCE")))
+        self.patch(_o.sys, "stdin", TextIOWrapper(BytesIO(b"\xfe\xed\xfa\xce")))
         result = get_result_for([self.option, self.test_id, "--attach-file", "-"])
 
         self.assertThat(
@@ -255,7 +255,7 @@ class StatusStreamResultTests(TestCase):
             MatchesListwise(
                 [
                     MatchesStatusCall(call="startTestRun"),
-                    MatchesStatusCall(file_bytes=b"\xFE\xED\xFA\xCE", file_name="stdin", eof=True),
+                    MatchesStatusCall(file_bytes=b"\xfe\xed\xfa\xce", file_name="stdin", eof=True),
                     MatchesStatusCall(call="stopTestRun"),
                 ]
             ),
