@@ -124,6 +124,7 @@ from io import BytesIO
 from io import UnsupportedOperation as _UnsupportedOperation
 
 import iso8601
+
 from testtools import ExtendedToOriginalDecorator, content, content_type
 from testtools.compat import _b, _u
 from testtools.content import TracebackContent
@@ -152,6 +153,9 @@ from subunit.v2 import ByteStreamToStreamResult, StreamResultToBytes
 # Otherwise it is major.minor.micro~$(revno).
 
 __version__ = (1, 4, 4, "final", 0)
+
+version_string = ".".join(map(str, __version__[:3]))
+
 
 __all__ = [
     "join_dir",
