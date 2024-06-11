@@ -23,6 +23,8 @@ IMPROVEMENTS
 * Add support for Python 3.12
   (Matthew Treinish)
 
+* Drop support for Python 3.7 (Jelmer Vernooĳ)
+
 1.4.3 (2023-09-17)
 ---------------------
 
