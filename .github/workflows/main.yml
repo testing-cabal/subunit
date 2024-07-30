@@ -1,17 +1,17 @@
 name: Tests
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 jobs:
   tests:
     name: tests-python${{ matrix.python-version }}-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', 'pypy3.9']
-        os: ['ubuntu-latest']
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "pypy3.9"]
+        os: ["ubuntu-latest"]
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
@@ -35,9 +35,10 @@ jobs:
         run: make check
       - name: Run make distcheck
         run: make distcheck
-      - name: Docs build
-        run: rst2html.py README.rst README.html
-        if: "matrix.python-version == '3.8'"
-      - name: Docs build
-        run: rst2html README.rst README.html
-        if: "matrix.python-version != '3.8'"
+    # Disabled; needs a tuit or two
+    #   - name: Docs build
+    #     run: md2html.py README.md README.html
+    #     if: "matrix.python-version == '3.8'"
+    #   - name: Docs build
+    #     run: md2html README.md README.html
+    #     if: "matrix.python-version != '3.8'"
