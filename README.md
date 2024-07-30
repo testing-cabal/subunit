@@ -15,8 +15,7 @@
 
   See the COPYING file for full details on the licensing of Subunit.
 
-Subunit
--------
+# Subunit
 
 Subunit is a streaming protocol for test results.
 
@@ -69,16 +68,15 @@ Subunit supplies the following filters:
  * subunit-stats - generate a summary of a subunit stream.
  * subunit-tags - add or remove tags from a stream.
 
-Integration with other tools
-----------------------------
+## Integration with other tools
+
 
 Subunit's language bindings act as integration with various test runners like
 'check', 'cppunit', Python's 'unittest'. Beyond that a small amount of glue
 (typically a few lines) will allow Subunit to be used in more sophisticated
 ways.
 
-Python
-======
+### Python
 
 Subunit has excellent Python support: most of the filters and tools are written
 in python and there are facilities for using Subunit to increase test isolation
@@ -92,21 +90,24 @@ subunit via the ``subunit.run`` module::
 For more information on the Python support Subunit offers , please see
 ``pydoc subunit``, or the source in ``python/subunit/``
 
-C
-=
+### Rust
+
+There is a rust crate [subunit](https://crates.io/crates/subunit) that can be used to parse v1 and v1, and emit v2 subunit streams.
+
+
+### C
 
 Subunit has C bindings to emit the protocol. The 'check' C unit testing project
 has included subunit support in their project for some years now. See
 'c/README' for more details.
 
-C++
-===
+### C++
+
 
 The C library is includable and usable directly from C++. A TestListener for
 CPPUnit is included in the Subunit distribution. See 'c++/README' for details.
 
-shell
-=====
+### shell
 
 There are two sets of shell tools. There are filters, which accept a subunit
 stream on stdin and output processed data (or a transformed stream) on stdout.
@@ -116,16 +117,14 @@ consisting of simple functions to output protocol elements, and a patch for
 adding subunit output to the 'ShUnit' shell test runner. See 'shell/README' for
 details.
 
-Filter recipes
---------------
+#### Filter recipes
 
 To ignore some failing tests whose root cause is already known::
 
   subunit-filter --without 'AttributeError.*flavor'
 
+## The xUnit test model
 
-The xUnit test model
---------------------
 
 Subunit implements a slightly modified xUnit test model. The stock standard
 model is that there are tests, which have an id(), can be run, and when run
@@ -136,16 +135,15 @@ a runner has without running them), tags (allow users to describe tests in
 ways the test framework doesn't apply any semantic value to), file attachments
 (allow arbitrary data to make analysing a failure easy) and timestamps.
 
-The protocol
-------------
+## The protocol
+
 
 Version 2, or v2 is new and still under development, but is intended to
 supercede version 1 in the very near future. Subunit's bundled tools accept
 only version 2 and only emit version 2, but the new filters subunit-1to2 and
 subunit-2to1 can be used to interoperate with older third party libraries.
 
-Version 2
-=========
+### Version 2
 
 Version 2 is a binary protocol consisting of independent packets that can be
 embedded in the output from tools like make - as long as each packet has no
@@ -248,6 +246,7 @@ the version check due to coincidence.
 
 Flags are stored in network byte order too.
 
+```asciiart
 +------------+------------+------------------------+
 | High byte               | Low byte               |
 +------------+------------+------------------------+
@@ -255,31 +254,24 @@ Flags are stored in network byte order too.
 +------------+------------+------------------------+
 | VERSION    |      feature bits                   |
 +------------+-------------------------------------+
+```
 
 Valid version values are:
-0x2 - version 2
+`0x2` - version 2
 
 Feature bits:
 
-+---------+-------------+---------------------------+
-| Bit 11  | mask 0x0800 | Test id present.          |
-+---------+-------------+---------------------------+
-| Bit 10  | mask 0x0400 | Routing code present.     |
-+---------+-------------+---------------------------+
-| Bit  9  | mask 0x0200 | Timestamp present.        |
-+---------+-------------+---------------------------+
-| Bit  8  | mask 0x0100 | Test is 'runnable'.       |
-+---------+-------------+---------------------------+
-| Bit  7  | mask 0x0080 | Tags are present.         |
-+---------+-------------+---------------------------+
-| Bit  6  | mask 0x0040 | File content is present.  |
-+---------+-------------+---------------------------+
-| Bit  5  | mask 0x0020 | File MIME type is present.|
-+---------+-------------+---------------------------+
-| Bit  4  | mask 0x0010 | EOF marker.               |
-+---------+-------------+---------------------------+
-| Bit  3  | mask 0x0008 | Must be zero in version 2.|
-+---------+-------------+---------------------------+
+| Bit position | Mask | Description|
+|---------|-------------|---------------------------|
+| Bit 11  |  `0x0800` | Test id present.          |
+| Bit 10  |  `0x0400` | Routing code present.     |
+| Bit  9  |  `0x0200` | Timestamp present.        |
+| Bit  8  |  `0x0100` | Test is 'runnable'.       |
+| Bit  7  |  `0x0080` | Tags are present.         |
+| Bit  6  |  `0x0040` | File content is present.  |
+| Bit  5  |  `0x0020` | File MIME type is present.|
+| Bit  4  |  `0x0010` | EOF marker.               |
+| Bit  3  |  `0x0008` | Must be zero in version 2.|
 
 Test status gets three bits:
 Bit 2 | Bit 1 | Bit 0 - mask 0x0007 - A test status enum lookup:
@@ -348,8 +340,7 @@ to be '0/3'.
 Following the end of the packet is a CRC-32 checksum of the contents of the
 packet including the signature.
 
-Example packets
-~~~~~~~~~~~~~~~
+#### Example packets
 
 Trivial test "foo" enumeration packet, with test id, runnable set,
 status=enumeration. Spaces below are to visually break up signature / flags /
@@ -358,15 +349,15 @@ length / testid / crc32
 b3 2901 0c 03666f6f 08555f1b
 
 
-Version 1 (and 1.1)
-===================
+### Version 1 (and 1.1)
 
 Version 1 (and 1.1) are mostly human readable protocols.
 
-Sample subunit wire contents
-----------------------------
+#### Sample subunit wire contents
 
-The following::
+The following:
+
+```subunit
 
   test: test foo works
   success: test foo works
@@ -389,18 +380,18 @@ When run through subunit2pyunit::
   ..
   ]..  space is eaten.
   foo.c:34 WARNING foo is not defined.
+```
 
-
-Subunit v1 protocol description
-===============================
+#### Subunit v1 protocol description
 
 This description is being ported to an EBNF style. Currently its only partly in
 that style, but should be fairly clear all the same. When in doubt, refer the
 source (and ideally help fix up the description!). Generally the protocol is
 line orientated and consists of either directives and their parameters, or
 when outside a DETAILS region unexpected lines which are not interpreted by
-the parser - they should be forwarded unaltered::
+the parser - they should be forwarded unaltered:
 
+```ebnf
     test|testing|test:|testing: test LABEL
     success|success:|successful|successful: test LABEL
     success|success:|successful|successful: test LABEL DETAILS
@@ -423,11 +414,14 @@ the parser - they should be forwarded unaltered::
     LABEL: UTF8*
     NAME: UTF8*
     DETAILS ::= BRACKETED | MULTIPART
-    BRACKETED ::= '[' CR UTF8-lines ']' CR
-    MULTIPART ::= '[ multipart' CR PART* ']' CR
-    PART ::= PART_TYPE CR NAME CR PART_BYTES CR
+    BRACKETED ::= '[' LF UTF8-lines ']' LF
+    MULTIPART ::= '[ multipart' LF PART* ']' LF
+    PART ::= PART_TYPE LF NAME LF PART_BYTES LF
     PART_TYPE ::= Content-Type: type/sub-type(;parameter=value,parameter=value)
     PART_BYTES ::= (DIGITS CR LF BYTE{DIGITS})* '0' CR LF
+    LF ::= '\n'
+    CR ::= '\r'
+```
 
 unexpected output on stdout -> stdout.
 exit w/0 or last test completing -> error
@@ -475,11 +469,9 @@ tests in some frameworks). uxsuccess is used to indicate and unexpected success
 where a test though to be failing actually passes. It is complementary to
 xfail.
 
-Hacking on subunit
-------------------
+## Hacking on subunit
 
-Releases
-========
+### Releases
 
 * Update versions in configure.ac and python/subunit/__init__.py.
 * Update NEWS.

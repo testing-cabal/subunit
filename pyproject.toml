@@ -1,48 +1,47 @@
 [build-system]
-requires = ["setuptools>=61.2", "testtools", "iso8601"]
 build-backend = "setuptools.build_meta"
+requires = ["iso8601", "setuptools>=61.2", "testtools"]
 
 [tool.ruff]
 line-length = 120
 
 [project]
-name = "python-subunit"
-description = "Python implementation of subunit test streaming protocol"
-readme = "README.rst"
+authors = [
+    { name = "Robert Collins", email = "subunit-dev@lists.launchpad.net" },
+]
 classifiers = [
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
-    "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python",
     "Topic :: Software Development :: Testing",
 ]
-keywords = ["python", "test", "streaming"]
-authors = [{name = "Robert Collins", email = "subunit-dev@lists.launchpad.net"}]
-license = {text = "Apache-2.0 or BSD"}
-dependencies = [
-    "iso8601",
-    "testtools>=0.9.34",
-]
-requires-python = ">=3.8"
+dependencies = ["iso8601", "testtools>=0.9.34"]
+description = "Python implementation of subunit test streaming protocol"
 dynamic = ["version"]
+keywords = ["python", "streaming", "test"]
+license = { text = "Apache-2.0 or BSD" }
+name = "python-subunit"
+readme = "README.md"
+requires-python = ">=3.8"
 
 [project.urls]
-Homepage = "http://launchpad.net/subunit"
 "Bug Tracker" = "https://bugs.launchpad.net/subunit"
+Homepage = "http://launchpad.net/subunit"
 "Source Code" = "https://github.com/testing-cabal/subunit/"
 
 [project.optional-dependencies]
 "docs" = ["docutils"]
-"test" = ["fixtures", "testscenarios", "hypothesis"]
+"test" = ["fixtures", "hypothesis", "testscenarios"]
 
 [tool.setuptools.packages.find]
-where = ["python"]
 include = ["subunit*"]
+where = ["python"]
 
 [project.scripts]
 "subunit-1to2" = "subunit.filter_scripts.subunit_1to2:main"
@@ -61,7 +60,7 @@ include = ["subunit*"]
 "tap2subunit" = "subunit.filter_scripts.tap2subunit:main"
 
 [tool.setuptools.dynamic]
-version = {attr = "subunit.version_string"}
+version = { attr = "subunit.version_string" }
 
 [tool.setuptools]
 license-files = ["COPYING"]
