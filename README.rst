@@ -423,11 +423,13 @@ the parser - they should be forwarded unaltered::
     LABEL: UTF8*
     NAME: UTF8*
     DETAILS ::= BRACKETED | MULTIPART
-    BRACKETED ::= '[' CR UTF8-lines ']' CR
-    MULTIPART ::= '[ multipart' CR PART* ']' CR
-    PART ::= PART_TYPE CR NAME CR PART_BYTES CR
+    BRACKETED ::= '[' LF UTF8-lines ']' LF
+    MULTIPART ::= '[ multipart' LF PART* ']' LF
+    PART ::= PART_TYPE LF NAME LF PART_BYTES LF
     PART_TYPE ::= Content-Type: type/sub-type(;parameter=value,parameter=value)
     PART_BYTES ::= (DIGITS CR LF BYTE{DIGITS})* '0' CR LF
+    LF ::= '\n'
+    CR ::= '\r'
 
 unexpected output on stdout -> stdout.
 exit w/0 or last test completing -> error
