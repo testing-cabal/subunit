@@ -257,7 +257,7 @@ class ByteStreamToStreamResult(object):
     """Parse a subunit byte stream.
 
     Mixed streams that contain non-subunit content is supported when a
-    non_subunit_name is passed to the contructor. The default is to raise an
+    non_subunit_name is passed to the constructor. The default is to raise an
     error containing the non-subunit byte after it has been read from the
     stream.
 

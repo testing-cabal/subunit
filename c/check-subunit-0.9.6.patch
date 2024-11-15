@@ -77,7 +77,7 @@
 +   enable_subunit=false
 +   ;;
 + true)
-+   AC_MSG_ERROR([The header subunit/child.h could not be succesfully included and is required for subunit protocol support. The homepage for subunit is https://launchpad.net/subunit/])
++   AC_MSG_ERROR([The header subunit/child.h could not be successfully included and is required for subunit protocol support. The homepage for subunit is https://launchpad.net/subunit/])
 +   ;;
 + esac
 +])
@@ -164,7 +164,7 @@
 +
 +Check supports running test suites with subunit output. This can be useful to
 +combine test results from multiple languages, or to perform programmatic
-+analysis on the results of multiple check test suites or otherise handle test
++analysis on the results of multiple check test suites or otherwise handle test
 +results in a programmatic manner. Using subunit with check is very straight
 +forward. There are two steps:
 +1) In your check test suite driver pass 'CK_SUBUNIT' as the output mode
