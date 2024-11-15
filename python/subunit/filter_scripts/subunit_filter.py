@@ -101,7 +101,7 @@ def make_options(description):
         "--rename",
         action="append",
         nargs=2,
-        help="Apply specified regex subsitutions to test names.",
+        help="Apply specified regex substitutions to test names.",
         dest="renames",
         default=[],
     )

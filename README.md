@@ -49,7 +49,7 @@ A number of useful things can be done easily with subunit:
    can be aggregated into a single stream through a multiplexer.
  * Test archiving: A test run may be recorded and replayed later.
  * Test isolation: Tests that may crash or otherwise interact badly with each
-   other can be run seperately and then aggregated, rather than interfering
+   other can be run separately and then aggregated, rather than interfering
    with each other or requiring an adhoc test->runner reporting protocol.
  * Grid testing: subunit can act as the necessary serialisation and
    deserialiation to get test runs on distributed machines to be reported in
@@ -139,7 +139,7 @@ ways the test framework doesn't apply any semantic value to), file attachments
 
 
 Version 2, or v2 is new and still under development, but is intended to
-supercede version 1 in the very near future. Subunit's bundled tools accept
+supersede version 1 in the very near future. Subunit's bundled tools accept
 only version 2 and only emit version 2, but the new filters subunit-1to2 and
 subunit-2to1 can be used to interoperate with older third party libraries.
 
@@ -166,7 +166,7 @@ damaged data.
 A key design goal for Subunit version 2 is to allow processing and multiplexing
 without forcing buffering for semantic correctness, as buffering tends to hide
 hung or otherwise misbehaving tests. That said, limited time based buffering
-for network efficiency is a good idea - this is ultimately implementator
+for network efficiency is a good idea - this is ultimately implementer
 choice. Line buffering is also discouraged for subunit streams, as dropping
 into a debugger or other tool may require interactive traffic even if line
 buffering would not otherwise be a problem.

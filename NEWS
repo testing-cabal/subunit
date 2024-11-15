@@ -335,7 +335,7 @@ All the other filters now only parse and emit v2 streams. V2 is still in
 draft format, so if you want to delay and wait for v2 to be finalised, you
 should use subunit-2to1 before any serialisation steps take place.
 With the ability to encapsulate multiple non-test streams, another significant
-cange is that filters which emit subunit now encapsulate any non-subunit they
+change is that filters which emit subunit now encapsulate any non-subunit they
 encounter, labelling it 'stdout'. This permits multiplexing such streams and
 detangling the stdout streams from each input.
 
