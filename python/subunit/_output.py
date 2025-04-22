@@ -62,7 +62,7 @@ def parse_arguments(args=None, ParserClass=OptionParser):
     status_commands = OptionGroup(
         parser,
         "Status Commands",
-        "These options report the status of a test. TEST_ID must be a string " "that uniquely identifies the test.",
+        "These options report the status of a test. TEST_ID must be a string that uniquely identifies the test.",
     )
     for action_name in _ALL_ACTIONS:
         status_commands.add_option(

@@ -460,7 +460,7 @@ class TestByteStreamToStreamResult(TestCase):
                     test_status="fail",
                     eof=True,
                     file_name="Parser Error",
-                    file_bytes=b"Bad checksum - calculated (0x78335115), " b"stored (0x78335100)",
+                    file_bytes=b"Bad checksum - calculated (0x78335115), stored (0x78335100)",
                     mime_type="text/plain;charset=utf8",
                 ),
             ],
@@ -529,8 +529,7 @@ class TestByteStreamToStreamResult(TestCase):
                     test_status="fail",
                     eof=True,
                     file_name="Parser Error",
-                    file_bytes=b"UTF8 string at offset 2 extends past end of "
-                    b"packet: claimed 63 bytes, 10 available",
+                    file_bytes=b"UTF8 string at offset 2 extends past end of packet: claimed 63 bytes, 10 available",
                     mime_type="text/plain;charset=utf8",
                 ),
             ],
