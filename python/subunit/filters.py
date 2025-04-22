@@ -38,8 +38,7 @@ def make_options(description):
         "--forward",
         action="store_true",
         default=False,
-        help="Forward subunit stream on stdout. When set, received "
-        "non-subunit output will be encapsulated in subunit.",
+        help="Forward subunit stream on stdout. When set, received non-subunit output will be encapsulated in subunit.",
     )
     return parser
 

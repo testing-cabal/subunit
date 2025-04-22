@@ -108,7 +108,7 @@ class TestProtocolServerForward(unittest.TestCase):
         client = unittest.TestResult()
         out = BytesIO()
         protocol = subunit.TestProtocolServer(client, forward_stream=out)
-        pipe = BytesIO(_b("test old mcdonald\n" "success old mcdonald\n"))
+        pipe = BytesIO(_b("test old mcdonald\nsuccess old mcdonald\n"))
         protocol.readFrom(pipe)
         self.assertEqual(client.testsRun, 1)
         self.assertEqual(pipe.getvalue(), out.getvalue())
@@ -203,17 +203,7 @@ class TestTestProtocolServerPassThrough(unittest.TestCase):
         self.protocol.lineReceived(_b("]\n"))
         self.assertEqual(
             self.stdout.getvalue(),
-            _b(
-                "failure a\n"
-                "failure: a\n"
-                "error a\n"
-                "error: a\n"
-                "success a\n"
-                "success: a\n"
-                "successful a\n"
-                "successful: a\n"
-                "]\n"
-            ),
+            _b("failure a\nfailure: a\nerror a\nerror: a\nsuccess a\nsuccess: a\nsuccessful a\nsuccessful: a\n]\n"),
         )
 
     def test_keywords_before_test(self):
@@ -1056,7 +1046,7 @@ class TestRemotedTestCase(unittest.TestCase):
         self.assertEqual("A test description", test.shortDescription())
         self.assertEqual("A test description", test.id())
         self.assertEqual("A test description (subunit.RemotedTestCase)", "%s" % test)
-        self.assertEqual("<subunit.RemotedTestCase description=" "'A test description'>", "%r" % test)
+        self.assertEqual("<subunit.RemotedTestCase description='A test description'>", "%r" % test)
         result = unittest.TestResult()
         test.run(result)
         self.assertEqual([(test, _remote_exception_repr + ": " + "Cannot run RemotedTestCases.\n\n")], result.errors)
@@ -1329,9 +1319,9 @@ class TestTestProtocolClient(TestCase):
             self.io.getvalue(),
             MatchesAny(
                 # testtools < 2.5.0
-                Equals(_b(("error: %s [\n" + _remote_exception_str + ": phwoar crikey\n" "]\n") % self.test.id())),
+                Equals(_b(("error: %s [\n" + _remote_exception_str + ": phwoar crikey\n]\n") % self.test.id())),
                 # testtools >= 2.5.0
-                Equals(_b(("error: %s [\n" + _remote_exception_repr + ": phwoar crikey\n" "]\n") % self.test.id())),
+                Equals(_b(("error: %s [\n" + _remote_exception_repr + ": phwoar crikey\n]\n") % self.test.id())),
             ),
         )
 
@@ -1379,9 +1369,9 @@ class TestTestProtocolClient(TestCase):
             self.io.getvalue(),
             MatchesAny(
                 # testtools < 2.5.0
-                Equals(_b(("xfail: %s [\n" + _remote_exception_str + ": phwoar crikey\n" "]\n") % self.test.id())),
+                Equals(_b(("xfail: %s [\n" + _remote_exception_str + ": phwoar crikey\n]\n") % self.test.id())),
                 # testtools >= 2.5.0
-                Equals(_b(("xfail: %s [\n" + _remote_exception_repr + ": phwoar crikey\n" "]\n") % self.test.id())),
+                Equals(_b(("xfail: %s [\n" + _remote_exception_repr + ": phwoar crikey\n]\n") % self.test.id())),
             ),
         )
 
@@ -1433,13 +1423,7 @@ class TestTestProtocolClient(TestCase):
         self.protocol.addSkip(self.test, details=details)
         self.assertEqual(
             self.io.getvalue(),
-            _b(
-                "skip: %s [ multipart\n"
-                "Content-Type: text/plain\n"
-                "reason\n"
-                "E\r\nHas it really?0\r\n"
-                "]\n" % self.test.id()
-            ),
+            _b("skip: %s [ multipart\nContent-Type: text/plain\nreason\nE\r\nHas it really?0\r\n]\n" % self.test.id()),
         )
 
     def test_progress_set(self):

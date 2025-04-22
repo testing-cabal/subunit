@@ -40,8 +40,7 @@ class SmokeTest(TestCase):
         self.expectThat(
             os.path.join(output, "foo/test.json"),
             FileContains(
-                '{"details": ["fred"], "id": "foo", "start": null, '
-                '"status": "success", "stop": null, "tags": ["tag"]}'
+                '{"details": ["fred"], "id": "foo", "start": null, "status": "success", "stop": null, "tags": ["tag"]}'
             ),
         )
         self.expectThat(os.path.join(output, "foo/fred"), FileContains("abcdefg"))

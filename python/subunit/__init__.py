@@ -134,7 +134,7 @@ try:
 
     RemoteException = _StringException
 except ImportError:
-    raise ImportError("testtools.testresult.real does not contain " "_StringException, check your version.")
+    raise ImportError("testtools.testresult.real does not contain _StringException, check your version.")
 from testtools import CopyStreamResult, testresult
 
 from subunit import chunked, details

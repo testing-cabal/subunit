@@ -29,8 +29,7 @@ jobs:
     - name: Run ruff check
       run: ruff check python
     - name: Format
-      run: |
-        python -m ruff format --check .
+      run: ruff format --check .
     - name: Run make check
       run: make check
     - name: Run make distcheck

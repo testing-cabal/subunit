@@ -93,7 +93,7 @@ xfail todo
         tag_filter = make_tag_filter(["a"], [])
         result = ExtendedTestResult()
         result_filter = TestResultFilter(result, filter_success=False, filter_predicate=tag_filter)
-        input_stream = _b("test: foo\n" "tags: a\n" "successful: foo\n" "test: bar\n" "successful: bar\n")
+        input_stream = _b("test: foo\ntags: a\nsuccessful: foo\ntest: bar\nsuccessful: bar\n")
         self.run_tests(result_filter, input_stream)
         foo = subunit.RemotedTestCase("foo")
         self.assertEqual(
@@ -263,7 +263,7 @@ xfail todo
 
         result = ExtendedTestResult()
         result_filter = TestResultFilter(result, filter_success=False, rename=rename)
-        input_stream = _b("test: foo\n" "successful: foo\n")
+        input_stream = _b("test: foo\nsuccessful: foo\n")
         self.run_tests(result_filter, input_stream)
         self.assertEqual(
             [("startTest", "foo - renamed"), ("addSuccess", "foo - renamed"), ("stopTest", "foo - renamed")],
