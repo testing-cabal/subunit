@@ -107,6 +107,10 @@ class TestResultDecorator:
     def time(self, a_datetime):
         return self.decorated.time(a_datetime)
 
+    # Python 3.12 addition: https://docs.python.org/3.12/library/unittest.html#unittest.TestResult.addDuration
+    def addDuration(self, test, duration):
+        return self.decorated.addDuration(test, duration)
+
 
 class HookedTestResultDecorator(TestResultDecorator):
     """A TestResult which calls a hook on every event."""
