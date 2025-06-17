@@ -208,10 +208,7 @@ class GTKTestResult(unittest.TestResult):
             self.pbar.set_fraction(percentage)
 
     def stopTestRun(self):
-        try:
-            super(GTKTestResult, self).stopTestRun()
-        except AttributeError:
-            pass
+        super(GTKTestResult, self).stopTestRun()
         GObject.idle_add(self.pbar.set_text, "Finished")
 
     def addError(self, test, err):
