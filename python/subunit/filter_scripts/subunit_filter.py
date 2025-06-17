@@ -30,11 +30,130 @@ import re
 import sys
 from optparse import OptionParser
 
-from testtools import ExtendedToStreamDecorator, StreamToExtendedDecorator
+# Removed testtools dependency - using subunit implementations instead
 
 from subunit import StreamResultToBytes, read_test_list
 from subunit.filters import filter_by_result, find_stream
-from subunit.test_results import TestResultFilter, and_predicates, make_tag_filter
+from subunit.test_results import and_predicates, make_tag_filter
+
+
+class StreamFilter:
+    """Filter stream events based on predicates."""
+
+    def __init__(
+        self,
+        target,
+        filter_success=True,
+        filter_skip=False,
+        filter_error=False,
+        filter_failure=False,
+        filter_xfail=False,
+        filter_predicate=None,
+        fixup_expected_failures=None,
+        rename=None,
+    ):
+        self.target = target
+        self.filter_success = filter_success
+        self.filter_skip = filter_skip
+        self.filter_error = filter_error
+        self.filter_failure = filter_failure
+        self.filter_xfail = filter_xfail
+        self.filter_predicate = filter_predicate
+        self.fixup_expected_failures = fixup_expected_failures or frozenset()
+        self.rename = rename
+        # Track test states
+        self._test_started = {}
+        self._test_tags = {}
+
+    def startTestRun(self):
+        if hasattr(self.target, "startTestRun"):
+            self.target.startTestRun()
+
+    def stopTestRun(self):
+        if hasattr(self.target, "stopTestRun"):
+            self.target.stopTestRun()
+
+    def status(self, test_id=None, test_status=None, test_tags=None, **kwargs):
+        """Filter and forward status events."""
+        # Handle non-test events
+        if test_id is None:
+            self.target.status(test_id=test_id, test_status=test_status, test_tags=test_tags, **kwargs)
+            return
+
+        # Apply rename if configured
+        original_test_id = test_id
+        if self.rename:
+            test_id = self.rename(test_id)
+            kwargs = kwargs.copy() if kwargs else {}
+
+        # Track test state
+        if test_status == "inprogress":
+            self._test_started[test_id] = True
+            self._test_tags[test_id] = test_tags
+
+        # Check if this test was already filtered at start
+        if test_id in self._test_started and not self._test_started[test_id]:
+            return  # Already decided to filter this test
+
+        # Check if we should filter this test
+        should_filter = False
+
+        # Filter by status
+        if test_status == "success" and self.filter_success:
+            should_filter = True
+        elif test_status == "skip" and self.filter_skip:
+            should_filter = True
+        elif test_status == "error" and self.filter_error:
+            should_filter = True
+        elif test_status == "failure" and self.filter_failure:
+            should_filter = True
+        elif test_status == "expectedfailure" and self.filter_xfail:
+            should_filter = True
+
+        # Apply custom predicate
+        if not should_filter and self.filter_predicate:
+            # Create a dummy test object
+            class DummyTest:
+                def __init__(self, test_id):
+                    self._id = test_id
+
+                def id(self):
+                    return self._id
+
+            test = DummyTest(original_test_id)
+            # Get tags for this test (use stored tags from inprogress or current tags)
+            tags = test_tags
+            if tags is None and test_id in self._test_tags:
+                tags = self._test_tags[test_id]
+
+            # Map status to outcome
+            outcome_map = {
+                "success": "success",
+                "failure": "failure",
+                "error": "error",
+                "skip": "skip",
+                "expectedfailure": "expectedfailure",
+                "unexpectedsuccess": "unexpectedsuccess",
+                "inprogress": "exists",  # For tag filtering on start
+            }
+            outcome = outcome_map.get(test_status, test_status)
+
+            if not self.filter_predicate(test, outcome, None, None, tags):
+                should_filter = True
+                # If filtering at inprogress, mark to filter all events for this test
+                if test_status == "inprogress":
+                    self._test_started[test_id] = False  # Mark as filtered
+
+        # If filtering, skip all events for this test
+        if should_filter:
+            # Clean up tracking
+            if test_status != "inprogress":
+                self._test_started.pop(test_id, None)
+                self._test_tags.pop(test_id, None)
+            return
+
+        # Forward the event
+        self.target.status(test_id=test_id, test_status=test_status, test_tags=test_tags, **kwargs)
 
 
 def make_options(description):
@@ -151,22 +270,36 @@ def _compile_rename(patterns):
 
 def _make_result(output, options, predicate):
     """Make the result that we'll send the test outcomes to."""
-    fixup_expected_failures = set()
-    for path in options.fixup_expected_failures or ():
-        fixup_expected_failures.update(read_test_list(path))
-    return StreamToExtendedDecorator(
-        TestResultFilter(
-            ExtendedToStreamDecorator(StreamResultToBytes(output)),
-            filter_error=options.error,
-            filter_failure=options.failure,
+    # Create base result
+    result = StreamResultToBytes(output)
+
+    # Apply filters if needed
+    if options.success or options.skip or options.error or options.failure or options.xfail or predicate is not None:
+        # Get fixup expected failures if provided
+        fixup_expected_failures = frozenset()
+        if options.fixup_expected_failures:
+            for fixture in options.fixup_expected_failures:
+                fixup_expected_failures = fixup_expected_failures.union(read_test_list(fixture))
+
+        # Create rename function
+        rename_func = None
+        if options.renames:
+            rename_func = _compile_rename(options.renames)
+
+        # Apply stream filter
+        result = StreamFilter(
+            result,
             filter_success=options.success,
             filter_skip=options.skip,
+            filter_error=options.error,
+            filter_failure=options.failure,
             filter_xfail=options.xfail,
             filter_predicate=predicate,
             fixup_expected_failures=fixup_expected_failures,
-            rename=_compile_rename(options.renames),
+            rename=rename_func,
         )
-    )
+
+    return result
 
 
 def main():
@@ -178,7 +311,7 @@ def main():
     filter_predicate = and_predicates([regexp_filter, tag_filter])
 
     filter_by_result(
-        lambda output_to: _make_result(sys.stdout, options, filter_predicate),
+        lambda output_to: _make_result(output_to, options, filter_predicate),
         output_path=None,
         passthrough=(not options.no_passthrough),
         forward=False,

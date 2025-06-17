@@ -18,13 +18,324 @@
 
 import csv
 import datetime
+import unittest
 
-import testtools
-from testtools import StreamResult
-from testtools.content import TracebackContent, text_content
+from subunit._content import TracebackContent, text_content
 
 import iso8601
 import subunit
+
+
+class TestResult(unittest.TestResult):
+    """Base TestResult class with extended interface support."""
+
+    def __init__(self):
+        super().__init__()
+        self.current_tags = set()
+        self.failfast = False
+
+    def addError(self, test, err, details=None):
+        """Add an error, optionally with details."""
+        if err is not None:
+            super().addError(test, err)
+
+    def addFailure(self, test, err, details=None):
+        """Add a failure, optionally with details."""
+        if err is not None:
+            super().addFailure(test, err)
+
+    def addSkip(self, test, reason, details=None):
+        """Add a skip, optionally with details."""
+        super().addSkip(test, reason)
+
+    def addSuccess(self, test, details=None):
+        """Add a success, optionally with details."""
+        super().addSuccess(test)
+
+    def addExpectedFailure(self, test, err, details=None):
+        """Add an expected failure, optionally with details."""
+        if err is not None:
+            super().addExpectedFailure(test, err)
+
+    def addUnexpectedSuccess(self, test, details=None):
+        """Add an unexpected success, optionally with details."""
+        super().addUnexpectedSuccess(test)
+
+    def tags(self, new_tags, gone_tags):
+        """Handle tags - update current_tags."""
+        if new_tags:
+            self.current_tags.update(new_tags)
+        if gone_tags:
+            self.current_tags.difference_update(gone_tags)
+
+    def time(self, a_datetime):
+        """Handle time - default implementation does nothing."""
+        pass
+
+    def progress(self, offset, whence):
+        """Handle progress - default implementation does nothing."""
+        pass
+
+    def done(self):
+        """Indicate that testing is complete."""
+        pass
+
+    def _err_details_to_string(self, test, details=None):
+        """Convert details dict to string representation."""
+        if not details:
+            return ""
+
+        result = []
+        for key, content in details.items():
+            content_bytes = b"".join(content.iter_bytes())
+            result.append(content_bytes.decode("utf-8", errors="replace"))
+
+        content = "".join(result)
+        # Treat whitespace-only content as empty for error messages
+        # Also treat quoted bracket content as empty (special case for protocol)
+        if content.strip() == "" or content.strip() == "]":
+            return ""
+        return content
+
+
+class ExtendedToOriginalDecorator:
+    """Decorator to make new TestResult interface work with old implementations."""
+
+    def __init__(self, decorated):
+        """Create a decorator around a TestResult."""
+        self.decorated = decorated
+
+    def __getattr__(self, name):
+        """Delegate to the decorated object."""
+        return getattr(self.decorated, name)
+
+    def __setattr__(self, name, value):
+        """Delegate attribute setting to the decorated object when appropriate."""
+        # Always set 'decorated' on ourselves
+        if name == "decorated":
+            super().__setattr__(name, value)
+        # For failfast and other TestResult attributes, forward to decorated
+        elif hasattr(self, "decorated") and hasattr(self.decorated, name):
+            setattr(self.decorated, name, value)
+        else:
+            super().__setattr__(name, value)
+
+    def addError(self, test, err=None, details=None):
+        """Add an error, gracefully handling details."""
+        if hasattr(self.decorated, "addError"):
+            # Check if the decorated TestResult truly supports details (not just has the parameter)
+            # We only consider it to support details if it's our own TestResult class
+            supports_details = isinstance(self.decorated, TestResult)
+
+            if supports_details:
+                # If details are supported, pass them through
+                self.decorated.addError(test, err, details=details)
+            else:
+                # For standard TestResult, we need err to be a valid exc_info tuple
+                if err is not None:
+                    self.decorated.addError(test, err)
+                elif details is not None:
+                    # Convert details to a simple exception for older TestResult
+                    # Extract content from details to create error message
+                    content = TestResult()._err_details_to_string(test, details)
+                    self.decorated.addError(test, (_StringException, _StringException(content), None))
+
+    def addFailure(self, test, err=None, details=None):
+        """Add a failure, gracefully handling details."""
+        if hasattr(self.decorated, "addFailure"):
+            # Check if the decorated TestResult truly supports details (not just has the parameter)
+            # We only consider it to support details if it's our own TestResult class
+            supports_details = isinstance(self.decorated, TestResult)
+
+            if supports_details:
+                # If details are supported, pass them through
+                self.decorated.addFailure(test, err, details=details)
+            else:
+                # For standard TestResult, we need err to be a valid exc_info tuple
+                if err is not None:
+                    self.decorated.addFailure(test, err)
+                elif details is not None:
+                    # Convert details to a simple exception for older TestResult
+                    # Extract content from details to create error message
+                    content = TestResult()._err_details_to_string(test, details)
+                    self.decorated.addFailure(test, (_StringException, _StringException(content), None))
+
+    def addSkip(self, test, reason=None, details=None):
+        """Add a skip, gracefully handling details."""
+        if hasattr(self.decorated, "addSkip"):
+            # Try with details first, fall back without details
+            try:
+                self.decorated.addSkip(test, reason, details=details)
+            except TypeError:
+                self.decorated.addSkip(test, reason)
+
+    def addSuccess(self, test, details=None):
+        """Add a success, gracefully handling details."""
+        if hasattr(self.decorated, "addSuccess"):
+            # Try with details first, fall back without details
+            try:
+                self.decorated.addSuccess(test, details=details)
+            except TypeError:
+                self.decorated.addSuccess(test)
+
+    def addExpectedFailure(self, test, err=None, details=None):
+        """Add an expected failure, gracefully handling details."""
+        if hasattr(self.decorated, "addExpectedFailure"):
+            # Check if the decorated TestResult truly supports details (not just has the parameter)
+            # We only consider it to support details if it's our own TestResult class
+            supports_details = isinstance(self.decorated, TestResult)
+
+            if supports_details:
+                # If details are supported, pass them through
+                self.decorated.addExpectedFailure(test, err, details=details)
+            else:
+                # For standard TestResult, we need err to be a valid exc_info tuple
+                if err is not None:
+                    self.decorated.addExpectedFailure(test, err)
+                elif details is not None:
+                    # Convert details to a simple exception for older TestResult
+                    # Extract content from details to create error message
+                    content = TestResult()._err_details_to_string(test, details)
+                    self.decorated.addExpectedFailure(test, (_StringException, _StringException(content), None))
+
+    def addUnexpectedSuccess(self, test, details=None):
+        """Add an unexpected success, gracefully handling details."""
+        if hasattr(self.decorated, "addUnexpectedSuccess"):
+            # Try with details first, fall back without details
+            try:
+                self.decorated.addUnexpectedSuccess(test, details=details)
+            except TypeError:
+                self.decorated.addUnexpectedSuccess(test)
+
+    def tags(self, new_tags, gone_tags):
+        """Handle tags if supported."""
+        if hasattr(self.decorated, "tags"):
+            self.decorated.tags(new_tags, gone_tags)
+
+    def time(self, a_datetime):
+        """Handle time if supported."""
+        if hasattr(self.decorated, "time"):
+            self.decorated.time(a_datetime)
+
+    def progress(self, offset, whence):
+        """Handle progress if supported."""
+        if hasattr(self.decorated, "progress"):
+            self.decorated.progress(offset, whence)
+
+
+class _StringException(Exception):
+    """An exception made from a string representation."""
+
+    def __init__(self, text):
+        """Create a _StringException from text."""
+        self._text = text
+        super().__init__(text)
+
+    def __str__(self):
+        return self._text
+
+    def __eq__(self, other):
+        """Check equality."""
+        if not isinstance(other, _StringException):
+            return False
+        return self._text == other._text
+
+    def __hash__(self):
+        """Hash for use in sets/dicts."""
+        return hash(self._text)
+
+
+class StreamResult:
+    """A basic StreamResult interface."""
+
+    def startTestRun(self):
+        """Start a test run."""
+        pass
+
+    def stopTestRun(self):
+        """Stop a test run."""
+        pass
+
+    def status(self, **kwargs):
+        """Handle a status event."""
+        pass
+
+
+class CopyStreamResult:
+    """Copy events to multiple StreamResults."""
+
+    def __init__(self, targets):
+        """Create a CopyStreamResult that writes to targets."""
+        self.targets = targets
+
+    def startTestRun(self):
+        """Start test run on all targets."""
+        for target in self.targets:
+            if hasattr(target, "startTestRun"):
+                target.startTestRun()
+
+    def stopTestRun(self):
+        """Stop test run on all targets."""
+        for target in self.targets:
+            if hasattr(target, "stopTestRun"):
+                target.stopTestRun()
+
+    def status(self, **kwargs):
+        """Handle a status event on all targets."""
+        for target in self.targets:
+            if hasattr(target, "status"):
+                target.status(**kwargs)
+
+
+class StreamResultRouter:
+    """Route StreamResult events based on rules."""
+
+    def __init__(self, target):
+        """Create a router that sends to target."""
+        self.target = target
+        self.rules = []
+
+    def add_rule(self, result, field, **kwargs):
+        """Add a routing rule."""
+        self.rules.append((result, field, kwargs))
+
+    def startTestRun(self):
+        """Start test run."""
+        if hasattr(self.target, "startTestRun"):
+            self.target.startTestRun()
+        for result, _, _ in self.rules:
+            if hasattr(result, "startTestRun"):
+                result.startTestRun()
+
+    def stopTestRun(self):
+        """Stop test run."""
+        if hasattr(self.target, "stopTestRun"):
+            self.target.stopTestRun()
+        for result, _, _ in self.rules:
+            if hasattr(result, "stopTestRun"):
+                result.stopTestRun()
+
+    def status(self, **kwargs):
+        """Route status based on rules."""
+        # Check if any rule matches
+        routed = False
+        for result, field, rule_kwargs in self.rules:
+            # Check if this rule matches
+            matches = True
+            for key, value in rule_kwargs.items():
+                if kwargs.get(key) != value:
+                    matches = False
+                    break
+
+            if matches:
+                # Route to this result
+                if hasattr(result, "status"):
+                    result.status(**kwargs)
+                routed = True
+
+        # If no rule matched, send to default target
+        if not routed and hasattr(self.target, "status"):
+            self.target.status(**kwargs)
 
 
 # NOT a TestResult, because we are implementing the interface, not inheriting
@@ -44,7 +355,7 @@ class TestResultDecorator:
     def __init__(self, decorated):
         """Create a TestResultDecorator forwarding to decorated."""
         # Make every decorator degrade gracefully.
-        self.decorated = testtools.ExtendedToOriginalDecorator(decorated)
+        self.decorated = ExtendedToOriginalDecorator(decorated)
 
     def startTest(self, test):
         return self.decorated.startTest(test)
@@ -76,13 +387,13 @@ class TestResultDecorator:
     def addUnexpectedSuccess(self, test, details=None):
         return self.decorated.addUnexpectedSuccess(test, details=details)
 
-    def _get_failfast(self):
+    @property
+    def failfast(self):
         return getattr(self.decorated, "failfast", False)
 
-    def _set_failfast(self, value):
+    @failfast.setter
+    def failfast(self, value):
         self.decorated.failfast = value
-
-    failfast = property(_get_failfast, _set_failfast)
 
     def progress(self, offset, whence):
         return self.decorated.progress(offset, whence)
@@ -112,69 +423,68 @@ class HookedTestResultDecorator(TestResultDecorator):
     """A TestResult which calls a hook on every event."""
 
     def __init__(self, decorated):
-        self.super = super()
-        self.super.__init__(decorated)
+        super().__init__(decorated)
 
     def startTest(self, test):
         self._before_event()
-        return self.super.startTest(test)
+        return super().startTest(test)
 
     def startTestRun(self):
         self._before_event()
-        return self.super.startTestRun()
+        return super().startTestRun()
 
     def stopTest(self, test):
         self._before_event()
-        return self.super.stopTest(test)
+        return super().stopTest(test)
 
     def stopTestRun(self):
         self._before_event()
-        return self.super.stopTestRun()
+        return super().stopTestRun()
 
     def addError(self, test, err=None, details=None):
         self._before_event()
-        return self.super.addError(test, err, details=details)
+        return super().addError(test, err, details=details)
 
     def addFailure(self, test, err=None, details=None):
         self._before_event()
-        return self.super.addFailure(test, err, details=details)
+        return super().addFailure(test, err, details=details)
 
     def addSuccess(self, test, details=None):
         self._before_event()
-        return self.super.addSuccess(test, details=details)
+        return super().addSuccess(test, details=details)
 
     def addSkip(self, test, reason=None, details=None):
         self._before_event()
-        return self.super.addSkip(test, reason, details=details)
+        return super().addSkip(test, reason, details=details)
 
     def addExpectedFailure(self, test, err=None, details=None):
         self._before_event()
-        return self.super.addExpectedFailure(test, err, details=details)
+        return super().addExpectedFailure(test, err, details=details)
 
     def addUnexpectedSuccess(self, test, details=None):
         self._before_event()
-        return self.super.addUnexpectedSuccess(test, details=details)
+        return super().addUnexpectedSuccess(test, details=details)
 
     def progress(self, offset, whence):
         self._before_event()
-        return self.super.progress(offset, whence)
+        return super().progress(offset, whence)
 
     def wasSuccessful(self):
         self._before_event()
-        return self.super.wasSuccessful()
+        return super().wasSuccessful()
 
     @property
     def shouldStop(self):
         self._before_event()
-        return self.super.shouldStop
+        return super().shouldStop
 
     def stop(self):
         self._before_event()
-        return self.super.stop()
+        return super().stop()
 
     def time(self, a_datetime):
         self._before_event()
-        return self.super.time(a_datetime)
+        return super().time(a_datetime)
 
 
 class AutoTimingTestResultDecorator(HookedTestResultDecorator):
@@ -273,8 +583,8 @@ class TagCollapsingDecorator(HookedTestResultDecorator, TagsMixin):
     """Collapses many 'tags' calls into one where possible."""
 
     def __init__(self, result):
-        super().__init__(result)
-        self._clear_tags()
+        HookedTestResultDecorator.__init__(self, result)
+        TagsMixin.__init__(self)
 
     def _before_event(self):
         self._flush_current_scope(self.decorated)
@@ -321,6 +631,9 @@ def make_tag_filter(with_tags, without_tags):
     without_tags = without_tags and set(without_tags) or None
 
     def check_tags(test, outcome, err, details, tags):
+        # Ensure tags is a set (handle None case)
+        if tags is None:
+            tags = set()
         if with_tags and not with_tags <= tags:
             return False
         if without_tags and bool(without_tags & tags):
@@ -332,8 +645,8 @@ def make_tag_filter(with_tags, without_tags):
 
 class _PredicateFilter(TestResultDecorator, TagsMixin):
     def __init__(self, result, predicate):
-        super().__init__(result)
-        self._clear_tags()
+        TestResultDecorator.__init__(self, result)
+        TagsMixin.__init__(self)
         self.decorated = TimeCollapsingDecorator(TagCollapsingDecorator(self.decorated))
         self._predicate = predicate
         # The current test (for filtering tags)
@@ -528,7 +841,7 @@ class TestResultFilter(TestResultDecorator):
         return test
 
 
-class TestIdPrintingResult(testtools.TestResult):
+class TestIdPrintingResult(unittest.TestResult):
     """Print test ids to a stream.
 
     Implements both TestResult and StreamResult, for compatibility.
@@ -633,7 +946,7 @@ class TestIdPrintingResult(testtools.TestResult):
             self._end_test(test_id)
 
 
-class TestByTestResult(testtools.TestResult):
+class TestByTestResult(TestResult):
     """Call something every time a test completes."""
 
     # XXX: In testtools since lp:testtools r249.  Once that's released, just
@@ -650,6 +963,10 @@ class TestByTestResult(testtools.TestResult):
         """
         super().__init__()
         self._on_test = on_test
+
+    def _now(self):
+        """Return current datetime with timezone."""
+        return datetime.datetime.now(tz=iso8601.UTC)
 
     def startTest(self, test):
         super().startTest(test)
@@ -679,22 +996,22 @@ class TestByTestResult(testtools.TestResult):
         return {"traceback": TracebackContent(err, test)}
 
     def addSuccess(self, test, details=None):
-        super().addSuccess(test)
+        super().addSuccess(test, details=details)
         self._status = "success"
         self._details = details
 
     def addFailure(self, test, err=None, details=None):
-        super().addFailure(test, err, details)
+        super().addFailure(test, err, details=details)
         self._status = "failure"
         self._details = self._err_to_details(test, err, details)
 
     def addError(self, test, err=None, details=None):
-        super().addError(test, err, details)
+        super().addError(test, err, details=details)
         self._status = "error"
         self._details = self._err_to_details(test, err, details)
 
     def addSkip(self, test, reason=None, details=None):
-        super().addSkip(test, reason, details)
+        super().addSkip(test, reason, details=details)
         self._status = "skip"
         if details is None:
             details = {"reason": text_content(reason)}

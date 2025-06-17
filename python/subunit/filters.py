@@ -17,7 +17,7 @@
 import sys
 from optparse import OptionParser
 
-from testtools import CopyStreamResult, StreamResult, StreamResultRouter
+from subunit import CopyStreamResult, StreamResult, StreamResultRouter
 
 from subunit import ByteStreamToStreamResult, DiscardStream, ProtocolTestCase, StreamResultToBytes
 from subunit.test_results import CatFiles
@@ -95,6 +95,12 @@ def run_tests_from_stream(
                 passthrough_result = StreamResultToBytes(passthrough_stream)
             result = StreamResultRouter(result)
             result.add_rule(passthrough_result, "test_id", test_id=None)
+        else:
+            # passthrough_stream is None - discard non-test events
+
+            discard_result = StreamResult()  # Use a basic StreamResult that does nothing
+            result = StreamResultRouter(result)
+            result.add_rule(discard_result, "test_id", test_id=None)
         test = ByteStreamToStreamResult(input_stream, non_subunit_name="stdout")
     else:
         raise Exception("Unknown protocol version.")

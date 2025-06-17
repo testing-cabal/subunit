@@ -22,7 +22,7 @@ from io import StringIO
 
 import testtools
 from testtools import TestCase
-from testtools.content import TracebackContent, text_content
+from subunit._content import TracebackContent, text_content
 from testtools.testresult.doubles import ExtendedTestResult
 
 import subunit

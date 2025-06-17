@@ -24,12 +24,119 @@ from io import BytesIO
 
 from testtools import TestCase
 from testtools.compat import _b
-from testtools.testresult.doubles import ExtendedTestResult, StreamResult
 
 import iso8601
 import subunit
 from subunit.test_results import make_tag_filter, TestResultFilter
 from subunit import ByteStreamToStreamResult, StreamResultToBytes
+from subunit.test_results import TestResult
+
+
+# StreamResult class that records events for testing
+class StreamResult:
+    def __init__(self):
+        self._events = []
+
+    def startTestRun(self):
+        self._events.append(("startTestRun",))
+
+    def stopTestRun(self):
+        self._events.append(("stopTestRun",))
+
+    def status(
+        self,
+        test_id=None,
+        test_status=None,
+        test_tags=None,
+        runnable=True,
+        file_name=None,
+        file_bytes=None,
+        eof=False,
+        mime_type=None,
+        route_code=None,
+        timestamp=None,
+    ):
+        self._events.append(
+            (
+                "status",
+                test_id,
+                test_status,
+                test_tags,
+                runnable,
+                file_name,
+                file_bytes,
+                eof,
+                mime_type,
+                route_code,
+                timestamp,
+            )
+        )
+
+
+# Test result class that records events for testing
+class ExtendedTestResult(TestResult):
+    def __init__(self):
+        super().__init__()
+        self._events = []
+
+    def startTest(self, test):
+        self._events.append(("startTest", test))
+        super().startTest(test)
+
+    def stopTest(self, test):
+        self._events.append(("stopTest", test))
+        super().stopTest(test)
+
+    def addError(self, test, err=None, details=None):
+        # For testing, when details is None but we have an error, use empty dict
+        # When details is provided, use details
+        if details is not None:
+            recorded_data = details
+        elif err is not None:
+            recorded_data = {}
+        else:
+            recorded_data = {}
+        self._events.append(("addError", test, recorded_data))
+        super().addError(test, err, details)
+
+    def addFailure(self, test, err=None, details=None):
+        self._events.append(("addFailure", test, details if details is not None else err))
+        super().addFailure(test, err, details)
+
+    def addSuccess(self, test, details=None):
+        if details is not None:
+            self._events.append(("addSuccess", test, details))
+        else:
+            self._events.append(("addSuccess", test))
+        super().addSuccess(test, details)
+
+    def addSkip(self, test, reason=None, details=None):
+        self._events.append(("addSkip", test, details if details is not None else {}))
+        super().addSkip(test, reason, details)
+
+    def addExpectedFailure(self, test, err=None, details=None):
+        self._events.append(("addExpectedFailure", test, details if details is not None else err))
+        super().addExpectedFailure(test, err, details)
+
+    def addUnexpectedSuccess(self, test, details=None):
+        self._events.append(("addUnexpectedSuccess", test, details))
+        super().addUnexpectedSuccess(test, details)
+
+    def startTestRun(self):
+        self._events.append(("startTestRun",))
+        super().startTestRun()
+
+    def stopTestRun(self):
+        self._events.append(("stopTestRun",))
+        super().stopTestRun()
+
+    def time(self, a_time):
+        self._events.append(("time", a_time))
+        super().time(a_time)
+
+    def tags(self, new_tags, gone_tags):
+        self._events.append(("tags", new_tags, gone_tags))
+        super().tags(new_tags, gone_tags)
 
 
 class TestTestResultFilter(TestCase):

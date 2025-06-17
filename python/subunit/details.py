@@ -18,14 +18,15 @@
 
 from io import BytesIO
 
-from testtools import content, content_type
-from testtools.compat import _b
+# Always use our implementation for consistency
+from subunit._content import Content, ContentType
+
 
 from subunit import chunked
 
-end_marker = _b("]\n")
-quoted_marker = _b(" ]")
-empty = _b("")
+end_marker = b"]\n"
+quoted_marker = b" ]"
+empty = b""
 
 
 class DetailsParser(object):
@@ -36,7 +37,7 @@ class SimpleDetailsParser(DetailsParser):
     """Parser for single-part [] delimited details."""
 
     def __init__(self, state):
-        self._message = _b("")
+        self._message = b""
         self._state = state
 
     def lineReceived(self, line):
@@ -55,15 +56,15 @@ class SimpleDetailsParser(DetailsParser):
             # We know that subunit/testtools serialise [] formatted
             # tracebacks as utf8, but perhaps we need a ReplacingContent
             # or something like that.
-            result["traceback"] = content.Content(
-                content_type.ContentType("text", "x-traceback", {"charset": "utf8"}), lambda: [self._message]
+            result["traceback"] = Content(
+                ContentType("text", "x-traceback", {"charset": "utf8"}), lambda: [self._message]
             )
         else:
             if style == "skip":
                 name = "reason"
             else:
                 name = "message"
-            result[name] = content.Content(content_type.ContentType("text", "plain"), lambda: [self._message])
+            result[name] = Content(ContentType("text", "plain"), lambda: [self._message])
         return result
 
     def get_message(self):
@@ -88,7 +89,7 @@ class MultipartDetailsParser(DetailsParser):
             main, sub = value.split("/")
         except ValueError:
             raise ValueError("Invalid MIME type %r" % value)
-        self._content_type = content_type.ContentType(main, sub)
+        self._content_type = ContentType(main, sub)
         self._parse_state = self._get_name
 
     def _get_name(self, line):
@@ -103,7 +104,7 @@ class MultipartDetailsParser(DetailsParser):
             # Line based use always ends on no residue.
             assert residue == empty, "residue: %r" % (residue,)
             body = self._body
-            self._details[self._name] = content.Content(self._content_type, lambda: [body.getvalue()])
+            self._details[self._name] = Content(self._content_type, lambda: [body.getvalue()])
             self._chunk_parser.close()
             self._parse_state = self._look_for_content
 

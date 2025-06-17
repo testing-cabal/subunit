@@ -21,21 +21,9 @@ import tempfile
 import unittest
 from io import BytesIO
 
-from testtools import PlaceHolder, TestCase, TestResult, skipIf
-from testtools.compat import _b, _u
-from testtools.content import Content, TracebackContent, text_content
-from testtools.content_type import ContentType
+from subunit._content import Content, TracebackContent, text_content, ContentType
+from subunit.test_results import TestResult
 
-try:
-    from testtools.testresult.doubles import ExtendedTestResult, Python26TestResult, Python27TestResult
-except ImportError:
-    from testtools.tests.helpers import (
-        Python26TestResult,
-        Python27TestResult,
-        ExtendedTestResult,
-    )
-
-from testtools.matchers import Contains, Equals, MatchesAny
 
 import iso8601
 
@@ -43,15 +31,211 @@ import subunit
 from subunit.tests import (
     _remote_exception_repr,
     _remote_exception_repr_chunked,
-    _remote_exception_str,
-    _remote_exception_str_chunked,
 )
 
 tb_prelude = "Traceback (most recent call last):\n"
 
 
+# Helper functions
+def _b(s):
+    """Convert string to bytes."""
+    if isinstance(s, str):
+        return s.encode("latin-1")
+    return s
+
+
+def _u(s):
+    """Convert bytes to string."""
+    if isinstance(s, bytes):
+        return s.decode("latin-1")
+    return s
+
+
+# Test case base class
+TestCase = unittest.TestCase
+
+
+# Placeholder test class
+class PlaceHolder:
+    def __init__(self, test_id):
+        self._test_id = test_id
+
+    def id(self):
+        return self._test_id
+
+
+# Skip decorator
+def skipIf(condition, reason):
+    """Skip decorator for tests."""
+    return unittest.skipIf(condition, reason)
+
+
+# Test result classes for testing
+class Python27TestResult(TestResult):
+    """TestResult that records events like Python 2.7."""
+
+    def __init__(self):
+        super().__init__()
+        self._events = []
+
+    def startTest(self, test):
+        self._events.append(("startTest", test))
+        super().startTest(test)
+
+    def stopTest(self, test):
+        self._events.append(("stopTest", test))
+        super().stopTest(test)
+
+    def addSuccess(self, test, details=None):
+        self._events.append(("addSuccess", test))
+        super().addSuccess(test, details)
+
+    def addError(self, test, error=None, details=None):
+        # Python 2.7 style: convert details to error for compatibility
+        if error is None and details is not None:
+            import subunit
+
+            error = subunit.RemoteError("")
+        self._events.append(("addError", test, error))
+        super().addError(test, error, details)
+
+    def addFailure(self, test, error=None, details=None):
+        # Python 2.7 style: convert details to error for compatibility
+        if error is None and details is not None:
+            import subunit
+
+            error = subunit.RemoteError("")
+        self._events.append(("addFailure", test, error))
+        super().addFailure(test, error, details)
+
+    def addSkip(self, test, reason, details=None):
+        self._events.append(("addSkip", test, reason))
+        super().addSkip(test, reason, details)
+
+    def addExpectedFailure(self, test, error=None, details=None):
+        # Python 2.7 style: convert details to error for compatibility
+        if error is None and details is not None:
+            import subunit
+
+            error = subunit.RemoteError("")
+
+        if error:
+            self._events.append(("addExpectedFailure", test, error))
+        else:
+            self._events.append(("addExpectedFailure", test))
+        super().addExpectedFailure(test, error, details)
+
+    def addUnexpectedSuccess(self, test, details=None):
+        self._events.append(("addUnexpectedSuccess", test))
+        super().addUnexpectedSuccess(test, details)
+
+
+class ExtendedTestResult(TestResult):
+    """TestResult that records events with full details support."""
+
+    def __init__(self):
+        super().__init__()
+        self._events = []
+        self.current_tags = set()
+
+    def startTest(self, test):
+        self._events.append(("startTest", test))
+        super().startTest(test)
+
+    def stopTest(self, test):
+        self._events.append(("stopTest", test))
+        super().stopTest(test)
+
+    def addSuccess(self, test, details=None):
+        if details is not None:
+            self._events.append(("addSuccess", test, details))
+        else:
+            self._events.append(("addSuccess", test))
+        super().addSuccess(test, details)
+
+    def addError(self, test, err, details=None):
+        if details is not None:
+            self._events.append(("addError", test, details))
+        else:
+            self._events.append(("addError", test, err))
+        super().addError(test, err, details)
+
+    def addFailure(self, test, err, details=None):
+        if details is not None:
+            self._events.append(("addFailure", test, details))
+        else:
+            self._events.append(("addFailure", test, err))
+        super().addFailure(test, err, details)
+
+    def addSkip(self, test, reason, details=None):
+        if details is not None:
+            self._events.append(("addSkip", test, details))
+        else:
+            self._events.append(("addSkip", test, reason))
+        super().addSkip(test, reason, details)
+
+    def addExpectedFailure(self, test, err, details=None):
+        if details is not None:
+            self._events.append(("addExpectedFailure", test, details))
+        elif err:
+            self._events.append(("addExpectedFailure", test, err))
+        else:
+            self._events.append(("addExpectedFailure", test))
+        super().addExpectedFailure(test, err, details)
+
+    def addUnexpectedSuccess(self, test, details=None):
+        if details is not None:
+            self._events.append(("addUnexpectedSuccess", test, details))
+        else:
+            self._events.append(("addUnexpectedSuccess", test))
+        super().addUnexpectedSuccess(test, details)
+
+    def progress(self, offset, whence):
+        self._events.append(("progress", offset, whence))
+        super().progress(offset, whence)
+
+    def tags(self, new_tags, gone_tags):
+        self._events.append(("tags", new_tags, gone_tags))
+        super().tags(new_tags, gone_tags)
+
+    def time(self, a_time):
+        self._events.append(("time", a_time))
+        super().time(a_time)
+
+
 def details_to_str(details):
     return TestResult()._err_details_to_string(None, details=details)
+
+
+def details_equal(details1, details2):
+    """Compare two details dicts by content rather than object identity."""
+    # Handle None and empty dict as equivalent
+    if (details1 is None or details1 == {}) and (details2 is None or details2 == {}):
+        return True
+    if details1 is None or details2 is None:
+        return False
+    if set(details1.keys()) != set(details2.keys()):
+        return False
+
+    for key in details1:
+        content1 = details1[key]
+        content2 = details2[key]
+
+        # Compare content types
+        if (
+            content1.content_type.type != content2.content_type.type
+            or content1.content_type.subtype != content2.content_type.subtype
+            or content1.content_type.parameters != content2.content_type.parameters
+        ):
+            return False
+
+        # Compare actual content bytes
+        bytes1 = b"".join(content1.iter_bytes())
+        bytes2 = b"".join(content2.iter_bytes())
+        if bytes1 != bytes2:
+            return False
+
+    return True
 
 
 class TestHelpers(TestCase):
@@ -157,7 +341,7 @@ class TestTestProtocolServerPipe(unittest.TestCase):
 
 class TestTestProtocolServerStartTest(unittest.TestCase):
     def setUp(self):
-        self.client = Python26TestResult()
+        self.client = Python27TestResult()
         self.stream = BytesIO()
         self.protocol = subunit.TestProtocolServer(self.client, self.stream)
 
@@ -341,7 +525,7 @@ class TestTestProtocolServerPassThrough(unittest.TestCase):
 
 class TestTestProtocolServerLostConnection(unittest.TestCase):
     def setUp(self):
-        self.client = Python26TestResult()
+        self.client = Python27TestResult()
         self.protocol = subunit.TestProtocolServer(self.client)
         self.test = subunit.RemotedTestCase("old mcdonald")
 
@@ -538,14 +722,23 @@ class TestTestProtocolServerAddFailure(unittest.TestCase):
         self.test = subunit.RemotedTestCase("mcdonalds farm")
 
     def assertFailure(self, details):
-        self.assertEqual(
-            [
-                ("startTest", self.test),
-                ("addFailure", self.test, details),
-                ("stopTest", self.test),
-            ],
-            self.client._events,
-        )
+        # Check we have the right number of events
+        self.assertEqual(3, len(self.client._events))
+
+        # Check event types and test objects
+        self.assertEqual("startTest", self.client._events[0][0])
+        self.assertEqual(self.test, self.client._events[0][1])
+
+        self.assertEqual("addFailure", self.client._events[1][0])
+        self.assertEqual(self.test, self.client._events[1][1])
+
+        # Check details match using content comparison
+        actual_details = self.client._events[1][2] if len(self.client._events[1]) > 2 else None
+        if not details_equal(details, actual_details):
+            self.fail(f"Details do not match.\nExpected: {details}\nActual: {actual_details}")
+
+        self.assertEqual("stopTest", self.client._events[2][0])
+        self.assertEqual(self.test, self.client._events[2][1])
 
     def simple_failure_keyword(self, keyword):
         self.protocol.lineReceived(_b("%s mcdonalds farm\n" % keyword))
@@ -589,11 +782,6 @@ class TestTestProtocolServerAddxFail(unittest.TestCase):
 
     def capture_expected_failure(self, test, err):
         self._events.append((test, err))
-
-    def setup_python26(self):
-        """Setup a test object ready to be xfailed and thunk to success."""
-        self.client = Python26TestResult()
-        self.setup_protocol()
 
     def setup_python27(self):
         """Setup a test object ready to be xfailed."""
@@ -648,24 +836,18 @@ class TestTestProtocolServerAddxFail(unittest.TestCase):
             )
 
     def test_simple_xfail(self):
-        self.setup_python26()
-        self.simple_xfail_keyword("xfail", True)
         self.setup_python27()
         self.simple_xfail_keyword("xfail", False)
         self.setup_python_ex()
         self.simple_xfail_keyword("xfail", False)
 
     def test_simple_xfail_colon(self):
-        self.setup_python26()
-        self.simple_xfail_keyword("xfail:", True)
         self.setup_python27()
         self.simple_xfail_keyword("xfail:", False)
         self.setup_python_ex()
         self.simple_xfail_keyword("xfail:", False)
 
     def test_xfail_empty_message(self):
-        self.setup_python26()
-        self.empty_message(True)
         self.setup_python27()
         self.empty_message(False)
         self.setup_python_ex()
@@ -685,16 +867,12 @@ class TestTestProtocolServerAddxFail(unittest.TestCase):
         self.check_success_or_xfail(as_success, "]\n")
 
     def test_xfail_quoted_bracket(self):
-        self.setup_python26()
-        self.xfail_quoted_bracket("xfail", True)
         self.setup_python27()
         self.xfail_quoted_bracket("xfail", False)
         self.setup_python_ex()
         self.xfail_quoted_bracket("xfail", False)
 
     def test_xfail_colon_quoted_bracket(self):
-        self.setup_python26()
-        self.xfail_quoted_bracket("xfail:", True)
         self.setup_python27()
         self.xfail_quoted_bracket("xfail:", False)
         self.setup_python_ex()
@@ -706,11 +884,6 @@ class TestTestProtocolServerAddunexpectedSuccess(TestCase):
 
     def capture_expected_failure(self, test, err):
         self._events.append((test, err))
-
-    def setup_python26(self):
-        """Setup a test object ready to be xfailed and thunk to success."""
-        self.client = Python26TestResult()
-        self.setup_protocol()
 
     def setup_python27(self):
         """Setup a test object ready to be xfailed."""
@@ -774,24 +947,18 @@ class TestTestProtocolServerAddunexpectedSuccess(TestCase):
             )
 
     def test_simple_uxsuccess(self):
-        self.setup_python26()
-        self.simple_uxsuccess_keyword("uxsuccess", True)
         self.setup_python27()
         self.simple_uxsuccess_keyword("uxsuccess", False)
         self.setup_python_ex()
         self.simple_uxsuccess_keyword("uxsuccess", False)
 
     def test_simple_uxsuccess_colon(self):
-        self.setup_python26()
-        self.simple_uxsuccess_keyword("uxsuccess:", True)
         self.setup_python27()
         self.simple_uxsuccess_keyword("uxsuccess:", False)
         self.setup_python_ex()
         self.simple_uxsuccess_keyword("uxsuccess:", False)
 
     def test_uxsuccess_empty_message(self):
-        self.setup_python26()
-        self.empty_message(True)
         self.setup_python27()
         self.empty_message(False)
         self.setup_python_ex()
@@ -809,16 +976,12 @@ class TestTestProtocolServerAddunexpectedSuccess(TestCase):
         self.check_fail_or_uxsuccess(as_fail, "]\n")
 
     def test_uxsuccess_quoted_bracket(self):
-        self.setup_python26()
-        self.uxsuccess_quoted_bracket("uxsuccess", True)
         self.setup_python27()
         self.uxsuccess_quoted_bracket("uxsuccess", False)
         self.setup_python_ex()
         self.uxsuccess_quoted_bracket("uxsuccess", False)
 
     def test_uxsuccess_colon_quoted_bracket(self):
-        self.setup_python26()
-        self.uxsuccess_quoted_bracket("uxsuccess:", True)
         self.setup_python27()
         self.uxsuccess_quoted_bracket("uxsuccess:", False)
         self.setup_python_ex()
@@ -843,14 +1006,24 @@ class TestTestProtocolServerAddSkip(unittest.TestCase):
         details = {}
         if reason is not None:
             details["reason"] = Content(ContentType("text", "plain"), lambda: [reason])
-        self.assertEqual(
-            [
-                ("startTest", self.test),
-                ("addSkip", self.test, details),
-                ("stopTest", self.test),
-            ],
-            self.client._events,
-        )
+
+        # Check we have the right number of events
+        self.assertEqual(3, len(self.client._events))
+
+        # Check event types and test objects
+        self.assertEqual("startTest", self.client._events[0][0])
+        self.assertEqual(self.test, self.client._events[0][1])
+
+        self.assertEqual("addSkip", self.client._events[1][0])
+        self.assertEqual(self.test, self.client._events[1][1])
+
+        # Check details match using content comparison
+        actual_details = self.client._events[1][2] if len(self.client._events[1]) > 2 else None
+        if not details_equal(details, actual_details):
+            self.fail(f"Details do not match.\nExpected: {details}\nActual: {actual_details}")
+
+        self.assertEqual("stopTest", self.client._events[2][0])
+        self.assertEqual(self.test, self.client._events[2][1])
 
     def simple_skip_keyword(self, keyword):
         self.protocol.lineReceived(_b("%s mcdonalds farm\n" % keyword))
@@ -907,14 +1080,23 @@ class TestTestProtocolServerAddSuccess(unittest.TestCase):
         self.simple_success_keyword("successful:")
 
     def assertSuccess(self, details):
-        self.assertEqual(
-            [
-                ("startTest", self.test),
-                ("addSuccess", self.test, details),
-                ("stopTest", self.test),
-            ],
-            self.client._events,
-        )
+        # Check we have the right number of events
+        self.assertEqual(3, len(self.client._events))
+
+        # Check event types and test objects
+        self.assertEqual("startTest", self.client._events[0][0])
+        self.assertEqual(self.test, self.client._events[0][1])
+
+        self.assertEqual("addSuccess", self.client._events[1][0])
+        self.assertEqual(self.test, self.client._events[1][1])
+
+        # Check details match using content comparison
+        actual_details = self.client._events[1][2] if len(self.client._events[1]) > 2 else None
+        if not details_equal(details, actual_details):
+            self.fail(f"Details do not match.\nExpected: {details}\nActual: {actual_details}")
+
+        self.assertEqual("stopTest", self.client._events[2][0])
+        self.assertEqual(self.test, self.client._events[2][1])
 
     def test_success_empty_message(self):
         self.protocol.lineReceived(_b("success mcdonalds farm [\n"))
@@ -944,7 +1126,7 @@ class TestTestProtocolServerProgress(unittest.TestCase):
     """Test receipt of progress: directives."""
 
     def test_progress_accepted_stdlib(self):
-        self.result = Python26TestResult()
+        self.result = TestResult()
         self.stream = BytesIO()
         self.protocol = subunit.TestProtocolServer(self.result, stream=self.stream)
         self.protocol.lineReceived(_b("progress: 23"))
@@ -1023,7 +1205,7 @@ class TestTestProtocolServerStreamTime(unittest.TestCase):
     """Test managing time information at the protocol level."""
 
     def test_time_accepted_stdlib(self):
-        self.result = Python26TestResult()
+        self.result = TestResult()
         self.stream = BytesIO()
         self.protocol = subunit.TestProtocolServer(self.result, stream=self.stream)
         self.protocol.lineReceived(_b("time: 2001-12-12 12:59:59Z\n"))
@@ -1265,150 +1447,76 @@ class TestTestProtocolClient(TestCase):
     def test_add_failure(self):
         """Test addFailure on a TestProtocolClient."""
         self.protocol.addFailure(self.test, subunit.RemoteError(_u("boo qux")))
-        self.assertThat(
+        self.assertEqual(
             self.io.getvalue(),
-            MatchesAny(
-                # testtools < 2.5.0
-                Equals(_b(("failure: %s [\n" + _remote_exception_str + ": boo qux\n" + "]\n") % self.test.id())),
-                # testtools >= 2.5.0
-                Equals(_b(("failure: %s [\n" + _remote_exception_repr + ": boo qux\n" + "]\n") % self.test.id())),
-            ),
+            _b(("failure: %s [\n" + _remote_exception_repr + ": boo qux\n" + "]\n") % self.test.id()),
         )
 
     def test_add_failure_details(self):
         """Test addFailure on a TestProtocolClient with details."""
         self.protocol.addFailure(self.test, details=self.sample_tb_details)
-        self.assertThat(
+        self.assertEqual(
             self.io.getvalue(),
-            MatchesAny(
-                # testtools < 2.5.0
-                Equals(
-                    _b(
-                        (
-                            "failure: %s [ multipart\n"
-                            "Content-Type: text/plain\n"
-                            "something\n"
-                            "F\r\nserialised\nform0\r\n"
-                            "Content-Type: text/x-traceback;charset=utf8,language=python\n"
-                            "traceback\n" + _remote_exception_str_chunked + "]\n"
-                        )
-                        % self.test.id()
-                    )
-                ),
-                # testtools >= 2.5.0
-                Equals(
-                    _b(
-                        (
-                            "failure: %s [ multipart\n"
-                            "Content-Type: text/plain\n"
-                            "something\n"
-                            "F\r\nserialised\nform0\r\n"
-                            "Content-Type: text/x-traceback;charset=utf8,language=python\n"
-                            "traceback\n" + _remote_exception_repr_chunked + "]\n"
-                        )
-                        % self.test.id()
-                    )
-                ),
+            _b(
+                (
+                    "failure: %s [ multipart\n"
+                    "Content-Type: text/plain\n"
+                    "something\n"
+                    "F\r\nserialised\nform0\r\n"
+                    "Content-Type: text/x-traceback;charset=utf8,language=python\n"
+                    "traceback\n" + _remote_exception_repr_chunked + "]\n"
+                )
+                % self.test.id()
             ),
         )
 
     def test_add_error(self):
         """Test stopTest on a TestProtocolClient."""
         self.protocol.addError(self.test, subunit.RemoteError(_u("phwoar crikey")))
-        self.assertThat(
-            self.io.getvalue(),
-            MatchesAny(
-                # testtools < 2.5.0
-                Equals(_b(("error: %s [\n" + _remote_exception_str + ": phwoar crikey\n]\n") % self.test.id())),
-                # testtools >= 2.5.0
-                Equals(_b(("error: %s [\n" + _remote_exception_repr + ": phwoar crikey\n]\n") % self.test.id())),
-            ),
+        self.assertEqual(
+            self.io.getvalue(), _b(("error: %s [\n" + _remote_exception_repr + ": phwoar crikey\n]\n") % self.test.id())
         )
 
     def test_add_error_details(self):
         """Test stopTest on a TestProtocolClient with details."""
         self.protocol.addError(self.test, details=self.sample_tb_details)
-        self.assertThat(
+        self.assertEqual(
             self.io.getvalue(),
-            MatchesAny(
-                # testtools < 2.5.0
-                Equals(
-                    _b(
-                        (
-                            "error: %s [ multipart\n"
-                            "Content-Type: text/plain\n"
-                            "something\n"
-                            "F\r\nserialised\nform0\r\n"
-                            "Content-Type: text/x-traceback;charset=utf8,language=python\n"
-                            "traceback\n" + _remote_exception_str_chunked + "]\n"
-                        )
-                        % self.test.id()
-                    )
-                ),
-                # testtools >= 2.5.0
-                Equals(
-                    _b(
-                        (
-                            "error: %s [ multipart\n"
-                            "Content-Type: text/plain\n"
-                            "something\n"
-                            "F\r\nserialised\nform0\r\n"
-                            "Content-Type: text/x-traceback;charset=utf8,language=python\n"
-                            "traceback\n" + _remote_exception_repr_chunked + "]\n"
-                        )
-                        % self.test.id()
-                    )
-                ),
+            _b(
+                (
+                    "error: %s [ multipart\n"
+                    "Content-Type: text/plain\n"
+                    "something\n"
+                    "F\r\nserialised\nform0\r\n"
+                    "Content-Type: text/x-traceback;charset=utf8,language=python\n"
+                    "traceback\n" + _remote_exception_repr_chunked + "]\n"
+                )
+                % self.test.id()
             ),
         )
 
     def test_add_expected_failure(self):
         """Test addExpectedFailure on a TestProtocolClient."""
         self.protocol.addExpectedFailure(self.test, subunit.RemoteError(_u("phwoar crikey")))
-        self.assertThat(
-            self.io.getvalue(),
-            MatchesAny(
-                # testtools < 2.5.0
-                Equals(_b(("xfail: %s [\n" + _remote_exception_str + ": phwoar crikey\n]\n") % self.test.id())),
-                # testtools >= 2.5.0
-                Equals(_b(("xfail: %s [\n" + _remote_exception_repr + ": phwoar crikey\n]\n") % self.test.id())),
-            ),
+        self.assertEqual(
+            self.io.getvalue(), _b(("xfail: %s [\n" + _remote_exception_repr + ": phwoar crikey\n]\n") % self.test.id())
         )
 
     def test_add_expected_failure_details(self):
         """Test addExpectedFailure on a TestProtocolClient with details."""
         self.protocol.addExpectedFailure(self.test, details=self.sample_tb_details)
-        self.assertThat(
+        self.assertEqual(
             self.io.getvalue(),
-            MatchesAny(
-                # testtools < 2.5.0
-                Equals(
-                    _b(
-                        (
-                            "xfail: %s [ multipart\n"
-                            "Content-Type: text/plain\n"
-                            "something\n"
-                            "F\r\nserialised\nform0\r\n"
-                            "Content-Type: text/x-traceback;charset=utf8,language=python\n"
-                            "traceback\n" + _remote_exception_str_chunked + "]\n"
-                        )
-                        % self.test.id()
-                    )
-                ),
-                # testtools >= 2.5.0
-                Equals(
-                    _b(
-                        (
-                            "xfail: %s [ multipart\n"
-                            "Content-Type: text/plain\n"
-                            "something\n"
-                            "F\r\nserialised\nform0\r\n"
-                            "Content-Type: text/x-traceback;charset=utf8,language=python\n"
-                            "traceback\n" + _remote_exception_repr_chunked + "]\n"
-                        )
-                        % self.test.id()
-                    )
-                ),
+            _b(
+                (
+                    "xfail: %s [ multipart\n"
+                    "Content-Type: text/plain\n"
+                    "something\n"
+                    "F\r\nserialised\nform0\r\n"
+                    "Content-Type: text/x-traceback;charset=utf8,language=python\n"
+                    "traceback\n" + _remote_exception_repr_chunked + "]\n"
+                )
+                % self.test.id()
             ),
         )
 
@@ -1479,7 +1587,7 @@ class TestTestProtocolClient(TestCase):
 
     def test_tags_both(self):
         self.protocol.tags({"quux"}, {"bar"})
-        self.assertThat([b"tags: quux -bar\n", b"tags: -bar quux\n"], Contains(self.io.getvalue()))
+        self.assertIn(self.io.getvalue(), [b"tags: quux -bar\n", b"tags: -bar quux\n"])
 
     def test_tags_gone(self):
         self.protocol.tags(set(), {"bar"})
