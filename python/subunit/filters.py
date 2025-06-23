@@ -194,8 +194,6 @@ def run_filter_script(result_factory, description, post_run_hook=None, protocol_
     )
     if post_run_hook:
         post_run_hook(result)
-    if not hasattr(result, "wasSuccessful"):
-        result = result.decorated
     if result.wasSuccessful():
         sys.exit(0)
     else:

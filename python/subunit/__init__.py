@@ -49,11 +49,8 @@ The test outcome methods ``addSuccess``, ``addError``, ``addExpectedFailure``,
 ``addFailure``, ``addSkip`` take an optional keyword parameter ``details``
 which can be used instead of the usual python unittest parameter.
 When used the value of details should be a dict from ``string`` to
-``testtools.content.Content`` objects. This is a draft API being worked on with
-the Python Testing In Python mail list, with the goal of permitting a common
-way to provide additional data beyond a traceback, such as captured data from
-disk, logging messages etc. The reference for this API is in testtools (0.9.0
-and newer).
+``testtools.content.Content`` objects. This API permits providing additional
+data beyond a traceback, such as captured data from disk, logging messages etc.
 
 The ``tags(new_tags, gone_tags)`` method is called (if present) to add or
 remove tags in the test run that is currently executing. If called when no
@@ -129,12 +126,8 @@ from testtools import ExtendedToOriginalDecorator, content, content_type
 from testtools.compat import _b, _u
 from testtools.content import TracebackContent
 
-try:
-    from testtools.testresult.real import _StringException
+from testtools.testresult.real import _StringException as RemoteException
 
-    RemoteException = _StringException
-except ImportError:
-    raise ImportError("testtools.testresult.real does not contain _StringException, check your version.")
 from testtools import CopyStreamResult, testresult
 
 from subunit import chunked, details
@@ -831,7 +824,7 @@ class TestProtocolClient(testresult.TestResult):
 
 
 def RemoteError(description=_u("")):
-    return (_StringException, _StringException(description), None)
+    return (RemoteException, RemoteException(description), None)
 
 
 class RemotedTestCase(unittest.TestCase):
@@ -965,7 +958,6 @@ def run_isolated(klass, self, result):
 
         # at this point, sys.stdin is redirected, now we want
         # to filter it to escape ]'s.
-        ### XXX: test and write that bit.
         stream = os.fdopen(1, "wb")
         result = TestProtocolClient(stream)
         klass.run(self, result)
@@ -982,7 +974,6 @@ def run_isolated(klass, self, result):
         fileobj = os.fdopen(c2pread, "rb")
         protocol.readFrom(fileobj)
         os.waitpid(pid, 0)
-        # TODO return code evaluation.
     return result
 
 

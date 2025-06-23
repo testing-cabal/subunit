@@ -26,14 +26,7 @@ from testtools.compat import _b, _u
 from testtools.content import Content, TracebackContent, text_content
 from testtools.content_type import ContentType
 
-try:
-    from testtools.testresult.doubles import ExtendedTestResult, Python26TestResult, Python27TestResult
-except ImportError:
-    from testtools.tests.helpers import (
-        Python26TestResult,
-        Python27TestResult,
-        ExtendedTestResult,
-    )
+from testtools.testresult.doubles import ExtendedTestResult, Python26TestResult, Python27TestResult
 
 from testtools.matchers import Contains, Equals, MatchesAny
 
@@ -1124,7 +1117,7 @@ class TestExecTestCase(unittest.TestCase):
         test.debug()
 
     def test_count_test_cases(self):
-        """TODO run the child process and count responses to determine the count."""
+        """Run the child process and count responses to determine the count."""
 
     def test_join_dir(self):
         sibling = subunit.join_dir(__file__, "foo")

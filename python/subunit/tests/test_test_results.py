@@ -60,6 +60,9 @@ class TimeCapturingResult(unittest.TestResult):
     def time(self, a_datetime):
         self._calls.append(a_datetime)
 
+    def progress(self, offset, whence):
+        pass
+
 
 class TestHookedTestResultDecorator(unittest.TestCase):
     def setUp(self):

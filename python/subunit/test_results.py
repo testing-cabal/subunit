@@ -20,98 +20,18 @@ import csv
 import datetime
 
 import testtools
-from testtools import StreamResult
-from testtools.content import TracebackContent, text_content
+from testtools import StreamResult, TestResultDecorator, TestByTestResult
 
 import iso8601
 import subunit
-
-
-# NOT a TestResult, because we are implementing the interface, not inheriting
-# it.
-class TestResultDecorator:
-    """General pass-through decorator.
-
-    This provides a base that other TestResults can inherit from to
-    gain basic forwarding functionality. It also takes care of
-    handling the case where the target doesn't support newer methods
-    or features by degrading them.
-    """
-
-    # XXX: Since lp:testtools r250, this is in testtools. Once it's released,
-    # we should gut this and just use that.
-
-    def __init__(self, decorated):
-        """Create a TestResultDecorator forwarding to decorated."""
-        # Make every decorator degrade gracefully.
-        self.decorated = testtools.ExtendedToOriginalDecorator(decorated)
-
-    def startTest(self, test):
-        return self.decorated.startTest(test)
-
-    def startTestRun(self):
-        return self.decorated.startTestRun()
-
-    def stopTest(self, test):
-        return self.decorated.stopTest(test)
-
-    def stopTestRun(self):
-        return self.decorated.stopTestRun()
-
-    def addError(self, test, err=None, details=None):
-        return self.decorated.addError(test, err, details=details)
-
-    def addFailure(self, test, err=None, details=None):
-        return self.decorated.addFailure(test, err, details=details)
-
-    def addSuccess(self, test, details=None):
-        return self.decorated.addSuccess(test, details=details)
-
-    def addSkip(self, test, reason=None, details=None):
-        return self.decorated.addSkip(test, reason, details=details)
-
-    def addExpectedFailure(self, test, err=None, details=None):
-        return self.decorated.addExpectedFailure(test, err, details=details)
-
-    def addUnexpectedSuccess(self, test, details=None):
-        return self.decorated.addUnexpectedSuccess(test, details=details)
-
-    def _get_failfast(self):
-        return getattr(self.decorated, "failfast", False)
-
-    def _set_failfast(self, value):
-        self.decorated.failfast = value
-
-    failfast = property(_get_failfast, _set_failfast)
-
-    def progress(self, offset, whence):
-        return self.decorated.progress(offset, whence)
-
-    def wasSuccessful(self):
-        return self.decorated.wasSuccessful()
-
-    @property
-    def shouldStop(self):
-        return self.decorated.shouldStop
-
-    def stop(self):
-        return self.decorated.stop()
-
-    @property
-    def testsRun(self):
-        return self.decorated.testsRun
-
-    def tags(self, new_tags, gone_tags):
-        return self.decorated.tags(new_tags, gone_tags)
-
-    def time(self, a_datetime):
-        return self.decorated.time(a_datetime)
 
 
 class HookedTestResultDecorator(TestResultDecorator):
     """A TestResult which calls a hook on every event."""
 
     def __init__(self, decorated):
+        # Wrap with ExtendedToOriginalDecorator to handle unittest TestResults
+        decorated = testtools.ExtendedToOriginalDecorator(decorated)
         self.super = super()
         self.super.__init__(decorated)
 
@@ -175,6 +95,14 @@ class HookedTestResultDecorator(TestResultDecorator):
     def time(self, a_datetime):
         self._before_event()
         return self.super.time(a_datetime)
+
+    def _get_failfast(self):
+        return getattr(self.decorated, "failfast", False)
+
+    def _set_failfast(self, value):
+        self.decorated.failfast = value
+
+    failfast = property(_get_failfast, _set_failfast)
 
 
 class AutoTimingTestResultDecorator(HookedTestResultDecorator):
@@ -310,7 +238,6 @@ class TimeCollapsingDecorator(HookedTestResultDecorator):
 
 def and_predicates(predicates):
     """Return a predicate that is true iff all predicates are true."""
-    # XXX: Should probably be in testtools to be better used by matchers. jml
     return lambda *args, **kwargs: all(p(*args, **kwargs) for p in predicates)
 
 
@@ -523,7 +450,6 @@ class TestResultFilter(TestResultDecorator):
         if self._rename_fn is None:
             return test
         new_id = self._rename_fn(test.id())
-        # TODO(jelmer): Isn't there a cleaner way of doing this?
         setattr(test, "id", lambda: new_id)
         return test
 
@@ -631,87 +557,6 @@ class TestIdPrintingResult(testtools.TestResult):
     def stopTestRun(self):
         for test_id in list(self._active_tests.keys()):
             self._end_test(test_id)
-
-
-class TestByTestResult(testtools.TestResult):
-    """Call something every time a test completes."""
-
-    # XXX: In testtools since lp:testtools r249.  Once that's released, just
-    # import that.
-
-    def __init__(self, on_test):
-        """Construct a ``TestByTestResult``.
-
-        :param on_test: A callable that take a test case, a status (one of
-            "success", "failure", "error", "skip", or "xfail"), a start time
-            (a ``datetime`` with timezone), a stop time, an iterable of tags,
-            and a details dict. Is called at the end of each test (i.e. on
-            ``stopTest``) with the accumulated values for that test.
-        """
-        super().__init__()
-        self._on_test = on_test
-
-    def startTest(self, test):
-        super().startTest(test)
-        self._start_time = self._now()
-        # There's no supported (i.e. tested) behaviour that relies on these
-        # being set, but it makes me more comfortable all the same. -- jml
-        self._status = None
-        self._details = None
-        self._stop_time = None
-
-    def stopTest(self, test):
-        self._stop_time = self._now()
-        super().stopTest(test)
-        self._on_test(
-            test=test,
-            status=self._status,
-            start_time=self._start_time,
-            stop_time=self._stop_time,
-            # current_tags is new in testtools 0.9.13.
-            tags=getattr(self, "current_tags", None),
-            details=self._details,
-        )
-
-    def _err_to_details(self, test, err, details):
-        if details:
-            return details
-        return {"traceback": TracebackContent(err, test)}
-
-    def addSuccess(self, test, details=None):
-        super().addSuccess(test)
-        self._status = "success"
-        self._details = details
-
-    def addFailure(self, test, err=None, details=None):
-        super().addFailure(test, err, details)
-        self._status = "failure"
-        self._details = self._err_to_details(test, err, details)
-
-    def addError(self, test, err=None, details=None):
-        super().addError(test, err, details)
-        self._status = "error"
-        self._details = self._err_to_details(test, err, details)
-
-    def addSkip(self, test, reason=None, details=None):
-        super().addSkip(test, reason, details)
-        self._status = "skip"
-        if details is None:
-            details = {"reason": text_content(reason)}
-        elif reason:
-            # XXX: What if details already has 'reason' key?
-            details["reason"] = text_content(reason)
-        self._details = details
-
-    def addExpectedFailure(self, test, err=None, details=None):
-        super().addExpectedFailure(test, err, details)
-        self._status = "xfail"
-        self._details = self._err_to_details(test, err, details)
-
-    def addUnexpectedSuccess(self, test, details=None):
-        super().addUnexpectedSuccess(test, details)
-        self._status = "success"
-        self._details = details
 
 
 class CsvResult(TestByTestResult):

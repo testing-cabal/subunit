@@ -14,7 +14,6 @@
 #  limitations under that license.
 #
 
-import builtins
 import codecs
 import datetime
 import select
@@ -451,10 +450,7 @@ class ByteStreamToStreamResult(object):
             # Bad CRC, report it and stop parsing the packet.
             raise ParseError("Bad checksum - calculated (0x%x), stored (0x%x)" % (crc, packet_crc))
 
-        if hasattr(builtins, "memoryview"):
-            body = memoryview(packet[-1])
-        else:
-            body = packet[-1]
+        body = memoryview(packet[-1])
 
         # Discard CRC-32
         body = body[:-4]
