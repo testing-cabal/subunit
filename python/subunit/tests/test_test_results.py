@@ -63,6 +63,14 @@ class TimeCapturingResult(unittest.TestResult):
     def progress(self, offset, whence):
         pass
 
+    def addDuration(self, test, duration):
+        """Called to add a test duration.
+
+        :param test: The test that completed.
+        :param duration: The duration of the test as a float in seconds.
+        """
+        pass
+
 
 class TestHookedTestResultDecorator(unittest.TestCase):
     def setUp(self):
@@ -145,6 +153,9 @@ class TestHookedTestResultDecorator(unittest.TestCase):
 
     def test_time(self):
         self.result.time(None)
+
+    def test_addDuration(self):
+        self.result.addDuration(self, 1.5)
 
 
 class TestAutoTimingTestResultDecorator(unittest.TestCase):
@@ -531,3 +542,17 @@ class TestCsvResult(testtools.TestCase):
         stream = StringIO()
         subunit.test_results.CsvResult(stream)
         self.assertEqual([], self.parse_stream(stream))
+
+
+class TestTestIdPrintingResult(testtools.TestCase):
+    def setUp(self):
+        super().setUp()
+        self.stream = StringIO()
+        self.result = subunit.test_results.TestIdPrintingResult(self.stream)
+
+    def test_addDuration(self):
+        # addDuration should not raise an exception
+        test = subunit.RemotedTestCase("foo")
+        self.result.addDuration(test, 2.5)
+        # TestIdPrintingResult doesn't output anything for addDuration
+        self.assertEqual("", self.stream.getvalue())

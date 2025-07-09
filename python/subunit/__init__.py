@@ -822,6 +822,14 @@ class TestProtocolClient(testresult.TestResult):
     def done(self):
         """Obey the testtools result.done() interface."""
 
+    def addDuration(self, test, duration):
+        """Called to add a test duration.
+
+        :param test: The test that completed.
+        :param duration: The duration of the test as a float in seconds.
+        """
+        pass
+
 
 def RemoteError(description=_u("")):
     return (RemoteException, RemoteException(description), None)
@@ -1261,6 +1269,14 @@ class TestResultStats(testresult.TestResult):
     def wasSuccessful(self):
         """Tells whether or not this result was a success"""
         return self.failed_tests == 0
+
+    def addDuration(self, test, duration):
+        """Called to add a test duration.
+
+        :param test: The test that completed.
+        :param duration: The duration of the test as a float in seconds.
+        """
+        pass
 
 
 def read_test_list(path):
