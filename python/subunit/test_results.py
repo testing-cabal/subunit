@@ -96,6 +96,11 @@ class HookedTestResultDecorator(TestResultDecorator):
         self._before_event()
         return self.super.time(a_datetime)
 
+    def addDuration(self, test, duration):
+        self._before_event()
+        if hasattr(self.decorated, "addDuration"):
+            return self.decorated.addDuration(test, duration)
+
     def _get_failfast(self):
         return getattr(self.decorated, "failfast", False)
 
@@ -553,6 +558,14 @@ class TestIdPrintingResult(testtools.TestResult):
     def wasSuccessful(self):
         "Tells whether or not this result was a success"
         return self.failed_tests == 0
+
+    def addDuration(self, test, duration):
+        """Called to add a test duration.
+
+        :param test: The test that completed.
+        :param duration: The duration of the test as a float in seconds.
+        """
+        pass
 
     def stopTestRun(self):
         for test_id in list(self._active_tests.keys()):

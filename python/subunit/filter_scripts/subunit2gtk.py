@@ -251,6 +251,14 @@ class GTKTestResult(unittest.TestResult):
         # We don't try to estimate completion yet.
         pass
 
+    def addDuration(self, test, duration):
+        """Called to add a test duration.
+
+        :param test: The test that completed.
+        :param duration: The duration of the test as a float in seconds.
+        """
+        pass
+
     def update_counts(self):
         self.run_label.set_text(str(self.testsRun))
         bad = len(self.failures + self.errors)
