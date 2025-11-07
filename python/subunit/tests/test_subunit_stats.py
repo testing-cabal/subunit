@@ -19,7 +19,6 @@
 import unittest
 from io import BytesIO, StringIO
 
-from testtools.compat import _b
 
 import subunit
 
@@ -42,8 +41,7 @@ class TestTestResultStats(unittest.TestCase):
 
     def setUpUsedStream(self):
         self.input_stream.write(
-            _b(
-                """tags: global
+            b"""tags: global
 test passed
 success passed
 test failed
@@ -56,7 +54,6 @@ skip skipped
 test todo
 xfail todo
 """
-            )
         )
         self.input_stream.seek(0)
         self.test.run(self.result)

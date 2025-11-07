@@ -15,8 +15,8 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Programming Language :: Python",
     "Topic :: Software Development :: Testing",
 ]
@@ -27,7 +27,7 @@ keywords = ["python", "streaming", "test"]
 license = { text = "Apache-2.0 or BSD" }
 name = "python-subunit"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 
 [project.urls]
 "Bug Tracker" = "https://bugs.launchpad.net/subunit"
