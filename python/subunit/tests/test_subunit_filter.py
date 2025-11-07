@@ -23,7 +23,7 @@ from datetime import datetime
 from io import BytesIO
 
 from testtools import TestCase
-from testtools.compat import _b
+
 from testtools.testresult.doubles import ExtendedTestResult, StreamResult
 
 import iso8601
@@ -39,8 +39,7 @@ class TestTestResultFilter(TestCase):
     # is an easy pithy way of getting a series of test objects to call into
     # the TestResult, and as TestResultFilter is intended for use with subunit
     # also has the benefit of detecting any interface skew issues.
-    example_subunit_stream = _b(
-        """\
+    example_subunit_stream = b"""\
 tags: global
 test passed
 success passed
@@ -56,7 +55,6 @@ skip skipped
 test todo
 xfail todo
 """
-    )
 
     def run_tests(self, result_filter, input_stream=None):
         """Run tests through the given filter.
@@ -93,7 +91,7 @@ xfail todo
         tag_filter = make_tag_filter(["a"], [])
         result = ExtendedTestResult()
         result_filter = TestResultFilter(result, filter_success=False, filter_predicate=tag_filter)
-        input_stream = _b("test: foo\ntags: a\nsuccessful: foo\ntest: bar\nsuccessful: bar\n")
+        input_stream = b"test: foo\ntags: a\nsuccessful: foo\ntest: bar\nsuccessful: bar\n"
         self.run_tests(result_filter, input_stream)
         foo = subunit.RemotedTestCase("foo")
         self.assertEqual(
@@ -196,9 +194,9 @@ xfail todo
         date_a = datetime(year=2000, month=1, day=1, tzinfo=iso8601.UTC)
         date_b = datetime(year=2000, month=1, day=2, tzinfo=iso8601.UTC)
         date_c = datetime(year=2000, month=1, day=3, tzinfo=iso8601.UTC)
-        subunit_stream = _b(
+        subunit_stream = (
             "\n".join(["time: %s", "test: foo", "time: %s", "error: foo", "time: %s", ""]) % (date_a, date_b, date_c)
-        )
+        ).encode()
         result = ExtendedTestResult()
         result_filter = TestResultFilter(result)
         self.run_tests(result_filter, subunit_stream)
@@ -222,9 +220,9 @@ xfail todo
         date_a = datetime(year=2000, month=1, day=1, tzinfo=iso8601.UTC)
         date_b = datetime(year=2000, month=1, day=2, tzinfo=iso8601.UTC)
         date_c = datetime(year=2000, month=1, day=3, tzinfo=iso8601.UTC)
-        subunit_stream = _b(
+        subunit_stream = (
             "\n".join(["time: %s", "test: foo", "time: %s", "success: foo", "time: %s", ""]) % (date_a, date_b, date_c)
-        )
+        ).encode()
         result = ExtendedTestResult()
         result_filter = TestResultFilter(result)
         result_filter.startTestRun()
@@ -243,7 +241,7 @@ xfail todo
         )
 
     def test_skip_preserved(self):
-        subunit_stream = _b("\n".join(["test: foo", "skip: foo", ""]))
+        subunit_stream = "\n".join(["test: foo", "skip: foo", ""]).encode()
         result = ExtendedTestResult()
         result_filter = TestResultFilter(result)
         self.run_tests(result_filter, subunit_stream)
@@ -263,7 +261,7 @@ xfail todo
 
         result = ExtendedTestResult()
         result_filter = TestResultFilter(result, filter_success=False, rename=rename)
-        input_stream = _b("test: foo\nsuccessful: foo\n")
+        input_stream = b"test: foo\nsuccessful: foo\n"
         self.run_tests(result_filter, input_stream)
         self.assertEqual(
             [("startTest", "foo - renamed"), ("addSuccess", "foo - renamed"), ("stopTest", "foo - renamed")],

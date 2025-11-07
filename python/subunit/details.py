@@ -19,13 +19,12 @@
 from io import BytesIO
 
 from testtools import content, content_type
-from testtools.compat import _b
 
 from subunit import chunked
 
-end_marker = _b("]\n")
-quoted_marker = _b(" ]")
-empty = _b("")
+end_marker = b"]\n"
+quoted_marker = b" ]"
+empty = b""
 
 
 class DetailsParser(object):
@@ -36,7 +35,7 @@ class SimpleDetailsParser(DetailsParser):
     """Parser for single-part [] delimited details."""
 
     def __init__(self, state):
-        self._message = _b("")
+        self._message = b""
         self._state = state
 
     def lineReceived(self, line):

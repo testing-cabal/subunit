@@ -18,7 +18,7 @@ import io
 import unittest
 
 from testtools import PlaceHolder, TestCase
-from testtools.compat import _b
+
 from testtools.matchers import StartsWith
 from testtools.testresult.doubles import StreamResult
 
@@ -97,7 +97,7 @@ class TestSubunitTestRunner(TestCase):
             )
         except SystemExit:
             self.fail("SystemExit raised")
-        self.assertThat(bytestream.getvalue(), StartsWith(_b("\xb3")))
+        self.assertThat(bytestream.getvalue(), StartsWith(b"\xb3"))
 
     class ExitingTest(TestCase):
         def test_exit(self):
