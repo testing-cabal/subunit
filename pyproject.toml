@@ -20,7 +20,7 @@ classifiers = [
     "Programming Language :: Python",
     "Topic :: Software Development :: Testing",
 ]
-dependencies = ["iso8601", "testtools>=2.5"]
+dependencies = ["iso8601", "testtools>=2.7"]
 description = "Python implementation of subunit test streaming protocol"
 dynamic = ["version"]
 keywords = ["python", "streaming", "test"]
