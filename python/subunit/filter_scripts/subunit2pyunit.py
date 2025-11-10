@@ -38,7 +38,7 @@ def main():
         dest="no_passthrough",
     )
     parser.add_option(
-        "--progress", action="store_true", help="Use bzrlib's test reporter (requires bzrlib)", default=False
+        "--progress", action="store_true", help="Use breezy 's test reporter (requires breezy)", default=False
     )
     (options, args) = parser.parse_args()
     test = ByteStreamToStreamResult(find_stream(sys.stdin, args), non_subunit_name="stdout")
@@ -54,8 +54,8 @@ def main():
         test, wrap_result, before_run=methodcaller("startTestRun"), after_run=methodcaller("stopTestRun")
     )
     if options.progress:
-        from bzrlib import ui
-        from bzrlib.tests import TextTestRunner
+        from breezy import ui
+        from breezy.tests import TextTestRunner
 
         ui.ui_factory = ui.make_ui_for_terminal(None, sys.stdout, sys.stderr)
         runner = TextTestRunner()
