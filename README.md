@@ -117,6 +117,11 @@ consisting of simple functions to output protocol elements, and a patch for
 adding subunit output to the 'ShUnit' shell test runner. See 'shell/README' for
 details.
 
+### perl
+
+There is a perl module [Test::Subunit](https://metacpan.org/pod/Test::Subunit)
+that can be used to emit and consume subunit v1 streams.
+
 #### Filter recipes
 
 To ignore some failing tests whose root cause is already known::
