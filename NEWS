@@ -5,6 +5,22 @@ subunit release notes
 NEXT (In development)
 ---------------------
 
+BUG FIXES
+~~~~~~~~~
+
+ * Drop support for Python 3.9.
+   (Jelmer Vernooĳ)
+
+ * Drop use of Python26 and Python27 test cases from testtools.
+   These are no longer relevant and no longer provided by
+   modern versions of testtools. (Jelmer Vernooĳ)
+
+IMPROVEMENTS
+~~~~~~~~~~~~
+
+ * Add support for Python 3.14.
+   (Jelmer Vernooĳ)
+
 1.4.4 (2023-11-17)
 ------------------
 

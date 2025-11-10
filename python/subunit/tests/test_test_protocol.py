@@ -25,7 +25,7 @@ from testtools import PlaceHolder, TestCase, TestResult, skipIf
 from testtools.content import Content, TracebackContent, text_content
 from testtools.content_type import ContentType
 
-from testtools.testresult.doubles import ExtendedTestResult, Python26TestResult, Python27TestResult
+from testtools.testresult.doubles import ExtendedTestResult
 
 from testtools.matchers import Contains, Equals, MatchesAny
 
@@ -147,7 +147,7 @@ class TestTestProtocolServerPipe(unittest.TestCase):
 
 class TestTestProtocolServerStartTest(unittest.TestCase):
     def setUp(self):
-        self.client = Python26TestResult()
+        self.client = ExtendedTestResult()
         self.stream = BytesIO()
         self.protocol = subunit.TestProtocolServer(self.client, self.stream)
 
@@ -327,7 +327,7 @@ class TestTestProtocolServerPassThrough(unittest.TestCase):
 
 class TestTestProtocolServerLostConnection(unittest.TestCase):
     def setUp(self):
-        self.client = Python26TestResult()
+        self.client = ExtendedTestResult()
         self.protocol = subunit.TestProtocolServer(self.client)
         self.test = subunit.RemotedTestCase("old mcdonald")
 
@@ -355,7 +355,7 @@ class TestTestProtocolServerLostConnection(unittest.TestCase):
         self.assertEqual(
             [
                 ("startTest", self.test),
-                ("addError", self.test, subunit.RemoteError("")),
+                ("addError", self.test, {}),
                 ("stopTest", self.test),
             ],
             self.client._events,
@@ -388,7 +388,7 @@ class TestTestProtocolServerLostConnection(unittest.TestCase):
         self.assertEqual(
             [
                 ("startTest", self.test),
-                ("addFailure", self.test, subunit.RemoteError("")),
+                ("addFailure", self.test, {}),
                 ("stopTest", self.test),
             ],
             self.client._events,
@@ -565,248 +565,114 @@ class TestTestProtocolServerAddFailure(unittest.TestCase):
 
 
 class TestTestProtocolServerAddxFail(unittest.TestCase):
-    """Tests for the xfail keyword.
+    """Tests for the xfail keyword."""
 
-    In Python this can thunk through to Success due to stdlib limitations (see
-    README).
-    """
-
-    def capture_expected_failure(self, test, err):
-        self._events.append((test, err))
-
-    def setup_python26(self):
-        """Setup a test object ready to be xfailed and thunk to success."""
-        self.client = Python26TestResult()
-        self.setup_protocol()
-
-    def setup_python27(self):
-        """Setup a test object ready to be xfailed."""
-        self.client = Python27TestResult()
-        self.setup_protocol()
-
-    def setup_python_ex(self):
+    def setUp(self):
         """Setup a test object ready to be xfailed with details."""
         self.client = ExtendedTestResult()
-        self.setup_protocol()
-
-    def setup_protocol(self):
-        """Setup the protocol based on self.client."""
         self.protocol = subunit.TestProtocolServer(self.client)
         self.protocol.lineReceived(b"test mcdonalds farm\n")
         self.test = self.client._events[-1][-1]
 
-    def simple_xfail_keyword(self, keyword, as_success):
+    def simple_xfail_keyword(self, keyword):
         self.protocol.lineReceived(("%s mcdonalds farm\n" % keyword).encode())
-        self.check_success_or_xfail(as_success)
+        self.check_xfail()
 
-    def check_success_or_xfail(self, as_success, error_message=None):
-        if as_success:
-            self.assertEqual(
-                [
-                    ("startTest", self.test),
-                    ("addSuccess", self.test),
-                    ("stopTest", self.test),
-                ],
-                self.client._events,
-            )
-        else:
-            details = {}
-            if error_message is not None:
-                details["traceback"] = Content(
-                    ContentType("text", "x-traceback", {"charset": "utf8"}), lambda: [error_message.encode()]
-                )
-            if isinstance(self.client, ExtendedTestResult):
-                value = details
-            else:
-                if error_message is not None:
-                    value = subunit.RemoteError(details_to_str(details))
-                else:
-                    value = subunit.RemoteError()
-            self.assertEqual(
-                [
-                    ("startTest", self.test),
-                    ("addExpectedFailure", self.test, value),
-                    ("stopTest", self.test),
-                ],
-                self.client._events,
-            )
-
-    def test_simple_xfail(self):
-        self.setup_python26()
-        self.simple_xfail_keyword("xfail", True)
-        self.setup_python27()
-        self.simple_xfail_keyword("xfail", False)
-        self.setup_python_ex()
-        self.simple_xfail_keyword("xfail", False)
-
-    def test_simple_xfail_colon(self):
-        self.setup_python26()
-        self.simple_xfail_keyword("xfail:", True)
-        self.setup_python27()
-        self.simple_xfail_keyword("xfail:", False)
-        self.setup_python_ex()
-        self.simple_xfail_keyword("xfail:", False)
-
-    def test_xfail_empty_message(self):
-        self.setup_python26()
-        self.empty_message(True)
-        self.setup_python27()
-        self.empty_message(False)
-        self.setup_python_ex()
-        self.empty_message(False, error_message="")
-
-    def empty_message(self, as_success, error_message="\n"):
-        self.protocol.lineReceived(b"xfail mcdonalds farm [\n")
-        self.protocol.lineReceived(b"]\n")
-        self.check_success_or_xfail(as_success, error_message)
-
-    def xfail_quoted_bracket(self, keyword, as_success):
-        # This tests it is accepted, but cannot test it is used today, because
-        # of not having a way to expose it in Python so far.
-        self.protocol.lineReceived(("%s mcdonalds farm [\n" % keyword).encode())
-        self.protocol.lineReceived(b" ]\n")
-        self.protocol.lineReceived(b"]\n")
-        self.check_success_or_xfail(as_success, "]\n")
-
-    def test_xfail_quoted_bracket(self):
-        self.setup_python26()
-        self.xfail_quoted_bracket("xfail", True)
-        self.setup_python27()
-        self.xfail_quoted_bracket("xfail", False)
-        self.setup_python_ex()
-        self.xfail_quoted_bracket("xfail", False)
-
-    def test_xfail_colon_quoted_bracket(self):
-        self.setup_python26()
-        self.xfail_quoted_bracket("xfail:", True)
-        self.setup_python27()
-        self.xfail_quoted_bracket("xfail:", False)
-        self.setup_python_ex()
-        self.xfail_quoted_bracket("xfail:", False)
-
-
-class TestTestProtocolServerAddunexpectedSuccess(TestCase):
-    """Tests for the uxsuccess keyword."""
-
-    def capture_expected_failure(self, test, err):
-        self._events.append((test, err))
-
-    def setup_python26(self):
-        """Setup a test object ready to be xfailed and thunk to success."""
-        self.client = Python26TestResult()
-        self.setup_protocol()
-
-    def setup_python27(self):
-        """Setup a test object ready to be xfailed."""
-        self.client = Python27TestResult()
-        self.setup_protocol()
-
-    def setup_python_ex(self):
-        """Setup a test object ready to be xfailed with details."""
-        self.client = ExtendedTestResult()
-        self.setup_protocol()
-
-    def setup_protocol(self):
-        """Setup the protocol based on self.client."""
-        self.protocol = subunit.TestProtocolServer(self.client)
-        self.protocol.lineReceived(b"test mcdonalds farm\n")
-        self.test = self.client._events[-1][-1]
-
-    def simple_uxsuccess_keyword(self, keyword, as_fail):
-        self.protocol.lineReceived(("%s mcdonalds farm\n" % keyword).encode())
-        self.check_fail_or_uxsuccess(as_fail)
-
-    def check_fail_or_uxsuccess(self, as_fail, error_message=None):
+    def check_xfail(self, error_message=None):
         details = {}
         if error_message is not None:
             details["traceback"] = Content(
                 ContentType("text", "x-traceback", {"charset": "utf8"}), lambda: [error_message.encode()]
             )
-        if isinstance(self.client, ExtendedTestResult):
-            value = details
-        else:
-            value = None
-        if as_fail:
-            self.client._events[1] = self.client._events[1][:2]
-            # The value is generated within the extended to original decorator:
-            # todo use the testtools matcher to check on this.
-            self.assertEqual(
-                [
-                    ("startTest", self.test),
-                    ("addFailure", self.test),
-                    ("stopTest", self.test),
-                ],
-                self.client._events,
-            )
-        elif value:
-            self.assertEqual(
-                [
-                    ("startTest", self.test),
-                    ("addUnexpectedSuccess", self.test, value),
-                    ("stopTest", self.test),
-                ],
-                self.client._events,
-            )
-        else:
-            self.assertEqual(
-                [
-                    ("startTest", self.test),
-                    ("addUnexpectedSuccess", self.test),
-                    ("stopTest", self.test),
-                ],
-                self.client._events,
-            )
+        self.assertEqual(
+            [
+                ("startTest", self.test),
+                ("addExpectedFailure", self.test, details),
+                ("stopTest", self.test),
+            ],
+            self.client._events,
+        )
 
-    def test_simple_uxsuccess(self):
-        self.setup_python26()
-        self.simple_uxsuccess_keyword("uxsuccess", True)
-        self.setup_python27()
-        self.simple_uxsuccess_keyword("uxsuccess", False)
-        self.setup_python_ex()
-        self.simple_uxsuccess_keyword("uxsuccess", False)
+    def test_simple_xfail(self):
+        self.simple_xfail_keyword("xfail")
 
-    def test_simple_uxsuccess_colon(self):
-        self.setup_python26()
-        self.simple_uxsuccess_keyword("uxsuccess:", True)
-        self.setup_python27()
-        self.simple_uxsuccess_keyword("uxsuccess:", False)
-        self.setup_python_ex()
-        self.simple_uxsuccess_keyword("uxsuccess:", False)
+    def test_simple_xfail_colon(self):
+        self.simple_xfail_keyword("xfail:")
 
-    def test_uxsuccess_empty_message(self):
-        self.setup_python26()
-        self.empty_message(True)
-        self.setup_python27()
-        self.empty_message(False)
-        self.setup_python_ex()
-        self.empty_message(False, error_message="")
-
-    def empty_message(self, as_fail, error_message="\n"):
-        self.protocol.lineReceived(b"uxsuccess mcdonalds farm [\n")
+    def test_xfail_empty_message(self):
+        self.protocol.lineReceived(b"xfail mcdonalds farm [\n")
         self.protocol.lineReceived(b"]\n")
-        self.check_fail_or_uxsuccess(as_fail, error_message)
+        self.check_xfail(error_message="")
 
-    def uxsuccess_quoted_bracket(self, keyword, as_fail):
-        self.protocol.lineReceived(("%s mcdonalds farm [\n" % keyword).encode())
+    def test_xfail_quoted_bracket(self):
+        self.protocol.lineReceived(b"xfail mcdonalds farm [\n")
         self.protocol.lineReceived(b" ]\n")
         self.protocol.lineReceived(b"]\n")
-        self.check_fail_or_uxsuccess(as_fail, "]\n")
+        self.check_xfail("]\n")
+
+    def test_xfail_colon_quoted_bracket(self):
+        self.protocol.lineReceived(b"xfail: mcdonalds farm [\n")
+        self.protocol.lineReceived(b" ]\n")
+        self.protocol.lineReceived(b"]\n")
+        self.check_xfail("]\n")
+
+
+class TestTestProtocolServerAddunexpectedSuccess(TestCase):
+    """Tests for the uxsuccess keyword."""
+
+    def setUp(self):
+        """Setup a test object ready for uxsuccess with details."""
+        super().setUp()
+        self.client = ExtendedTestResult()
+        self.protocol = subunit.TestProtocolServer(self.client)
+        self.protocol.lineReceived(b"test mcdonalds farm\n")
+        self.test = self.client._events[-1][-1]
+
+    def simple_uxsuccess_keyword(self, keyword):
+        self.protocol.lineReceived(("%s mcdonalds farm\n" % keyword).encode())
+        self.check_uxsuccess()
+
+    def check_uxsuccess(self, error_message=None):
+        if error_message is not None:
+            details = {}
+            details["traceback"] = Content(
+                ContentType("text", "x-traceback", {"charset": "utf8"}), lambda: [error_message.encode()]
+            )
+            expected_events = [
+                ("startTest", self.test),
+                ("addUnexpectedSuccess", self.test, details),
+                ("stopTest", self.test),
+            ]
+        else:
+            expected_events = [
+                ("startTest", self.test),
+                ("addUnexpectedSuccess", self.test),
+                ("stopTest", self.test),
+            ]
+        self.assertEqual(expected_events, self.client._events)
+
+    def test_simple_uxsuccess(self):
+        self.simple_uxsuccess_keyword("uxsuccess")
+
+    def test_simple_uxsuccess_colon(self):
+        self.simple_uxsuccess_keyword("uxsuccess:")
+
+    def test_uxsuccess_empty_message(self):
+        self.protocol.lineReceived(b"uxsuccess mcdonalds farm [\n")
+        self.protocol.lineReceived(b"]\n")
+        self.check_uxsuccess(error_message="")
 
     def test_uxsuccess_quoted_bracket(self):
-        self.setup_python26()
-        self.uxsuccess_quoted_bracket("uxsuccess", True)
-        self.setup_python27()
-        self.uxsuccess_quoted_bracket("uxsuccess", False)
-        self.setup_python_ex()
-        self.uxsuccess_quoted_bracket("uxsuccess", False)
+        self.protocol.lineReceived(b"uxsuccess mcdonalds farm [\n")
+        self.protocol.lineReceived(b" ]\n")
+        self.protocol.lineReceived(b"]\n")
+        self.check_uxsuccess("]\n")
 
     def test_uxsuccess_colon_quoted_bracket(self):
-        self.setup_python26()
-        self.uxsuccess_quoted_bracket("uxsuccess:", True)
-        self.setup_python27()
-        self.uxsuccess_quoted_bracket("uxsuccess:", False)
-        self.setup_python_ex()
-        self.uxsuccess_quoted_bracket("uxsuccess:", False)
+        self.protocol.lineReceived(b"uxsuccess: mcdonalds farm [\n")
+        self.protocol.lineReceived(b" ]\n")
+        self.protocol.lineReceived(b"]\n")
+        self.check_uxsuccess("]\n")
 
 
 class TestTestProtocolServerAddSkip(unittest.TestCase):
@@ -928,7 +794,7 @@ class TestTestProtocolServerProgress(unittest.TestCase):
     """Test receipt of progress: directives."""
 
     def test_progress_accepted_stdlib(self):
-        self.result = Python26TestResult()
+        self.result = ExtendedTestResult()
         self.stream = BytesIO()
         self.protocol = subunit.TestProtocolServer(self.result, stream=self.stream)
         self.protocol.lineReceived(b"progress: 23")
@@ -1007,7 +873,7 @@ class TestTestProtocolServerStreamTime(unittest.TestCase):
     """Test managing time information at the protocol level."""
 
     def test_time_accepted_stdlib(self):
-        self.result = Python26TestResult()
+        self.result = ExtendedTestResult()
         self.stream = BytesIO()
         self.protocol = subunit.TestProtocolServer(self.result, stream=self.stream)
         self.protocol.lineReceived(b"time: 2001-12-12 12:59:59Z\n")
