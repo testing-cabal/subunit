@@ -56,3 +56,6 @@ perl/MYMETA.yml
 .*.swo
 perl/MYMETA.json
 .hypothesis
+python/python_subunit.egg-info/
+test-driver
+ar-lib
