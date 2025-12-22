@@ -60,6 +60,7 @@ CONSTANT_TAGS = [
 
 
 if TestStreamResultContract is not None:
+
     class TestStreamResultToBytesContract(TestCase, TestStreamResultContract):
         """Check that StreamResult behaves as testtools expects."""
 
