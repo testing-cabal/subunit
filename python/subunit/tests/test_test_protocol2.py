@@ -30,7 +30,12 @@ except ImportError:
 from testtools import TestCase
 from testtools.matchers import Contains, HasLength
 from testtools.testresult.doubles import StreamResult
-from testtools.tests.test_testresult import TestStreamResultContract
+
+try:
+    from testtools.tests.test_testresult import TestStreamResultContract
+except ImportError:
+    # testtools >= 2.8 no longer includes the tests submodule
+    TestStreamResultContract = None
 
 import subunit
 import iso8601
@@ -54,11 +59,13 @@ CONSTANT_TAGS = [
 ]
 
 
-class TestStreamResultToBytesContract(TestCase, TestStreamResultContract):
-    """Check that StreamResult behaves as testtools expects."""
+if TestStreamResultContract is not None:
 
-    def _make_result(self):
-        return subunit.StreamResultToBytes(BytesIO())
+    class TestStreamResultToBytesContract(TestCase, TestStreamResultContract):
+        """Check that StreamResult behaves as testtools expects."""
+
+        def _make_result(self):
+            return subunit.StreamResultToBytes(BytesIO())
 
 
 class TestStreamResultToBytes(TestCase):
