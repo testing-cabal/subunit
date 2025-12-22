@@ -913,7 +913,12 @@ class ExecTestCase(unittest.TestCase):
 
     def _run(self, result):
         protocol = TestProtocolServer(result)
-        process = subprocess.Popen(self.script, shell=True, stdout=subprocess.PIPE)
+        # Explicitly invoke Python to run the script instead of relying on
+        # execute permissions, which may not be preserved during installation
+        import shlex
+
+        script_parts = shlex.split(self.script)
+        process = subprocess.Popen([sys.executable] + script_parts, stdout=subprocess.PIPE)
         make_stream_binary(process.stdout)
         output = process.communicate()[0]
         protocol.readFrom(BytesIO(output))
