@@ -48,7 +48,7 @@ FLAG_FILE_CONTENT = 0x0040
 EPOCH = datetime.datetime.fromtimestamp(0, tz=iso8601.UTC)
 NUL_ELEMENT = b"\0"[0]
 # Contains True for types for which 'nul in thing' falsely returns false.
-_nul_test_broken = {}
+_nul_test_broken: dict[type, bool] = {}
 
 
 def read_exactly(stream, size):

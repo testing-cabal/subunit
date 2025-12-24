@@ -16,6 +16,8 @@
 
 import datetime
 from io import BytesIO
+from typing import TYPE_CHECKING, Callable, Optional
+from types import ModuleType
 
 try:
     from hypothesis import given
@@ -25,17 +27,17 @@ try:
     # Settings.default.verbosity = Verbosity.verbose
     import hypothesis.strategies as st
 except ImportError:
-    given = None
-    st = None
+    given: Optional[Callable[..., Callable[..., None]]] = None  # type: ignore[assignment,no-redef]
+    st: Optional[ModuleType] = None  # type: ignore[assignment,no-redef]
 from testtools import TestCase
 from testtools.matchers import Contains, HasLength
 from testtools.testresult.doubles import StreamResult
 
 try:
-    from testtools.tests.test_testresult import TestStreamResultContract
+    from testtools.tests.test_testresult import TestStreamResultContract  # type: ignore[import-not-found]
 except ImportError:
     # testtools >= 2.8 no longer includes the tests submodule
-    TestStreamResultContract = None
+    TestStreamResultContract: Optional[type] = None  # type: ignore[assignment,misc,no-redef]
 
 import subunit
 import iso8601

@@ -5,6 +5,18 @@ requires = ["iso8601", "setuptools>=61.2", "testtools"]
 [tool.ruff]
 line-length = 120
 
+[tool.mypy]
+python_version = "3.10"
+
+[[tool.mypy.overrides]]
+module = [
+    "gi",
+    "gi.repository",
+    "junitxml",
+    "testscenarios",
+]
+ignore_missing_imports = true
+
 [project]
 authors = [
     { name = "Robert Collins", email = "subunit-dev@lists.launchpad.net" },
