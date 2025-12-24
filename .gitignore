@@ -59,3 +59,6 @@ perl/MYMETA.json
 python/python_subunit.egg-info/
 test-driver
 ar-lib
+*.o
+*.log
+*.trs
