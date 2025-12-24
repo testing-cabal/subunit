@@ -18,3 +18,4 @@ exclude py-compile
 prune shell
 exclude stamp-h1
 include NEWS
+recursive-include python/tests *.py

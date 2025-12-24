@@ -12,23 +12,23 @@ EXTRA_DIST =  \
 	c/check-subunit-0.9.3.patch \
 	c/check-subunit-0.9.5.patch \
 	c/check-subunit-0.9.6.patch \
- 	python/subunit/tests/__init__.py \
- 	python/subunit/tests/sample-script.py \
- 	python/subunit/tests/sample-two-script.py \
- 	python/subunit/tests/test_chunked.py \
- 	python/subunit/tests/test_details.py \
- 	python/subunit/tests/test_filters.py \
- 	python/subunit/tests/test_filter_to_disk.py \
- 	python/subunit/tests/test_output_filter.py \
- 	python/subunit/tests/test_progress_model.py \
- 	python/subunit/tests/test_run.py \
- 	python/subunit/tests/test_subunit_filter.py \
- 	python/subunit/tests/test_subunit_stats.py \
- 	python/subunit/tests/test_subunit_tags.py \
- 	python/subunit/tests/test_tap2subunit.py \
- 	python/subunit/tests/test_test_protocol.py \
- 	python/subunit/tests/test_test_protocol2.py \
- 	python/subunit/tests/test_test_results.py \
+ 	python/tests/__init__.py \
+ 	python/tests/sample-script.py \
+ 	python/tests/sample-two-script.py \
+ 	python/tests/test_chunked.py \
+ 	python/tests/test_details.py \
+ 	python/tests/test_filters.py \
+ 	python/tests/test_filter_to_disk.py \
+ 	python/tests/test_output_filter.py \
+ 	python/tests/test_progress_model.py \
+ 	python/tests/test_run.py \
+ 	python/tests/test_subunit_filter.py \
+ 	python/tests/test_subunit_stats.py \
+ 	python/tests/test_subunit_tags.py \
+ 	python/tests/test_tap2subunit.py \
+ 	python/tests/test_test_protocol.py \
+ 	python/tests/test_test_protocol2.py \
+ 	python/tests/test_test_results.py \
 	python/subunit/filter_scripts/__init__.py \
 	python/subunit/filter_scripts/subunit_1to2.py \
 	python/subunit/filter_scripts/subunit2csv.py \

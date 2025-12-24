@@ -17,6 +17,7 @@
 import unittest
 
 import subunit
+import tests
 
 
 class ShellTests(subunit.ExecTestCase):
@@ -29,7 +30,7 @@ class ShellTests(subunit.ExecTestCase):
 
 def test_suite():
     result = unittest.TestSuite()
-    result.addTest(subunit.test_suite())
+    result.addTest(tests.test_suite())
     result.addTest(ShellTests("test_sourcing"))
     result.addTest(ShellTests("test_functions"))
     return result

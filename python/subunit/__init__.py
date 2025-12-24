@@ -175,12 +175,6 @@ PROGRESS_PUSH = 2
 PROGRESS_POP = 3
 
 
-def test_suite():
-    import subunit.tests
-
-    return subunit.tests.test_suite()
-
-
 def join_dir(base_path, path):
     """
     Returns an absolute path to C{path}, calculated relative to the parent

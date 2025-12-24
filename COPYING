@@ -29,6 +29,6 @@ Code that has been incorporated into Subunit from other projects will
 naturally be under its own license, and will retain that license.
 
 A known list of such code is maintained here:
-* The runtests.py and python/subunit/tests/TestUtil.py module are GPL test
+* The runtests.py and python/tests/TestUtil.py module are GPL test
   support modules. They are not installed by Subunit - they are only ever
   used on the build machine.  Copyright 2004 Canonical Limited.

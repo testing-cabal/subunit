@@ -32,7 +32,7 @@ from testtools.matchers import Contains, Equals, MatchesAny
 import iso8601
 
 import subunit
-from subunit.tests import (
+from . import (
     _remote_exception_repr,
     _remote_exception_repr_chunked,
     _remote_exception_str,

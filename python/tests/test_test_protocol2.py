@@ -16,7 +16,7 @@
 
 import datetime
 from io import BytesIO
-from typing import TYPE_CHECKING, Callable, Optional
+from typing import Callable, Optional
 from types import ModuleType
 
 try:

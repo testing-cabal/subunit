@@ -26,7 +26,7 @@ _remote_exception_str = "Traceback (most recent call last):\ntesttools.testresul
 _remote_exception_str_chunked = "57\r\n" + _remote_exception_str + ": boo qux\n0\r\n"
 
 
-from subunit.tests import (  # noqa: E402
+from . import (  # noqa: E402
     test_chunked,
     test_details,
     test_filter_to_disk,
