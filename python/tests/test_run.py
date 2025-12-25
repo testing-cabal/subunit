@@ -93,7 +93,7 @@ class TestSubunitTestRunner(TestCase):
         try:
             self.assertEqual(
                 None,
-                run.main(argv=["progName", "subunit.tests.test_run.TestSubunitTestRunner.FailingTest"], stdout=stream),
+                run.main(argv=["progName", "tests.test_run.TestSubunitTestRunner.FailingTest"], stdout=stream),
             )
         except SystemExit:
             self.fail("SystemExit raised")
@@ -109,7 +109,7 @@ class TestSubunitTestRunner(TestCase):
         exc = self.assertRaises(
             SystemExit,
             run.main,
-            argv=["progName", "subunit.tests.test_run.TestSubunitTestRunner.ExitingTest"],
+            argv=["progName", "tests.test_run.TestSubunitTestRunner.ExitingTest"],
             stdout=stream,
         )
         self.assertEqual(0, exc.args[0])

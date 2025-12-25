@@ -2,6 +2,14 @@
 subunit release notes
 ---------------------
 
+1.4.6 (UNRELEASED)
+---------------------
+
+IMPROVEMENTS
+~~~~~~~~~~~~
+
+  * Stop installing tests. (Jelmer Vernooĳ)
+
 1.4.5 (2025-11-10)
 ---------------------
 
