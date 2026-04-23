@@ -14,6 +14,11 @@ IMPROVEMENTS
     commands and merges their streams, optionally prefixing each command's
     test ids. (Jelmer Vernooĳ, #2150097)
 
+  * ``subunit-combine`` supports testr-style ``$LISTOPT``, ``$IDOPTION``,
+    ``$IDFILE`` and ``$IDLIST`` placeholders in command argv, along with
+    ``--list``, ``--load-list`` and positional test ids for per-command
+    filtering. (Jelmer Vernooĳ)
+
 1.4.5 (2025-11-10)
 ---------------------
 

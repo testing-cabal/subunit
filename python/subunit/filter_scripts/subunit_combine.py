@@ -25,24 +25,50 @@ Example configuration::
 
     commands:
       - prefix: "python/"
-        argv: ["python", "-m", "subunit.run", "mypkg.tests"]
+        argv: ["python", "-m", "subunit.run", "discover", ".", "$LISTOPT", "$IDOPTION"]
+        list_option: "--list"
+        id_option: "--load-list $IDFILE"
       - prefix: "rust/"
         argv: ["cargo", "test", "--", "--format=subunit"]
         cwd: "rust"
 
 The combined subunit v2 stream is written to stdout. The exit code is 0 if
-all commands exited 0 and no tests failed, 1 otherwise.
+all commands exited 0, 1 otherwise.
+
+testr-style substitutions
+-------------------------
+
+Each command's ``argv``, ``list_option`` and ``id_option`` entries may contain
+the following placeholders, which are expanded per invocation:
+
+* ``$LISTOPT`` -- expands to ``list_option`` when ``subunit-combine --list``
+  is used, empty otherwise.
+* ``$IDLIST`` -- space-separated list of (prefix-stripped) test ids to run
+  for this command. Empty if no ids were requested or none match.
+* ``$IDFILE`` -- path to a temporary file containing one test id per line.
+* ``$IDOPTION`` -- expands to ``id_option`` (with ``$IDFILE`` further
+  substituted) when ids are being supplied, empty otherwise.
+
+Test ids can be passed as positional arguments after the config file or via
+``--load-list FILE``. Ids that start with a command's ``prefix`` are routed
+(with the prefix stripped) to that command; ids that don't match any prefix
+are ignored for that command.
 """
 
 import os
+import re
 import subprocess
 import sys
+import tempfile
 from argparse import ArgumentParser
 from typing import Optional
 
 import yaml
 
 from subunit import ByteStreamToStreamResult, StreamResultToBytes
+
+
+_VARIABLE_RE = re.compile(r"\$(IDOPTION|IDFILE|IDLIST|LISTOPT)")
 
 
 class _PrefixingStreamResult:
@@ -85,16 +111,99 @@ def load_config(path: str) -> list[dict]:
         prefix = cmd.get("prefix", "")
         if not isinstance(prefix, str):
             raise ValueError(f"{path}: commands[{i}].prefix must be a string")
+        for key in ("list_option", "id_option"):
+            value = cmd.get(key)
+            if value is not None and not isinstance(value, str):
+                raise ValueError(f"{path}: commands[{i}].{key} must be a string")
     return commands
 
 
-def run_command(cmd: dict, output) -> int:
+def _substitute(template: str, variables: dict[str, str]) -> list[str]:
+    """Substitute $VAR placeholders in ``template`` and return a shell-split list.
+
+    Empty values are expanded to the empty string; the resulting string is then
+    split on whitespace so that e.g. an empty ``$LISTOPT`` disappears rather
+    than leaving an empty argument behind.
+    """
+
+    def repl(match: re.Match) -> str:
+        return variables.get(match.group(1), "")
+
+    return re.sub(_VARIABLE_RE, repl, template).split()
+
+
+def _expand_argv(
+    cmd: dict,
+    *,
+    list_mode: bool,
+    test_ids: Optional[list[str]],
+    idfile_path: Optional[str],
+) -> list[str]:
+    """Expand testr-style placeholders in ``cmd['argv']``."""
+    list_option = cmd.get("list_option", "") if list_mode else ""
+    id_option_template = cmd.get("id_option", "")
+    if test_ids is None or not id_option_template:
+        id_option = ""
+    else:
+        id_option = re.sub(
+            _VARIABLE_RE,
+            lambda m: {"IDFILE": idfile_path or "", "IDLIST": " ".join(test_ids)}.get(m.group(1), ""),
+            id_option_template,
+        )
+    variables = {
+        "LISTOPT": list_option,
+        "IDOPTION": id_option,
+        "IDFILE": idfile_path or "",
+        "IDLIST": " ".join(test_ids) if test_ids else "",
+    }
+    expanded: list[str] = []
+    for piece in cmd["argv"]:
+        if _VARIABLE_RE.search(piece):
+            expanded.extend(_substitute(piece, variables))
+        else:
+            expanded.append(piece)
+    return expanded
+
+
+def _select_ids_for_command(cmd: dict, test_ids: Optional[list[str]]) -> Optional[list[str]]:
+    """Return the ids that belong to ``cmd`` (with the prefix stripped).
+
+    Returns None when no filtering should be applied (no ids were requested
+    globally).
+    """
+    if test_ids is None:
+        return None
+    prefix = cmd.get("prefix", "")
+    if not prefix:
+        return list(test_ids)
+    return [tid[len(prefix) :] for tid in test_ids if tid.startswith(prefix)]
+
+
+def _write_idfile(test_ids: list[str]) -> str:
+    fd, path = tempfile.mkstemp(prefix="subunit-combine-", suffix=".list")
+    with os.fdopen(fd, "w") as f:
+        for tid in test_ids:
+            f.write(tid + "\n")
+    return path
+
+
+def run_command(
+    cmd: dict,
+    output,
+    *,
+    list_mode: bool = False,
+    test_ids: Optional[list[str]] = None,
+) -> int:
     """Run a single command and forward its subunit v2 output.
 
     The child's stdout is parsed as subunit v2 and re-emitted to ``output``
     (a :class:`StreamResultToBytes`) with each test_id prefixed with
     ``cmd['prefix']`` (if any).
 
+    :param list_mode: If True, ``$LISTOPT`` is substituted with the command's
+        ``list_option`` so the child lists tests rather than running them.
+    :param test_ids: If not None, the list of (prefix-stripped) test ids to
+        supply to the child via ``$IDLIST`` / ``$IDOPTION`` / ``$IDFILE``.
     :return: The exit code of the child process.
     """
     prefix = cmd.get("prefix", "")
@@ -104,24 +213,46 @@ def run_command(cmd: dict, output) -> int:
     if extra_env:
         env.update(extra_env)
 
-    proc = subprocess.Popen(
-        cmd["argv"],
-        stdout=subprocess.PIPE,
-        cwd=cwd,
-        env=env,
-    )
+    idfile_path: Optional[str] = None
+    if test_ids is not None and test_ids:
+        idfile_path = _write_idfile(test_ids)
+
     try:
-        assert proc.stdout is not None
-        result = _PrefixingStreamResult(output, prefix) if prefix else output
-        ByteStreamToStreamResult(proc.stdout, non_subunit_name="stdout").run(result)
+        argv = _expand_argv(
+            cmd,
+            list_mode=list_mode,
+            test_ids=test_ids,
+            idfile_path=idfile_path,
+        )
+        proc = subprocess.Popen(argv, stdout=subprocess.PIPE, cwd=cwd, env=env)
+        try:
+            assert proc.stdout is not None
+            result = _PrefixingStreamResult(output, prefix) if prefix else output
+            ByteStreamToStreamResult(proc.stdout, non_subunit_name="stdout").run(result)
+        finally:
+            returncode = proc.wait()
     finally:
-        returncode = proc.wait()
+        if idfile_path is not None:
+            try:
+                os.unlink(idfile_path)
+            except OSError:
+                pass
     return returncode
 
 
-def combine(commands: list[dict], output_stream) -> int:
+def combine(
+    commands: list[dict],
+    output_stream,
+    *,
+    list_mode: bool = False,
+    test_ids: Optional[list[str]] = None,
+) -> int:
     """Run ``commands`` and merge their subunit streams into ``output_stream``.
 
+    :param list_mode: Run each command in listing mode (``$LISTOPT`` expanded).
+    :param test_ids: Optional list of test ids to restrict execution to.
+        Each command only sees ids whose prefix matches; commands with no
+        matching ids are skipped entirely.
     :return: 0 if every command exited 0, 1 otherwise.
     """
     output = StreamResultToBytes(output_stream)
@@ -129,12 +260,27 @@ def combine(commands: list[dict], output_stream) -> int:
     failed = False
     try:
         for cmd in commands:
-            rc = run_command(cmd, output)
+            cmd_ids = _select_ids_for_command(cmd, test_ids)
+            if test_ids is not None and not cmd_ids:
+                # Ids were requested, but none match this command.
+                continue
+            rc = run_command(cmd, output, list_mode=list_mode, test_ids=cmd_ids)
             if rc != 0:
                 failed = True
     finally:
         output.stopTestRun()
     return 1 if failed else 0
+
+
+def _read_id_list(path: str) -> list[str]:
+    """Read test ids from a file, one per line; blank lines and # comments are skipped."""
+    ids = []
+    with open(path) as f:
+        for line in f:
+            line = line.split("#", 1)[0].strip()
+            if line:
+                ids.append(line)
+    return ids
 
 
 def make_parser() -> ArgumentParser:
@@ -143,6 +289,26 @@ def make_parser() -> ArgumentParser:
         "config",
         help="Path to a YAML configuration file describing the commands to run.",
     )
+    parser.add_argument(
+        "test_ids",
+        nargs="*",
+        help="Optional test ids to restrict execution to. Ids whose prefix "
+        "matches a command are routed to that command.",
+    )
+    parser.add_argument(
+        "--list",
+        dest="list_mode",
+        action="store_true",
+        help="List tests that would be run instead of running them. Each "
+        "command is invoked with its configured list_option substituted for "
+        "$LISTOPT.",
+    )
+    parser.add_argument(
+        "--load-list",
+        dest="load_list",
+        metavar="FILE",
+        help="Read test ids (one per line) from FILE to restrict execution.",
+    )
     return parser
 
 
@@ -150,7 +316,21 @@ def main(argv: Optional[list[str]] = None) -> None:
     parser = make_parser()
     options = parser.parse_args(argv)
     commands = load_config(options.config)
-    sys.exit(combine(commands, sys.stdout))
+
+    test_ids: Optional[list[str]] = None
+    if options.load_list:
+        test_ids = _read_id_list(options.load_list)
+    if options.test_ids:
+        test_ids = (test_ids or []) + options.test_ids
+
+    sys.exit(
+        combine(
+            commands,
+            sys.stdout,
+            list_mode=options.list_mode,
+            test_ids=test_ids,
+        )
+    )
 
 
 if __name__ == "__main__":
