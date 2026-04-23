@@ -29,7 +29,7 @@ classifiers = [
     "Programming Language :: Python",
     "Topic :: Software Development :: Testing",
 ]
-dependencies = ["iso8601", "testtools>=2.7"]
+dependencies = ["iso8601", "PyYAML", "testtools>=2.7"]
 description = "Python implementation of subunit test streaming protocol"
 dynamic = ["version"]
 keywords = ["python", "streaming", "test"]
@@ -54,6 +54,7 @@ where = ["python"]
 [project.scripts]
 "subunit-1to2" = "subunit.filter_scripts.subunit_1to2:main"
 "subunit-2to1" = "subunit.filter_scripts.subunit_2to1:main"
+"subunit-combine" = "subunit.filter_scripts.subunit_combine:main"
 "subunit-filter" = "subunit.filter_scripts.subunit_filter:main"
 "subunit-ls" = "subunit.filter_scripts.subunit_ls:main"
 "subunit-notify" = "subunit.filter_scripts.subunit_notify:main"

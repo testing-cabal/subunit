@@ -10,6 +10,10 @@ IMPROVEMENTS
 
   * Stop installing tests. (Jelmer Vernooĳ)
 
+  * Add ``subunit-combine`` script that runs multiple subunit-producing
+    commands and merges their streams, optionally prefixing each command's
+    test ids. (Jelmer Vernooĳ, #2150097)
+
 1.4.5 (2025-11-10)
 ---------------------
 
