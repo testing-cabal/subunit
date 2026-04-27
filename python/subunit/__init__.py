@@ -1113,6 +1113,154 @@ def TAP2SubUnit(tap, output_stream):
     return 0
 
 
+def GoJSON2SubUnit(gojson, output_stream):
+    """Filter a `go test -json` stream into a subunit v2 byte stream.
+
+    `go test -json` (or `go tool test2json`) emits one JSON object per line.
+    Each object carries an `Action` (`run`, `output`, `pass`, `fail`, `skip`,
+    `pause`, `cont`, `bench`, `start`), a `Package`, an optional `Test`, and
+    on terminal events an `Elapsed` and `Time`. This function maps each
+    test's lifecycle to a pair of subunit packets — `inprogress` at the
+    `run` event and the final status at the terminal event — so the
+    consumer can derive a duration. Captured `output` lines for the test
+    are folded into a single `text/plain; charset=UTF8` attachment on the
+    terminal packet.
+
+    Test IDs are formed as ``<package>.<TestName>``. Subtests keep Go's
+    native ``Parent/Sub`` form, so the resulting ID is
+    ``<package>.<Parent>/<Sub>``, which round-trips through
+    ``go test -run '^Parent$/^Sub$'``.
+
+    Package-level failures (no `Test` field on a `fail` event — typically
+    a build error) are reported as a synthetic ``<package> [build]`` test
+    so the failure shows up alongside the test results instead of being
+    silently swallowed.
+
+    :param gojson: An iterable of text lines (e.g. ``sys.stdin``) carrying
+        the `go test -json` stream.
+    :param output_stream: A binary stream to write subunit v2 bytes to.
+    :return: 0 if no test failed, 1 otherwise — matching the convention
+        used by `TAP2SubUnit`.
+    """
+    import json
+
+    output = StreamResultToBytes(output_stream)
+    UTF8_TEXT = "text/plain; charset=UTF8"
+    # Per-test buffered `output` chunks plus the start timestamp captured
+    # on the `run` event, keyed by full test_id.
+    buffers = {}
+    start_times = {}
+    # Per-package buffered output, used to attribute build / setup failures
+    # that don't carry a `Test` field.
+    pkg_buffers = {}
+    any_failed = False
+
+    def parse_time(value):
+        if not value:
+            return None
+        try:
+            return iso8601.parse_date(value)
+        except (TypeError, ValueError, iso8601.ParseError):
+            return None
+
+    def make_test_id(pkg, test):
+        # Both package and test are required for an unambiguous ID; the
+        # caller checks for `Test` before reaching here.
+        return "{}.{}".format(pkg, test)
+
+    for line in gojson:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            event = json.loads(line)
+        except (TypeError, ValueError):
+            # `go test -json` occasionally interleaves a non-JSON banner
+            # (e.g. on a panic during package init). Drop it rather than
+            # aborting the whole stream.
+            continue
+        if not isinstance(event, dict):
+            continue
+
+        action = event.get("Action")
+        pkg = event.get("Package") or ""
+        test = event.get("Test")
+        timestamp = parse_time(event.get("Time"))
+
+        if action == "output":
+            chunk = event.get("Output", "")
+            if test:
+                buffers.setdefault(make_test_id(pkg, test), []).append(chunk)
+            elif pkg:
+                pkg_buffers.setdefault(pkg, []).append(chunk)
+            continue
+
+        if action == "run" and test:
+            test_id = make_test_id(pkg, test)
+            start_times[test_id] = timestamp
+            output.status(
+                test_id=test_id,
+                test_status="inprogress",
+                timestamp=timestamp,
+            )
+            continue
+
+        if action in ("pass", "fail", "skip") and test:
+            status = {"pass": "success", "fail": "fail", "skip": "skip"}[action]
+            test_id = make_test_id(pkg, test)
+            chunks = buffers.pop(test_id, [])
+            start_times.pop(test_id, None)
+            file_bytes = ("".join(chunks)).encode("utf-8") if chunks else None
+            output.status(
+                test_id=test_id,
+                test_status=status,
+                eof=True,
+                file_name="go test output" if file_bytes else None,
+                file_bytes=file_bytes,
+                mime_type=UTF8_TEXT if file_bytes else None,
+                timestamp=timestamp,
+            )
+            if action == "fail":
+                any_failed = True
+            continue
+
+        if action == "fail" and not test and pkg:
+            # Package-level failure (build error, init panic, etc.). Emit
+            # a synthetic test so the failure is visible.
+            chunks = pkg_buffers.pop(pkg, [])
+            file_bytes = ("".join(chunks)).encode("utf-8") if chunks else None
+            output.status(
+                test_id="{} [build]".format(pkg),
+                test_status="fail",
+                eof=True,
+                file_name="go test output" if file_bytes else None,
+                file_bytes=file_bytes,
+                mime_type=UTF8_TEXT if file_bytes else None,
+                timestamp=timestamp,
+            )
+            any_failed = True
+            continue
+
+        # `pass`/`skip` without `Test` is a package-level summary; harmless
+        # to drop. `pause`/`cont`/`start`/`bench` aren't terminal — skip.
+
+    # Any tests still in-progress at EOF were aborted (the runner died
+    # mid-test). Surface them as failures so they're not silently lost.
+    for test_id, chunks in list(buffers.items()):
+        file_bytes = ("".join(chunks)).encode("utf-8") if chunks else None
+        output.status(
+            test_id=test_id,
+            test_status="fail",
+            eof=True,
+            file_name="go test output" if file_bytes else None,
+            file_bytes=file_bytes,
+            mime_type=UTF8_TEXT if file_bytes else None,
+        )
+        any_failed = True
+
+    return 1 if any_failed else 0
+
+
 def tag_stream(original, filtered, tags):
     """Alter tags on a stream.
 
