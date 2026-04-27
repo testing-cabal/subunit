@@ -67,7 +67,7 @@ class TestGoJSON2SubUnit(TestCase):
         rc = subunit.GoJSON2SubUnit(self.gojson, self.subunit)
         self.assertEqual(0, rc)
         self.assertEqual(
-            [("pkg/a.TestFoo", "inprogress"), ("pkg/a.TestFoo", "success")],
+            [("pkg/a::TestFoo", "inprogress"), ("pkg/a::TestFoo", "success")],
             self._statuses(self._events()),
         )
 
@@ -86,8 +86,8 @@ class TestGoJSON2SubUnit(TestCase):
         # Each test produces an inprogress packet and a terminal packet;
         # check the terminal status (last one wins in dict()).
         statuses = dict(self._statuses(self._events()))
-        self.assertEqual("fail", statuses["pkg/a.TestBad"])
-        self.assertEqual("success", statuses["pkg/a.TestGood"])
+        self.assertEqual("fail", statuses["pkg/a::TestBad"])
+        self.assertEqual("success", statuses["pkg/a::TestGood"])
 
     def test_skip_status(self):
         self.gojson.write(
@@ -99,7 +99,7 @@ class TestGoJSON2SubUnit(TestCase):
         self.gojson.seek(0)
         rc = subunit.GoJSON2SubUnit(self.gojson, self.subunit)
         self.assertEqual(0, rc)
-        self.assertIn(("pkg/a.TestSkipped", "skip"), self._statuses(self._events()))
+        self.assertIn(("pkg/a::TestSkipped", "skip"), self._statuses(self._events()))
 
     def test_subtest_keeps_slash_separator(self):
         # Go subtests are reported as "Parent/Sub"; the resulting test ID
@@ -114,7 +114,7 @@ class TestGoJSON2SubUnit(TestCase):
         self.gojson.seek(0)
         subunit.GoJSON2SubUnit(self.gojson, self.subunit)
         self.assertIn(
-            ("pkg/a.TestParent/sub_one", "success"),
+            ("pkg/a::TestParent/sub_one", "success"),
             self._statuses(self._events()),
         )
 
@@ -132,7 +132,7 @@ class TestGoJSON2SubUnit(TestCase):
         events = self._events()
         # Find the terminal packet for TestNoisy and confirm both lines
         # were folded into one attachment.
-        terminal = [e for e in events if e[0] == "status" and e[1] == "pkg/a.TestNoisy" and e[2] == "fail"]
+        terminal = [e for e in events if e[0] == "status" and e[1] == "pkg/a::TestNoisy" and e[2] == "fail"]
         self.assertEqual(1, len(terminal))
         # Tuple shape from StreamResult:
         # ("status", test_id, test_status, test_tags, runnable, file_name,
@@ -172,7 +172,7 @@ class TestGoJSON2SubUnit(TestCase):
         self.gojson.seek(0)
         rc = subunit.GoJSON2SubUnit(self.gojson, self.subunit)
         self.assertEqual(0, rc)
-        self.assertIn(("pkg/a.TestFoo", "success"), self._statuses(self._events()))
+        self.assertIn(("pkg/a::TestFoo", "success"), self._statuses(self._events()))
 
     def test_blank_lines_are_skipped(self):
         self.gojson.write("\n\n")
@@ -182,7 +182,7 @@ class TestGoJSON2SubUnit(TestCase):
         self.gojson.seek(0)
         rc = subunit.GoJSON2SubUnit(self.gojson, self.subunit)
         self.assertEqual(0, rc)
-        self.assertIn(("pkg/a.TestFoo", "success"), self._statuses(self._events()))
+        self.assertIn(("pkg/a::TestFoo", "success"), self._statuses(self._events()))
 
     def test_unfinished_test_at_eof_is_failed(self):
         # A test that started but never reached a terminal action — the

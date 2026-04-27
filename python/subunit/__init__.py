@@ -1126,10 +1126,12 @@ def GoJSON2SubUnit(gojson, output_stream):
     are folded into a single `text/plain; charset=UTF8` attachment on the
     terminal packet.
 
-    Test IDs are formed as ``<package>.<TestName>``. Subtests keep Go's
-    native ``Parent/Sub`` form, so the resulting ID is
-    ``<package>.<Parent>/<Sub>``, which round-trips through
-    ``go test -run '^Parent$/^Sub$'``.
+    Test IDs are formed as ``<package>::<TestName>`` — using ``::`` (rather
+    than ``.``) so the package boundary survives round-tripping back to
+    ``-run`` arguments, since Go package paths can themselves contain dots.
+    Subtests keep Go's native ``Parent/Sub`` form, so the resulting ID is
+    ``<package>::<Parent>/<Sub>``, which round-trips through
+    ``go test -run '^Parent$/^Sub$' <package>``.
 
     Package-level failures (no `Test` field on a `fail` event — typically
     a build error) are reported as a synthetic ``<package> [build]`` test
@@ -1165,8 +1167,10 @@ def GoJSON2SubUnit(gojson, output_stream):
 
     def make_test_id(pkg, test):
         # Both package and test are required for an unambiguous ID; the
-        # caller checks for `Test` before reaching here.
-        return "{}.{}".format(pkg, test)
+        # caller checks for `Test` before reaching here. The "::" separator
+        # is unambiguous: Go package paths and test names can both contain
+        # "." and "/" but neither uses "::".
+        return "{}::{}".format(pkg, test)
 
     for line in gojson:
         line = line.strip()
