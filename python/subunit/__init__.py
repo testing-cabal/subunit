@@ -1261,6 +1261,159 @@ def GoJSON2SubUnit(gojson, output_stream):
     return 1 if any_failed else 0
 
 
+def JUnitXML2SubUnit(xml_files, output_stream):
+    """Convert JUnit XML test reports to a subunit v2 byte stream.
+
+    Reads each path in ``xml_files`` (in the supplied order) and emits
+    one subunit packet pair per ``<testcase>`` element. The packet pair
+    is ``inprogress`` followed by the terminal status, with synthetic
+    timestamps spaced by the testcase's ``time`` attribute so consumers
+    can recover the recorded duration.
+
+    Test IDs are formed as ``<classname>::<name>`` from the testcase's
+    ``classname`` and ``name`` attributes. Maven Surefire and Gradle
+    both populate ``classname`` with the fully-qualified Java class
+    (e.g. ``com.example.FooTest``), so the resulting ID is
+    ``com.example.FooTest::testBar``.
+
+    Mapping rules:
+      * ``<failure>`` child → status ``fail`` (an assertion failure).
+      * ``<error>`` child → status ``fail`` (an unexpected exception);
+        subunit doesn't distinguish these and the JUnit author intent is
+        identical for our purposes (both mean "did not pass").
+      * ``<skipped>`` child → status ``skip``.
+      * Otherwise → status ``success``.
+
+    The body text and ``message``/``type`` attributes of the failure
+    element are folded into a single ``text/plain`` attachment on the
+    terminal packet, mirroring how ``GoJSON2SubUnit`` attaches captured
+    stdout to its results.
+
+    Per-class ``<system-out>`` / ``<system-err>`` blocks aren't attributed
+    to individual testcases by the JUnit schema (they cover the whole
+    suite). They're dropped — preserving them would require attaching
+    them to a synthetic suite-level packet, and most consumers don't
+    surface that.
+
+    :param xml_files: Iterable of file paths containing JUnit XML.
+    :param output_stream: A binary stream to write subunit v2 bytes to.
+    :return: 0 if no testcase failed or errored, 1 otherwise. Files that
+        fail to parse are reported on stderr and counted as a failure so
+        the broken XML doesn't get silently swallowed.
+    """
+    import datetime
+    import xml.etree.ElementTree as ET
+
+    output = StreamResultToBytes(output_stream)
+    UTF8_TEXT = "text/plain; charset=UTF8"
+    any_failed = False
+    # Synthetic timestamps. We don't know when the JUnit run actually
+    # happened, but spacing the inprogress/terminal packets by each
+    # testcase's recorded `time` attribute lets consumers compute the
+    # right duration without making up wall-clock data.
+    clock = datetime.datetime(2000, 1, 1, tzinfo=datetime.timezone.utc)
+
+    def parse_time(value):
+        if value is None:
+            return 0.0
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return 0.0
+
+    def iter_testsuites(root):
+        # JUnit XML files come in two shapes: a single ``<testsuite>``
+        # at the root, or a ``<testsuites>`` wrapper containing many.
+        if root.tag == "testsuite":
+            yield root
+        elif root.tag == "testsuites":
+            for ts in root.findall("testsuite"):
+                yield ts
+        # Anything else is silently ignored — a non-JUnit document.
+
+    for path in xml_files:
+        try:
+            tree = ET.parse(path)
+        except (OSError, ET.ParseError) as exc:
+            sys.stderr.write("JUnitXML2SubUnit: failed to parse {}: {}\n".format(path, exc))
+            any_failed = True
+            continue
+
+        root = tree.getroot()
+        for suite in iter_testsuites(root):
+            for case in suite.findall("testcase"):
+                classname = case.get("classname") or ""
+                name = case.get("name") or ""
+                if not name:
+                    # Without a name there's no usable test_id; skip
+                    # rather than emit a malformed ID.
+                    continue
+                test_id = "{}::{}".format(classname, name) if classname else name
+                duration = parse_time(case.get("time"))
+
+                failure = case.find("failure")
+                error = case.find("error")
+                skipped = case.find("skipped")
+
+                if failure is not None or error is not None:
+                    status = "fail"
+                    detail = failure if failure is not None else error
+                    file_bytes = _format_junit_detail(detail)
+                    any_failed = True
+                elif skipped is not None:
+                    status = "skip"
+                    file_bytes = _format_junit_detail(skipped)
+                else:
+                    status = "success"
+                    file_bytes = None
+
+                start_ts = clock
+                end_ts = clock + datetime.timedelta(seconds=duration)
+                clock = end_ts
+
+                output.status(
+                    test_id=test_id,
+                    test_status="inprogress",
+                    timestamp=start_ts,
+                )
+                output.status(
+                    test_id=test_id,
+                    test_status=status,
+                    eof=True,
+                    file_name="junit detail" if file_bytes else None,
+                    file_bytes=file_bytes,
+                    mime_type=UTF8_TEXT if file_bytes else None,
+                    timestamp=end_ts,
+                )
+
+    return 1 if any_failed else 0
+
+
+def _format_junit_detail(element):
+    """Serialise a ``<failure>``/``<error>``/``<skipped>`` body to bytes.
+
+    JUnit elements carry the message and exception type as attributes and
+    the stack trace as element text. Combine both into a single
+    text/plain blob so the consumer sees everything on one packet. Returns
+    ``None`` when there's nothing to attach (an empty ``<skipped/>``).
+    """
+    parts = []
+    msg = element.get("message")
+    typ = element.get("type")
+    if typ and msg:
+        parts.append("{}: {}".format(typ, msg))
+    elif typ:
+        parts.append(typ)
+    elif msg:
+        parts.append(msg)
+    body = (element.text or "").strip()
+    if body:
+        parts.append(body)
+    if not parts:
+        return None
+    return ("\n".join(parts) + "\n").encode("utf-8")
+
+
 def tag_stream(original, filtered, tags):
     """Alter tags on a stream.
 
