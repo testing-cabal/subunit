@@ -481,7 +481,6 @@ xfail.
 * Update versions in `configure.ac` and `python/subunit/__init__.py`.
 * Update `NEWS`.
 * Do a ``make distcheck``, which will update `Makefile` etc.
-``* Do a PyPI release: PYTHONPATH=python python setup.py sdist bdist_wheel; twine upload -s dist/*``
-* Upload the regular one to LP.
-* Push a tagged commit.
-  ``git push -t origin master:master``
+* Push a tagged commit — this triggers the `publish.yml` GitHub Actions workflow,
+  which publishes to PyPI automatically via trusted publishing (OIDC), no API token needed:
+  ``git push --tags origin master:master``

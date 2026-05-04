@@ -2,8 +2,18 @@
 subunit release notes
 ---------------------
 
-1.4.6 (UNRELEASED)
+1.4.6 (2026-05-04)
 ---------------------
+
+BUG FIXES
+~~~~~~~~~
+
+  * Fix compatibility with testtools 2.8.2. (Jelmer Vernooĳ)
+
+  * Fix ``ExecTestCase`` to work without executable permissions on the
+    test script. (Jelmer Vernooĳ)
+
+  * Fix ``ExecTestCase`` to properly handle shell scripts. (Jelmer Vernooĳ)
 
 IMPROVEMENTS
 ~~~~~~~~~~~~
@@ -18,6 +28,12 @@ IMPROVEMENTS
     ``$IDFILE`` and ``$IDLIST`` placeholders in command argv, along with
     ``--list``, ``--load-list`` and positional test ids for per-command
     filtering. (Jelmer Vernooĳ)
+
+  * Add ``gojson2subunit`` script for converting ``go test -json`` streams
+    to subunit. (Jelmer Vernooĳ)
+
+  * Add ``junitxml2subunit`` script for converting JUnit XML test reports
+    to subunit. (Jelmer Vernooĳ)
 
 1.4.5 (2025-11-10)
 ---------------------
