@@ -478,10 +478,10 @@ xfail.
 
 ### Releases
 
-* Update versions in configure.ac and python/subunit/__init__.py.
-* Update NEWS.
-* Do a make distcheck, which will update Makefile etc.
-* Do a PyPI release: PYTHONPATH=python python setup.py sdist bdist_wheel; twine upload -s dist/*
+* Update versions in `configure.ac` and `python/subunit/__init__.py`.
+* Update `NEWS`.
+* Do a ``make distcheck``, which will update `Makefile` etc.
+``* Do a PyPI release: PYTHONPATH=python python setup.py sdist bdist_wheel; twine upload -s dist/*``
 * Upload the regular one to LP.
 * Push a tagged commit.
-  git push -t origin master:master
+  ``git push -t origin master:master``
