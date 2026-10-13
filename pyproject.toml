@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "setuptools.build_meta"
-requires = ["iso8601", "setuptools>=61.2", "testtools"]
+requires = ["setuptools>=61.2"]
 
 [tool.ruff]
 line-length = 120
@@ -71,7 +71,7 @@ where = ["python"]
 "tap2subunit" = "subunit.filter_scripts.tap2subunit:main"
 
 [tool.setuptools.dynamic]
-version = { attr = "subunit.version_string" }
+version = { attr = "subunit.version.version_string" }
 
 [tool.setuptools]
 license-files = ["COPYING"]
